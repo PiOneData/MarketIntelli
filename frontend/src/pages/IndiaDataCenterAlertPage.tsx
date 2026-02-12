@@ -1,4 +1,7 @@
 import { useState } from "react";
+import DataCenterMap from "../components/DataCenterMap";
+import Tabs from "../components/common/Tabs";
+import { getLatLng } from "../components/geoUtils";
 
 interface DataCenter {
   id: string;
@@ -104,6 +107,8 @@ function IndiaDataCenterAlertPage() {
   const [dataCenters, setDataCenters] = useState<DataCenter[]>(INITIAL_DATA);
   const [form, setForm] = useState(EMPTY_FORM);
   const [filters, setFilters] = useState({ state: "", city: "", company: "" });
+  const [activeTab, setActiveTab] = useState("table");
+  const [selectedDataCenter, setSelectedDataCenter] = useState<DataCenter | null>(null);
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -159,6 +164,12 @@ function IndiaDataCenterAlertPage() {
     return true;
   });
 
+  // Add lat/lng for map
+  const filteredDataWithLatLng = filteredData.map((dc) => ({
+    ...dc,
+    ...getLatLng(dc.city, dc.state),
+  }));
+
   const uniqueStates = [...new Set(dataCenters.map((dc) => dc.state))].sort();
   const uniqueCities = [...new Set(dataCenters.map((dc) => dc.city))].sort();
 
@@ -192,185 +203,261 @@ function IndiaDataCenterAlertPage() {
         </div>
       </div>
 
-      {/* Add New Data Center Form */}
-      <div className="india-dc-form-section">
-        <h3>Add New Data Center</h3>
-        <form onSubmit={handleAddDataCenter} className="india-dc-form">
-          <div className="india-dc-form-grid">
-            <div className="india-dc-field">
-              <label htmlFor="company">Company / Group</label>
-              <input
-                id="company"
-                name="company"
-                type="text"
-                placeholder="e.g. Adani Group"
-                value={form.company}
-                onChange={handleFormChange}
-              />
-            </div>
-            <div className="india-dc-field">
-              <label htmlFor="city">City</label>
-              <input
-                id="city"
-                name="city"
-                type="text"
-                placeholder="e.g. Mumbai"
-                value={form.city}
-                onChange={handleFormChange}
-              />
-            </div>
-            <div className="india-dc-field">
-              <label htmlFor="location">Location</label>
-              <input
-                id="location"
-                name="location"
-                type="text"
-                placeholder="e.g. Navi Mumbai SEZ"
-                value={form.location}
-                onChange={handleFormChange}
-              />
-            </div>
-            <div className="india-dc-field">
-              <label htmlFor="state">State</label>
-              <select id="state" name="state" value={form.state} onChange={handleFormChange}>
-                <option value="">Select State</option>
-                {INDIAN_STATES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-            <div className="india-dc-field">
-              <label htmlFor="powerMW">Power Needs (MW)</label>
-              <input
-                id="powerMW"
-                name="powerMW"
-                type="number"
-                placeholder="e.g. 50"
-                value={form.powerMW}
-                onChange={handleFormChange}
-              />
-            </div>
-            <div className="india-dc-field">
-              <label htmlFor="sizeSqFt">Size (Sq. Ft.)</label>
-              <input
-                id="sizeSqFt"
-                name="sizeSqFt"
-                type="number"
-                placeholder="e.g. 200000"
-                value={form.sizeSqFt}
-                onChange={handleFormChange}
-              />
-            </div>
-            <div className="india-dc-field">
-              <label htmlFor="status">Status</label>
-              <select id="status" name="status" value={form.status} onChange={handleFormChange}>
-                <option value="">Select Status</option>
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="india-dc-form-actions">
-            <button type="submit" className="india-dc-btn india-dc-btn--primary">Add Data Center</button>
-            <button type="button" className="india-dc-btn india-dc-btn--info" onClick={handleExportCSV}>Export to CSV</button>
-            <button type="button" className="india-dc-btn india-dc-btn--accent">Daily Report</button>
-          </div>
-        </form>
-      </div>
+      {/* Tabs for Table/Map */}
+      <Tabs
+        tabs={[
+          { label: "Table View", key: "table" },
+          { label: "Map View", key: "map" },
+        ]}
+        active={activeTab}
+        onChange={setActiveTab}
+        className="india-dc-tabs"
+      />
 
-      {/* Filters */}
-      <div className="india-dc-filters">
-        <h3>Filters</h3>
-        <div className="india-dc-filters-row">
-          <div className="india-dc-field">
-            <label htmlFor="filter-state">Filter by State</label>
-            <select id="filter-state" name="state" value={filters.state} onChange={handleFilterChange}>
-              <option value="">All States</option>
-              {uniqueStates.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+      {activeTab === "table" ? (
+        <>
+          {/* Add New Data Center Form */}
+          <div className="india-dc-form-section">
+            <h3>Add New Data Center</h3>
+            <form onSubmit={handleAddDataCenter} className="india-dc-form">
+              <div className="india-dc-form-grid">
+                {/* ...existing code... */}
+                <div className="india-dc-field">
+                  <label htmlFor="company">Company / Group</label>
+                  <input
+                    id="company"
+                    name="company"
+                    type="text"
+                    placeholder="e.g. Adani Group"
+                    value={form.company}
+                    onChange={handleFormChange}
+                  />
+                </div>
+                <div className="india-dc-field">
+                  <label htmlFor="city">City</label>
+                  <input
+                    id="city"
+                    name="city"
+                    type="text"
+                    placeholder="e.g. Mumbai"
+                    value={form.city}
+                    onChange={handleFormChange}
+                  />
+                </div>
+                <div className="india-dc-field">
+                  <label htmlFor="location">Location</label>
+                  <input
+                    id="location"
+                    name="location"
+                    type="text"
+                    placeholder="e.g. Navi Mumbai SEZ"
+                    value={form.location}
+                    onChange={handleFormChange}
+                  />
+                </div>
+                <div className="india-dc-field">
+                  <label htmlFor="state">State</label>
+                  <select id="state" name="state" value={form.state} onChange={handleFormChange}>
+                    <option value="">Select State</option>
+                    {INDIAN_STATES.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="india-dc-field">
+                  <label htmlFor="powerMW">Power Needs (MW)</label>
+                  <input
+                    id="powerMW"
+                    name="powerMW"
+                    type="number"
+                    placeholder="e.g. 50"
+                    value={form.powerMW}
+                    onChange={handleFormChange}
+                  />
+                </div>
+                <div className="india-dc-field">
+                  <label htmlFor="sizeSqFt">Size (Sq. Ft.)</label>
+                  <input
+                    id="sizeSqFt"
+                    name="sizeSqFt"
+                    type="number"
+                    placeholder="e.g. 200000"
+                    value={form.sizeSqFt}
+                    onChange={handleFormChange}
+                  />
+                </div>
+                <div className="india-dc-field">
+                  <label htmlFor="status">Status</label>
+                  <select id="status" name="status" value={form.status} onChange={handleFormChange}>
+                    <option value="">Select Status</option>
+                    {STATUS_OPTIONS.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="india-dc-form-actions">
+                <button type="submit" className="india-dc-btn india-dc-btn--primary">Add Data Center</button>
+                <button type="button" className="india-dc-btn india-dc-btn--info" onClick={handleExportCSV}>Export to CSV</button>
+                <button type="button" className="india-dc-btn india-dc-btn--accent">Daily Report</button>
+              </div>
+            </form>
           </div>
-          <div className="india-dc-field">
-            <label htmlFor="filter-city">Filter by City</label>
-            <select id="filter-city" name="city" value={filters.city} onChange={handleFilterChange}>
-              <option value="">All Cities</option>
-              {uniqueCities.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-          <div className="india-dc-field">
-            <label htmlFor="filter-company">Filter by Company</label>
-            <input
-              id="filter-company"
-              name="company"
-              type="text"
-              placeholder="Search company..."
-              value={filters.company}
-              onChange={handleFilterChange}
-            />
-          </div>
-          <div className="india-dc-field india-dc-field--action">
-            <button type="button" className="india-dc-btn india-dc-btn--outline" onClick={clearFilters}>Clear Filters</button>
-          </div>
-        </div>
-      </div>
 
-      {/* Data Center Registry Table */}
-      <div className="india-dc-table-section">
-        <h3>Data Center Registry</h3>
-        <p className="india-dc-table-count">{filteredData.length} of {dataCenters.length} data centers shown</p>
-        <div className="india-dc-table-wrapper">
-          <table className="india-dc-table">
-            <thead>
-              <tr>
-                <th>Date Added</th>
-                <th>Company / Group</th>
-                <th>City</th>
-                <th>Location</th>
-                <th>State</th>
-                <th>Power (MW)</th>
-                <th>Size (Sq. Ft.)</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="india-dc-table-empty">No data centers match the current filters.</td>
-                </tr>
-              ) : (
-                filteredData.map((dc) => (
-                  <tr key={dc.id}>
-                    <td>{dc.dateAdded}</td>
-                    <td className="india-dc-table-company">{dc.company}</td>
-                    <td>{dc.city}</td>
-                    <td>{dc.location}</td>
-                    <td>{dc.state}</td>
-                    <td>{dc.powerMW}</td>
-                    <td>{dc.sizeSqFt.toLocaleString()}</td>
-                    <td>
-                      <span className={`india-dc-status india-dc-status--${dc.status.toLowerCase().replace(/\s+/g, "-")}`}>
-                        {dc.status}
-                      </span>
-                    </td>
-                    <td>
-                      <button className="india-dc-btn-delete" onClick={() => handleDelete(dc.id)} title="Delete">
-                        <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    </td>
+          {/* Filters */}
+          <div className="india-dc-filters">
+            <h3>Filters</h3>
+            <div className="india-dc-filters-row">
+              <div className="india-dc-field">
+                <label htmlFor="filter-state">Filter by State</label>
+                <select id="filter-state" name="state" value={filters.state} onChange={handleFilterChange}>
+                  <option value="">All States</option>
+                  {uniqueStates.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="india-dc-field">
+                <label htmlFor="filter-city">Filter by City</label>
+                <select id="filter-city" name="city" value={filters.city} onChange={handleFilterChange}>
+                  <option value="">All Cities</option>
+                  {uniqueCities.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="india-dc-field">
+                <label htmlFor="filter-company">Filter by Company</label>
+                <input
+                  id="filter-company"
+                  name="company"
+                  type="text"
+                  placeholder="Search company..."
+                  value={filters.company}
+                  onChange={handleFilterChange}
+                />
+              </div>
+              <div className="india-dc-field india-dc-field--action">
+                <button type="button" className="india-dc-btn india-dc-btn--outline" onClick={clearFilters}>Clear Filters</button>
+              </div>
+            </div>
+          </div>
+
+          {/* Data Center Registry Table */}
+          <div className="india-dc-table-section">
+            <h3>Data Center Registry</h3>
+            <p className="india-dc-table-count">{filteredData.length} of {dataCenters.length} data centers shown</p>
+            <div className="india-dc-table-wrapper">
+              <table className="india-dc-table">
+                <thead>
+                  <tr>
+                    <th>Date Added</th>
+                    <th>Company / Group</th>
+                    <th>City</th>
+                    <th>Location</th>
+                    <th>State</th>
+                    <th>Power (MW)</th>
+                    <th>Size (Sq. Ft.)</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {filteredData.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="india-dc-table-empty">No data centers match the current filters.</td>
+                    </tr>
+                  ) : (
+                    filteredData.map((dc) => (
+                      <tr key={dc.id}>
+                        <td>{dc.dateAdded}</td>
+                        <td className="india-dc-table-company">{dc.company}</td>
+                        <td>{dc.city}</td>
+                        <td>{dc.location}</td>
+                        <td>{dc.state}</td>
+                        <td>{dc.powerMW}</td>
+                        <td>{dc.sizeSqFt.toLocaleString()}</td>
+                        <td>
+                          <span className={`india-dc-status india-dc-status--${dc.status.toLowerCase().replace(/\s+/g, "-")}`}>
+                            {dc.status}
+                          </span>
+                        </td>
+                        <td>
+                          <button className="india-dc-btn-delete" onClick={() => handleDelete(dc.id)} title="Delete">
+                            <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="india-dc-map-section">
+          <div className="india-dc-filters">
+            <h3>Filters</h3>
+            <div className="india-dc-filters-row">
+              <div className="india-dc-field">
+                <label htmlFor="filter-state-map">Filter by State</label>
+                <select id="filter-state-map" name="state" value={filters.state} onChange={handleFilterChange}>
+                  <option value="">All States</option>
+                  {uniqueStates.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="india-dc-field">
+                <label htmlFor="filter-city-map">Filter by City</label>
+                <select id="filter-city-map" name="city" value={filters.city} onChange={handleFilterChange}>
+                  <option value="">All Cities</option>
+                  {uniqueCities.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="india-dc-field">
+                <label htmlFor="filter-company-map">Filter by Company</label>
+                <input
+                  id="filter-company-map"
+                  name="company"
+                  type="text"
+                  placeholder="Search company..."
+                  value={filters.company}
+                  onChange={handleFilterChange}
+                />
+              </div>
+              <div className="india-dc-field india-dc-field--action">
+                <button type="button" className="india-dc-btn india-dc-btn--outline" onClick={clearFilters}>Clear Filters</button>
+              </div>
+            </div>
+          </div>
+          <DataCenterMap
+            dataCenters={filteredDataWithLatLng}
+            onMarkerClick={(id) => {
+              const dc = filteredDataWithLatLng.find((d) => d.id === id);
+              setSelectedDataCenter(dc || null);
+            }}
+          />
+          {selectedDataCenter && (
+            <div className="india-dc-map-details">
+              <h4>Data Center Details</h4>
+              <div><strong>Company:</strong> {selectedDataCenter.company}</div>
+              <div><strong>City:</strong> {selectedDataCenter.city}</div>
+              <div><strong>Location:</strong> {selectedDataCenter.location}</div>
+              <div><strong>State:</strong> {selectedDataCenter.state}</div>
+              <div><strong>Power:</strong> {selectedDataCenter.powerMW} MW</div>
+              <div><strong>Size:</strong> {selectedDataCenter.sizeSqFt.toLocaleString()} sq.ft.</div>
+              <div><strong>Status:</strong> {selectedDataCenter.status}</div>
+              <button className="india-dc-btn india-dc-btn--outline" onClick={() => setSelectedDataCenter(null)} style={{ marginTop: 12 }}>Close</button>
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 }

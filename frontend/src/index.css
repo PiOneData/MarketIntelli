@@ -1178,3 +1178,29 @@ p {
     display: none;
   }
 }
+
+/* Custom Tabs */
+.custom-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.custom-tab {
+  padding: 0.5rem 1.5rem;
+  background: var(--color-gray-100);
+  border: none;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-gray-600);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.custom-tab--active {
+  background: var(--color-primary-light);
+  color: var(--color-white);
+}
+.custom-tab:not(.custom-tab--active):hover {
+  background: var(--color-gray-200);
+  color: var(--color-primary-dark);
+}
