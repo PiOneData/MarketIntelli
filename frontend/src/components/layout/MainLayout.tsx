@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
-import refexLogo from "../../assets/refex-logo.svg";
+import refexLogo from "../../assets/refex-logo.png";
 
 interface SubItem {
   id: string;
