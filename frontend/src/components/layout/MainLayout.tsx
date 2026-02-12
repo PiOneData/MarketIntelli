@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
+import refexLogo from "../../assets/refex-logo.svg";
 
 interface SubItem {
   id: string;
@@ -128,8 +129,8 @@ function MainLayout() {
               <span className="menu-toggle-bar" />
             </button>
           )}
-          <h1>MarketIntelli</h1>
-          <span className="subtitle">Solar Market Intelligence Platform</span>
+          <img src={refexLogo} alt="Refex" className="header-logo" />
+          <span className="subtitle">Renewable Energy Market Intelligence</span>
         </div>
         <nav className="app-nav">
           <ul>

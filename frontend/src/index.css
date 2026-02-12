@@ -167,12 +167,13 @@ p {
   justify-content: space-between;
   height: var(--header-height);
   padding: 0 var(--space-8);
-  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
-  color: var(--color-white);
-  box-shadow: var(--shadow-md);
+  background: #ffffff;
+  color: #000000;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
   z-index: 100;
+  border-bottom: 1px solid var(--color-gray-200);
 }
 
 .header-brand {
@@ -184,13 +185,20 @@ p {
 .app-header h1 {
   font-size: var(--font-size-xl);
   letter-spacing: -0.025em;
+  color: #000000;
+}
+
+.header-logo {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
 }
 
 .app-header .subtitle {
   font-size: var(--font-size-sm);
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(0, 0, 0, 0.6);
   font-weight: 400;
-  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  border-left: 1px solid rgba(0, 0, 0, 0.2);
   padding-left: var(--space-4);
 }
 
@@ -259,18 +267,18 @@ p {
   padding: 0 var(--space-3);
   font-size: var(--font-size-sm);
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(0, 0, 0, 0.6);
   border-bottom: 2px solid transparent;
   transition: color 0.2s ease, border-color 0.2s ease;
 }
 
 .app-nav a:hover {
-  color: var(--color-white);
+  color: #000000;
 }
 
 .app-nav a.active {
-  color: var(--color-white);
-  border-bottom-color: var(--color-white);
+  color: #000000;
+  border-bottom-color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -639,13 +647,15 @@ p {
   display: flex;
   align-items: center;
   position: relative;
-  background-color: rgba(0, 0, 0, 0.08);
+  background-color: var(--color-gray-100);
+  border: 1px solid var(--color-gray-300);
   border-radius: var(--radius-md);
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .header-search-form:focus-within {
-  background-color: rgba(0, 0, 0, 0.12);
+  background-color: var(--color-white);
+  border-color: var(--color-primary);
 }
 
 .header-search-icon {
@@ -1024,8 +1034,300 @@ p {
   background-color: #fef2f2;
 }
 
+/* -- Tabs -- */
+
+.india-dc-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  border-bottom: 2px solid var(--color-gray-200);
+  padding-bottom: 0;
+}
+
+.india-dc-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-gray-500);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.india-dc-tab:hover {
+  color: var(--color-gray-700);
+}
+
+.india-dc-tab--active {
+  color: var(--color-primary-dark);
+  border-bottom-color: var(--color-primary);
+  font-weight: 600;
+}
+
+.india-dc-tab svg {
+  flex-shrink: 0;
+}
+
 /* ==========================================================================
-   13. RESPONSIVE DESIGN
+   13. MAP — Data Center Map View
+   ========================================================================== */
+
+.dc-map-container {
+  display: flex;
+  gap: var(--space-5);
+  min-height: 600px;
+}
+
+.dc-map-wrapper {
+  flex: 1;
+  min-width: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--color-gray-200);
+  box-shadow: var(--shadow-sm);
+}
+
+.dc-map {
+  width: 100%;
+  height: 600px;
+  z-index: 1;
+}
+
+.dc-map-popup h4 {
+  margin: 0 0 6px 0;
+  font-size: var(--font-size-base);
+  color: var(--color-primary-dark);
+}
+
+.dc-map-popup p {
+  margin: 2px 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-700);
+}
+
+.dc-map-popup-status {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-gray-200);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+/* Sidebar */
+
+.dc-map-sidebar {
+  width: 340px;
+  flex-shrink: 0;
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow-y: auto;
+  max-height: 600px;
+  padding: var(--space-5);
+}
+
+.dc-map-sidebar-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-gray-900);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 2px solid var(--color-primary);
+}
+
+.dc-map-sidebar-hint p {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-500);
+  margin-bottom: var(--space-4);
+}
+
+.dc-map-legend {
+  margin-bottom: var(--space-5);
+}
+
+.dc-map-legend h4 {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+  color: var(--color-gray-700);
+}
+
+.dc-map-legend-note {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-400);
+  margin-bottom: var(--space-2);
+  font-style: italic;
+}
+
+.dc-map-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+  padding: 2px 0;
+}
+
+.dc-map-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dc-map-state-list h4 {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+  color: var(--color-gray-700);
+}
+
+.dc-map-state-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: none;
+  border: none;
+  border-left: 2px solid var(--color-gray-200);
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-700);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  text-align: left;
+}
+
+.dc-map-state-btn:hover {
+  background-color: var(--color-gray-50);
+  border-left-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.dc-map-state-name {
+  font-weight: 500;
+}
+
+.dc-map-state-stats {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-400);
+}
+
+/* Detail Panel */
+
+.dc-map-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.dc-map-detail-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-3);
+  background: var(--color-gray-50);
+  border-radius: var(--radius-md);
+}
+
+.dc-map-detail-value {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.dc-map-detail-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-500);
+  text-align: center;
+}
+
+.dc-map-detail-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.dc-map-detail-status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: #fff;
+}
+
+.dc-map-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.dc-map-dc-card {
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.dc-map-dc-card:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.dc-map-dc-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-gray-50);
+  font-size: var(--font-size-sm);
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.dc-map-dc-card-header strong {
+  color: var(--color-gray-800);
+}
+
+.dc-map-dc-status {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.dc-map-dc-card-body {
+  padding: var(--space-2) var(--space-3);
+}
+
+.dc-map-dc-card-body p {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-600);
+  margin: 1px 0;
+}
+
+.dc-map-dc-date {
+  color: var(--color-gray-400) !important;
+  font-style: italic;
+}
+
+.dc-map-back-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   14. RESPONSIVE DESIGN
    ========================================================================== */
 
 @media (max-width: 768px) {
@@ -1176,5 +1478,22 @@ p {
 
   .header-search {
     display: none;
+  }
+
+  .dc-map-container {
+    flex-direction: column;
+  }
+
+  .dc-map-sidebar {
+    width: 100%;
+    max-height: 400px;
+  }
+
+  .dc-map {
+    height: 400px;
+  }
+
+  .dc-map-detail-summary {
+    grid-template-columns: repeat(3, 1fr);
   }
 }

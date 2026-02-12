@@ -1,4 +1,5 @@
 import { useState } from "react";
+import DataCenterMap from "../components/DataCenterMap";
 
 interface DataCenter {
   id: string;
@@ -901,6 +902,7 @@ function IndiaDataCenterAlertPage() {
   const [dataCenters, setDataCenters] = useState<DataCenter[]>(INITIAL_DATA);
   const [form, setForm] = useState(EMPTY_FORM);
   const [filters, setFilters] = useState({ state: "", city: "", company: "" });
+  const [activeTab, setActiveTab] = useState<"registry" | "map">("registry");
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -968,6 +970,36 @@ function IndiaDataCenterAlertPage() {
         <h2>India Data Center Alert Service</h2>
         <p>Track and monitor data center developments across India. Get real-time alerts on new facilities, expansions, and power capacity changes.</p>
       </div>
+
+      {/* Tab Navigation */}
+      <div className="india-dc-tabs">
+        <button
+          className={`india-dc-tab ${activeTab === "registry" ? "india-dc-tab--active" : ""}`}
+          onClick={() => setActiveTab("registry")}
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+            <path fillRule="evenodd" d="M5 4a3 3 0 00-3 3v6a3 3 0 003 3h10a3 3 0 003-3V7a3 3 0 00-3-3H5zm-1 9v-1h5v2H5a1 1 0 01-1-1zm7 1h4a1 1 0 001-1v-1h-5v2zm0-4h5V8h-5v2zM9 8H4v2h5V8z" clipRule="evenodd" />
+          </svg>
+          Registry
+        </button>
+        <button
+          className={`india-dc-tab ${activeTab === "map" ? "india-dc-tab--active" : ""}`}
+          onClick={() => setActiveTab("map")}
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+            <path fillRule="evenodd" d="M12 1.586l-4 4v12.828l4-4V1.586zM3.707 3.293A1 1 0 002 4v10a1 1 0 00.293.707L6 18.414V5.586L3.707 3.293zM14 5.586v12.828l2.293-2.293A1 1 0 0018 16V6a1 1 0 00-.293-.707L14 1.586v4z" clipRule="evenodd" />
+          </svg>
+          Map View
+        </button>
+      </div>
+
+      {/* Map View */}
+      {activeTab === "map" && (
+        <DataCenterMap dataCenters={dataCenters} />
+      )}
+
+      {/* Registry View */}
+      {activeTab === "registry" && <>
 
       {/* Stats Cards */}
       <div className="india-dc-stats">
@@ -1168,6 +1200,8 @@ function IndiaDataCenterAlertPage() {
           </table>
         </div>
       </div>
+
+      </>}
     </div>
   );
 }
