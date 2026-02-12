@@ -10,11 +10,12 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    port: 9002,        // frontend port
     host: "0.0.0.0",
+    allowedHosts: ['refexmi.pionedata.com'],  // allow this hostname
     proxy: {
       "/api": {
-        target: "http://backend:8000",
+        target: "http://127.0.0.1:9001",     // backend port
         changeOrigin: true,
       },
     },
