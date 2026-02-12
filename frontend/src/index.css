@@ -194,6 +194,49 @@ p {
   padding-left: var(--space-4);
 }
 
+/* -- Menu Toggle (Hamburger) -- */
+
+.menu-toggle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 2rem;
+  height: 2rem;
+  padding: 4px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.menu-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.menu-toggle-bar {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-white);
+  border-radius: 1px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  transform-origin: center;
+}
+
+.menu-toggle--active .menu-toggle-bar:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.menu-toggle--active .menu-toggle-bar:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-toggle--active .menu-toggle-bar:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
 /* -- Navigation -- */
 
 .app-nav ul {
@@ -231,30 +274,47 @@ p {
   font-weight: 600;
 }
 
-/* -- Content Area with optional Sidenav -- */
+/* -- App Body (Sidenav + Content wrapper) -- */
+
+.app-body {
+  flex: 1;
+  display: flex;
+  width: 100%;
+}
+
+/* -- Content Area -- */
 
 .app-content {
   flex: 1;
-  width: 100%;
+  min-width: 0;
   max-width: var(--max-width);
   margin: 0 auto;
-}
-
-.app-content.has-sidenav {
-  display: flex;
 }
 
 /* -- Sidenav -- */
 
 .sidenav {
-  width: 240px;
+  width: 260px;
   flex-shrink: 0;
-  padding: var(--space-6) 0 var(--space-6) var(--space-8);
+  background-color: var(--color-white);
+  border-right: 1px solid var(--color-gray-200);
   position: sticky;
   top: var(--header-height);
   align-self: flex-start;
-  max-height: calc(100vh - var(--header-height));
+  height: calc(100vh - var(--header-height));
   overflow-y: auto;
+  overflow-x: hidden;
+  transition: width 0.3s ease;
+}
+
+.sidenav--collapsed {
+  width: 0;
+  border-right-color: transparent;
+}
+
+.sidenav-inner {
+  width: 260px;
+  padding: var(--space-6) var(--space-5);
 }
 
 .sidenav ul {
@@ -598,17 +658,27 @@ p {
     font-size: var(--font-size-xs);
   }
 
-  .app-content.has-sidenav {
+  .app-body {
     flex-direction: column;
   }
 
   .sidenav {
-    width: 100%;
+    width: 100% !important;
     position: static;
-    max-height: none;
-    padding: var(--space-3) var(--space-4);
+    height: auto;
+    border-right: none;
     border-bottom: 1px solid var(--color-gray-200);
-    background-color: var(--color-white);
+    overflow: visible;
+    transition: none;
+  }
+
+  .sidenav--collapsed {
+    display: none;
+  }
+
+  .sidenav-inner {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
   }
 
   .sidenav ul {
