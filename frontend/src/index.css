@@ -626,7 +626,406 @@ p {
 }
 
 /* ==========================================================================
-   11. RESPONSIVE DESIGN
+   11. HEADER — Search Bar
+   ========================================================================== */
+
+.header-search {
+  display: flex;
+  align-items: center;
+  margin-left: var(--space-3);
+}
+
+.header-search-form {
+  display: flex;
+  align-items: center;
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+  transition: background-color 0.2s ease;
+}
+
+.header-search-form:focus-within {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.header-search-icon {
+  position: absolute;
+  left: 0.625rem;
+  color: rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+}
+
+.header-search-input {
+  width: 180px;
+  padding: 0.375rem 0.75rem 0.375rem 2rem;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-white);
+  font-size: var(--font-size-sm);
+  font-family: inherit;
+}
+
+.header-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.header-search-input:focus {
+  width: 220px;
+}
+
+/* ==========================================================================
+   12. PAGE — India Data Center Alert Service
+   ========================================================================== */
+
+.india-dc-page {
+  max-width: 1200px;
+}
+
+.india-dc-header {
+  margin-bottom: var(--space-6);
+}
+
+.india-dc-header h2 {
+  margin-bottom: var(--space-2);
+  color: var(--color-primary-dark);
+}
+
+.india-dc-header p {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-500);
+  max-width: 600px;
+}
+
+/* -- Stats Cards -- */
+
+.india-dc-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+.india-dc-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border-top: 3px solid var(--color-primary);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.india-dc-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.india-dc-stat-card--accent {
+  border-top-color: var(--color-accent);
+}
+
+.india-dc-stat-card--info {
+  border-top-color: var(--color-info);
+}
+
+.india-dc-stat-card--success {
+  border-top-color: var(--color-success);
+}
+
+.india-dc-stat-value {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-gray-900);
+}
+
+.india-dc-stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-500);
+  font-weight: 500;
+}
+
+/* -- Form Section -- */
+
+.india-dc-form-section {
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+
+.india-dc-form-section h3 {
+  color: var(--color-primary-dark);
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.india-dc-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.india-dc-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.india-dc-field label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-gray-700);
+}
+
+.india-dc-field input,
+.india-dc-field select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-family: inherit;
+  color: var(--color-gray-800);
+  background: var(--color-white);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.india-dc-field input:focus,
+.india-dc-field select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+}
+
+.india-dc-field input::placeholder {
+  color: var(--color-gray-400);
+}
+
+.india-dc-form-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* -- Buttons -- */
+
+.india-dc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.5rem 1.25rem;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  font-family: inherit;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.india-dc-btn:active {
+  transform: scale(0.98);
+}
+
+.india-dc-btn--primary {
+  background-color: var(--color-success);
+  color: var(--color-white);
+}
+
+.india-dc-btn--primary:hover {
+  background-color: #15803d;
+}
+
+.india-dc-btn--info {
+  background-color: var(--color-info);
+  color: var(--color-white);
+}
+
+.india-dc-btn--info:hover {
+  background-color: #1d4ed8;
+}
+
+.india-dc-btn--accent {
+  background-color: var(--color-accent);
+  color: var(--color-white);
+}
+
+.india-dc-btn--accent:hover {
+  background-color: #d97706;
+}
+
+.india-dc-btn--outline {
+  background-color: transparent;
+  color: var(--color-gray-600);
+  border: 1px solid var(--color-gray-300);
+}
+
+.india-dc-btn--outline:hover {
+  background-color: var(--color-gray-50);
+  border-color: var(--color-gray-400);
+}
+
+/* -- Filters -- */
+
+.india-dc-filters {
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+
+.india-dc-filters h3 {
+  color: var(--color-primary-dark);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.india-dc-filters-row {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.india-dc-filters-row .india-dc-field {
+  flex: 1;
+  min-width: 180px;
+}
+
+.india-dc-field--action {
+  display: flex;
+  justify-content: flex-end;
+  align-self: flex-end;
+}
+
+/* -- Table Section -- */
+
+.india-dc-table-section {
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+}
+
+.india-dc-table-section h3 {
+  color: var(--color-primary-dark);
+  margin-bottom: var(--space-2);
+}
+
+.india-dc-table-count {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-400);
+  margin-bottom: var(--space-4);
+}
+
+.india-dc-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.india-dc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.india-dc-table thead {
+  background-color: var(--color-gray-50);
+}
+
+.india-dc-table th {
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  font-weight: 600;
+  color: var(--color-gray-700);
+  border-bottom: 2px solid var(--color-gray-200);
+  white-space: nowrap;
+}
+
+.india-dc-table td {
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-gray-600);
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.india-dc-table tbody tr:hover {
+  background-color: var(--color-gray-50);
+}
+
+.india-dc-table-company {
+  font-weight: 600;
+  color: var(--color-gray-800);
+}
+
+.india-dc-table-empty {
+  text-align: center;
+  padding: var(--space-8) !important;
+  color: var(--color-gray-400) !important;
+  font-style: italic;
+}
+
+/* -- Status Badges -- */
+
+.india-dc-status {
+  display: inline-block;
+  padding: 0.125rem 0.625rem;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.india-dc-status--operational {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.india-dc-status--under-construction {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.india-dc-status--planned {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+/* -- Delete Button -- */
+
+.india-dc-btn-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  background: none;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-sm);
+  color: var(--color-gray-400);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.india-dc-btn-delete:hover {
+  color: var(--color-error);
+  border-color: var(--color-error);
+  background-color: #fef2f2;
+}
+
+/* ==========================================================================
+   13. RESPONSIVE DESIGN
    ========================================================================== */
 
 @media (max-width: 768px) {
@@ -717,6 +1116,32 @@ p {
   h2 {
     font-size: var(--font-size-xl);
   }
+
+  .header-search-input {
+    width: 120px;
+  }
+
+  .header-search-input:focus {
+    width: 150px;
+  }
+
+  .india-dc-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .india-dc-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .india-dc-filters-row {
+    flex-direction: column;
+  }
+
+  .india-dc-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 @media (max-width: 480px) {
@@ -734,5 +1159,22 @@ p {
 
   .metric-value {
     font-size: var(--font-size-xl);
+  }
+
+  .india-dc-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .india-dc-form-actions {
+    flex-direction: column;
+  }
+
+  .india-dc-form-actions .india-dc-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .header-search {
+    display: none;
   }
 }
