@@ -10,12 +10,11 @@ export default defineConfig({
     },
   },
   server: {
-    port: 9002,        // frontend port
+    port: 3000,        // match Docker EXPOSE port
     host: "0.0.0.0",
-    allowedHosts: ['refexmi.pionedata.com'],  // allow this hostname
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:9001",     // backend port
+        target: "http://backend:8000",     // use Docker network hostname
         changeOrigin: true,
       },
     },
