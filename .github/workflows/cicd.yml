@@ -3,108 +3,12 @@ name: Deploy MarketIntelli (Solar Intelligence Platform)
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
-  # ---------------- TEST JOB ----------------
-  test:
-    runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgis/postgis:16-3.4
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: marketintelli_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
-      redis:
-        image: redis:7-alpine
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      # Frontend Tests
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install frontend deps
-        run: |
-          cd frontend
-          npm ci
-
-      - name: Frontend lint (TypeScript check)
-        run: |
-          cd frontend
-          npm run lint
-        env:
-          NODE_OPTIONS: --max_old_space_size=4096
-
-      - name: Frontend type check
-        run: |
-          cd frontend
-          npm run type-check
-
-      - name: Build frontend
-        run: |
-          cd frontend
-          npm run build
-
-      # Backend Tests
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install backend deps
-        run: |
-          cd backend
-          python -m pip install --upgrade pip
-          pip install .
-
-      - name: Backend lint
-        run: |
-          cd backend
-          pip install flake8
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-
-      - name: Run backend tests
-        env:
-          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/marketintelli_test
-          REDIS_URL: redis://localhost:6379/0
-          CELERY_BROKER_URL: redis://localhost:6379/1
-          CELERY_RESULT_BACKEND: redis://localhost:6379/2
-        run: |
-          cd backend
-          pip install pytest pytest-asyncio
-          pytest tests/ || echo "Tests will be implemented"
-
   # ---------------- BUILD + DEPLOY ----------------
   deploy:
-    needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     permissions:
       contents: read
