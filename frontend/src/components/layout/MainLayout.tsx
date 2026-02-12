@@ -1,30 +1,90 @@
-import { Outlet, NavLink } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
+import refexLogo from "../../assets/refex-logo.svg";
 
-const navItems = [
+interface SubItem {
+  id: string;
+  label: string;
+  path?: string;
+}
+
+interface NavItem {
+  path: string;
+  label: string;
+  children?: SubItem[];
+}
+
+const navItems: NavItem[] = [
   { path: "/", label: "Dashboard" },
-  { path: "/geo-analytics", label: "Geo Analytics" },
-  { path: "/projects", label: "Projects" },
-  { path: "/policy", label: "Policy" },
-  { path: "/alerts", label: "Alerts" },
+  {
+    path: "/geo-analytics",
+    label: "Geo Analytics",
+    children: [
+      { id: "solar-potential-mapping", label: "Solar Potential Mapping" },
+      { id: "grid-infrastructure-layer", label: "Grid Infrastructure Layer" },
+      { id: "disaster-risk-overlay", label: "Disaster Risk Overlay" },
+    ],
+  },
+  {
+    path: "/projects",
+    label: "Projects",
+    children: [
+      { id: "project-directory", label: "Project Directory" },
+      { id: "developer-profiles", label: "Developer Profiles" },
+      { id: "tender-intelligence", label: "Tender Intelligence" },
+      { id: "india-data-center-alerts", label: "India Data Center Alert Service", path: "/projects/india-data-center-alerts" },
+    ],
+  },
+  {
+    path: "/policy",
+    label: "Policy",
+    children: [
+      { id: "policy-repository", label: "Policy Repository" },
+      { id: "tariff-tracker", label: "Tariff Tracker" },
+      { id: "compliance-alerts", label: "Compliance Alerts" },
+      { id: "subsidy-monitor", label: "Subsidy Monitor" },
+    ],
+  },
+  {
+    path: "/alerts",
+    label: "Alerts",
+    children: [
+      { id: "active-alerts", label: "Active Alerts" },
+      { id: "custom-watchlists", label: "Custom Watchlists" },
+      { id: "disaster-response-integration", label: "Disaster Response Integration" },
+    ],
+  },
 ];
 
-function MainLayout() {
+function Sidenav({
+  items,
+  collapsed,
+}: {
+  items: SubItem[];
+  collapsed: boolean;
+}) {
+  const navigate = useNavigate();
+
+  const handleClick = (item: SubItem) => {
+    if (item.path) {
+      navigate(item.path);
+    } else {
+      const el = document.getElementById(item.id);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  };
+
   return (
-    <div className="app-layout">
-      <header className="app-header">
-        <h1>MarketIntelli</h1>
-        <span className="subtitle">Solar Market Intelligence Platform</span>
-      </header>
-      <nav className="app-nav">
+    <aside className={`sidenav ${collapsed ? "sidenav--collapsed" : ""}`}>
+      <div className="sidenav-inner">
         <ul>
-          {navItems.map((item) => (
-            <li key={item.path}>
-              <NavLink
-                to={item.path}
-                className={({ isActive }) => (isActive ? "active" : "")}
-              >
+          {items.map((item) => (
+            <li key={item.id}>
+              <button onClick={() => handleClick(item)}>
                 {item.label}
-              </NavLink>
+              </button>
             </li>
           ))}
         </ul>

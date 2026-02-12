@@ -1,0 +1,1499 @@
+/* ==========================================================================
+   MarketIntelli - Solar Market Intelligence Platform
+   Organized CSS Stylesheet
+   ========================================================================== */
+
+/* ==========================================================================
+   1. DESIGN TOKENS (CSS Custom Properties)
+   ========================================================================== */
+
+:root {
+  /* Brand Colors */
+  --color-primary: #0f766e;
+  --color-primary-light: #14b8a6;
+  --color-primary-dark: #0d5f59;
+  --color-accent: #f59e0b;
+  --color-accent-light: #fbbf24;
+
+  /* Neutrals */
+  --color-white: #ffffff;
+  --color-gray-50: #f8fafc;
+  --color-gray-100: #f1f5f9;
+  --color-gray-200: #e2e8f0;
+  --color-gray-300: #cbd5e1;
+  --color-gray-400: #94a3b8;
+  --color-gray-500: #64748b;
+  --color-gray-600: #475569;
+  --color-gray-700: #334155;
+  --color-gray-800: #1e293b;
+  --color-gray-900: #0f172a;
+
+  /* Semantic Colors */
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+  --color-info: #2563eb;
+
+  /* Typography */
+  --font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* Borders & Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+
+  /* Layout */
+  --max-width: 1280px;
+  --header-height: 4rem;
+}
+
+/* ==========================================================================
+   2. RESET & BASE STYLES
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  color: var(--color-gray-800);
+  background-color: var(--color-gray-50);
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul {
+  list-style: none;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* ==========================================================================
+   3. TYPOGRAPHY
+   ========================================================================== */
+
+h1 {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-white);
+}
+
+h2 {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-gray-900);
+  margin-bottom: var(--space-6);
+}
+
+h3 {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-gray-800);
+  margin-bottom: var(--space-3);
+}
+
+p {
+  color: var(--color-gray-600);
+  line-height: 1.7;
+}
+
+/* ==========================================================================
+   4. LAYOUT — App Shell
+   ========================================================================== */
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* -- Header -- */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--header-height);
+  padding: 0 var(--space-8);
+  background: #ffffff;
+  color: #000000;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.app-header h1 {
+  font-size: var(--font-size-xl);
+  letter-spacing: -0.025em;
+  color: #000000;
+}
+
+.header-logo {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+}
+
+.app-header .subtitle {
+  font-size: var(--font-size-sm);
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 400;
+  border-left: 1px solid rgba(0, 0, 0, 0.2);
+  padding-left: var(--space-4);
+}
+
+/* -- Menu Toggle (Hamburger) -- */
+
+.menu-toggle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 2rem;
+  height: 2rem;
+  padding: 4px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.menu-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.menu-toggle-bar {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background-color: #000000;
+  border-radius: 1px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  transform-origin: center;
+}
+
+.menu-toggle--active .menu-toggle-bar:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.menu-toggle--active .menu-toggle-bar:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-toggle--active .menu-toggle-bar:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* -- Navigation -- */
+
+.app-nav ul {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 100%;
+}
+
+.app-nav li {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.app-nav a {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.app-nav a:hover {
+  color: #000000;
+}
+
+.app-nav a.active {
+  color: #000000;
+  border-bottom-color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* -- App Body (Sidenav + Content wrapper) -- */
+
+.app-body {
+  flex: 1;
+  display: flex;
+  width: 100%;
+}
+
+/* -- Content Area -- */
+
+.app-content {
+  flex: 1;
+  min-width: 0;
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+/* -- Sidenav -- */
+
+.sidenav {
+  width: 260px;
+  flex-shrink: 0;
+  background-color: var(--color-white);
+  border-right: 1px solid var(--color-gray-200);
+  position: sticky;
+  top: var(--header-height);
+  align-self: flex-start;
+  height: calc(100vh - var(--header-height));
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: width 0.3s ease;
+}
+
+.sidenav--collapsed {
+  width: 0;
+  border-right-color: transparent;
+}
+
+.sidenav-inner {
+  width: 260px;
+  padding: var(--space-6) var(--space-5);
+}
+
+.sidenav ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sidenav button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-gray-600);
+  background: none;
+  border: none;
+  border-left: 2px solid var(--color-gray-200);
+  border-radius: 0;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.sidenav button:hover {
+  color: var(--color-primary);
+  border-left-color: var(--color-primary-light);
+  background-color: var(--color-gray-50);
+}
+
+/* -- Main Content Area -- */
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-8);
+}
+
+/* ==========================================================================
+   5. COMMON COMPONENTS
+   ========================================================================== */
+
+/* -- Loading Spinner -- */
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-12) 0;
+  color: var(--color-gray-500);
+}
+
+.spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid var(--color-gray-200);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-spinner p {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+/* -- Error Message -- */
+
+.error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-8);
+  margin: var(--space-8) auto;
+  max-width: 480px;
+  text-align: center;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-lg);
+}
+
+.error-message p {
+  color: var(--color-error);
+  font-weight: 500;
+}
+
+.error-message button {
+  padding: var(--space-2) var(--space-6);
+  background-color: var(--color-error);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: var(--font-size-sm);
+  transition: background-color 0.2s ease;
+}
+
+.error-message button:hover {
+  background-color: #b91c1c;
+}
+
+/* ==========================================================================
+   6. PAGE — Dashboard
+   ========================================================================== */
+
+.dashboard-page h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* -- Market Overview Panel -- */
+
+.market-overview-panel {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+  box-shadow: var(--shadow-sm);
+}
+
+.market-overview-panel h3 {
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-5);
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  background: linear-gradient(135deg, var(--color-gray-50), var(--color-white));
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.metric-value {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1.2;
+}
+
+.metric-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-500);
+  font-weight: 500;
+}
+
+/* -- Financial Insights Panel -- */
+
+.financial-insights-panel {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+}
+
+.financial-insights-panel h3 {
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.financial-insights-panel p {
+  padding: var(--space-6);
+  text-align: center;
+  font-style: italic;
+}
+
+.financial-insights-panel table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.financial-insights-panel thead {
+  background-color: var(--color-gray-50);
+}
+
+.financial-insights-panel th {
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  font-weight: 600;
+  color: var(--color-gray-700);
+  border-bottom: 2px solid var(--color-gray-200);
+  white-space: nowrap;
+}
+
+.financial-insights-panel td {
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-gray-600);
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.financial-insights-panel tbody tr:hover {
+  background-color: var(--color-gray-50);
+}
+
+/* ==========================================================================
+   7. PAGE — Geo Analytics
+   ========================================================================== */
+
+.geo-analytics-page section {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease;
+}
+
+.geo-analytics-page section:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.geo-analytics-page section h3 {
+  color: var(--color-primary-dark);
+}
+
+/* ==========================================================================
+   8. PAGE — Projects
+   ========================================================================== */
+
+.projects-page section {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease;
+}
+
+.projects-page section:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.projects-page section h3 {
+  color: var(--color-primary-dark);
+}
+
+/* ==========================================================================
+   9. PAGE — Policy
+   ========================================================================== */
+
+.policy-page section {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease;
+}
+
+.policy-page section:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.policy-page section h3 {
+  color: var(--color-primary-dark);
+}
+
+/* ==========================================================================
+   10. PAGE — Alerts
+   ========================================================================== */
+
+.alerts-page section {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease;
+}
+
+.alerts-page section:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.alerts-page section h3 {
+  color: var(--color-primary-dark);
+}
+
+/* ==========================================================================
+   11. HEADER — Search Bar
+   ========================================================================== */
+
+.header-search {
+  display: flex;
+  align-items: center;
+  margin-left: var(--space-3);
+}
+
+.header-search-form {
+  display: flex;
+  align-items: center;
+  position: relative;
+  background-color: var(--color-gray-100);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.header-search-form:focus-within {
+  background-color: var(--color-white);
+  border-color: var(--color-primary);
+}
+
+.header-search-icon {
+  position: absolute;
+  left: 0.625rem;
+  color: rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+}
+
+.header-search-input {
+  width: 180px;
+  padding: 0.375rem 0.75rem 0.375rem 2rem;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #000000;
+  font-size: var(--font-size-sm);
+  font-family: inherit;
+}
+
+.header-search-input::placeholder {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.header-search-input:focus {
+  width: 220px;
+}
+
+/* ==========================================================================
+   12. PAGE — India Data Center Alert Service
+   ========================================================================== */
+
+.india-dc-page {
+  max-width: 1200px;
+}
+
+.india-dc-header {
+  margin-bottom: var(--space-6);
+}
+
+.india-dc-header h2 {
+  margin-bottom: var(--space-2);
+  color: var(--color-primary-dark);
+}
+
+.india-dc-header p {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-500);
+  max-width: 600px;
+}
+
+/* -- Stats Cards -- */
+
+.india-dc-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+.india-dc-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border-top: 3px solid var(--color-primary);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.india-dc-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.india-dc-stat-card--accent {
+  border-top-color: var(--color-accent);
+}
+
+.india-dc-stat-card--info {
+  border-top-color: var(--color-info);
+}
+
+.india-dc-stat-card--success {
+  border-top-color: var(--color-success);
+}
+
+.india-dc-stat-value {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-gray-900);
+}
+
+.india-dc-stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-500);
+  font-weight: 500;
+}
+
+/* -- Form Section -- */
+
+.india-dc-form-section {
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+
+.india-dc-form-section h3 {
+  color: var(--color-primary-dark);
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.india-dc-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.india-dc-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.india-dc-field label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-gray-700);
+}
+
+.india-dc-field input,
+.india-dc-field select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-family: inherit;
+  color: var(--color-gray-800);
+  background: var(--color-white);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.india-dc-field input:focus,
+.india-dc-field select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+}
+
+.india-dc-field input::placeholder {
+  color: var(--color-gray-400);
+}
+
+.india-dc-form-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* -- Buttons -- */
+
+.india-dc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.5rem 1.25rem;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  font-family: inherit;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.india-dc-btn:active {
+  transform: scale(0.98);
+}
+
+.india-dc-btn--primary {
+  background-color: var(--color-success);
+  color: var(--color-white);
+}
+
+.india-dc-btn--primary:hover {
+  background-color: #15803d;
+}
+
+.india-dc-btn--info {
+  background-color: var(--color-info);
+  color: var(--color-white);
+}
+
+.india-dc-btn--info:hover {
+  background-color: #1d4ed8;
+}
+
+.india-dc-btn--accent {
+  background-color: var(--color-accent);
+  color: var(--color-white);
+}
+
+.india-dc-btn--accent:hover {
+  background-color: #d97706;
+}
+
+.india-dc-btn--outline {
+  background-color: transparent;
+  color: var(--color-gray-600);
+  border: 1px solid var(--color-gray-300);
+}
+
+.india-dc-btn--outline:hover {
+  background-color: var(--color-gray-50);
+  border-color: var(--color-gray-400);
+}
+
+/* -- Filters -- */
+
+.india-dc-filters {
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+
+.india-dc-filters h3 {
+  color: var(--color-primary-dark);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.india-dc-filters-row {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.india-dc-filters-row .india-dc-field {
+  flex: 1;
+  min-width: 180px;
+}
+
+.india-dc-field--action {
+  display: flex;
+  justify-content: flex-end;
+  align-self: flex-end;
+}
+
+/* -- Table Section -- */
+
+.india-dc-table-section {
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+}
+
+.india-dc-table-section h3 {
+  color: var(--color-primary-dark);
+  margin-bottom: var(--space-2);
+}
+
+.india-dc-table-count {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-400);
+  margin-bottom: var(--space-4);
+}
+
+.india-dc-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.india-dc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.india-dc-table thead {
+  background-color: var(--color-gray-50);
+}
+
+.india-dc-table th {
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  font-weight: 600;
+  color: var(--color-gray-700);
+  border-bottom: 2px solid var(--color-gray-200);
+  white-space: nowrap;
+}
+
+.india-dc-table td {
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-gray-600);
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.india-dc-table tbody tr:hover {
+  background-color: var(--color-gray-50);
+}
+
+.india-dc-table-company {
+  font-weight: 600;
+  color: var(--color-gray-800);
+}
+
+.india-dc-table-empty {
+  text-align: center;
+  padding: var(--space-8) !important;
+  color: var(--color-gray-400) !important;
+  font-style: italic;
+}
+
+/* -- Status Badges -- */
+
+.india-dc-status {
+  display: inline-block;
+  padding: 0.125rem 0.625rem;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.india-dc-status--operational {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.india-dc-status--under-construction {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.india-dc-status--planned {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+/* -- Delete Button -- */
+
+.india-dc-btn-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  background: none;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-sm);
+  color: var(--color-gray-400);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.india-dc-btn-delete:hover {
+  color: var(--color-error);
+  border-color: var(--color-error);
+  background-color: #fef2f2;
+}
+
+/* -- Tabs -- */
+
+.india-dc-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  border-bottom: 2px solid var(--color-gray-200);
+  padding-bottom: 0;
+}
+
+.india-dc-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-gray-500);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.india-dc-tab:hover {
+  color: var(--color-gray-700);
+}
+
+.india-dc-tab--active {
+  color: var(--color-primary-dark);
+  border-bottom-color: var(--color-primary);
+  font-weight: 600;
+}
+
+.india-dc-tab svg {
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   13. MAP — Data Center Map View
+   ========================================================================== */
+
+.dc-map-container {
+  display: flex;
+  gap: var(--space-5);
+  min-height: 600px;
+}
+
+.dc-map-wrapper {
+  flex: 1;
+  min-width: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--color-gray-200);
+  box-shadow: var(--shadow-sm);
+}
+
+.dc-map {
+  width: 100%;
+  height: 600px;
+  z-index: 1;
+}
+
+.dc-map-popup h4 {
+  margin: 0 0 6px 0;
+  font-size: var(--font-size-base);
+  color: var(--color-primary-dark);
+}
+
+.dc-map-popup p {
+  margin: 2px 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-700);
+}
+
+.dc-map-popup-status {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-gray-200);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+/* Sidebar */
+
+.dc-map-sidebar {
+  width: 340px;
+  flex-shrink: 0;
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow-y: auto;
+  max-height: 600px;
+  padding: var(--space-5);
+}
+
+.dc-map-sidebar-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-gray-900);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 2px solid var(--color-primary);
+}
+
+.dc-map-sidebar-hint p {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-500);
+  margin-bottom: var(--space-4);
+}
+
+.dc-map-legend {
+  margin-bottom: var(--space-5);
+}
+
+.dc-map-legend h4 {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+  color: var(--color-gray-700);
+}
+
+.dc-map-legend-note {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-400);
+  margin-bottom: var(--space-2);
+  font-style: italic;
+}
+
+.dc-map-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+  padding: 2px 0;
+}
+
+.dc-map-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dc-map-state-list h4 {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+  color: var(--color-gray-700);
+}
+
+.dc-map-state-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: none;
+  border: none;
+  border-left: 2px solid var(--color-gray-200);
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-700);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  text-align: left;
+}
+
+.dc-map-state-btn:hover {
+  background-color: var(--color-gray-50);
+  border-left-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.dc-map-state-name {
+  font-weight: 500;
+}
+
+.dc-map-state-stats {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-400);
+}
+
+/* Detail Panel */
+
+.dc-map-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.dc-map-detail-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-3);
+  background: var(--color-gray-50);
+  border-radius: var(--radius-md);
+}
+
+.dc-map-detail-value {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.dc-map-detail-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-500);
+  text-align: center;
+}
+
+.dc-map-detail-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.dc-map-detail-status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: #fff;
+}
+
+.dc-map-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.dc-map-dc-card {
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.dc-map-dc-card:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.dc-map-dc-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-gray-50);
+  font-size: var(--font-size-sm);
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.dc-map-dc-card-header strong {
+  color: var(--color-gray-800);
+}
+
+.dc-map-dc-status {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.dc-map-dc-card-body {
+  padding: var(--space-2) var(--space-3);
+}
+
+.dc-map-dc-card-body p {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-600);
+  margin: 1px 0;
+}
+
+.dc-map-dc-date {
+  color: var(--color-gray-400) !important;
+  font-style: italic;
+}
+
+.dc-map-back-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   14. RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  :root {
+    --header-height: auto;
+  }
+
+  .app-header {
+    flex-wrap: wrap;
+    padding: var(--space-3) var(--space-4);
+    gap: var(--space-2);
+  }
+
+  .app-header .subtitle {
+    display: none;
+  }
+
+  .app-nav {
+    width: 100%;
+  }
+
+  .app-nav ul {
+    flex-wrap: wrap;
+    gap: 0;
+  }
+
+  .app-nav a {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-size-xs);
+  }
+
+  .app-body {
+    flex-direction: column;
+  }
+
+  .sidenav {
+    width: 100% !important;
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--color-gray-200);
+    overflow: visible;
+    transition: none;
+  }
+
+  .sidenav--collapsed {
+    display: none;
+  }
+
+  .sidenav-inner {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .sidenav ul {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+
+  .sidenav button {
+    border-left: none;
+    border-bottom: 2px solid var(--color-gray-200);
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--font-size-xs);
+    white-space: nowrap;
+  }
+
+  .sidenav button:hover {
+    border-left-color: transparent;
+    border-bottom-color: var(--color-primary-light);
+  }
+
+  .app-main {
+    padding: var(--space-4);
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .financial-insights-panel table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  h2 {
+    font-size: var(--font-size-xl);
+  }
+
+  .header-search-input {
+    width: 120px;
+  }
+
+  .header-search-input:focus {
+    width: 150px;
+  }
+
+  .india-dc-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .india-dc-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .india-dc-filters-row {
+    flex-direction: column;
+  }
+
+  .india-dc-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header h1 {
+    font-size: var(--font-size-base);
+  }
+
+  .app-nav a {
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .metric-card {
+    padding: var(--space-4);
+  }
+
+  .metric-value {
+    font-size: var(--font-size-xl);
+  }
+
+  .india-dc-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .india-dc-form-actions {
+    flex-direction: column;
+  }
+
+  .india-dc-form-actions .india-dc-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .header-search {
+    display: none;
+  }
+
+  .dc-map-container {
+    flex-direction: column;
+  }
+
+  .dc-map-sidebar {
+    width: 100%;
+    max-height: 400px;
+  }
+
+  .dc-map {
+    height: 400px;
+  }
+
+  .dc-map-detail-summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

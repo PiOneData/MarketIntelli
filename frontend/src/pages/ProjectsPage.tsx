@@ -17,7 +17,7 @@ function ProjectsPage() {
   return (
     <div className="projects-page">
       <h2>Project &amp; Developer Intelligence</h2>
-      <section>
+      <section id="project-directory">
         <h3>Project Directory</h3>
         <p>
           {projects?.length ?? 0} projects loaded. Comprehensive database of
@@ -25,11 +25,11 @@ function ProjectsPage() {
         </p>
         {/* Project list table will go here */}
       </section>
-      <section>
+      <section id="developer-profiles">
         <h3>Developer Profiles</h3>
         <p>Historical performance, capacity portfolio, and risk scoring.</p>
       </section>
-      <section>
+      <section id="tender-intelligence">
         <h3>Tender Intelligence</h3>
         <p>Real-time updates on upcoming and awarded tenders with bid analytics.</p>
       </section>
