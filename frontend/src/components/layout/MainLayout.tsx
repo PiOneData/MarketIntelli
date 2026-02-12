@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Outlet, NavLink, useLocation } from "react-router-dom";
+import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 
 interface SubItem {
   id: string;
   label: string;
+  path?: string;
 }
 
 interface NavItem {
@@ -30,6 +31,7 @@ const navItems: NavItem[] = [
       { id: "project-directory", label: "Project Directory" },
       { id: "developer-profiles", label: "Developer Profiles" },
       { id: "tender-intelligence", label: "Tender Intelligence" },
+      { id: "india-data-center-alerts", label: "India Data Center Alert Service", path: "/projects/india-data-center-alerts" },
     ],
   },
   {
@@ -60,10 +62,16 @@ function Sidenav({
   items: SubItem[];
   collapsed: boolean;
 }) {
-  const handleClick = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
+  const navigate = useNavigate();
+
+  const handleClick = (item: SubItem) => {
+    if (item.path) {
+      navigate(item.path);
+    } else {
+      const el = document.getElementById(item.id);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }
   };
 
@@ -73,7 +81,7 @@ function Sidenav({
         <ul>
           {items.map((item) => (
             <li key={item.id}>
-              <button onClick={() => handleClick(item.id)}>
+              <button onClick={() => handleClick(item)}>
                 {item.label}
               </button>
             </li>
@@ -86,13 +94,23 @@ function Sidenav({
 
 function MainLayout() {
   const location = useLocation();
-  const currentNav = navItems.find((item) => item.path === location.pathname);
+  const currentNav = navItems.find((item) =>
+    location.pathname === item.path || location.pathname.startsWith(item.path + "/")
+  );
   const subItems = currentNav?.children;
   const [sidenavOpen, setSidenavOpen] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     setSidenavOpen(true);
   }, [location.pathname]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setSearchQuery("");
+    }
+  };
 
   return (
     <div className="app-layout">
@@ -119,12 +137,28 @@ function MainLayout() {
               <li key={item.path}>
                 <NavLink
                   to={item.path}
+                  end={item.path === "/"}
                   className={({ isActive }) => (isActive ? "active" : "")}
                 >
                   {item.label}
                 </NavLink>
               </li>
             ))}
+            <li className="header-search">
+              <form onSubmit={handleSearchSubmit} className="header-search-form">
+                <svg className="header-search-icon" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                </svg>
+                <input
+                  type="text"
+                  className="header-search-input"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  aria-label="Search"
+                />
+              </form>
+            </li>
           </ul>
         </nav>
       </header>
