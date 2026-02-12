@@ -128,8 +128,8 @@ function MainLayout() {
               <span className="menu-toggle-bar" />
             </button>
           )}
-          <h1>MarketIntelli</h1>
-          <span className="subtitle">Solar Market Intelligence Platform</span>
+          <img src="/assets/refex-logo.png" alt="Refex Logo" style={{ height: 40, marginRight: 16 }} />
+          <span className="subtitle">Renewable Energy Market Intelligence</span>
         </div>
         <nav className="app-nav">
           <ul>
