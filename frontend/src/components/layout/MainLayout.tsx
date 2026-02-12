@@ -12,23 +12,25 @@ function MainLayout() {
   return (
     <div className="app-layout">
       <header className="app-header">
-        <h1>MarketIntelli</h1>
-        <span className="subtitle">Solar Market Intelligence Platform</span>
+        <div className="header-brand">
+          <h1>MarketIntelli</h1>
+          <span className="subtitle">Solar Market Intelligence Platform</span>
+        </div>
+        <nav className="app-nav">
+          <ul>
+            {navItems.map((item) => (
+              <li key={item.path}>
+                <NavLink
+                  to={item.path}
+                  className={({ isActive }) => (isActive ? "active" : "")}
+                >
+                  {item.label}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </header>
-      <nav className="app-nav">
-        <ul>
-          {navItems.map((item) => (
-            <li key={item.path}>
-              <NavLink
-                to={item.path}
-                className={({ isActive }) => (isActive ? "active" : "")}
-              >
-                {item.label}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      </nav>
       <main className="app-main">
         <Outlet />
       </main>
