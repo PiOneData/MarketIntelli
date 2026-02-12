@@ -231,13 +231,64 @@ p {
   font-weight: 600;
 }
 
-/* -- Main Content Area -- */
+/* -- Content Area with optional Sidenav -- */
 
-.app-main {
+.app-content {
   flex: 1;
   width: 100%;
   max-width: var(--max-width);
   margin: 0 auto;
+}
+
+.app-content.has-sidenav {
+  display: flex;
+}
+
+/* -- Sidenav -- */
+
+.sidenav {
+  width: 240px;
+  flex-shrink: 0;
+  padding: var(--space-6) 0 var(--space-6) var(--space-8);
+  position: sticky;
+  top: var(--header-height);
+  align-self: flex-start;
+  max-height: calc(100vh - var(--header-height));
+  overflow-y: auto;
+}
+
+.sidenav ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sidenav button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-gray-600);
+  background: none;
+  border: none;
+  border-left: 2px solid var(--color-gray-200);
+  border-radius: 0;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.sidenav button:hover {
+  color: var(--color-primary);
+  border-left-color: var(--color-primary-light);
+  background-color: var(--color-gray-50);
+}
+
+/* -- Main Content Area -- */
+
+.app-main {
+  flex: 1;
+  min-width: 0;
   padding: var(--space-8);
 }
 
@@ -545,6 +596,38 @@ p {
   .app-nav a {
     padding: var(--space-2) var(--space-3);
     font-size: var(--font-size-xs);
+  }
+
+  .app-content.has-sidenav {
+    flex-direction: column;
+  }
+
+  .sidenav {
+    width: 100%;
+    position: static;
+    max-height: none;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--color-gray-200);
+    background-color: var(--color-white);
+  }
+
+  .sidenav ul {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+
+  .sidenav button {
+    border-left: none;
+    border-bottom: 2px solid var(--color-gray-200);
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--font-size-xs);
+    white-space: nowrap;
+  }
+
+  .sidenav button:hover {
+    border-left-color: transparent;
+    border-bottom-color: var(--color-primary-light);
   }
 
   .app-main {
