@@ -212,14 +212,14 @@ p {
 }
 
 .menu-toggle:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .menu-toggle-bar {
   display: block;
   width: 100%;
   height: 2px;
-  background-color: var(--color-white);
+  background-color: #000000;
   border-radius: 1px;
   transition: transform 0.3s ease, opacity 0.3s ease;
   transform-origin: center;
@@ -639,19 +639,19 @@ p {
   display: flex;
   align-items: center;
   position: relative;
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(0, 0, 0, 0.08);
   border-radius: var(--radius-md);
   transition: background-color 0.2s ease;
 }
 
 .header-search-form:focus-within {
-  background-color: rgba(255, 255, 255, 0.25);
+  background-color: rgba(0, 0, 0, 0.12);
 }
 
 .header-search-icon {
   position: absolute;
   left: 0.625rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(0, 0, 0, 0.7);
   pointer-events: none;
 }
 
@@ -661,13 +661,13 @@ p {
   background: transparent;
   border: none;
   outline: none;
-  color: var(--color-white);
+  color: #000000;
   font-size: var(--font-size-sm);
   font-family: inherit;
 }
 
 .header-search-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(0, 0, 0, 0.5);
 }
 
 .header-search-input:focus {
