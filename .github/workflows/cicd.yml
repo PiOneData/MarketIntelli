@@ -2,7 +2,7 @@ name: MarketIntelli CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -56,8 +56,8 @@ jobs:
       uses: docker/login-action@v3
       with:
         registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        username: ${{ secrets.GHCR_USERNAME }}
+        password: ${{ secrets.GHCR_TOKEN }}
 
     - name: Push frontend Docker image
       if: github.event_name != 'pull_request'
@@ -152,8 +152,8 @@ jobs:
       uses: docker/login-action@v3
       with:
         registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        username: ${{ secrets.GHCR_USERNAME }}
+        password: ${{ secrets.GHCR_TOKEN }}
 
     - name: Push backend Docker image
       if: github.event_name != 'pull_request'
@@ -225,7 +225,7 @@ jobs:
       with:
         sarif_file: 'trivy-backend-results.sarif'
 
-  # Deployment (optional - customize based on your deployment target)
+  # Deployment
   deploy:
     runs-on: ubuntu-latest
     needs: [integration-tests, security-scan]
@@ -235,18 +235,52 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Deploy to staging/production
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Add server to known hosts
       run: |
-        echo "Add your deployment commands here"
-        echo "Examples:"
-        echo "- Deploy to AWS ECS/EKS"
-        echo "- Deploy to Azure Container Instances"
-        echo "- Deploy to Google Cloud Run"
-        echo "- Deploy to your own servers"
-        echo ""
-        echo "Docker images are available at:"
-        echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}"
-        echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}"
+        ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+    - name: Deploy to server
+      run: |
+        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+          # Navigate to project directory
+          cd /home/${{ secrets.SERVER_USER }}/MarketIntelli/MarketIntelli
+          
+          # Login to GHCR
+          echo ${{ secrets.GHCR_TOKEN }} | docker login ${{ env.REGISTRY }} -u ${{ secrets.GHCR_USERNAME }} --password-stdin
+          
+          # Pull latest images
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}
+          
+          # Tag as latest for docker-compose
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }} marketintelli_backend:latest
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }} marketintelli_frontend:latest
+          
+          # Update docker-compose with new images
+          docker-compose down
+          docker-compose up -d
+          
+          # Clean up old images
+          docker image prune -f
+        EOF
+
+    - name: Verify deployment
+      run: |
+        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+          # Wait for services to start
+          sleep 30
+          
+          # Check if services are running
+          curl -f http://localhost:9002/ || exit 1
+          curl -f http://localhost:9001/docs || exit 1
+          
+          echo "✅ MarketIntelli deployed successfully!"
+        EOF
 
   # Cleanup old packages
   cleanup:
