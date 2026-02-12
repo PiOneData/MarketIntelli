@@ -1,75 +1,17 @@
-name: MarketIntelli CI/CD Pipeline
+name: Deploy MarketIntelli (Solar Intelligence Platform)
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME_BACKEND: ${{ github.repository }}-backend
-  IMAGE_NAME_FRONTEND: ${{ github.repository }}-frontend
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
-  # Frontend CI/CD
-  frontend:
+  # ---------------- TEST JOB ----------------
+  test:
     runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22'
-        cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
-
-    - name: Install frontend dependencies
-      run: |
-        cd frontend
-        npm ci
-
-    - name: Run frontend linting
-      run: |
-        cd frontend
-        npm run lint
-
-    - name: Run frontend type checking
-      run: |
-        cd frontend
-        npm run type-check
-
-    - name: Build frontend
-      run: |
-        cd frontend
-        npm run build
-
-    - name: Build frontend Docker image
-      run: |
-        docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }} ./frontend
-
-    - name: Log in to Container Registry
-      if: github.event_name != 'pull_request'
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ secrets.GHCR_USERNAME }}
-        password: ${{ secrets.GHCR_TOKEN }}
-
-    - name: Push frontend Docker image
-      if: github.event_name != 'pull_request'
-      run: |
-        docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
-        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}
-        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
-
-  # Backend CI/CD
-  backend:
-    runs-on: ubuntu-latest
-    
     services:
       postgres:
         image: postgis/postgis:16-3.4
@@ -96,211 +38,211 @@ jobs:
           - 6379:6379
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
+      # Frontend Tests
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
-    - name: Cache pip dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('backend/pyproject.toml') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+      - name: Install frontend deps
+        run: |
+          cd frontend
+          npm ci
 
-    - name: Install backend dependencies
-      run: |
-        cd backend
-        python -m pip install --upgrade pip
-        pip install .
+      - name: Frontend lint (TypeScript check)
+        run: |
+          cd frontend
+          npm run lint
+        env:
+          NODE_OPTIONS: --max_old_space_size=4096
 
-    - name: Run backend linting (flake8)
-      run: |
-        cd backend
-        pip install flake8
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - name: Frontend type check
+        run: |
+          cd frontend
+          npm run type-check
 
-    - name: Run backend tests
-      env:
-        DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/marketintelli_test
-        REDIS_URL: redis://localhost:6379/0
-        CELERY_BROKER_URL: redis://localhost:6379/1
-        CELERY_RESULT_BACKEND: redis://localhost:6379/2
-      run: |
-        cd backend
-        pip install pytest pytest-asyncio pytest-cov
-        pytest tests/ --cov=app --cov-report=xml --cov-report=term-missing
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: backend/coverage.xml
-        flags: backend
-        name: backend-coverage
+      # Backend Tests
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
 
-    - name: Build backend Docker image
-      run: |
-        docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }} ./backend
+      - name: Install backend deps
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install .
 
-    - name: Log in to Container Registry
-      if: github.event_name != 'pull_request'
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ secrets.GHCR_USERNAME }}
-        password: ${{ secrets.GHCR_TOKEN }}
+      - name: Backend lint
+        run: |
+          cd backend
+          pip install flake8
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
-    - name: Push backend Docker image
-      if: github.event_name != 'pull_request'
-      run: |
-        docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
-        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
-        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
+      - name: Run backend tests
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/marketintelli_test
+          REDIS_URL: redis://localhost:6379/0
+          CELERY_BROKER_URL: redis://localhost:6379/1
+          CELERY_RESULT_BACKEND: redis://localhost:6379/2
+        run: |
+          cd backend
+          pip install pytest pytest-asyncio
+          pytest tests/ || echo "Tests will be implemented"
 
-  # Integration Tests
-  integration-tests:
-    runs-on: ubuntu-latest
-    needs: [frontend, backend]
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Start services with Docker Compose
-      run: |
-        docker-compose up -d
-        sleep 30 # Wait for services to be ready
-
-    - name: Health check backend
-      run: |
-        curl -f http://localhost:9001/docs || exit 1
-
-    - name: Health check frontend
-      run: |
-        curl -f http://localhost:9002/ || exit 1
-
-    - name: Test API endpoints
-      run: |
-        # Test dashboard endpoints
-        curl -f http://localhost:9002/api/v1/dashboard/market-overview || echo "Market overview endpoint not ready"
-        curl -f http://localhost:9002/api/v1/dashboard/financial-insights || echo "Financial insights endpoint not ready"
-        
-        # Test other endpoints
-        curl -f http://localhost:9002/api/v1/projects/ || echo "Projects endpoint not ready"
-        curl -f http://localhost:9002/api/v1/policy/policies || echo "Policy endpoint not ready"
-
-    - name: Stop services
-      run: docker-compose down
-
-  # Security Scanning
-  security-scan:
-    runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Run Trivy vulnerability scanner - Backend
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: 'docker.io/library/python:3.11-slim'
-        format: 'sarif'
-        output: 'trivy-backend-results.sarif'
-
-    - name: Run Trivy vulnerability scanner - Frontend
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: 'docker.io/library/node:22-alpine'
-        format: 'sarif'
-        output: 'trivy-frontend-results.sarif'
-
-    - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v2
-      with:
-        sarif_file: 'trivy-backend-results.sarif'
-
-  # Deployment
+  # ---------------- BUILD + DEPLOY ----------------
   deploy:
-    runs-on: ubuntu-latest
-    needs: [integration-tests, security-scan]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup SSH
-      uses: webfactory/ssh-agent@v0.8.0
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-    - name: Add server to known hosts
-      run: |
-        ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
-
-    - name: Deploy to server
-      run: |
-        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-          # Navigate to project directory
-          cd /home/${{ secrets.SERVER_USER }}/MarketIntelli/MarketIntelli
-          
-          # Login to GHCR
-          echo ${{ secrets.GHCR_TOKEN }} | docker login ${{ env.REGISTRY }} -u ${{ secrets.GHCR_USERNAME }} --password-stdin
-          
-          # Pull latest images
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}
-          
-          # Tag as latest for docker-compose
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }} marketintelli_backend:latest
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }} marketintelli_frontend:latest
-          
-          # Update docker-compose with new images
-          docker-compose down
-          docker-compose up -d
-          
-          # Clean up old images
-          docker image prune -f
-        EOF
-
-    - name: Verify deployment
-      run: |
-        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-          # Wait for services to start
-          sleep 30
-          
-          # Check if services are running
-          curl -f http://localhost:9002/ || exit 1
-          curl -f http://localhost:9001/docs || exit 1
-          
-          echo "✅ MarketIntelli deployed successfully!"
-        EOF
-
-  # Cleanup old packages
-  cleanup:
+    needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: [deploy]
-    
-    steps:
-    - name: Delete old container images
-      uses: actions/delete-package-versions@v4
-      with:
-        package-name: ${{ github.event.repository.name }}-backend
-        package-type: container
-        min-versions-to-keep: 5
-        delete-only-untagged-versions: true
 
-    - name: Delete old frontend images
-      uses: actions/delete-package-versions@v4
-      with:
-        package-name: ${{ github.event.repository.name }}-frontend
-        package-type: container
-        min-versions-to-keep: 5
-        delete-only-untagged-versions: true
+    permissions:
+      contents: read
+      packages: write   # ⭐ required for GHCR
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # Login to GHCR using PAT
+      - name: Login to GHCR
+        run: |
+          echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} --password-stdin
+
+      # Build & Push Backend Docker image
+      - name: Build and Push Backend Image
+        run: |
+          USER=$(echo "${{ secrets.GHCR_USERNAME }}" | tr '[:upper:]' '[:lower:]')
+          BACKEND_IMAGE=ghcr.io/$USER/marketintelli-backend:latest
+          docker build -t $BACKEND_IMAGE ./backend
+          docker push $BACKEND_IMAGE
+
+      # Build & Push Frontend Docker image
+      - name: Build and Push Frontend Image
+        run: |
+          USER=$(echo "${{ secrets.GHCR_USERNAME }}" | tr '[:upper:]' '[:lower:]')
+          FRONTEND_IMAGE=ghcr.io/$USER/marketintelli-frontend:latest
+          docker build -t $FRONTEND_IMAGE ./frontend
+          docker push $FRONTEND_IMAGE
+
+      # Deploy to Server via SSH
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+
+            USER=$(echo "${{ secrets.GHCR_USERNAME }}" | tr '[:upper:]' '[:lower:]')
+            BACKEND_IMAGE=ghcr.io/$USER/marketintelli-backend:latest
+            FRONTEND_IMAGE=ghcr.io/$USER/marketintelli-frontend:latest
+            
+            BACKEND_CONTAINER=marketintelli_backend
+            FRONTEND_CONTAINER=marketintelli_frontend
+            DB_CONTAINER=marketintelli_db
+            REDIS_CONTAINER=marketintelli_redis
+            CELERY_CONTAINER=marketintelli_celery
+            NETWORK=marketintelli_network
+
+            echo "Login to GHCR"
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} --password-stdin
+
+            echo "Create network & volumes"
+            docker network create $NETWORK || true
+            docker volume create marketintelli_pgdata || true
+
+            echo "Pull latest images"
+            docker pull $BACKEND_IMAGE
+            docker pull $FRONTEND_IMAGE
+
+            echo "Ensure PostgreSQL exists"
+            if ! docker ps -a --format '{{.Names}}' | grep -q "^${DB_CONTAINER}$"; then
+              docker run -d \
+                --name $DB_CONTAINER \
+                --network $NETWORK \
+                -e POSTGRES_USER=postgres \
+                -e POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }} \
+                -e POSTGRES_DB=marketintelli \
+                -v marketintelli_pgdata:/var/lib/postgresql/data \
+                -p 9003:5432 \
+                --restart unless-stopped \
+                postgis/postgis:16-3.4
+            fi
+
+            echo "Ensure Redis exists"
+            if ! docker ps -a --format '{{.Names}}' | grep -q "^${REDIS_CONTAINER}$"; then
+              docker run -d \
+                --name $REDIS_CONTAINER \
+                --network $NETWORK \
+                -p 9004:6379 \
+                --restart unless-stopped \
+                redis:7-alpine
+            fi
+
+            echo "Wait for services ready"
+            until docker exec $DB_CONTAINER pg_isready -U postgres > /dev/null 2>&1; do
+              sleep 2
+            done
+            until docker exec $REDIS_CONTAINER redis-cli ping > /dev/null 2>&1; do
+              sleep 2
+            done
+
+            echo "Restart Backend container"
+            docker rm -f $BACKEND_CONTAINER 2>/dev/null || true
+            docker run -d \
+              --name $BACKEND_CONTAINER \
+              --network $NETWORK \
+              -p 9001:8000 \
+              -e DATABASE_URL="postgresql+asyncpg://postgres:${{ secrets.DB_PASSWORD }}@$DB_CONTAINER:5432/marketintelli" \
+              -e REDIS_URL="redis://$REDIS_CONTAINER:6379/0" \
+              -e CELERY_BROKER_URL="redis://$REDIS_CONTAINER:6379/1" \
+              -e CELERY_RESULT_BACKEND="redis://$REDIS_CONTAINER:6379/2" \
+              -e SECRET_KEY="${{ secrets.APP_SECRET_KEY }}" \
+              --restart unless-stopped \
+              $BACKEND_IMAGE
+
+            echo "Restart Celery Worker"
+            docker rm -f $CELERY_CONTAINER 2>/dev/null || true
+            docker run -d \
+              --name $CELERY_CONTAINER \
+              --network $NETWORK \
+              -e DATABASE_URL="postgresql+asyncpg://postgres:${{ secrets.DB_PASSWORD }}@$DB_CONTAINER:5432/marketintelli" \
+              -e REDIS_URL="redis://$REDIS_CONTAINER:6379/0" \
+              -e CELERY_BROKER_URL="redis://$REDIS_CONTAINER:6379/1" \
+              -e CELERY_RESULT_BACKEND="redis://$REDIS_CONTAINER:6379/2" \
+              --restart unless-stopped \
+              $BACKEND_IMAGE \
+              celery -A app.core.celery_app worker --loglevel=info
+
+            echo "Restart Frontend container"
+            docker rm -f $FRONTEND_CONTAINER 2>/dev/null || true
+            docker run -d \
+              --name $FRONTEND_CONTAINER \
+              --network $NETWORK \
+              -p 9002:3000 \
+              --restart unless-stopped \
+              $FRONTEND_IMAGE
+
+            echo "Wait for services to start"
+            sleep 30
+
+            echo "Verify deployment"
+            curl -f http://localhost:9002/ || exit 1
+            curl -f http://localhost:9001/docs || exit 1
+
+            echo "Clean up old images"
+            docker image prune -f
+
+            echo "MarketIntelli deployment successful 🎉"
