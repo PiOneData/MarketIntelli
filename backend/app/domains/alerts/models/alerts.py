@@ -50,10 +50,10 @@ class Notification(Base):
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4, init=False)
     user_id: Mapped[UUID] = mapped_column()
+    channel: Mapped[str] = mapped_column(String(50))  # email, sms, push, in_app
     alert_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("alerts.id"), nullable=True, default=None
     )
-    channel: Mapped[str] = mapped_column(String(50))  # email, sms, push, in_app
     status: Mapped[str] = mapped_column(String(50), default="pending")  # pending, sent, failed
     read: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(

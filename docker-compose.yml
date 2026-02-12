@@ -4,7 +4,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "9001:8000"
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/marketintelli
       - REDIS_URL=redis://redis:6379/0
@@ -23,7 +23,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "9002:3000"
     depends_on:
       - backend
     volumes:
@@ -36,7 +36,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: marketintelli
     ports:
-      - "5432:5432"
+      - "9003:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -48,7 +48,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "9004:6379"
 
   celery-worker:
     build:

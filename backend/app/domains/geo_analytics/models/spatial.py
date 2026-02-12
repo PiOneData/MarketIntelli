@@ -33,9 +33,9 @@ class GridInfrastructure(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4, init=False)
     name: Mapped[str] = mapped_column(String(255))
     infrastructure_type: Mapped[str] = mapped_column(String(100))  # substation, corridor, etc.
+    geometry: Mapped[str] = mapped_column(Geometry("GEOMETRY", srid=4326), init=False)
     capacity_mva: Mapped[float] = mapped_column(Float, nullable=True, default=None)
     congestion_level: Mapped[int] = mapped_column(Integer, nullable=True, default=None)  # 1-5
-    geometry: Mapped[str] = mapped_column(Geometry("GEOMETRY", srid=4326), init=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), init=False
     )
@@ -50,8 +50,8 @@ class DisasterRiskZone(Base):
     risk_type: Mapped[str] = mapped_column(String(100))  # flood, cyclone, heatwave
     severity: Mapped[int] = mapped_column(Integer)  # 1-5
     state: Mapped[str] = mapped_column(String(255))
-    description: Mapped[str] = mapped_column(String(1000), default="")
     geometry: Mapped[str] = mapped_column(Geometry("POLYGON", srid=4326), init=False)
+    description: Mapped[str] = mapped_column(String(1000), default="")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), init=False
     )

@@ -32,6 +32,9 @@ function MainLayout() {
       <main className="app-main">
         <Outlet />
       </main>
+      <main className="main-content">
+        <Outlet />
+      </main>
     </div>
   );
 }
