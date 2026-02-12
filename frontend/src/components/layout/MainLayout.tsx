@@ -21,8 +21,9 @@ const navItems: NavItem[] = [
     label: "Geo Analytics",
     children: [
       { id: "solar-potential-mapping", label: "Solar Potential Mapping" },
-      { id: "grid-infrastructure-layer", label: "Grid Infrastructure Layer" },
+      { id: "wind-site-analyser", label: "Wind Site Analyser" },
       { id: "disaster-risk-overlay", label: "Disaster Risk Overlay" },
+      { id: "land-availability", label: "Land Availability" },
     ],
   },
   {
@@ -32,8 +33,12 @@ const navItems: NavItem[] = [
       { id: "project-directory", label: "Project Directory" },
       { id: "developer-profiles", label: "Developer Profiles" },
       { id: "tender-intelligence", label: "Tender Intelligence" },
-      { id: "india-data-center-alerts", label: "India Data Center Alert Service", path: "/projects/india-data-center-alerts" },
+      { id: "india-data-center-registry", label: "India Data Center Registry", path: "/projects/india-data-center-registry" },
     ],
+  },
+  {
+    path: "/power-data",
+    label: "Power Data",
   },
   {
     path: "/policy",
@@ -56,16 +61,26 @@ const navItems: NavItem[] = [
   },
 ];
 
+const EXTERNAL_LINKS: Record<string, string> = {
+  "wind-site-analyser": "https://dharanv2006.users.earthengine.app/view/wind-site-analyser",
+};
+
 function Sidenav({
   items,
   collapsed,
+  onToggle,
 }: {
   items: SubItem[];
   collapsed: boolean;
+  onToggle: () => void;
 }) {
   const navigate = useNavigate();
 
   const handleClick = (item: SubItem) => {
+    if (EXTERNAL_LINKS[item.id]) {
+      window.open(EXTERNAL_LINKS[item.id], "_blank", "noopener,noreferrer");
+      return;
+    }
     if (item.path) {
       navigate(item.path);
     } else {
@@ -79,11 +94,27 @@ function Sidenav({
   return (
     <aside className={`sidenav ${collapsed ? "sidenav--collapsed" : ""}`}>
       <div className="sidenav-inner">
+        <button
+          className={`menu-toggle ${!collapsed ? "menu-toggle--active" : ""}`}
+          onClick={onToggle}
+          aria-label={!collapsed ? "Collapse sidebar" : "Expand sidebar"}
+          aria-expanded={!collapsed}
+        >
+          <span className="menu-toggle-bar" />
+          <span className="menu-toggle-bar" />
+          <span className="menu-toggle-bar" />
+        </button>
         <ul>
           {items.map((item) => (
             <li key={item.id}>
               <button onClick={() => handleClick(item)}>
                 {item.label}
+                {EXTERNAL_LINKS[item.id] && (
+                  <svg className="sidenav-external-icon" viewBox="0 0 20 20" fill="currentColor" width="12" height="12">
+                    <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                    <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                  </svg>
+                )}
               </button>
             </li>
           ))}
@@ -117,18 +148,6 @@ function MainLayout() {
     <div className="app-layout">
       <header className="app-header">
         <div className="header-brand">
-          {subItems && (
-            <button
-              className={`menu-toggle ${sidenavOpen ? "menu-toggle--active" : ""}`}
-              onClick={() => setSidenavOpen((prev) => !prev)}
-              aria-label={sidenavOpen ? "Close sidebar" : "Open sidebar"}
-              aria-expanded={sidenavOpen}
-            >
-              <span className="menu-toggle-bar" />
-              <span className="menu-toggle-bar" />
-              <span className="menu-toggle-bar" />
-            </button>
-          )}
           <img src={refexLogo} alt="Refex" className="header-logo" />
           <span className="subtitle">Renewable Energy Market Intelligence</span>
         </div>
@@ -164,7 +183,7 @@ function MainLayout() {
         </nav>
       </header>
       <div className={`app-body ${subItems ? "has-sidenav" : ""}`}>
-        {subItems && <Sidenav items={subItems} collapsed={!sidenavOpen} />}
+        {subItems && <Sidenav items={subItems} collapsed={!sidenavOpen} onToggle={() => setSidenavOpen((prev) => !prev)} />}
         <div className="app-content">
           <main className="app-main">
             <Outlet />

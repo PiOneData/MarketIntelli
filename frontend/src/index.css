@@ -325,6 +325,18 @@ p {
   padding: var(--space-6) var(--space-5);
 }
 
+.sidenav-inner > .menu-toggle {
+  margin-bottom: var(--space-4);
+  border-left: none;
+  width: 2rem;
+}
+
+.sidenav-external-icon {
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
 .sidenav ul {
   display: flex;
   flex-direction: column;
@@ -332,7 +344,9 @@ p {
 }
 
 .sidenav button {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   width: 100%;
   text-align: left;
   padding: var(--space-2) var(--space-3);
@@ -685,7 +699,29 @@ p {
 }
 
 /* ==========================================================================
-   12. PAGE — India Data Center Alert Service
+   11b. PAGE — Power Data
+   ========================================================================== */
+
+.power-data-page section {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease;
+}
+
+.power-data-page section:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.power-data-page section h3 {
+  color: var(--color-primary-dark);
+}
+
+/* ==========================================================================
+   12. PAGE — India Data Center Registry
    ========================================================================== */
 
 .india-dc-page {
@@ -1367,6 +1403,15 @@ p {
 
 .geo-layer-tab svg {
   flex-shrink: 0;
+}
+
+a.geo-layer-tab {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+a.geo-layer-tab:hover {
+  color: var(--color-primary);
 }
 
 .geo-layer-placeholder {

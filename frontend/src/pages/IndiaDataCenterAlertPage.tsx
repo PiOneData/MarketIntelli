@@ -1,5 +1,6 @@
 import { useState } from "react";
 import DataCenterMap from "../components/DataCenterMap";
+import SubstationView from "../components/SubstationView";
 
 interface DataCenter {
   id: string;
@@ -902,7 +903,7 @@ function IndiaDataCenterAlertPage() {
   const [dataCenters, setDataCenters] = useState<DataCenter[]>(INITIAL_DATA);
   const [form, setForm] = useState(EMPTY_FORM);
   const [filters, setFilters] = useState({ state: "", city: "", company: "" });
-  const [activeTab, setActiveTab] = useState<"registry" | "map">("registry");
+  const [activeTab, setActiveTab] = useState<"registry" | "map" | "substations">("registry");
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -967,7 +968,7 @@ function IndiaDataCenterAlertPage() {
   return (
     <div className="india-dc-page">
       <div className="india-dc-header">
-        <h2>India Data Center Alert Service</h2>
+        <h2>India Data Center Registry</h2>
         <p>Track and monitor data center developments across India. Get real-time alerts on new facilities, expansions, and power capacity changes.</p>
       </div>
 
@@ -991,12 +992,24 @@ function IndiaDataCenterAlertPage() {
           </svg>
           Map View
         </button>
+        <button
+          className={`india-dc-tab ${activeTab === "substations" ? "india-dc-tab--active" : ""}`}
+          onClick={() => setActiveTab("substations")}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          </svg>
+          Substation Map
+        </button>
       </div>
 
       {/* Map View */}
       {activeTab === "map" && (
         <DataCenterMap dataCenters={dataCenters} />
       )}
+
+      {/* Substation Map View */}
+      {activeTab === "substations" && <SubstationView />}
 
       {/* Registry View */}
       {activeTab === "registry" && <>
