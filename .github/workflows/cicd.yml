@@ -1,0 +1,152 @@
+name: Deploy MarketIntelli (Solar Intelligence Platform)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # ---------------- BUILD + DEPLOY ----------------
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write   # ⭐ required for GHCR
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # Login to GHCR using PAT
+      - name: Login to GHCR
+        run: |
+          echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} --password-stdin
+
+      # Build & Push Backend Docker image
+      - name: Build and Push Backend Image
+        run: |
+          USER=$(echo "${{ secrets.GHCR_USERNAME }}" | tr '[:upper:]' '[:lower:]')
+          BACKEND_IMAGE=ghcr.io/$USER/marketintelli-backend:latest
+          docker build -t $BACKEND_IMAGE ./backend
+          docker push $BACKEND_IMAGE
+
+      # Build & Push Frontend Docker image
+      - name: Build and Push Frontend Image
+        run: |
+          USER=$(echo "${{ secrets.GHCR_USERNAME }}" | tr '[:upper:]' '[:lower:]')
+          FRONTEND_IMAGE=ghcr.io/$USER/marketintelli-frontend:latest
+          docker build -t $FRONTEND_IMAGE ./frontend
+          docker push $FRONTEND_IMAGE
+
+      # Deploy to Server via SSH
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+
+            USER=$(echo "${{ secrets.GHCR_USERNAME }}" | tr '[:upper:]' '[:lower:]')
+            BACKEND_IMAGE=ghcr.io/$USER/marketintelli-backend:latest
+            FRONTEND_IMAGE=ghcr.io/$USER/marketintelli-frontend:latest
+            
+            BACKEND_CONTAINER=marketintelli_backend
+            FRONTEND_CONTAINER=marketintelli_frontend
+            DB_CONTAINER=marketintelli_db
+            REDIS_CONTAINER=marketintelli_redis
+            CELERY_CONTAINER=marketintelli_celery
+            NETWORK=marketintelli_network
+
+            echo "Login to GHCR"
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ secrets.GHCR_USERNAME }} --password-stdin
+
+            echo "Create network & volumes"
+            docker network create $NETWORK || true
+            docker volume create marketintelli_pgdata || true
+
+            echo "Pull latest images"
+            docker pull $BACKEND_IMAGE
+            docker pull $FRONTEND_IMAGE
+
+            echo "Ensure PostgreSQL exists"
+            if ! docker ps -a --format '{{.Names}}' | grep -q "^${DB_CONTAINER}$"; then
+              docker run -d \
+                --name $DB_CONTAINER \
+                --network $NETWORK \
+                -e POSTGRES_USER=postgres \
+                -e POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }} \
+                -e POSTGRES_DB=marketintelli \
+                -v marketintelli_pgdata:/var/lib/postgresql/data \
+                -p 9003:5432 \
+                --restart unless-stopped \
+                postgis/postgis:16-3.4
+            fi
+
+            echo "Ensure Redis exists"
+            if ! docker ps -a --format '{{.Names}}' | grep -q "^${REDIS_CONTAINER}$"; then
+              docker run -d \
+                --name $REDIS_CONTAINER \
+                --network $NETWORK \
+                -p 9004:6379 \
+                --restart unless-stopped \
+                redis:7-alpine
+            fi
+
+            echo "Wait for services ready"
+            until docker exec $DB_CONTAINER pg_isready -U postgres > /dev/null 2>&1; do
+              sleep 2
+            done
+            until docker exec $REDIS_CONTAINER redis-cli ping > /dev/null 2>&1; do
+              sleep 2
+            done
+
+            echo "Restart Backend container"
+            docker rm -f $BACKEND_CONTAINER 2>/dev/null || true
+            docker run -d \
+              --name $BACKEND_CONTAINER \
+              --network $NETWORK \
+              -p 9001:8000 \
+              -e DATABASE_URL="postgresql+asyncpg://postgres:${{ secrets.DB_PASSWORD }}@$DB_CONTAINER:5432/marketintelli" \
+              -e REDIS_URL="redis://$REDIS_CONTAINER:6379/0" \
+              -e CELERY_BROKER_URL="redis://$REDIS_CONTAINER:6379/1" \
+              -e CELERY_RESULT_BACKEND="redis://$REDIS_CONTAINER:6379/2" \
+              -e SECRET_KEY="${{ secrets.APP_SECRET_KEY }}" \
+              --restart unless-stopped \
+              $BACKEND_IMAGE
+
+            echo "Restart Celery Worker"
+            docker rm -f $CELERY_CONTAINER 2>/dev/null || true
+            docker run -d \
+              --name $CELERY_CONTAINER \
+              --network $NETWORK \
+              -e DATABASE_URL="postgresql+asyncpg://postgres:${{ secrets.DB_PASSWORD }}@$DB_CONTAINER:5432/marketintelli" \
+              -e REDIS_URL="redis://$REDIS_CONTAINER:6379/0" \
+              -e CELERY_BROKER_URL="redis://$REDIS_CONTAINER:6379/1" \
+              -e CELERY_RESULT_BACKEND="redis://$REDIS_CONTAINER:6379/2" \
+              --restart unless-stopped \
+              $BACKEND_IMAGE \
+              celery -A app.core.celery_app worker --loglevel=info
+
+            echo "Restart Frontend container"
+            docker rm -f $FRONTEND_CONTAINER 2>/dev/null || true
+            docker run -d \
+              --name $FRONTEND_CONTAINER \
+              --network $NETWORK \
+              -p 9002:3000 \
+              --restart unless-stopped \
+              $FRONTEND_IMAGE
+
+            echo "Wait for services to start"
+            sleep 30
+
+            echo "Verify deployment"
+            curl -f http://localhost:9002/ || exit 1
+            curl -f http://localhost:9001/docs || exit 1
+
+            echo "Clean up old images"
+            docker image prune -f
+
+            echo "MarketIntelli deployment successful 🎉"

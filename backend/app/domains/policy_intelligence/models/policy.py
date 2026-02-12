@@ -15,8 +15,8 @@ class Policy(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4, init=False)
     title: Mapped[str] = mapped_column(String(500))
     authority: Mapped[str] = mapped_column(String(255))  # MNRE, SECI, SERC, etc.
-    state: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)
     category: Mapped[str] = mapped_column(String(100))  # regulation, guideline, amendment
+    state: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)
     summary: Mapped[str] = mapped_column(Text, default="")
     effective_date: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, default=None
@@ -36,8 +36,8 @@ class TariffRecord(Base):
     state: Mapped[str] = mapped_column(String(255))
     tariff_type: Mapped[str] = mapped_column(String(100))  # feed_in, auction, ppa
     rate_per_kwh: Mapped[float] = mapped_column(Float)
-    currency: Mapped[str] = mapped_column(String(10), default="INR")
     effective_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    currency: Mapped[str] = mapped_column(String(10), default="INR")
     expiry_date: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, default=None
     )
