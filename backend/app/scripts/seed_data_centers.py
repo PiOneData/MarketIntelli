@@ -1,20 +1,22 @@
 """
-Seed script to migrate the 76 hardcoded data center entries into the database.
+Seed script to import data center entries from dc_118.csv into PostgreSQL.
 
 Usage:
     python -m app.scripts.seed_data_centers
 
-This script creates DataCenterCompany records (one per unique company name)
-and DataCenterFacility records for each facility, linking them via company_id.
+This script:
+1. Reads dc_118.csv
+2. Creates DataCenterCompany records (one per unique company name)
+3. Creates DataCenterFacility records for each facility, linking them via company_id
 """
 
 import asyncio
-from datetime import datetime
 import csv
 import os
+import re
+from datetime import datetime
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import async_session_factory
 from app.domains.data_center_intelligence.models.data_center import (
@@ -22,59 +24,116 @@ from app.domains.data_center_intelligence.models.data_center import (
     DataCenterFacility,
 )
 
-# CSV file path
-CSV_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "dc_118.csv")
+# CSV file path - check multiple locations
+_SCRIPT_DIR = os.path.dirname(__file__)
+_CANDIDATES = [
+    os.path.join(_SCRIPT_DIR, "..", "..", "..", "dc_118.csv"),  # project root
+    os.path.join(_SCRIPT_DIR, "..", "..", "dc_118.csv"),        # backend/
+    "/app/dc_118.csv",                                          # Docker mount
+]
+CSV_PATH = next((p for p in _CANDIDATES if os.path.exists(p)), _CANDIDATES[0])
 
-def load_csv_data():
-    data = []
-    with open(CSV_PATH, encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            # Clean up and handle nulls
-            for k, v in row.items():
-                if v is not None:
-                    v = v.strip()
-                row[k] = v if v else None
-            data.append(row)
-    return data
-
-# Map company names to parent companies for enrichment
+# Map known company names to parent companies
 COMPANY_PARENTS = {
     "AdaniConneX": "Adani Group",
-    "Reliance Industries": "Reliance Industries Ltd",
-    "Google (with AdaniConneX & Airtel)": None,
-    "NTT Global Data Centers": "NTT Group",
-    "NTT DATA & Neysa Networks": "NTT Group",
-    "CtrlS Datacenters": None,
-    "Yotta Infrastructure": "Hiranandani Group",
-    "Tulip Data City": None,
-    "Nxtra (Airtel)": "Bharti Airtel",
+    "Sify Technologies Ltd": "Sify Technologies",
     "STT GDC India": "ST Telemedia",
-    "Equinix / GPX": "Equinix",
-    "Lumina CloudInfra (Blackstone)": "Blackstone",
-    "Digital Edge (Stonepeak) / NIIF": "Stonepeak / NIIF",
-    "Sify Infinit Spaces": "Sify Technologies",
-    "Sify Technologies": "Sify Technologies",
-    "RackBank": None,
-    "Anant Raj": "Anant Raj Ltd",
-    "Colt DCS & RMZ Digital": "Colt Technology Services",
-    "Lodha Developers": "Macrotech Developers",
-    "AWS India (Amazon)": "Amazon",
-    "Microsoft Azure": "Microsoft",
-    "Reliance Jio": "Reliance Industries Ltd",
+    "NTT DATA, Inc.": "NTT Group",
+    "Yotta Data Services": "Hiranandani Group",
+    "Yotta": "Hiranandani Group",
+    "Nxtra by Airtel": "Bharti Airtel",
+    "CtrlS Datacenters Ltd": None,
+    "CtrlS Datacenters Pvt Ltd": None,
     "Tata Communications": "Tata Group",
-    "Hypervault AI (Tata Group)": "Tata Group",
+    "Equinix": "Equinix Inc",
+    "Microsoft": "Microsoft Corporation",
+    "Amazon AWS": "Amazon",
+    "Reliance Data Center": "Reliance Industries Ltd",
+    "Iron Mountain Data Centers": "Iron Mountain Inc",
+    "CapitaLand Data Centre": "CapitaLand Investment",
+    "Digital Realty": "Digital Realty Trust",
+    "L&T Cloudfiniti": "Larsen & Toubro",
+    "Anant Raj Cloud": "Anant Raj Ltd",
+    "BSNL IDC": "BSNL",
+    "RailTel Corporation of India Ltd.": "Indian Railways",
+    "ESDS Software Solution Pvt. Ltd.": None,
+    "Rackbank Datacenters Pvt. Ltd.": None,
+    "Colt Technology Services": "Fidelity Investments",
+    "Pi Datacenters": None,
 }
 
 
-def _parse_status(status: str) -> str:
-    """Normalize status to lowercase with underscores."""
-    return status.lower().replace(" ", "_")
+def _parse_power_mw(val: str | None) -> float | None:
+    """Parse power value from CSV (e.g. '1.2 MW', '16 MW', 'Not Listed')."""
+    if not val or val.strip().lower() in ("not listed", "not publicly disclosed", ""):
+        return None
+    match = re.search(r"([\d.]+)", val.replace(",", ""))
+    if match:
+        try:
+            return float(match.group(1))
+        except ValueError:
+            return None
+    return None
 
+
+def _parse_whitespace(val: str | None) -> float | None:
+    """Parse whitespace/size field to approximate sq ft."""
+    if not val or val.strip().lower() in ("not listed", ""):
+        return None
+    val = val.strip()
+    if "acre" in val.lower():
+        match = re.search(r"([\d,.]+)", val.replace(",", ""))
+        if match:
+            return round(float(match.group(1)) * 43560, 2)
+    if "sq.m" in val.lower() or "sq. m" in val.lower():
+        match = re.search(r"([\d,.]+)", val.replace(",", ""))
+        if match:
+            return round(float(match.group(1)) * 10.764, 2)
+    if "sq" in val.lower():
+        match = re.search(r"([\d,.]+)", val.replace(",", ""))
+        if match:
+            return float(match.group(1).replace(",", ""))
+    if "rack" in val.lower():
+        match = re.search(r"([\d,.]+)", val.replace(",", ""))
+        if match:
+            return float(match.group(1).replace(",", ""))
+    return None
+
+
+def _parse_tier(val: str | None) -> str | None:
+    """Normalize tier design field."""
+    if not val or val.strip().lower() in ("not listed", ""):
+        return None
+    val = val.strip()
+    val = (
+        val.replace("Tier 4", "Tier IV")
+        .replace("Tier 3", "Tier III")
+        .replace("Tier 2", "Tier II")
+    )
+    return val
+
+
+def load_csv_data() -> list[dict]:
+    """Load and parse the CSV file, handling multiline fields."""
+    rows = []
+    with open(CSV_PATH, encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            cleaned = {}
+            for k, v in row.items():
+                if k and v:
+                    v = " ".join(v.split())  # collapse multiline into single line
+                    cleaned[k.strip()] = v.strip() if v.strip() else None
+                elif k:
+                    cleaned[k.strip()] = None
+            rows.append(cleaned)
+    return rows
 
 
 async def seed_data_centers() -> None:
+    """Seed data centers from CSV into the database."""
     csv_data = load_csv_data()
+
     async with async_session_factory() as session:
         # Check if data already exists
         existing = await session.execute(select(DataCenterCompany).limit(1))
@@ -83,52 +142,58 @@ async def seed_data_centers() -> None:
             return
 
         # Create companies
-        company_map = {}
-        unique_companies = set(row["Company Name"] for row in csv_data if row["Company Name"])
-        for company_name in sorted(unique_companies):
-            company = DataCenterCompany(
-                name=company_name,
-                parent_company=None,
-            )
-            session.add(company)
-            company_map[company_name] = company
+        company_map: dict[str, DataCenterCompany] = {}
+        for row in csv_data:
+            name = row.get("Company Name")
+            if name and name not in company_map:
+                website = row.get("URL to Website")
+                parent = COMPANY_PARENTS.get(name)
+                company = DataCenterCompany(
+                    name=name,
+                    parent_company=parent,
+                    website=website,
+                )
+                session.add(company)
+                company_map[name] = company
 
         await session.flush()
 
         # Create facilities
         for row in csv_data:
-            company_name = row["Company Name"]
+            company_name = row.get("Company Name")
             company = company_map.get(company_name)
             if not company:
                 continue
-            # Parse date if possible
-            date_added = None
-            # No date in CSV, so use today
-            try:
-                date_added = datetime.today()
-            except Exception:
-                date_added = None
-            # Parse numeric fields
-            def parse_float(val):
-                try:
-                    return float(val.replace("MW", "").replace(",", "").strip()) if val else None
-                except Exception:
-                    return None
+
+            city = row.get("City") or row.get("Market") or "Unknown"
+            state = row.get("State") or "Unknown"
+            state = state.strip().strip(",").strip()
+
+            address = row.get("Address")
+            postal = row.get("Postal")
+            location_parts = []
+            if address:
+                location_parts.append(address)
+            if postal:
+                location_parts.append(f"Postal: {postal}")
+            location_detail = ", ".join(location_parts) if location_parts else None
+
             facility = DataCenterFacility(
                 company_id=company.id,
-                name=row.get("Data Center Name"),
-                city=row.get("City"),
-                state=row.get("State"),
-                location_detail=row.get("Address"),
-                power_capacity_mw=parse_float(row.get("Power (MW)")),
-                size_sqft=None,  # Not directly mapped, could parse from Whitespace
-                status=None,  # Not directly mapped, could use Tier Design or custom logic
-                date_added=date_added,
+                name=row.get("Data Center Name") or "Unknown",
+                city=city,
+                state=state,
+                location_detail=location_detail,
+                power_capacity_mw=_parse_power_mw(row.get("Power (MW)")) or 0.0,
+                size_sqft=_parse_whitespace(row.get("Whitespace")) or 0.0,
+                status="operational",
+                tier_level=_parse_tier(row.get("Tier Design")),
+                date_added=datetime.now(),
             )
             session.add(facility)
 
         await session.commit()
-        print(f"Seeded {len(unique_companies)} companies and {len(csv_data)} facilities.")
+        print(f"Seeded {len(company_map)} companies and {len(csv_data)} facilities.")
 
 
 def main() -> None:
