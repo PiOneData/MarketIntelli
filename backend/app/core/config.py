@@ -9,7 +9,8 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
 
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/marketintelli"
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:marketintelli123@20.40.61.170:9003/marketintelli"
+    SYNC_DATABASE_URL: str = "postgresql+psycopg2://postgres:marketintelli123@20.40.61.170:9003/marketintelli"
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"

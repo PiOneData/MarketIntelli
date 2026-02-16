@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
 
@@ -6,12 +7,33 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.api.v1.router import api_router
+from app.db.base import Base
 from app.db.session import engine
+
+# Import all models so they are registered with Base.metadata
+from app.domains.dashboard.models.market_overview import InstalledCapacity, FinancialInsight  # noqa: F401
+from app.domains.data_center_intelligence.models.data_center import DataCenterCompany, DataCenterFacility  # noqa: F401
+from app.domains.project_intelligence.models.projects import Developer, SolarProject, Tender  # noqa: F401
+from app.domains.policy_intelligence.models.policy import Policy, TariffRecord, Subsidy  # noqa: F401
+from app.domains.alerts.models.alerts import Alert, Watchlist, Notification  # noqa: F401
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    # Startup
+    # Startup: create tables if they don't exist
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    logger.info("Database tables verified/created.")
+
+    # Seed data centers from CSV if table is empty
+    try:
+        from app.scripts.seed_data_centers import seed_data_centers
+        await seed_data_centers()
+    except Exception as e:
+        logger.warning("CSV seed skipped: %s", e)
+
     yield
     # Shutdown
     await engine.dispose()
