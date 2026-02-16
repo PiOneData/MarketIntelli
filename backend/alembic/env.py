@@ -14,6 +14,7 @@ from app.domains.geo_analytics.models.spatial import SolarPotentialZone, GridInf
 from app.domains.project_intelligence.models.projects import Developer, SolarProject, Tender  # noqa: F401
 from app.domains.policy_intelligence.models.policy import Policy, TariffRecord, Subsidy  # noqa: F401
 from app.domains.alerts.models.alerts import Alert, Watchlist, Notification  # noqa: F401
+from app.domains.data_center_intelligence.models.data_center import DataCenterCompany, DataCenterFacility  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
