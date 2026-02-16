@@ -20,7 +20,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     # CORS
-    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://20.40.61.170:9002",
+        "http://20.40.61.170:9001",
+        "https://refexmi.pionedata.com"
+    ]
 
     # Celery
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
