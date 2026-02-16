@@ -48,8 +48,8 @@ class DataCenterFacility(Base):
     longitude: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
     power_capacity_mw: Mapped[float] = mapped_column(Float, default=0.0)
     it_load_mw: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
+    status: Mapped[str] = mapped_column(String(50), default="unknown")  # planned, under_construction, operational
     size_sqft: Mapped[float] = mapped_column(Float, default=0.0)
-    status: Mapped[str] = mapped_column(String(50))  # planned, under_construction, operational
     tier_level: Mapped[str | None] = mapped_column(String(20), nullable=True, default=None)
     pue_target: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
     pue_actual: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
