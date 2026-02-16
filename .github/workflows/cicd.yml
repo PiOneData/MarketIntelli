@@ -77,7 +77,7 @@ jobs:
                 --name $DB_CONTAINER \
                 --network $NETWORK \
                 -e POSTGRES_USER=postgres \
-                -e POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }} \
+                -e POSTGRES_PASSWORD=marketintelli123 \
                 -e POSTGRES_DB=marketintelli \
                 -v marketintelli_pgdata:/var/lib/postgresql/data \
                 -p 9003:5432 \
@@ -109,7 +109,7 @@ jobs:
               --name $BACKEND_CONTAINER \
               --network $NETWORK \
               -p 9001:8000 \
-              -e DATABASE_URL="postgresql+asyncpg://postgres:${{ secrets.DB_PASSWORD }}@$DB_CONTAINER:5432/marketintelli" \
+              -e DATABASE_URL="postgresql+asyncpg://postgres:marketintelli123@$DB_CONTAINER:5432/marketintelli" \
               -e REDIS_URL="redis://$REDIS_CONTAINER:6379/0" \
               -e CELERY_BROKER_URL="redis://$REDIS_CONTAINER:6379/1" \
               -e CELERY_RESULT_BACKEND="redis://$REDIS_CONTAINER:6379/2" \
@@ -122,7 +122,7 @@ jobs:
             docker run -d \
               --name $CELERY_CONTAINER \
               --network $NETWORK \
-              -e DATABASE_URL="postgresql+asyncpg://postgres:${{ secrets.DB_PASSWORD }}@$DB_CONTAINER:5432/marketintelli" \
+              -e DATABASE_URL="postgresql+asyncpg://postgres:marketintelli123@$DB_CONTAINER:5432/marketintelli" \
               -e REDIS_URL="redis://$REDIS_CONTAINER:6379/0" \
               -e CELERY_BROKER_URL="redis://$REDIS_CONTAINER:6379/1" \
               -e CELERY_RESULT_BACKEND="redis://$REDIS_CONTAINER:6379/2" \
