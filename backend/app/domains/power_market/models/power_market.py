@@ -101,9 +101,9 @@ class PowerConsumption(Base):
     state: Mapped[str] = mapped_column(String(255))
     sector: Mapped[str] = mapped_column(String(100))  # domestic, industrial, commercial, agriculture
     consumption_mu: Mapped[float] = mapped_column(Float)  # Million Units
-    peak_demand_mw: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
     data_year: Mapped[int] = mapped_column(Integer)
     data_month: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    peak_demand_mw: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
     source: Mapped[str] = mapped_column(String(500), default="")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), init=False
