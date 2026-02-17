@@ -34,6 +34,9 @@ class TariffRecord(Base):
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4, init=False)
     state: Mapped[str] = mapped_column(String(255))
+    energy_source: Mapped[str] = mapped_column(
+        String(100), default="solar"
+    )  # solar, wind, hybrid, biomass, small_hydro
     tariff_type: Mapped[str] = mapped_column(String(100))  # feed_in, auction, ppa
     rate_per_kwh: Mapped[float] = mapped_column(Float)
     effective_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))

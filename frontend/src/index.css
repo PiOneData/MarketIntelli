@@ -1922,7 +1922,551 @@ a.geo-layer-tab:hover {
 }
 
 /* ==========================================================================
-   15. RESPONSIVE DESIGN
+   15. POWER MARKET — Power Data Intelligence Page
+   ========================================================================== */
+
+.pm-page {
+  padding: var(--space-2) 0;
+}
+
+.pm-header {
+  margin-bottom: var(--space-6);
+}
+
+.pm-header h2 {
+  color: var(--color-gray-900);
+  margin-bottom: var(--space-2);
+}
+
+.pm-header p {
+  color: var(--color-gray-500);
+  font-size: var(--font-size-sm);
+}
+
+/* Tabs */
+.pm-tabs {
+  display: flex;
+  gap: var(--space-1);
+  margin-bottom: var(--space-6);
+  border-bottom: 2px solid var(--color-gray-200);
+  padding-bottom: 0;
+  overflow-x: auto;
+}
+
+.pm-tab {
+  display: flex;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-gray-500);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.pm-tab:hover {
+  color: var(--color-gray-700);
+}
+
+.pm-tab--active {
+  color: var(--color-primary-dark);
+  border-bottom-color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* Sections */
+.pm-section {
+  animation: pmFadeIn 0.25s ease;
+}
+
+@keyframes pmFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pm-section h3 {
+  color: var(--color-primary-dark);
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+/* Stats Grid */
+.pm-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.pm-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border-top: 3px solid var(--color-primary);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pm-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.pm-stat-card--accent {
+  border-top-color: var(--color-accent);
+  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 50%);
+}
+
+.pm-stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-500);
+  font-weight: 500;
+}
+
+.pm-stat-value {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-gray-900);
+}
+
+/* Filters */
+.pm-filters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.pm-filters select {
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-family: inherit;
+  color: var(--color-gray-800);
+  background: var(--color-white);
+  min-width: 160px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.pm-filters select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+}
+
+.pm-filter-count {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-400);
+  margin-left: auto;
+}
+
+/* Tables */
+.pm-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.pm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.pm-table thead {
+  background-color: var(--color-gray-50);
+}
+
+.pm-table th {
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  font-weight: 600;
+  color: var(--color-gray-700);
+  border-bottom: 2px solid var(--color-gray-200);
+  white-space: nowrap;
+}
+
+.pm-table td {
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-gray-600);
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.pm-table tbody tr:hover {
+  background-color: var(--color-gray-50);
+}
+
+.pm-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--color-gray-800);
+}
+
+.pm-dev {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-xs);
+}
+
+.pm-corridor-name {
+  font-weight: 600;
+  color: var(--color-gray-800);
+  max-width: 280px;
+}
+
+.pm-rate {
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.pm-savings {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+/* Source Badges */
+.pm-source-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  border-radius: 9999px;
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+
+.pm-source-badge--solar {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.pm-source-badge--wind {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.pm-source-badge--small_hydro {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.pm-source-badge--biomass {
+  background-color: #fce7f3;
+  color: #9d174d;
+}
+
+.pm-source-badge--thermal {
+  background-color: #fde8e8;
+  color: #991b1b;
+}
+
+.pm-source-badge--hydro {
+  background-color: #e0f2fe;
+  color: #075985;
+}
+
+.pm-source-badge--nuclear {
+  background-color: #ede9fe;
+  color: #5b21b6;
+}
+
+.pm-source-badge--hybrid,
+.pm-source-badge--solar_wind_hybrid {
+  background-color: #ecfdf5;
+  color: #047857;
+}
+
+/* Sector Badges */
+.pm-sector-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  border-radius: 9999px;
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+
+.pm-sector-badge--industrial {
+  background-color: #e0e7ff;
+  color: #3730a3;
+}
+
+.pm-sector-badge--domestic {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.pm-sector-badge--commercial {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.pm-sector-badge--agriculture {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+/* Status Badges */
+.pm-status {
+  display: inline-block;
+  padding: 0.125rem 0.625rem;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  border-radius: 9999px;
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+
+.pm-status--operational {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.pm-status--under_construction {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.pm-status--planned {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+/* Cards Grid */
+.pm-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: var(--space-4);
+}
+
+/* Investment Cards */
+.pm-invest-card {
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease;
+}
+
+.pm-invest-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.pm-invest-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.pm-invest-category {
+  display: inline-block;
+  padding: 0.125rem 0.625rem;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  border-radius: 9999px;
+  text-transform: capitalize;
+}
+
+.pm-invest-category--fdi {
+  background-color: #ede9fe;
+  color: #5b21b6;
+}
+
+.pm-invest-category--project_finance {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.pm-invest-category--green_bond {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.pm-invest-category--subsidy {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.pm-invest-category--tax_incentive {
+  background-color: #fce7f3;
+  color: #9d174d;
+}
+
+.pm-invest-institution {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-gray-500);
+}
+
+.pm-invest-card h4 {
+  color: var(--color-gray-900);
+  font-size: var(--font-size-base);
+  margin-bottom: var(--space-2);
+  line-height: 1.4;
+}
+
+.pm-invest-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+  line-height: 1.5;
+  margin-bottom: var(--space-4);
+}
+
+.pm-invest-details {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+.pm-invest-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pm-invest-detail-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-500);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.pm-invest-detail-value {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-800);
+  font-weight: 600;
+}
+
+.pm-invest-eligibility {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-gray-100);
+}
+
+.pm-invest-eligibility p {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+  line-height: 1.5;
+  margin-top: var(--space-1);
+}
+
+/* Repository Cards */
+.pm-repo-card {
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.pm-repo-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.pm-repo-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.pm-repo-category {
+  display: inline-block;
+  padding: 0.125rem 0.625rem;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  border-radius: 9999px;
+  background-color: rgba(15, 118, 110, 0.1);
+  color: var(--color-primary);
+  text-transform: capitalize;
+}
+
+.pm-repo-type {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-gray-400);
+  text-transform: uppercase;
+}
+
+.pm-repo-card h4 {
+  color: var(--color-gray-900);
+  font-size: var(--font-size-base);
+  margin-bottom: var(--space-1);
+}
+
+.pm-repo-org {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: var(--space-2);
+}
+
+.pm-repo-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+  line-height: 1.5;
+  margin-bottom: var(--space-4);
+  flex: 1;
+}
+
+.pm-repo-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-gray-100);
+}
+
+.pm-repo-updated {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-400);
+}
+
+.pm-repo-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.pm-repo-link:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   16. RESPONSIVE DESIGN
    ========================================================================== */
 
 @media (max-width: 768px) {
@@ -2077,6 +2621,39 @@ a.geo-layer-tab:hover {
     font-size: var(--font-size-xs);
     white-space: nowrap;
   }
+
+  /* Power Market responsive */
+  .pm-tabs {
+    overflow-x: auto;
+    gap: 0;
+  }
+
+  .pm-tab {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-size-xs);
+  }
+
+  .pm-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .pm-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pm-filter-count {
+    margin-left: 0;
+  }
+
+  .pm-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pm-invest-details {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
 }
 
 @media (max-width: 480px) {
@@ -2138,5 +2715,9 @@ a.geo-layer-tab:hover {
     position: static;
     max-width: 100%;
     margin: var(--space-3);
+  }
+
+  .pm-stats-grid {
+    grid-template-columns: 1fr;
   }
 }

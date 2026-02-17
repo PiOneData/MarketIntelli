@@ -39,6 +39,16 @@ const navItems: NavItem[] = [
   {
     path: "/power-data",
     label: "Power Data",
+    children: [
+      { id: "overview", label: "Overview" },
+      { id: "renewable-capacity", label: "Renewable Capacity" },
+      { id: "power-generation", label: "Power Generation" },
+      { id: "transmission", label: "Transmission" },
+      { id: "consumption", label: "Consumption" },
+      { id: "re-tariffs", label: "RE Tariffs" },
+      { id: "investment-guidelines", label: "Investment & Finance" },
+      { id: "data-repository", label: "Data Sources" },
+    ],
   },
   {
     path: "/policy",
