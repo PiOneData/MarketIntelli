@@ -153,13 +153,13 @@ class InvestmentGuideline(Base):
     title: Mapped[str] = mapped_column(String(500))
     category: Mapped[str] = mapped_column(String(100))  # fdi, project_finance, green_bond, subsidy, tax_incentive
     institution: Mapped[str] = mapped_column(String(255))  # RBI, SBI, PNB, IREDA, etc.
+    data_year: Mapped[int] = mapped_column(Integer)
     description: Mapped[str] = mapped_column(Text, default="")
     interest_rate_range: Mapped[str | None] = mapped_column(String(100), nullable=True, default=None)
     max_loan_amount: Mapped[str | None] = mapped_column(String(100), nullable=True, default=None)
     tenure_years: Mapped[str | None] = mapped_column(String(50), nullable=True, default=None)
     eligibility: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
     document_url: Mapped[str | None] = mapped_column(String(1000), nullable=True, default=None)
-    data_year: Mapped[int] = mapped_column(Integer)
     source: Mapped[str] = mapped_column(String(500), default="")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), init=False
