@@ -16,6 +16,10 @@ from app.domains.data_center_intelligence.models.data_center import DataCenterCo
 from app.domains.project_intelligence.models.projects import Developer, SolarProject, Tender  # noqa: F401
 from app.domains.policy_intelligence.models.policy import Policy, TariffRecord, Subsidy  # noqa: F401
 from app.domains.alerts.models.alerts import Alert, Watchlist, Notification  # noqa: F401
+from app.domains.power_market.models.power_market import (  # noqa: F401
+    RenewableCapacity, PowerGeneration, TransmissionLine,
+    PowerConsumption, RETariff, InvestmentGuideline, DataRepository,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +37,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await seed_data_centers()
     except Exception as e:
         logger.warning("CSV seed skipped: %s", e)
+
+    # Seed power market data if tables are empty
+    try:
+        from app.scripts.seed_power_market import seed_power_market
+        await seed_power_market()
+    except Exception as e:
+        logger.warning("Power market seed skipped: %s", e)
 
     yield
     # Shutdown

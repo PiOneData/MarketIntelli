@@ -42,7 +42,8 @@ async def list_tariffs(
     tariffs = await service.list_tariffs(state, tariff_type)
     return [
         TariffRecordRead(
-            id=t.id, state=t.state, tariff_type=t.tariff_type,
+            id=t.id, state=t.state, energy_source=t.energy_source,
+            tariff_type=t.tariff_type,
             rate_per_kwh=t.rate_per_kwh, currency=t.currency,
             effective_date=t.effective_date, expiry_date=t.expiry_date,
             source=t.source,

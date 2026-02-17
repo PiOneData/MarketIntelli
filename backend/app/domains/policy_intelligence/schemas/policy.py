@@ -18,6 +18,7 @@ class PolicyRead(BaseModel):
 class TariffRecordRead(BaseModel):
     id: UUID
     state: str
+    energy_source: str = "solar"
     tariff_type: str
     rate_per_kwh: float
     currency: str
