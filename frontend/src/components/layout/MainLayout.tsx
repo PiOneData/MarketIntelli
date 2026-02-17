@@ -20,19 +20,19 @@ const navItems: NavItem[] = [
     path: "/geo-analytics",
     label: "Geo Analytics",
     children: [
-      { id: "solar-potential-mapping", label: "Solar Potential Mapping" },
+      { id: "solar-potential-mapping", label: "Solar Potential Mapping", path: "/geo-analytics/solar-potential-mapping" },
       { id: "wind-site-analyser", label: "Wind Site Analyser" },
-      { id: "disaster-risk-overlay", label: "Disaster Risk Overlay" },
-      { id: "land-availability", label: "Land Availability" },
+      { id: "disaster-risk-overlay", label: "Disaster Risk Overlay", path: "/geo-analytics/disaster-risk-overlay" },
+      { id: "land-availability", label: "Land Availability", path: "/geo-analytics/land-availability" },
     ],
   },
   {
     path: "/projects",
     label: "Projects",
     children: [
-      { id: "project-directory", label: "Project Directory" },
-      { id: "developer-profiles", label: "Developer Profiles" },
-      { id: "tender-intelligence", label: "Tender Intelligence" },
+      { id: "project-directory", label: "Project Directory", path: "/projects/project-directory" },
+      { id: "developer-profiles", label: "Developer Profiles", path: "/projects/developer-profiles" },
+      { id: "tender-intelligence", label: "Tender Intelligence", path: "/projects/tender-intelligence" },
       { id: "india-data-center-registry", label: "India Data Center Registry", path: "/projects/india-data-center-registry" },
     ],
   },
@@ -40,33 +40,33 @@ const navItems: NavItem[] = [
     path: "/power-data",
     label: "Power Data",
     children: [
-      { id: "overview", label: "Overview" },
-      { id: "renewable-capacity", label: "Renewable Capacity" },
-      { id: "power-generation", label: "Power Generation" },
-      { id: "transmission", label: "Transmission" },
-      { id: "consumption", label: "Consumption" },
-      { id: "re-tariffs", label: "RE Tariffs" },
-      { id: "investment-guidelines", label: "Investment & Finance" },
-      { id: "data-repository", label: "Data Sources" },
+      { id: "overview", label: "Overview", path: "/power-data/overview" },
+      { id: "renewable-capacity", label: "Renewable Capacity", path: "/power-data/renewable-capacity" },
+      { id: "power-generation", label: "Power Generation", path: "/power-data/power-generation" },
+      { id: "transmission", label: "Transmission", path: "/power-data/transmission" },
+      { id: "consumption", label: "Consumption", path: "/power-data/consumption" },
+      { id: "re-tariffs", label: "RE Tariffs", path: "/power-data/re-tariffs" },
+      { id: "investment-guidelines", label: "Investment & Finance", path: "/power-data/investment-guidelines" },
+      { id: "data-repository", label: "Data Sources", path: "/power-data/data-repository" },
     ],
   },
   {
     path: "/policy",
     label: "Policy",
     children: [
-      { id: "policy-repository", label: "Policy Repository" },
-      { id: "tariff-tracker", label: "Tariff Tracker" },
-      { id: "compliance-alerts", label: "Compliance Alerts" },
-      { id: "subsidy-monitor", label: "Subsidy Monitor" },
+      { id: "policy-repository", label: "Policy Repository", path: "/policy/policy-repository" },
+      { id: "tariff-tracker", label: "Tariff Tracker", path: "/policy/tariff-tracker" },
+      { id: "compliance-alerts", label: "Compliance Alerts", path: "/policy/compliance-alerts" },
+      { id: "subsidy-monitor", label: "Subsidy Monitor", path: "/policy/subsidy-monitor" },
     ],
   },
   {
     path: "/alerts",
     label: "Alerts",
     children: [
-      { id: "active-alerts", label: "Active Alerts" },
-      { id: "custom-watchlists", label: "Custom Watchlists" },
-      { id: "disaster-response-integration", label: "Disaster Response Integration" },
+      { id: "active-alerts", label: "Active Alerts", path: "/alerts/active-alerts" },
+      { id: "custom-watchlists", label: "Custom Watchlists", path: "/alerts/custom-watchlists" },
+      { id: "disaster-response-integration", label: "Disaster Response Integration", path: "/alerts/disaster-response-integration" },
     ],
   },
 ];
@@ -85,6 +85,7 @@ function Sidenav({
   onToggle: () => void;
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleClick = (item: SubItem) => {
     if (EXTERNAL_LINKS[item.id]) {
@@ -93,11 +94,6 @@ function Sidenav({
     }
     if (item.path) {
       navigate(item.path);
-    } else {
-      const el = document.getElementById(item.id);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
     }
   };
 
@@ -115,19 +111,25 @@ function Sidenav({
           <span className="menu-toggle-bar" />
         </button>
         <ul>
-          {items.map((item) => (
-            <li key={item.id}>
-              <button onClick={() => handleClick(item)}>
-                {item.label}
-                {EXTERNAL_LINKS[item.id] && (
-                  <svg className="sidenav-external-icon" viewBox="0 0 20 20" fill="currentColor" width="12" height="12">
-                    <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                    <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
-                  </svg>
-                )}
-              </button>
-            </li>
-          ))}
+          {items.map((item) => {
+            const isActive = item.path ? location.pathname === item.path : false;
+            return (
+              <li key={item.id}>
+                <button
+                  className={isActive ? "sidenav-btn--active" : ""}
+                  onClick={() => handleClick(item)}
+                >
+                  {item.label}
+                  {EXTERNAL_LINKS[item.id] && (
+                    <svg className="sidenav-external-icon" viewBox="0 0 20 20" fill="currentColor" width="12" height="12">
+                      <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                      <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                    </svg>
+                  )}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </div>
     </aside>

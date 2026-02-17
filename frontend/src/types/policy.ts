@@ -12,6 +12,7 @@ export interface Policy {
 export interface TariffRecord {
   id: string;
   state: string;
+  energy_source: string;
   tariff_type: string;
   rate_per_kwh: number;
   currency: string;
