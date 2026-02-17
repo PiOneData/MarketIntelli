@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID, uuid4
 
@@ -7,6 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.db.base import Base
 
 
+@dataclass
 class Policy(Base):
     """Central and state-level solar policies, regulations from MNRE, SECI, SERC."""
 
@@ -27,6 +29,7 @@ class Policy(Base):
     )
 
 
+@dataclass
 class TariffRecord(Base):
     """Historical and current feed-in tariffs, auction results, and PPA rates."""
 
@@ -34,12 +37,12 @@ class TariffRecord(Base):
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4, init=False)
     state: Mapped[str] = mapped_column(String(255))
-    energy_source: Mapped[str] = mapped_column(
-        String(100), default="solar"
-    )  # solar, wind, hybrid, biomass, small_hydro
     tariff_type: Mapped[str] = mapped_column(String(100))  # feed_in, auction, ppa
     rate_per_kwh: Mapped[float] = mapped_column(Float)
     effective_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    energy_source: Mapped[str] = mapped_column(
+        String(100), default="solar"
+    )  # solar, wind, hybrid, biomass, small_hydro
     currency: Mapped[str] = mapped_column(String(10), default="INR")
     expiry_date: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, default=None
@@ -50,6 +53,7 @@ class TariffRecord(Base):
     )
 
 
+@dataclass
 class Subsidy(Base):
     """Central and state-level subsidy tracking."""
 
