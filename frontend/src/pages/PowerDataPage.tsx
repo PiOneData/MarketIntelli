@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useParams } from "react-router-dom";
 import {
   usePowerMarketOverview,
   useRenewableCapacity,
@@ -12,34 +13,14 @@ import {
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ErrorMessage from "../components/common/ErrorMessage";
 
-type TabKey =
-  | "overview"
-  | "capacity"
-  | "generation"
-  | "transmission"
-  | "consumption"
-  | "tariffs"
-  | "investment"
-  | "repository";
-
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "overview", label: "Overview" },
-  { key: "capacity", label: "Renewable Capacity" },
-  { key: "generation", label: "Power Generation" },
-  { key: "transmission", label: "Transmission" },
-  { key: "consumption", label: "Consumption" },
-  { key: "tariffs", label: "RE Tariffs" },
-  { key: "investment", label: "Investment" },
-  { key: "repository", label: "Data Sources" },
-];
-
 function formatNumber(n: number | null | undefined): string {
   if (n == null) return "—";
   return n.toLocaleString("en-IN", { maximumFractionDigits: 2 });
 }
 
 function PowerDataPage() {
-  const [activeTab, setActiveTab] = useState<TabKey>("overview");
+  const { section } = useParams<{ section: string }>();
+  const activeSection = section || "overview";
   const [stateFilter, setStateFilter] = useState("");
   const [sourceFilter, setSourceFilter] = useState("");
 
@@ -50,21 +31,9 @@ function PowerDataPage() {
         <p>Comprehensive renewable energy capacity, generation, transmission, and market data across India</p>
       </header>
 
-      <nav className="pm-tabs">
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            className={`pm-tab ${activeTab === tab.key ? "pm-tab--active" : ""}`}
-            onClick={() => setActiveTab(tab.key)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
-
       <div className="pm-content">
-        {activeTab === "overview" && <OverviewSection />}
-        {activeTab === "capacity" && (
+        {activeSection === "overview" && <OverviewSection />}
+        {activeSection === "renewable-capacity" && (
           <CapacitySection
             stateFilter={stateFilter}
             setStateFilter={setStateFilter}
@@ -72,7 +41,7 @@ function PowerDataPage() {
             setSourceFilter={setSourceFilter}
           />
         )}
-        {activeTab === "generation" && (
+        {activeSection === "power-generation" && (
           <GenerationSection
             stateFilter={stateFilter}
             setStateFilter={setStateFilter}
@@ -80,16 +49,16 @@ function PowerDataPage() {
             setSourceFilter={setSourceFilter}
           />
         )}
-        {activeTab === "transmission" && <TransmissionSection />}
-        {activeTab === "consumption" && (
+        {activeSection === "transmission" && <TransmissionSection />}
+        {activeSection === "consumption" && (
           <ConsumptionSection
             stateFilter={stateFilter}
             setStateFilter={setStateFilter}
           />
         )}
-        {activeTab === "tariffs" && <TariffSection />}
-        {activeTab === "investment" && <InvestmentSection />}
-        {activeTab === "repository" && <RepositorySection />}
+        {activeSection === "re-tariffs" && <TariffSection />}
+        {activeSection === "investment-guidelines" && <InvestmentSection />}
+        {activeSection === "data-repository" && <RepositorySection />}
       </div>
     </div>
   );

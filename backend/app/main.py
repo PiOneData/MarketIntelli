@@ -45,6 +45,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as e:
         logger.warning("Power market seed skipped: %s", e)
 
+    # Seed policy intelligence data if tables are empty
+    try:
+        from app.scripts.seed_policy import seed_policy
+        await seed_policy()
+    except Exception as e:
+        logger.warning("Policy seed skipped: %s", e)
+
     yield
     # Shutdown
     await engine.dispose()

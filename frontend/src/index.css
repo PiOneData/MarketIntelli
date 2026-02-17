@@ -366,6 +366,13 @@ p {
   background-color: var(--color-gray-50);
 }
 
+.sidenav button.sidenav-btn--active {
+  color: var(--color-primary);
+  border-left-color: var(--color-primary);
+  background-color: rgba(15, 118, 110, 0.06);
+  font-weight: 600;
+}
+
 /* -- Main Content Area -- */
 
 .app-main {
@@ -607,22 +614,263 @@ p {
    9. PAGE — Policy
    ========================================================================== */
 
-.policy-page section {
-  background-color: var(--color-white);
-  border: 1px solid var(--color-gray-200);
-  border-radius: var(--radius-xl);
-  padding: var(--space-6);
-  margin-bottom: var(--space-5);
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.2s ease;
+.policy-page .pol-section {
+  animation: pmFadeIn 0.25s ease;
 }
 
-.policy-page section:hover {
+.policy-page .pol-section h3 {
+  color: var(--color-primary-dark);
+  margin-bottom: var(--space-2);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.pol-section-desc {
+  color: var(--color-gray-500);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-3);
+}
+
+.pol-data-source {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-400);
+  font-weight: 500;
+  margin-bottom: var(--space-5);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-gray-50);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-primary-light);
+}
+
+/* Policy Cards Grid */
+.pol-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: var(--space-4);
+}
+
+.pol-card {
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.pol-card:hover {
   box-shadow: var(--shadow-md);
 }
 
-.policy-page section h3 {
+.pol-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.pol-card h4 {
+  color: var(--color-gray-900);
+  font-size: var(--font-size-base);
+  margin-bottom: var(--space-2);
+  line-height: 1.4;
+}
+
+.pol-card-meta {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-bottom: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.pol-authority {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.pol-state {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-gray-500);
+  padding: 0.125rem 0.5rem;
+  background: var(--color-gray-100);
+  border-radius: 9999px;
+}
+
+.pol-summary {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+  line-height: 1.6;
+  margin-bottom: var(--space-4);
+  flex: 1;
+}
+
+.pol-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-gray-100);
+}
+
+.pol-date {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-400);
+}
+
+.pol-link {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+  transition: color 0.15s ease;
+}
+
+.pol-link:hover {
   color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+/* Category Badges */
+.pol-category-badge {
+  display: inline-block;
+  padding: 0.125rem 0.625rem;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  border-radius: 9999px;
+  text-transform: capitalize;
+}
+
+.pol-category-badge--regulation {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.pol-category-badge--guideline {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.pol-category-badge--amendment {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+/* Status Badges */
+.pol-status-badge {
+  display: inline-block;
+  padding: 0.125rem 0.625rem;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  border-radius: 9999px;
+  text-transform: capitalize;
+}
+
+.pol-status-badge--active {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.pol-status-badge--expired {
+  background-color: #fde8e8;
+  color: #991b1b;
+}
+
+.pol-status-badge--pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+/* Recency Badges */
+.pol-recency {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  border-radius: 9999px;
+}
+
+.pol-recency--recent {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.pol-recency--moderate {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.pol-recency--old {
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-500);
+}
+
+.pol-recency--unknown {
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-400);
+}
+
+/* Subsidy Details */
+.pol-subsidy-details {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.pol-subsidy-amount,
+.pol-subsidy-unit {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pol-detail-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-500);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.pol-detail-value {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-800);
+  font-weight: 600;
+}
+
+/* Table helpers */
+.pol-title-cell {
+  max-width: 400px;
+}
+
+.pol-title-cell strong {
+  color: var(--color-gray-800);
+  font-size: var(--font-size-sm);
+}
+
+.pol-summary-inline {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-500);
+  line-height: 1.4;
+}
+
+.pol-source-cell {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-500);
+  max-width: 200px;
+}
+
+.pol-empty {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--color-gray-400);
+  font-style: italic;
 }
 
 /* ==========================================================================
@@ -2540,6 +2788,13 @@ a.geo-layer-tab:hover {
     border-bottom-color: var(--color-primary-light);
   }
 
+  .sidenav button.sidenav-btn--active {
+    border-left-color: transparent;
+    border-bottom-color: var(--color-primary);
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
   .app-main {
     padding: var(--space-4);
   }
@@ -2647,6 +2902,10 @@ a.geo-layer-tab:hover {
   }
 
   .pm-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pol-cards-grid {
     grid-template-columns: 1fr;
   }
 
