@@ -15,7 +15,7 @@ export default defineConfig({
     allowedHosts: ['refexmi.pionedata.com', 'localhost'],  // allow these hostnames
     proxy: {
       "/api": {
-        target: "http://marketintelli_backend:8000",     // use actual Docker container name
+        target: "http://backend:8000",     // use Docker service name
         changeOrigin: true,
       },
     },
