@@ -112,7 +112,7 @@ function OverviewSection() {
     { label: "Wind Installed", value: `${formatNumber(overview.total_wind_mw)} MW` },
     { label: "Small Hydro", value: `${formatNumber(overview.total_small_hydro_mw)} MW` },
     { label: "Biomass", value: `${formatNumber(overview.total_biomass_mw)} MW` },
-    { label: "Total RE Generation", value: `${formatNumber(overview.total_generation_mu)/10} MU`, accent: true },
+    { label: "Total RE Generation", value: `${formatNumber(overview.total_generation_mu/10)} MU`, accent: true },
   ];
 
   return (
