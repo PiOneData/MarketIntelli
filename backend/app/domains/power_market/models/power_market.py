@@ -74,13 +74,13 @@ class TransmissionLine(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4, init=False)
     name: Mapped[str] = mapped_column(String(500))
     from_state: Mapped[str] = mapped_column(String(255))
-    to_state: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)
     voltage_kv: Mapped[int] = mapped_column(Integer)
+    data_year: Mapped[int] = mapped_column(Integer)
+    to_state: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)
     length_km: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
     capacity_mw: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
     status: Mapped[str] = mapped_column(String(100), default="operational")
     owner: Mapped[str] = mapped_column(String(255), default="")
-    data_year: Mapped[int] = mapped_column(Integer)
     source: Mapped[str] = mapped_column(String(500), default="")
     source_url: Mapped[str | None] = mapped_column(String(1000), nullable=True, default=None)
     created_at: Mapped[datetime] = mapped_column(
@@ -124,15 +124,15 @@ class RETariff(Base):
     energy_source: Mapped[str] = mapped_column(String(100))  # solar, wind, hybrid, solar_wind_hybrid
     tariff_type: Mapped[str] = mapped_column(String(100))  # feed_in, auction, ppa, green_energy_open_access
     rate_per_kwh: Mapped[float] = mapped_column(Float)
-    currency: Mapped[str] = mapped_column(String(10), default="INR")
     effective_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    data_year: Mapped[int] = mapped_column(Integer)
+    currency: Mapped[str] = mapped_column(String(10), default="INR")
     expiry_date: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, default=None
     )
     ordering_authority: Mapped[str] = mapped_column(String(255), default="")
     tender_id: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)
     grid_tariff_comparison: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
-    data_year: Mapped[int] = mapped_column(Integer)
     source: Mapped[str] = mapped_column(String(500), default="")
     source_url: Mapped[str | None] = mapped_column(String(1000), nullable=True, default=None)
     created_at: Mapped[datetime] = mapped_column(
