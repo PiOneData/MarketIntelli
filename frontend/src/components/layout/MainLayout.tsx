@@ -23,17 +23,17 @@ const navItems: NavItem[] = [
       { id: "solar-potential-mapping", label: "Solar Potential Mapping", path: "/geo-analytics/solar-potential-mapping" },
       { id: "wind-site-analyser", label: "Wind Site Analyser" },
       { id: "disaster-risk-overlay", label: "Disaster Risk Overlay", path: "/geo-analytics/disaster-risk-overlay" },
-      { id: "land-availability", label: "Land Availability", path: "/geo-analytics/land-availability" },
     ],
   },
   {
     path: "/projects",
     label: "Projects",
     children: [
+      { id: "india-data-center-registry", label: "India Data Center Registry", path: "/projects/india-data-center-registry" },
+      { id: "land-availability", label: "Land Availability", path: "/projects/land-availability" },
       { id: "project-directory", label: "Project Directory", path: "/projects/project-directory" },
       { id: "developer-profiles", label: "Developer Profiles", path: "/projects/developer-profiles" },
       { id: "tender-intelligence", label: "Tender Intelligence", path: "/projects/tender-intelligence" },
-      { id: "india-data-center-registry", label: "India Data Center Registry", path: "/projects/india-data-center-registry" },
     ],
   },
   {
@@ -48,6 +48,13 @@ const navItems: NavItem[] = [
       { id: "re-tariffs", label: "RE Tariffs", path: "/power-data/re-tariffs" },
       { id: "investment-guidelines", label: "Investment & Finance", path: "/power-data/investment-guidelines" },
       { id: "data-repository", label: "Data Sources", path: "/power-data/data-repository" },
+    ],
+  },
+  {
+    path: "/finance",
+    label: "Finance",
+    children: [
+      { id: "power-trading", label: "Power Trading", path: "/finance/power-trading" },
     ],
   },
   {

@@ -47,7 +47,7 @@ function DashboardPage() {
   return (
     <div className="dashboard-page">
       <div className="dashboard-page-header">
-        <h2>Solar Intelligence Dashboard</h2>
+        <h2>Renewable Energy Dashboard</h2>
         <p className="dashboard-page-desc">
           Real-time market overview for India's renewable energy sector
         </p>

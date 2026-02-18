@@ -82,7 +82,7 @@ function OverviewSection() {
     { label: "Large Hydro", value: `${formatNumber(overview.total_large_hydro_mw)} MW` },
     { label: "Small Hydro", value: `${formatNumber(overview.total_small_hydro_mw)} MW` },
     { label: "Biomass / WtE", value: `${formatNumber(overview.total_biomass_mw)} MW` },
-    { label: "Total RE Generation", value: `${formatNumber(overview.total_generation_mu/10)} MU`, accent: true },
+    { label: "Total RE Generation", value: `${formatNumber(overview.total_generation_mu)} MU`, accent: true },
   ];
 
   return (

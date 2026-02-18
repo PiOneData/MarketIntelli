@@ -150,12 +150,15 @@ class PowerMarketService:
 
     async def get_power_market_overview(self) -> dict:
         """Aggregate overview of the renewable power market."""
-        # Get latest year with data
-        year_stmt = select(sa_func.max(RenewableCapacity.data_year))
-        year_result = await self.db.execute(year_stmt)
-        latest_year = year_result.scalar() or 2025
+        # RE energy source labels
+        RE_SOURCES = ("solar", "wind", "hydro", "small_hydro", "large_hydro", "biomass")
 
-        # Get capacity totals by source
+        # Get latest year with capacity data
+        cap_year_stmt = select(sa_func.max(RenewableCapacity.data_year))
+        cap_year_result = await self.db.execute(cap_year_stmt)
+        latest_year = cap_year_result.scalar() or 2026
+
+        # Get capacity totals by source for the latest year
         cap_stmt = (
             select(
                 RenewableCapacity.energy_source,
@@ -167,10 +170,25 @@ class PowerMarketService:
         cap_result = await self.db.execute(cap_stmt)
         source_totals = {row.energy_source: row.total_mw for row in cap_result.all()}
 
-        # Get generation total
+        # Count distinct states tracked (from capacity data)
+        states_stmt = select(sa_func.count(sa_func.distinct(RenewableCapacity.state)))
+        states_result = await self.db.execute(states_stmt)
+        states_tracked = states_result.scalar() or 0
+
+        # Get latest year with generation data (may differ from capacity year)
+        gen_year_stmt = select(sa_func.max(PowerGeneration.data_year))
+        gen_year_result = await self.db.execute(gen_year_stmt)
+        gen_year = gen_year_result.scalar() or latest_year
+
+        # Sum RE generation for "All India" to get the national total without double-counting.
+        # Filter for RE sources only (exclude thermal, nuclear).
         gen_stmt = (
             select(sa_func.sum(PowerGeneration.generation_mu))
-            .where(PowerGeneration.data_year == latest_year)
+            .where(
+                PowerGeneration.data_year == gen_year,
+                PowerGeneration.state == "All India",
+                PowerGeneration.energy_source.in_(RE_SOURCES),
+            )
         )
         gen_result = await self.db.execute(gen_stmt)
         total_gen = gen_result.scalar() or 0
@@ -186,4 +204,5 @@ class PowerMarketService:
             "total_large_hydro_mw": source_totals.get("large_hydro", 0),
             "total_generation_mu": total_gen,
             "data_year": latest_year,
+            "states_tracked": states_tracked,
         }

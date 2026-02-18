@@ -116,4 +116,18 @@ export interface PowerMarketOverview {
   total_large_hydro_mw: number;
   total_generation_mu: number;
   data_year: number;
+  states_tracked: number;
+}
+
+export interface IexREMarketData {
+  date: string;
+  gtam_buy_volume_mu: number;
+  gtam_sell_volume_mu: number;
+  gtam_mcp_inr_per_mwh: number;
+  rec_solar_price_inr: number | null;
+  rec_non_solar_price_inr: number | null;
+  dam_re_volume_mu: number | null;
+  rtm_re_volume_mu: number | null;
+  source: string;
+  last_updated: string;
 }
