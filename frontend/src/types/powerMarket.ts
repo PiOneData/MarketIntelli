@@ -113,6 +113,7 @@ export interface PowerMarketOverview {
   total_wind_mw: number;
   total_small_hydro_mw: number;
   total_biomass_mw: number;
+  total_large_hydro_mw: number;
   total_generation_mu: number;
   data_year: number;
 }

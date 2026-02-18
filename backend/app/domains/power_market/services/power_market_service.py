@@ -183,6 +183,7 @@ class PowerMarketService:
             "total_wind_mw": source_totals.get("wind", 0),
             "total_small_hydro_mw": source_totals.get("small_hydro", 0),
             "total_biomass_mw": source_totals.get("biomass", 0),
+            "total_large_hydro_mw": source_totals.get("large_hydro", 0),
             "total_generation_mu": total_gen,
             "data_year": latest_year,
         }

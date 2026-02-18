@@ -79,8 +79,9 @@ function OverviewSection() {
     { label: "Total RE Capacity", value: `${formatNumber(overview.total_installed_re_mw)} MW`, accent: true },
     { label: "Solar Installed", value: `${formatNumber(overview.total_solar_mw)} MW` },
     { label: "Wind Installed", value: `${formatNumber(overview.total_wind_mw)} MW` },
+    { label: "Large Hydro", value: `${formatNumber(overview.total_large_hydro_mw)} MW` },
     { label: "Small Hydro", value: `${formatNumber(overview.total_small_hydro_mw)} MW` },
-    { label: "Biomass", value: `${formatNumber(overview.total_biomass_mw)} MW` },
+    { label: "Biomass / WtE", value: `${formatNumber(overview.total_biomass_mw)} MW` },
     { label: "Total RE Generation", value: `${formatNumber(overview.total_generation_mu/10)} MU`, accent: true },
   ];
 
