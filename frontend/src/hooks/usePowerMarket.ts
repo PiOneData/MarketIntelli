@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   getOverview,
+  getCapacitySummary,
   listRenewableCapacity,
   listPowerGeneration,
   listTransmissionLines,
@@ -14,6 +15,13 @@ export function usePowerMarketOverview() {
   return useQuery({
     queryKey: ["power-market", "overview"],
     queryFn: getOverview,
+  });
+}
+
+export function useCapacitySummary(params?: { data_year?: number }) {
+  return useQuery({
+    queryKey: ["power-market", "capacity-summary", params],
+    queryFn: () => getCapacitySummary(params),
   });
 }
 
