@@ -1,5 +1,5 @@
 import apiClient from "./client";
-import type { Alert, Watchlist, Notification } from "../types/alerts";
+import type { Alert, Watchlist, Notification, NewsArticle, NewsFilters } from "../types/alerts";
 
 export async function listAlerts(params?: {
   alert_type?: string;
@@ -33,5 +33,38 @@ export async function getNotifications(
   const { data } = await apiClient.get(`/alerts/notifications/${userId}`, {
     params: { unread_only: unreadOnly },
   });
+  return data;
+}
+
+export async function listNews(params?: {
+  category?: string;
+  state?: string;
+  source?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<NewsArticle[]> {
+  const { data } = await apiClient.get("/alerts/news", { params });
+  return data;
+}
+
+export async function getNewsFilters(): Promise<NewsFilters> {
+  const { data } = await apiClient.get("/alerts/news/filters");
+  return data;
+}
+
+export async function addNewsToWatchlist(
+  articleId: string,
+  userId: string,
+  articleTitle: string,
+): Promise<Watchlist> {
+  const { data } = await apiClient.post(
+    `/alerts/news/${articleId}/watchlist/${userId}`,
+    { article_id: articleId, article_title: articleTitle },
+  );
+  return data;
+}
+
+export async function triggerNewsScrape(): Promise<{ status: string }> {
+  const { data } = await apiClient.post("/alerts/news/scrape");
   return data;
 }

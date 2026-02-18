@@ -59,3 +59,29 @@ class Notification(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), init=False
     )
+
+
+class NewsArticle(Base):
+    """India-focused news articles for renewable energy and data centers."""
+
+    __tablename__ = "news_articles"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4, init=False)
+    title: Mapped[str] = mapped_column(String(1000))
+    url: Mapped[str] = mapped_column(String(2000))
+    source: Mapped[str] = mapped_column(String(255))  # e.g. "Economic Times", "Mercom India"
+    category: Mapped[str] = mapped_column(
+        String(100)
+    )  # "renewable_energy", "data_center", "policy", "solar", "wind"
+    state: Mapped[str | None] = mapped_column(
+        String(255), nullable=True, default=None
+    )  # Indian state if applicable
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
+    image_url: Mapped[str | None] = mapped_column(String(2000), nullable=True, default=None)
+    published_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+    scraped_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), init=False
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)

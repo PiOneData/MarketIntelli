@@ -67,6 +67,7 @@ const navItems: NavItem[] = [
       { id: "active-alerts", label: "Active Alerts", path: "/alerts/active-alerts" },
       { id: "custom-watchlists", label: "Custom Watchlists", path: "/alerts/custom-watchlists" },
       { id: "disaster-response-integration", label: "Disaster Response Integration", path: "/alerts/disaster-response-integration" },
+      { id: "news-feed", label: "News Feed", path: "/alerts/news-feed" },
     ],
   },
 ];
