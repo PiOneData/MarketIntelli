@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
-import { useParams } from "react-router-dom";
-import { useAlerts, useNews, useNewsFilters, useAddNewsToWatchlist } from "../hooks/useAlerts";
+import { useParams, useNavigate } from "react-router-dom";
+import { useAlerts, useNews, useNewsFilters, useAddNewsToWatchlist, useWatchlists } from "../hooks/useAlerts";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ErrorMessage from "../components/common/ErrorMessage";
 import type { NewsArticle } from "../types/alerts";
@@ -114,6 +114,7 @@ function NewsCard({
 /* ------------------------------------------------------------------ */
 
 function NewsFeedSection() {
+  const navigate = useNavigate();
   const [categoryFilter, setCategoryFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("");
   const [sourceFilter, setSourceFilter] = useState("");
@@ -148,6 +149,7 @@ function NewsFeedSection() {
       {
         onSuccess: () => {
           setWatchedArticles((prev) => new Set(prev).add(article.id));
+          navigate("/alerts/custom-watchlists");
         },
       }
     );
@@ -264,6 +266,77 @@ function NewsFeedSection() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Custom Watchlists Section                                          */
+/* ------------------------------------------------------------------ */
+
+function CustomWatchlistsSection() {
+  const { data: watchlists = [], isLoading, isError, refetch } = useWatchlists(DEMO_USER_ID);
+
+  if (isLoading) return <LoadingSpinner message="Loading watchlists..." />;
+  if (isError) return <ErrorMessage message="Failed to load watchlists" onRetry={() => refetch()} />;
+
+  const newsWatchlists = watchlists.filter((w) => w.watch_type === "news_article");
+  const otherWatchlists = watchlists.filter((w) => w.watch_type !== "news_article");
+
+  return (
+    <section id="custom-watchlists">
+      <h3>Custom Watchlists</h3>
+      <p className="pol-section-desc">
+        Articles and topics you are tracking. Add articles to your watchlist from the News Feed.
+      </p>
+
+      {watchlists.length === 0 ? (
+        <div className="news-empty">
+          <p>No items in your watchlist yet.</p>
+          <p style={{ fontSize: "0.875rem", color: "var(--color-gray-400)", marginTop: "0.5rem" }}>
+            Go to the <strong>News Feed</strong> and click <strong>Watch</strong> on articles you want to track.
+          </p>
+        </div>
+      ) : (
+        <>
+          {newsWatchlists.length > 0 && (
+            <div className="watchlist-group">
+              <h4 className="watchlist-group-title">Watched News Articles ({newsWatchlists.length})</h4>
+              <div className="watchlist-cards">
+                {newsWatchlists.map((w) => (
+                  <div key={w.id} className="watchlist-card">
+                    <div className="watchlist-card-type">
+                      <span className="news-badge news-badge--policy">News Article</span>
+                    </div>
+                    <p className="watchlist-card-name">{w.name}</p>
+                    <span className={`pol-status-badge pol-status-badge--${w.is_active ? "active" : "inactive"}`}>
+                      {w.is_active ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {otherWatchlists.length > 0 && (
+            <div className="watchlist-group">
+              <h4 className="watchlist-group-title">Other Watchlists ({otherWatchlists.length})</h4>
+              <div className="watchlist-cards">
+                {otherWatchlists.map((w) => (
+                  <div key={w.id} className="watchlist-card">
+                    <div className="watchlist-card-type">
+                      <span className="news-badge news-badge--renewable">{w.watch_type.replace(/_/g, " ")}</span>
+                    </div>
+                    <p className="watchlist-card-name">{w.name}</p>
+                    <span className={`pol-status-badge pol-status-badge--${w.is_active ? "active" : "inactive"}`}>
+                      {w.is_active ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Active Alerts Section                                               */
 /* ------------------------------------------------------------------ */
 
@@ -296,12 +369,7 @@ function AlertsPage() {
 
       {activeSection === "active-alerts" && <ActiveAlertsSection />}
 
-      {activeSection === "custom-watchlists" && (
-        <section id="custom-watchlists">
-          <h3>Custom Watchlists</h3>
-          <p>User-defined tracking of developers, states, or project categories.</p>
-        </section>
-      )}
+      {activeSection === "custom-watchlists" && <CustomWatchlistsSection />}
 
       {activeSection === "disaster-response-integration" && (
         <section id="disaster-response-integration">

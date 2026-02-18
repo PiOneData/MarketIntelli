@@ -7,7 +7,7 @@ import PolicyPage from "./pages/PolicyPage";
 import AlertsPage from "./pages/AlertsPage";
 import IndiaDataCenterAlertPage from "./pages/IndiaDataCenterAlertPage";
 import PowerDataPage from "./pages/PowerDataPage";
-import PowerTradingPage from "./pages/PowerTradingPage";
+import FinancePage from "./pages/FinancePage";
 
 function App() {
   return (
@@ -30,15 +30,15 @@ function App() {
         <Route path="/power-data/:section" element={<PowerDataPage />} />
 
         {/* Finance */}
-        <Route path="/finance" element={<Navigate to="/finance/power-trading" replace />} />
-        <Route path="/finance/power-trading" element={<PowerTradingPage />} />
+        <Route path="/finance" element={<Navigate to="/finance/investment-finance" replace />} />
+        <Route path="/finance/:section" element={<FinancePage />} />
 
         {/* Policy */}
         <Route path="/policy" element={<Navigate to="/policy/policy-repository" replace />} />
         <Route path="/policy/:section" element={<PolicyPage />} />
 
         {/* Alerts */}
-        <Route path="/alerts" element={<Navigate to="/alerts/active-alerts" replace />} />
+        <Route path="/alerts" element={<Navigate to="/alerts/news-feed" replace />} />
         <Route path="/alerts/:section" element={<AlertsPage />} />
       </Route>
     </Routes>

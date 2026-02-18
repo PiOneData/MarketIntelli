@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
@@ -6,8 +6,10 @@ from app.domains.policy_intelligence.schemas.policy import (
     PolicyRead,
     TariffRecordRead,
     SubsidyRead,
+    ComplianceAlertRead,
 )
 from app.domains.policy_intelligence.services.policy_service import PolicyService
+from app.domains.policy_intelligence.services.compliance_scraper import ComplianceScraperService
 
 router = APIRouter()
 
@@ -69,3 +71,48 @@ async def list_subsidies(
         )
         for s in subsidies
     ]
+
+
+@router.get("/compliance-alerts", response_model=list[ComplianceAlertRead])
+async def list_compliance_alerts(
+    authority: str | None = None,
+    category: str | None = None,
+    db: AsyncSession = Depends(get_db),
+) -> list[ComplianceAlertRead]:
+    """Real-time compliance alerts from MNRE Notifications, MoP Gazette, CERC/SERC Orders.
+
+    Data is refreshed twice daily from live RSS feeds.
+    Sources:
+    - MNRE Notifications: PIB India (https://pib.gov.in)
+    - MoP Gazette: PIB India (https://pib.gov.in)
+    - CERC/SERC Orders: Mercom India (https://mercomindia.com), Solar Quarter (https://solarquarter.com)
+    """
+    service = ComplianceScraperService(db)
+    alerts = await service.list_compliance_alerts(authority=authority, category=category)
+    return [
+        ComplianceAlertRead(
+            id=a.id,
+            title=a.title,
+            authority=a.authority,
+            data_source=a.data_source,
+            source_name=a.source_name,
+            source_url=a.source_url,
+            category=a.category,
+            summary=a.summary,
+            published_at=a.published_at,
+            scraped_at=a.scraped_at,
+            is_active=a.is_active,
+        )
+        for a in alerts
+    ]
+
+
+@router.post("/compliance-alerts/scrape", response_model=dict)
+async def trigger_compliance_scrape(
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Manually trigger a compliance alert scrape from MNRE/MoP/CERC/SERC sources."""
+    service = ComplianceScraperService(db)
+    background_tasks.add_task(service.scrape_and_store)
+    return {"status": "compliance scrape triggered"}

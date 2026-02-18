@@ -22,7 +22,6 @@ const navItems: NavItem[] = [
     children: [
       { id: "solar-potential-mapping", label: "Solar Potential Mapping", path: "/geo-analytics/solar-potential-mapping" },
       { id: "wind-site-analyser", label: "Wind Site Analyser" },
-      { id: "disaster-risk-overlay", label: "Disaster Risk Overlay", path: "/geo-analytics/disaster-risk-overlay" },
     ],
   },
   {
@@ -46,7 +45,6 @@ const navItems: NavItem[] = [
       { id: "transmission", label: "Transmission", path: "/power-data/transmission" },
       { id: "consumption", label: "Consumption", path: "/power-data/consumption" },
       { id: "re-tariffs", label: "RE Tariffs", path: "/power-data/re-tariffs" },
-      { id: "investment-guidelines", label: "Investment & Finance", path: "/power-data/investment-guidelines" },
       { id: "data-repository", label: "Data Sources", path: "/power-data/data-repository" },
     ],
   },
@@ -54,6 +52,7 @@ const navItems: NavItem[] = [
     path: "/finance",
     label: "Finance",
     children: [
+      { id: "investment-finance", label: "Investment & Finance", path: "/finance/investment-finance" },
       { id: "power-trading", label: "Power Trading", path: "/finance/power-trading" },
     ],
   },
@@ -71,10 +70,10 @@ const navItems: NavItem[] = [
     path: "/alerts",
     label: "Alerts",
     children: [
+      { id: "news-feed", label: "News Feed", path: "/alerts/news-feed" },
       { id: "active-alerts", label: "Active Alerts", path: "/alerts/active-alerts" },
       { id: "custom-watchlists", label: "Custom Watchlists", path: "/alerts/custom-watchlists" },
       { id: "disaster-response-integration", label: "Disaster Response Integration", path: "/alerts/disaster-response-integration" },
-      { id: "news-feed", label: "News Feed", path: "/alerts/news-feed" },
     ],
   },
 ];
