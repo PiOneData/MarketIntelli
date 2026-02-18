@@ -1,6 +1,7 @@
 import apiClient from "./client";
 import type {
   RenewableCapacity,
+  RenewableCapacitySummary,
   PowerGeneration,
   TransmissionLine,
   PowerConsumption,
@@ -26,7 +27,7 @@ export async function listRenewableCapacity(params?: {
 
 export async function getCapacitySummary(params?: {
   data_year?: number;
-}): Promise<RenewableCapacity[]> {
+}): Promise<RenewableCapacitySummary[]> {
   const { data } = await apiClient.get("/power-market/capacity-summary", { params });
   return data;
 }
