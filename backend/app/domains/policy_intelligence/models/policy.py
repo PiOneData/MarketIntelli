@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import String, Float, DateTime, Text, func
+from sqlalchemy import String, Float, DateTime, Text, Boolean, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -72,3 +72,38 @@ class Subsidy(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), init=False
     )
+
+
+@dataclass
+class ComplianceAlert(Base):
+    """Real-time compliance alerts scraped from MNRE Notifications, MoP Gazette, CERC/SERC Orders.
+
+    Refreshed twice daily from official RSS/data sources.
+    Sources:
+      - MNRE Notifications: PIB India RSS (https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=3)
+      - MoP Gazette: PIB India RSS (https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=33)
+      - CERC/SERC Orders: Mercom India (https://mercomindia.com/feed/),
+                           Solar Quarter (https://solarquarter.com/feed/)
+    """
+
+    __tablename__ = "compliance_alerts"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4, init=False)
+    title: Mapped[str] = mapped_column(String(500))
+    authority: Mapped[str] = mapped_column(String(255))  # MNRE, MoP, CERC, SERC
+    data_source: Mapped[str] = mapped_column(
+        String(255), default=""
+    )  # "MNRE Notifications" / "MoP Gazette" / "CERC/SERC Orders"
+    source_name: Mapped[str] = mapped_column(String(255), default="")  # RSS feed name
+    source_url: Mapped[str] = mapped_column(String(2000))  # Real link to the article
+    category: Mapped[str] = mapped_column(
+        String(100), default="regulation"
+    )  # regulation, amendment, deadline, tariff_order, notification, regulatory_order
+    summary: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
+    published_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+    scraped_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), init=False
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)

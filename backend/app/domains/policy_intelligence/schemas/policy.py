@@ -36,3 +36,17 @@ class SubsidyRead(BaseModel):
     unit: str
     status: str
     disbursement_date: datetime | None = None
+
+
+class ComplianceAlertRead(BaseModel):
+    id: UUID
+    title: str
+    authority: str
+    data_source: str
+    source_name: str
+    source_url: str
+    category: str
+    summary: str | None = None
+    published_at: datetime | None = None
+    scraped_at: datetime
+    is_active: bool = True

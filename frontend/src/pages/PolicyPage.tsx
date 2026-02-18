@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { usePolicies, useTariffs, useSubsidies } from "../hooks/usePolicy";
+import { usePolicies, useTariffs, useSubsidies, useComplianceAlerts } from "../hooks/usePolicy";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ErrorMessage from "../components/common/ErrorMessage";
 
@@ -219,86 +219,178 @@ function TariffTrackerSection() {
 /*  Compliance Alerts Section                                          */
 /* ------------------------------------------------------------------ */
 
+const DATA_SOURCE_LINKS: Record<string, string> = {
+  "MNRE Notifications": "https://pib.gov.in/AllRelease.aspx",
+  "MoP Gazette": "https://pib.gov.in/AllRelease.aspx",
+  "CERC/SERC Orders": "https://mercomindia.com/category/regulation/",
+};
+
+const AUTHORITY_LINKS: Record<string, string> = {
+  "MNRE": "https://mnre.gov.in",
+  "MoP": "https://powermin.gov.in",
+  "CERC": "https://cercind.gov.in",
+  "SERC": "https://mercomindia.com/category/regulation/",
+  "MNRE/MoP": "https://pib.gov.in/AllRelease.aspx",
+  "CERC/SERC": "https://mercomindia.com/category/regulation/",
+  "SECI": "https://www.seci.co.in",
+};
+
 function ComplianceAlertsSection() {
   const [categoryFilter, setCategoryFilter] = useState("");
-  const { data: policies = [], isLoading, error } = usePolicies();
+  const [authorityFilter, setAuthorityFilter] = useState("");
+  const { data: alerts = [], isLoading, error, refetch, dataUpdatedAt } = useComplianceAlerts();
 
   const categories = useMemo(
-    () => [...new Set(policies.map((p) => p.category))].sort(),
-    [policies]
+    () => [...new Set(alerts.map((a) => a.category))].sort(),
+    [alerts]
+  );
+  const authorities = useMemo(
+    () => [...new Set(alerts.map((a) => a.authority))].sort(),
+    [alerts]
   );
   const filtered = useMemo(
     () =>
-      policies
-        .filter((p) => !categoryFilter || p.category === categoryFilter)
-        .sort((a, b) => {
-          const da = a.effective_date ? new Date(a.effective_date).getTime() : 0;
-          const db = b.effective_date ? new Date(b.effective_date).getTime() : 0;
-          return db - da;
-        }),
-    [policies, categoryFilter]
+      alerts.filter(
+        (a) =>
+          (!categoryFilter || a.category === categoryFilter) &&
+          (!authorityFilter || a.authority === authorityFilter)
+      ),
+    [alerts, categoryFilter, authorityFilter]
   );
 
   if (isLoading) return <LoadingSpinner />;
-  if (error) return <ErrorMessage message="Failed to load compliance data" />;
+  if (error) return <ErrorMessage message="Failed to load compliance alerts" onRetry={() => refetch()} />;
 
   return (
     <section className="pol-section">
       <h3>Compliance Alerts</h3>
       <p className="pol-section-desc">
         Track new regulations, amendments, and upcoming compliance deadlines for renewable energy projects.
+        Data refreshed twice daily from official sources.
       </p>
-      <div className="pol-data-source">
-        Data sources: MNRE Notifications, MoP Gazette, CERC/SERC Orders
+
+      {/* Real data source links */}
+      <div className="pol-data-source" style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
+        <span>Data sources:</span>
+        <a href="https://pib.gov.in/AllRelease.aspx" target="_blank" rel="noopener noreferrer" className="pol-link">
+          MNRE Notifications (PIB)
+        </a>
+        <span>·</span>
+        <a href="https://pib.gov.in/AllRelease.aspx" target="_blank" rel="noopener noreferrer" className="pol-link">
+          MoP Gazette (PIB)
+        </a>
+        <span>·</span>
+        <a href="https://mercomindia.com/category/regulation/" target="_blank" rel="noopener noreferrer" className="pol-link">
+          CERC/SERC Orders (Mercom India)
+        </a>
+        <span>·</span>
+        <a href="https://solarquarter.com/category/policy/" target="_blank" rel="noopener noreferrer" className="pol-link">
+          Solar Quarter Policy
+        </a>
+        {dataUpdatedAt > 0 && (
+          <span style={{ marginLeft: "auto", fontSize: "0.78rem", color: "var(--color-gray-400)" }}>
+            Last fetched: {new Date(dataUpdatedAt).toLocaleString("en-IN")}
+          </span>
+        )}
       </div>
-      <div className="pm-filters">
+
+      <div className="pm-filters" style={{ marginTop: "0.75rem" }}>
         <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
           <option value="">All Categories</option>
           {categories.map((c) => (
-            <option key={c} value={c}>{c}</option>
+            <option key={c} value={c}>{c.replace(/_/g, " ")}</option>
           ))}
         </select>
-        <span className="pm-filter-count">{filtered.length} items</span>
+        <select value={authorityFilter} onChange={(e) => setAuthorityFilter(e.target.value)}>
+          <option value="">All Authorities</option>
+          {authorities.map((a) => (
+            <option key={a} value={a}>{a}</option>
+          ))}
+        </select>
+        <span className="pm-filter-count">{filtered.length} alerts</span>
+        <button className="news-clear-btn" onClick={() => refetch()}>
+          Refresh Now
+        </button>
       </div>
-      <div className="pm-table-wrapper">
-        <table className="pm-table">
-          <thead>
-            <tr>
-              <th>Policy / Regulation</th>
-              <th>Authority</th>
-              <th>Category</th>
-              <th>Scope</th>
-              <th>Effective Date</th>
-              <th>Recency</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((p) => {
-              const recency = recencyLabel(p.effective_date);
-              return (
-                <tr key={p.id}>
-                  <td className="pol-title-cell">
-                    <strong>{p.title}</strong>
-                    <br />
-                    <span className="pol-summary-inline">{p.summary.slice(0, 120)}...</span>
-                  </td>
-                  <td>{p.authority}</td>
-                  <td>
-                    <span className={`pol-category-badge pol-category-badge--${p.category}`}>
-                      {p.category}
-                    </span>
-                  </td>
-                  <td>{p.state || "National"}</td>
-                  <td>{formatDate(p.effective_date)}</td>
-                  <td><span className={`pol-recency ${recency.className}`}>{recency.text}</span></td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      {filtered.length === 0 && (
-        <p className="pol-empty">No compliance items match the current filters.</p>
+
+      {filtered.length === 0 ? (
+        <div className="news-empty">
+          <p>No compliance alerts loaded yet. Data is fetched on startup and refreshed every 12 hours.</p>
+          <p style={{ fontSize: "0.875rem", color: "var(--color-gray-400)", marginTop: "0.5rem" }}>
+            Browse live regulatory updates directly at:
+          </p>
+          <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem", flexWrap: "wrap" }}>
+            {Object.entries(DATA_SOURCE_LINKS).map(([label, url]) => (
+              <a key={label} href={url} target="_blank" rel="noopener noreferrer" className="pol-link">
+                {label}
+              </a>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="pm-table-wrapper">
+          <table className="pm-table">
+            <thead>
+              <tr>
+                <th>Regulation / Notification</th>
+                <th>Authority</th>
+                <th>Data Source</th>
+                <th>Category</th>
+                <th>Published</th>
+                <th>Link</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((a) => {
+                const recency = recencyLabel(a.published_at);
+                return (
+                  <tr key={a.id}>
+                    <td className="pol-title-cell">
+                      <strong>{a.title}</strong>
+                      {a.summary && (
+                        <>
+                          <br />
+                          <span className="pol-summary-inline">{a.summary.slice(0, 140)}…</span>
+                        </>
+                      )}
+                    </td>
+                    <td>
+                      {AUTHORITY_LINKS[a.authority] ? (
+                        <a href={AUTHORITY_LINKS[a.authority]} target="_blank" rel="noopener noreferrer" className="pol-link">
+                          {a.authority}
+                        </a>
+                      ) : (
+                        a.authority
+                      )}
+                    </td>
+                    <td>
+                      <span className="pol-data-source-badge">{a.data_source}</span>
+                    </td>
+                    <td>
+                      <span className={`pol-category-badge pol-category-badge--${a.category}`}>
+                        {a.category.replace(/_/g, " ")}
+                      </span>
+                    </td>
+                    <td>
+                      <div>{formatDate(a.published_at)}</div>
+                      <span className={`pol-recency ${recency.className}`}>{recency.text}</span>
+                    </td>
+                    <td>
+                      <a
+                        href={a.source_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="pol-link"
+                      >
+                        View
+                      </a>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   );

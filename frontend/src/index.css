@@ -4729,3 +4729,72 @@ a.geo-layer-tab:hover {
 
   .rcd-dual-divider { width: 100%; height: 1px; }
 }
+
+/* ==========================================================================
+   CUSTOM WATCHLISTS
+   ========================================================================== */
+
+.watchlist-group {
+  margin-top: 1.5rem;
+}
+
+.watchlist-group-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-gray-300);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-gray-700);
+}
+
+.watchlist-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.watchlist-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: border-color 0.2s;
+}
+
+.watchlist-card:hover {
+  border-color: var(--color-green-500);
+}
+
+.watchlist-card-type {
+  display: flex;
+  align-items: center;
+}
+
+.watchlist-card-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-gray-100);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   COMPLIANCE ALERTS EXTRAS
+   ========================================================================== */
+
+.pol-data-source-badge {
+  display: inline-block;
+  background: rgba(99, 179, 237, 0.12);
+  color: #63b3ed;
+  border: 1px solid rgba(99, 179, 237, 0.25);
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  white-space: nowrap;
+}

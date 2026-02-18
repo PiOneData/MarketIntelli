@@ -1,5 +1,5 @@
 import apiClient from "./client";
-import type { Policy, TariffRecord, Subsidy } from "../types/policy";
+import type { Policy, TariffRecord, Subsidy, ComplianceAlert } from "../types/policy";
 
 export async function listPolicies(params?: {
   authority?: string;
@@ -22,5 +22,18 @@ export async function listSubsidies(params?: {
   status?: string;
 }): Promise<Subsidy[]> {
   const { data } = await apiClient.get("/policy/subsidies", { params });
+  return data;
+}
+
+export async function listComplianceAlerts(params?: {
+  authority?: string;
+  category?: string;
+}): Promise<ComplianceAlert[]> {
+  const { data } = await apiClient.get("/policy/compliance-alerts", { params });
+  return data;
+}
+
+export async function triggerComplianceScrape(): Promise<{ status: string }> {
+  const { data } = await apiClient.post("/policy/compliance-alerts/scrape");
   return data;
 }

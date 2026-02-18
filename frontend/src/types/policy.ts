@@ -31,3 +31,17 @@ export interface Subsidy {
   status: string;
   disbursement_date: string | null;
 }
+
+export interface ComplianceAlert {
+  id: string;
+  title: string;
+  authority: string;
+  data_source: string;
+  source_name: string;
+  source_url: string;
+  category: string;
+  summary: string | null;
+  published_at: string | null;
+  scraped_at: string;
+  is_active: boolean;
+}
