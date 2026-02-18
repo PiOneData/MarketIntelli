@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import func, select
 
-from app.db.session import AsyncSessionLocal
+from app.db.session import async_session_factory
 from app.domains.alerts.models.alerts import NewsArticle
 
 logger = logging.getLogger(__name__)
@@ -293,7 +293,7 @@ SEED_ARTICLES = [
 
 async def seed_news() -> None:
     """Insert curated news articles if the table is empty."""
-    async with AsyncSessionLocal() as db:
+    async with async_session_factory() as db:
         count_result = await db.execute(select(func.count()).select_from(NewsArticle))
         count = count_result.scalar_one()
         if count > 0:
