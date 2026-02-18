@@ -88,14 +88,16 @@ class ComplianceAlert(Base):
 
     __tablename__ = "compliance_alerts"
 
+    # --- fields with NO default must come first (dataclass ordering rule) ---
     id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4, init=False)
     title: Mapped[str] = mapped_column(String(500))
     authority: Mapped[str] = mapped_column(String(255))  # MNRE, MoP, CERC, SERC
+    source_url: Mapped[str] = mapped_column(String(2000))  # Real link to the article
+    # --- fields WITH defaults ---
     data_source: Mapped[str] = mapped_column(
         String(255), default=""
     )  # "MNRE Notifications" / "MoP Gazette" / "CERC/SERC Orders"
     source_name: Mapped[str] = mapped_column(String(255), default="")  # RSS feed name
-    source_url: Mapped[str] = mapped_column(String(2000))  # Real link to the article
     category: Mapped[str] = mapped_column(
         String(100), default="regulation"
     )  # regulation, amendment, deadline, tariff_order, notification, regulatory_order

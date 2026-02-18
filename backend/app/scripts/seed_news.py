@@ -177,7 +177,7 @@ SEED_ARTICLES = [
     # ── Renewable energy general ──────────────────────────────────────────────
     {
         "title": "India Renewable Energy Statistics – MNRE",
-        "url": "https://mnre.gov.in/renewable-energy-statistics/",
+        "url": "https://mnre.gov.in/renewable-energy-sector-at-a-glance/",
         "source": "MNRE",
         "category": "renewable_energy",
         "state": None,
