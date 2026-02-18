@@ -7,6 +7,7 @@ from app.domains.policy_intelligence.routes.policy import router as policy_route
 from app.domains.alerts.routes.alerts import router as alerts_router
 from app.domains.data_center_intelligence.routes.data_centers import router as data_centers_router
 from app.domains.power_market.routes.power_market import router as power_market_router
+from app.domains.finance.routes.power_trading import router as power_trading_router
 
 api_router = APIRouter()
 
@@ -17,3 +18,4 @@ api_router.include_router(policy_router, prefix="/policy", tags=["Policy Intelli
 api_router.include_router(alerts_router, prefix="/alerts", tags=["Alerts"])
 api_router.include_router(data_centers_router, prefix="/data-centers", tags=["Data Center Intelligence"])
 api_router.include_router(power_market_router, prefix="/power-market", tags=["Power Market Intelligence"])
+api_router.include_router(power_trading_router, prefix="/finance", tags=["Finance – Power Trading"])

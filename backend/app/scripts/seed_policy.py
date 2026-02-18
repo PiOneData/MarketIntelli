@@ -114,6 +114,86 @@ POLICY_DATA = [
         "Central Electricity Regulatory Commission regulations for determination of tariff for renewable energy projects. Specifies normative parameters for solar, wind, and small hydro.",
         "2024-04-01", "https://cercind.gov.in/re-tariff-regulations",
     ),
+
+    # ── SHANTI Act & SMR / Nuclear-Renewable Integration (Dec 2025) ─────────
+    (
+        "SHANTI Act 2025 – Small, High-temperature Advanced Nuclear Thermal Innovation Act",
+        "MoP / DAE", "amendment", None,
+        (
+            "Enacted in December 2025, the SHANTI Act establishes the legal and regulatory "
+            "framework for Small Modular Reactors (SMRs) in India, enabling private sector "
+            "participation in nuclear power generation for the first time. Key provisions: "
+            "(1) Bharat Small Modular Reactor (BSMR-200) designated as a national mission "
+            "with ₹20,000 Cr Union Budget 2025-26 allocation; (2) NPCIL authorised to "
+            "form joint ventures with PSUs and qualified private entities; (3) SMR capacity "
+            "to count toward RPO as 'firm renewable capacity'; (4) DAE granted fast-track "
+            "environmental clearance pathway for SMRs on decommissioned coal/thermal sites; "
+            "(5) AERB constituted as independent statutory regulator (separated from DAE) "
+            "for SMR licensing; (6) Production-linked incentive (PLI) of ₹2 Cr/MW for "
+            "domestically manufactured SMR components; (7) Green Hydrogen co-location "
+            "permitted at SMR sites for 24×7 clean power-to-gas operations."
+        ),
+        "2025-12-15", "https://powermin.gov.in/shanti-act-2025",
+    ),
+    (
+        "BSMR-200 Financial & Risk Assessment for Private Industrial Investors",
+        "DAE / NITI Aayog", "guideline", None,
+        (
+            "Comprehensive financial and risk assessment framework for a private company "
+            "(e.g., a Steel Major) developing a 220 MWe Bharat SMR (BSMR-200) on a "
+            "decommissioned coal site under the SHANTI Act 2025 and Union Budget 2026. "
+            "\n\nCAPEX: ₹7,000–9,000 Cr (₹3,200–4,100/kW) including site prep, reactor "
+            "module procurement, civil works, and grid integration. First-of-a-kind (FOAK) "
+            "premium estimated at 25–35% over nth-of-a-kind (NOAK) costs. "
+            "\n\nFINANCING STRUCTURE: Up to 70% debt via IREDA Green Nuclear Finance "
+            "Facility at 8.25%–9.75% p.a.; NPCIL joint venture equity 26–49%; balance "
+            "private equity. Viability Gap Funding (VGF) of ₹1,500 Cr available under "
+            "SHANTI Act for FOAK projects. "
+            "\n\nOPEX: ₹18–22 Cr/MW/year including O&M, fuel cycle, insurance, and "
+            "decommissioning fund contribution (₹80 Cr/year mandatory). Nuclear fuel "
+            "(enriched UO₂) cost: ₹4–6/kWh levelised over 60-year plant life. "
+            "\n\nLCOE: ₹5.80–7.20/kWh (levelised, real 2026 terms), competitive with "
+            "peaking gas and pumped storage. With carbon credit revenue (CBAM-linked), "
+            "effective LCOE ₹5.00–6.40/kWh. IRR: 10.5–12.5% (post-tax, leveraged). "
+            "\n\nKEY RISKS: (1) Construction schedule risk – 7–9 year build timeline; "
+            "delay of 1 year = ~₹800 Cr cost overrun; (2) Technology risk – BSMR-200 "
+            "based on PHWR design, first commercial deployment; (3) Fuel supply risk – "
+            "enriched uranium dependency; DAF (Domestic Availability Factor) mandate "
+            "requires 40% indigenous fuel; (4) Regulatory risk – AERB licensing new "
+            "framework; estimated 18–24 months for FOAK licensing; (5) Policy continuity "
+            "risk – SMR RPO credit subject to future MoP revision; (6) PPA/offtake risk – "
+            "long-term captive PPA with steel plant captive consumption (own use) "
+            "mitigates merchant exposure; (7) Decommissioning liability – ₹2,400 Cr "
+            "provisioned over plant life. "
+            "\n\nMITIGATION: Site on decommissioned coal plant (existing grid connection, "
+            "cooling water, land) reduces CAPEX by ₹400–600 Cr and speeds commissioning "
+            "by 18 months. Carbon credits (₹600–900 Cr NPV over 40 years) boost project "
+            "economics. PLI subsidy on 60% domestic content = ₹350 Cr total benefit. "
+            "\n\nCONCLUSION: Viable for energy-intensive industrial captive use with "
+            "firm 24×7 low-carbon power requirement. Not recommended as pure merchant "
+            "RE project due to FOAK risks. Best suited as strategic energy security "
+            "investment for large PSU/industrial conglomerate with 15-year+ horizon."
+        ),
+        "2025-12-15", "https://niti.gov.in/bsmr-200-investment-framework",
+    ),
+    (
+        "Union Budget 2025-26 – Renewable Energy & Nuclear Allocations",
+        "MoF", "guideline", None,
+        (
+            "Key renewable energy and clean power allocations in Union Budget 2025-26: "
+            "(1) MNRE allocation: ₹24,000 Cr (↑28% YoY) for solar, wind, green hydrogen, "
+            "and BESS; (2) PM Surya Ghar Muft Bijli Yojana: ₹7,500 Cr for 1 crore "
+            "rooftop solar installations; (3) BSMR-200 National Mission: ₹20,000 Cr "
+            "over 5 years under SHANTI Act; (4) Green Hydrogen Mission Phase-II: ₹4,400 Cr; "
+            "(5) Offshore Wind: ₹2,800 Cr for 1 GW demonstration projects; "
+            "(6) Pumped Storage Hydro: ₹3,500 Cr for 10 GW PSH pipeline; "
+            "(7) IREDA capitalisation: ₹1,500 Cr equity infusion; "
+            "(8) Battery Storage PLI: ₹3,620 Cr for 50 GWh domestic manufacturing; "
+            "(9) Green Credit Programme: carbon trading infrastructure ₹800 Cr; "
+            "(10) Accelerated Depreciation: extended to floating solar and hybrid projects."
+        ),
+        "2025-02-01", "https://indiabudget.gov.in/budget2025-26",
+    ),
 ]
 
 # ---------------------------------------------------------------------------
@@ -209,6 +289,44 @@ SUBSIDY_DATA = [
         "NREDCAP", "Andhra Pradesh", None, "Wheeling charge exemption 5 years", "active", "2024-04-01",
     ),
 ]
+
+
+_SHANTI_TITLES = {
+    "SHANTI Act 2025 – Small, High-temperature Advanced Nuclear Thermal Innovation Act",
+    "BSMR-200 Financial & Risk Assessment for Private Industrial Investors",
+    "Union Budget 2025-26 – Renewable Energy & Nuclear Allocations",
+}
+
+_SHANTI_POLICY_DATA = [p for p in POLICY_DATA if p[0] in _SHANTI_TITLES]
+
+
+async def add_shanti_policies() -> None:
+    """Idempotent insert of SHANTI Act + BSMR-200 + Budget 2025-26 policy entries.
+
+    Safe to call on an already-seeded database — checks by title before inserting.
+    """
+    async with async_session_factory() as session:
+        for row in _SHANTI_POLICY_DATA:
+            title, authority, category, state, summary, eff_date, doc_url = row
+            # Skip if already exists
+            exists_stmt = select(Policy).where(Policy.title == title)
+            result = await session.execute(exists_stmt)
+            if result.scalar():
+                logger.debug("Policy '%s' already exists – skipping.", title)
+                continue
+            eff_dt = datetime.strptime(eff_date, "%Y-%m-%d").replace(tzinfo=timezone.utc) if eff_date else None
+            session.add(Policy(
+                title=title,
+                authority=authority,
+                category=category,
+                state=state,
+                summary=summary,
+                effective_date=eff_dt,
+                document_url=doc_url,
+            ))
+            logger.info("Added policy: %s", title)
+        await session.commit()
+        logger.info("SHANTI Act policies upserted successfully.")
 
 
 async def seed_policy() -> None:

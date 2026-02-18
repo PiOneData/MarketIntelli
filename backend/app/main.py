@@ -52,6 +52,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as e:
         logger.warning("Policy seed skipped: %s", e)
 
+    # Always ensure SHANTI Act + BSMR-200 + Budget 2025-26 policies are present
+    try:
+        from app.scripts.seed_policy import add_shanti_policies
+        await add_shanti_policies()
+    except Exception as e:
+        logger.warning("SHANTI policy upsert skipped: %s", e)
+
     yield
     # Shutdown
     await engine.dispose()
