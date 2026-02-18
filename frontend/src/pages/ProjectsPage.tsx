@@ -44,6 +44,17 @@ function ProjectsPage() {
           <p>Real-time updates on upcoming and awarded tenders with bid analytics.</p>
         </section>
       )}
+
+      {activeSection === "land-availability" && (
+        <section id="land-availability">
+          <h3>Land Availability</h3>
+          <p>
+            Analyze available land parcels for renewable energy project development with
+            satellite-based land classification, proximity to grid infrastructure, and
+            suitability scoring. Filter by state, land type, and minimum area.
+          </p>
+        </section>
+      )}
     </div>
   );
 }

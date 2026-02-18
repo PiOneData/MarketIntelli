@@ -116,8 +116,8 @@ export default function KpiCarousel({
     const biomass = pmOverview
       ? formatCapacity(pmOverview.total_biomass_mw)
       : { value: dash, unit: "MW" };
-    const regions = marketOverview
-      ? marketOverview.regional_distribution.length.toString()
+    const regions = pmOverview
+      ? pmOverview.states_tracked.toString()
       : dash;
     const dataYear = pmOverview ? pmOverview.data_year.toString() : "2025";
 
