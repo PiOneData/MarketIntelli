@@ -28,3 +28,22 @@ export interface Notification {
   read: boolean;
   created_at: string;
 }
+
+export interface NewsArticle {
+  id: string;
+  title: string;
+  url: string;
+  source: string;
+  category: string;
+  state: string | null;
+  summary: string | null;
+  image_url: string | null;
+  published_at: string | null;
+  scraped_at: string;
+  is_active: boolean;
+}
+
+export interface NewsFilters {
+  states: string[];
+  sources: string[];
+}

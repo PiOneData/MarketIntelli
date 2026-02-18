@@ -4,6 +4,9 @@ import {
   getWatchlists,
   createWatchlist,
   getNotifications,
+  listNews,
+  getNewsFilters,
+  addNewsToWatchlist,
 } from "../api/alerts";
 
 export function useAlerts(params?: {
@@ -44,5 +47,38 @@ export function useNotifications(userId: string, unreadOnly?: boolean) {
     queryKey: ["notifications", userId, unreadOnly],
     queryFn: () => getNotifications(userId, unreadOnly),
     enabled: !!userId,
+  });
+}
+
+export function useNews(params?: {
+  category?: string;
+  state?: string;
+  source?: string;
+  limit?: number;
+  offset?: number;
+}) {
+  return useQuery({
+    queryKey: ["news", params],
+    queryFn: () => listNews(params),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useNewsFilters() {
+  return useQuery({
+    queryKey: ["news-filters"],
+    queryFn: getNewsFilters,
+    staleTime: 10 * 60 * 1000,
+  });
+}
+
+export function useAddNewsToWatchlist(userId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ articleId, articleTitle }: { articleId: string; articleTitle: string }) =>
+      addNewsToWatchlist(articleId, userId, articleTitle),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["watchlists", userId] });
+    },
   });
 }

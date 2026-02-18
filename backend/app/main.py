@@ -15,7 +15,7 @@ from app.domains.dashboard.models.market_overview import InstalledCapacity, Fina
 from app.domains.data_center_intelligence.models.data_center import DataCenterCompany, DataCenterFacility  # noqa: F401
 from app.domains.project_intelligence.models.projects import Developer, SolarProject, Tender  # noqa: F401
 from app.domains.policy_intelligence.models.policy import Policy, TariffRecord, Subsidy  # noqa: F401
-from app.domains.alerts.models.alerts import Alert, Watchlist, Notification  # noqa: F401
+from app.domains.alerts.models.alerts import Alert, Watchlist, Notification, NewsArticle  # noqa: F401
 from app.domains.power_market.models.power_market import (  # noqa: F401
     RenewableCapacity, PowerGeneration, TransmissionLine,
     PowerConsumption, RETariff, InvestmentGuideline, DataRepository,
@@ -52,6 +52,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as e:
         logger.warning("Policy seed skipped: %s", e)
 
+    # Seed news articles if table is empty
+    try:
+        from app.scripts.seed_news import seed_news
+        await seed_news()
+    except Exception as e:
+        logger.warning("News seed skipped: %s", e)
     # Always ensure SHANTI Act + BSMR-200 + Budget 2025-26 policies are present
     try:
         from app.scripts.seed_policy import add_shanti_policies

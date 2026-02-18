@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
@@ -9,8 +9,11 @@ from app.domains.alerts.schemas.alerts import (
     WatchlistRead,
     WatchlistCreate,
     NotificationRead,
+    NewsArticleRead,
+    NewsWatchlistCreate,
 )
 from app.domains.alerts.services.alert_service import AlertService
+from app.domains.alerts.services.news_service import NewsService
 
 router = APIRouter()
 
@@ -86,3 +89,76 @@ async def get_notifications(
         )
         for n in notifications
     ]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# News Feed endpoints
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@router.get("/news", response_model=list[NewsArticleRead])
+async def list_news(
+    category: str | None = None,
+    state: str | None = None,
+    source: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+    db: AsyncSession = Depends(get_db),
+) -> list[NewsArticleRead]:
+    """India-focused renewable energy and data center news feed with optional filters."""
+    service = NewsService(db)
+    articles = await service.list_news(category=category, state=state, source=source,
+                                       limit=limit, offset=offset)
+    return [
+        NewsArticleRead(
+            id=a.id, title=a.title, url=a.url, source=a.source,
+            category=a.category, state=a.state, summary=a.summary,
+            image_url=a.image_url, published_at=a.published_at,
+            scraped_at=a.scraped_at, is_active=a.is_active,
+        )
+        for a in articles
+    ]
+
+
+@router.get("/news/filters", response_model=dict)
+async def get_news_filters(
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Return available filter values for the news feed."""
+    service = NewsService(db)
+    states = await service.get_available_states()
+    sources = await service.get_available_sources()
+    return {"states": states, "sources": sources}
+
+
+@router.post("/news/scrape", response_model=dict)
+async def trigger_scrape(
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Trigger a background RSS scrape for new articles."""
+    service = NewsService(db)
+    background_tasks.add_task(service.scrape_and_store)
+    return {"status": "scrape triggered"}
+
+
+@router.post("/news/{article_id}/watchlist/{user_id}", response_model=WatchlistRead, status_code=201)
+async def add_news_to_watchlist(
+    article_id: UUID,
+    user_id: UUID,
+    payload: NewsWatchlistCreate,
+    db: AsyncSession = Depends(get_db),
+) -> WatchlistRead:
+    """Add a news article to the user's watchlist."""
+    service = AlertService(db)
+    w = await service.create_watchlist(
+        user_id=user_id,
+        name=payload.article_title[:255],
+        watch_type="news_article",
+        target_id=str(article_id),
+    )
+    return WatchlistRead(
+        id=w.id, user_id=w.user_id, name=w.name,
+        watch_type=w.watch_type, target_id=w.target_id,
+        is_active=w.is_active,
+    )

@@ -39,3 +39,22 @@ class NotificationRead(BaseModel):
     status: str
     read: bool
     created_at: datetime
+
+
+class NewsArticleRead(BaseModel):
+    id: UUID
+    title: str
+    url: str
+    source: str
+    category: str
+    state: str | None = None
+    summary: str | None = None
+    image_url: str | None = None
+    published_at: datetime | None = None
+    scraped_at: datetime
+    is_active: bool
+
+
+class NewsWatchlistCreate(BaseModel):
+    article_id: str
+    article_title: str
