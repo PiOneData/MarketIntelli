@@ -3888,3 +3888,844 @@ a.geo-layer-tab:hover {
     justify-content: center;
   }
 }
+
+/* ==========================================================================
+   REGIONAL CAPACITY DASHBOARD CAROUSEL
+   ========================================================================== */
+
+/* ── Keyframe animations ───────────────────────────────────────────────────── */
+
+@keyframes rcdSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Solar: outer rays clockwise */
+@keyframes rcdRotateCW {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Solar: inner rays counter-clockwise */
+@keyframes rcdRotateCCW {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+
+/* Solar: core pulse */
+@keyframes rcdSolarPulse {
+  0%, 100% { opacity: 0.85; r: 26; }
+  50%       { opacity: 1;    r: 28; }
+}
+
+/* Solar: ambient glow throb */
+@keyframes rcdGlowPulse {
+  0%, 100% { transform: scale(1);    opacity: 0.35; }
+  50%       { transform: scale(1.12); opacity: 0.55; }
+}
+
+/* Wind: horizontal streak */
+@keyframes rcdWindStreak {
+  0%   { transform: translateX(-120%); opacity: 0; }
+  15%  { opacity: 1; }
+  85%  { opacity: 0.7; }
+  100% { transform: translateX(120%);  opacity: 0; }
+}
+
+/* Hydro: wave horizontal sweep */
+@keyframes rcdWaveSweep1 {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes rcdWaveSweep2 {
+  0%   { transform: translateX(-25%); }
+  100% { transform: translateX(-75%); }
+}
+
+/* Hydro: water drop fall */
+@keyframes rcdDropFall {
+  0%   { transform: translateY(-20px) scaleY(0.6); opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 0.8; }
+  100% { transform: translateY(60px) scaleY(1.3);  opacity: 0; }
+}
+
+/* Biomass: leaf float up with sway */
+@keyframes rcdLeafFloat {
+  0%   { transform: translate(0, 60px)  rotate(0deg);   opacity: 0; }
+  10%  { opacity: 0.9; }
+  50%  { transform: translate(12px, 20px) rotate(18deg); }
+  90%  { opacity: 0.7; }
+  100% { transform: translate(-8px, -20px) rotate(-12deg); opacity: 0; }
+}
+
+/* ── Main carousel shell ───────────────────────────────────────────────────── */
+
+.rcd-carousel {
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5) var(--space-6);
+  margin-bottom: var(--space-6);
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Rainbow top stripe */
+.rcd-carousel::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    #3b82f6 0%, #f59e0b 30%, #10b981 60%, #8b5cf6 85%, #0ea5e9 100%
+  );
+}
+
+/* ── Header ────────────────────────────────────────────────────────────────── */
+
+.rcd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.rcd-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rcd-title {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-gray-900);
+  margin: 0;
+}
+
+.rcd-subtitle {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-gray-400);
+  letter-spacing: 0.02em;
+}
+
+/* ── Navigation ────────────────────────────────────────────────────────────── */
+
+.rcd-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.rcd-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-gray-200);
+  background: var(--color-white);
+  color: var(--color-gray-500);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.rcd-nav-btn:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.rcd-dots { display: flex; gap: var(--space-2); align-items: center; }
+
+.rcd-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-gray-300);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.25s, transform 0.25s;
+}
+
+.rcd-dot--active {
+  background: var(--color-primary);
+  transform: scale(1.4);
+}
+
+/* ── Slide viewport ────────────────────────────────────────────────────────── */
+
+.rcd-viewport {
+  min-height: 280px;
+  animation: rcdSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Progress bar ──────────────────────────────────────────────────────────── */
+
+.rcd-progress {
+  margin-top: var(--space-4);
+  height: 3px;
+  background: var(--color-gray-100);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.rcd-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #10b981);
+  border-radius: 9999px;
+  transition: width 0.5s ease;
+}
+
+/* ── Slide 0: Regional grid ────────────────────────────────────────────────── */
+
+.rcd-regional-slide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.rcd-regional-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+}
+
+.rcd-region-card {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-gray-200);
+  border-top: 4px solid;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: default;
+}
+
+.rcd-region-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.rcd-region-card-top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.rcd-region-badge {
+  width: 2rem; height: 2rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rcd-region-badge-key {
+  color: #fff;
+  font-weight: 800;
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.05em;
+}
+
+.rcd-region-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.rcd-region-name {
+  font-weight: 700;
+  font-size: var(--font-size-base);
+  line-height: 1.2;
+}
+
+.rcd-region-sublabel {
+  font-size: 0.65rem;
+  color: var(--color-gray-400);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.rcd-region-pct {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.rcd-region-total {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.rcd-region-total-val {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--color-gray-900);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.rcd-region-total-lbl {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-400);
+  font-weight: 500;
+}
+
+.rcd-region-share-bar-bg {
+  height: 5px;
+  background: var(--color-gray-100);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.rcd-region-share-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.rcd-region-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.rcd-region-source-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.rcd-source-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.rcd-source-name {
+  flex: 1;
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-600);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rcd-source-val {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-gray-800);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rcd-grand-total-band {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: linear-gradient(90deg, #f0fdf4 0%, #eff6ff 100%);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  flex-wrap: wrap;
+}
+
+.rcd-grand-total-icon {
+  display: flex;
+  align-items: center;
+  color: var(--color-primary);
+}
+
+.rcd-grand-total-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-gray-700);
+  flex: 1;
+}
+
+.rcd-grand-total-val {
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  color: var(--color-gray-900);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.rcd-grand-total-sub {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-400);
+}
+
+/* ── Slides 1 & 2: Energy champion slide ───────────────────────────────────── */
+
+.rcd-energy-slide {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: var(--space-5);
+  min-height: 280px;
+  align-items: start;
+}
+
+/* Left animation panel */
+.rcd-anim-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--rcd-bg, #f8fafc);
+  border: 1px solid var(--color-gray-200);
+  min-height: 260px;
+}
+
+.rcd-anim-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.rcd-anim-source {
+  font-size: var(--font-size-lg);
+  font-weight: 800;
+  color: var(--rcd-accent, var(--color-gray-900));
+  letter-spacing: 0.01em;
+}
+
+.rcd-anim-unit {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-gray-400);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Right champions panel */
+.rcd-champions-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.rcd-champions-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.rcd-champions-title {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-gray-900);
+}
+
+.rcd-champions-sub {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-400);
+}
+
+.rcd-champions-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.rcd-champion-row {
+  display: grid;
+  grid-template-columns: 50px 1fr auto auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.rcd-champion-rank {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+}
+
+.rcd-champion-state {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-gray-800);
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rcd-champion-bar-bg {
+  height: 8px;
+  background: var(--color-gray-100);
+  border-radius: 9999px;
+  overflow: hidden;
+  min-width: 80px;
+}
+
+.rcd-champion-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.rcd-champion-val {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-gray-900);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rcd-champion-unit-strip {
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px dashed;
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-400);
+  text-align: right;
+}
+
+/* ── Slide 3: Dual (Hydro + Biomass) ───────────────────────────────────────── */
+
+.rcd-dual-slide {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  gap: var(--space-5);
+  min-height: 280px;
+  align-items: start;
+}
+
+.rcd-dual-divider {
+  background: var(--color-gray-200);
+  width: 1px;
+  align-self: stretch;
+}
+
+.rcd-dual-half {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.rcd-dual-anim-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.rcd-dual-title {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-gray-900);
+}
+
+.rcd-dual-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.rcd-dual-row {
+  display: grid;
+  grid-template-columns: 30px 1fr auto auto;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.rcd-dual-rank {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+}
+
+.rcd-dual-state {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-gray-800);
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rcd-dual-bar-bg {
+  height: 7px;
+  background: var(--color-gray-100);
+  border-radius: 9999px;
+  overflow: hidden;
+  min-width: 60px;
+}
+
+.rcd-dual-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.rcd-dual-val {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-gray-900);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ── Animation wrappers (shared) ───────────────────────────────────────────── */
+
+.rcd-anim-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Solar animation ───────────────────────────────────────────────────────── */
+
+.rcd-solar-wrap {
+  width: 140px;
+  height: 140px;
+}
+
+.rcd-solar-glow {
+  position: absolute;
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fef3c7 0%, transparent 70%);
+  animation: rcdGlowPulse 3s ease-in-out infinite;
+}
+
+.rcd-solar-svg {
+  width: 140px; height: 140px;
+  overflow: visible;
+}
+
+.rcd-solar-rays-outer {
+  animation: rcdRotateCW 18s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.rcd-solar-rays-inner {
+  animation: rcdRotateCCW 12s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.rcd-solar-core {
+  animation: rcdSolarPulse 2.5s ease-in-out infinite;
+}
+
+.rcd-solar-inner {
+  animation: rcdSolarPulse 2.5s ease-in-out infinite reverse;
+}
+
+/* ── Wind animation ────────────────────────────────────────────────────────── */
+
+.rcd-wind-wrap {
+  width: 180px;
+  height: 160px;
+  position: relative;
+}
+
+.rcd-turbine-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: absolute;
+}
+
+.rcd-turbine-main {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-60%);
+}
+
+.rcd-turbine-secondary {
+  bottom: 0;
+  right: 8px;
+}
+
+.rcd-turbine-head {
+  display: block;
+  overflow: visible;
+}
+
+.rcd-turbine-head-sm {
+  width: 76px; height: 36px;
+}
+
+.rcd-turbine-head {
+  width: 110px; height: 52px;
+}
+
+.rcd-turbine-tower {
+  border-radius: 3px;
+}
+
+.rcd-turbine-tower-lg {
+  width: 7px;
+  height: 75px;
+  background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
+}
+
+.rcd-turbine-tower-sm {
+  width: 5px;
+  height: 50px;
+  background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
+}
+
+/* Ground base line */
+.rcd-wind-wrap::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #cbd5e1, #cbd5e1, transparent);
+  border-radius: 9999px;
+}
+
+/* Wind streak lines */
+.rcd-wind-streaks {
+  position: absolute;
+  top: 30%;
+  left: 0; right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.rcd-wind-streak {
+  height: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, transparent 0%, #bfdbfe 30%, #93c5fd 60%, transparent 100%);
+  opacity: 0;
+}
+
+.rcd-wind-streak-0 { width: 55%; animation: rcdWindStreak 2.2s ease-in-out 0s    infinite; }
+.rcd-wind-streak-1 { width: 40%; animation: rcdWindStreak 2.2s ease-in-out 0.4s  infinite; }
+.rcd-wind-streak-2 { width: 65%; animation: rcdWindStreak 2.2s ease-in-out 0.8s  infinite; }
+.rcd-wind-streak-3 { width: 35%; animation: rcdWindStreak 2.2s ease-in-out 1.2s  infinite; }
+.rcd-wind-streak-4 { width: 50%; animation: rcdWindStreak 2.2s ease-in-out 1.6s  infinite; }
+
+/* ── Hydro animation ───────────────────────────────────────────────────────── */
+
+.rcd-hydro-wrap {
+  width: 120px;
+  height: 80px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  position: relative;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.rcd-hydro-waves-container {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 80px;
+  overflow: hidden;
+}
+
+.rcd-hydro-wave-svg {
+  width: 200%;
+  height: 80px;
+  display: block;
+}
+
+.rcd-wave-g1 {
+  animation: rcdWaveSweep1 4s linear infinite;
+}
+
+.rcd-wave-g2 {
+  animation: rcdWaveSweep2 5.5s linear infinite;
+}
+
+.rcd-hydro-drops {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 100%;
+  pointer-events: none;
+}
+
+.rcd-hydro-drop {
+  position: absolute;
+  width: 8px; height: 12px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: #38bdf8;
+  opacity: 0;
+}
+
+.rcd-hydro-drop-0 { left: 20%; animation: rcdDropFall 2s ease-in 0s   infinite; }
+.rcd-hydro-drop-1 { left: 45%; animation: rcdDropFall 2s ease-in 0.5s infinite; }
+.rcd-hydro-drop-2 { left: 65%; animation: rcdDropFall 2s ease-in 1.0s infinite; }
+.rcd-hydro-drop-3 { left: 80%; animation: rcdDropFall 2s ease-in 1.5s infinite; }
+
+/* ── Biomass animation ─────────────────────────────────────────────────────── */
+
+.rcd-biomass-wrap {
+  width: 80px;
+  height: 80px;
+  position: relative;
+}
+
+.rcd-leaf {
+  position: absolute;
+  width: 18px; height: 24px;
+  opacity: 0;
+}
+
+.rcd-leaf-0 { left: 5%;  animation: rcdLeafFloat 3.0s ease-in-out 0.0s  infinite; }
+.rcd-leaf-1 { left: 25%; animation: rcdLeafFloat 3.5s ease-in-out 0.5s  infinite; }
+.rcd-leaf-2 { left: 45%; animation: rcdLeafFloat 2.8s ease-in-out 1.0s  infinite; }
+.rcd-leaf-3 { left: 65%; animation: rcdLeafFloat 3.2s ease-in-out 0.25s infinite; }
+.rcd-leaf-4 { left: 15%; animation: rcdLeafFloat 3.8s ease-in-out 1.5s  infinite; }
+.rcd-leaf-5 { left: 55%; animation: rcdLeafFloat 2.6s ease-in-out 0.75s infinite; }
+.rcd-leaf-6 { left: 80%; animation: rcdLeafFloat 3.4s ease-in-out 1.25s infinite; }
+
+/* ── Responsive ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .rcd-regional-grid { grid-template-columns: repeat(2, 1fr); }
+  .rcd-energy-slide  { grid-template-columns: 180px 1fr; }
+}
+
+@media (max-width: 768px) {
+  .rcd-regional-grid { grid-template-columns: 1fr 1fr; }
+
+  .rcd-energy-slide {
+    grid-template-columns: 1fr;
+  }
+
+  .rcd-anim-panel { min-height: 140px; }
+
+  .rcd-dual-slide {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+
+  .rcd-dual-divider { width: 100%; height: 1px; }
+}

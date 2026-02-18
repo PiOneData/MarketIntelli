@@ -6,6 +6,7 @@ import {
   useRETariffs,
 } from "../hooks/usePowerMarket";
 import KpiCarousel from "../components/dashboard/KpiCarousel";
+import RegionalCapacityCarousel from "../components/dashboard/RegionalCapacityCarousel";
 import EnergyMixChart from "../components/dashboard/EnergyMixChart";
 import TopStatesChart from "../components/dashboard/TopStatesChart";
 import FinancialInsightsChart from "../components/dashboard/FinancialInsightsChart";
@@ -61,6 +62,9 @@ function DashboardPage() {
         pmLoading={pmOverview.isLoading}
         mktLoading={overview.isLoading}
       />
+
+      {/* Regional Capacity Dashboard Carousel */}
+      <RegionalCapacityCarousel capacitySummary={capacitySummary.data} />
 
       {/* Charts Row */}
       {(hasPmData || hasCapData) && (
