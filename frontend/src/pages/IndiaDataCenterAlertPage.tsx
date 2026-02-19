@@ -45,8 +45,6 @@ function toMapFormat(facilities: DataCenterFacility[]) {
     powerMW: f.power_capacity_mw,
     sizeSqFt: f.size_sqft,
     status: STATUS_DISPLAY[f.status] || f.status,
-    latitude: f.latitude,
-    longitude: f.longitude,
   }));
 }
 
