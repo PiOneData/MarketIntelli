@@ -2,7 +2,8 @@
 Seed script to import data center entries from dc-extracted-19022026-final.csv into PostgreSQL.
 
 Usage:
-    python -m app.scripts.seed_data_centers
+    python -m app.scripts.seed_data_centers           # skip if data exists
+    python -m app.scripts.seed_data_centers --force   # clear all DC data and re-seed
 
 This script:
 1. Reads dc-extracted-19022026-final.csv — the authoritative full dataset (~287 data centers)
@@ -14,9 +15,10 @@ import asyncio
 import csv
 import os
 import re
+import sys
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import select, delete
 
 from app.db.session import async_session_factory
 from app.domains.data_center_intelligence.models.data_center import (
@@ -32,6 +34,16 @@ _CANDIDATES = [
     "/app/dc-extracted-19022026-final.csv",                                          # Docker mount
 ]
 CSV_PATH = next((p for p in _CANDIDATES if os.path.exists(p)), _CANDIDATES[0])
+
+# Normalise common state-name typos / aliases found in the source data
+STATE_ALIASES: dict[str, str] = {
+    "Telengana": "Telangana",
+    "Tamilnadu": "Tamil Nadu",
+    "Tamil Nadu": "Tamil Nadu",
+    "Andhra Pradesh": "Andhra Pradesh",
+    "Uttarakhand": "Uttarakhand",
+    "Jammu and Kashmir": "Jammu & Kashmir",
+}
 
 # Map known company names to parent companies
 COMPANY_PARENTS = {
@@ -62,10 +74,12 @@ COMPANY_PARENTS = {
     "Pi Datacenters": None,
 }
 
+_EMPTY_VALS = {"not listed", "not publicly disclosed", "not specified", ""}
+
 
 def _parse_power_mw(val: str | None) -> float | None:
-    """Parse power value from CSV (e.g. '1.2 MW', '16 MW', 'Not Listed')."""
-    if not val or val.strip().lower() in ("not listed", "not publicly disclosed", ""):
+    """Parse power value from CSV (e.g. '1.2 MW', '16 MW', 'Not Specified')."""
+    if not val or val.strip().lower() in _EMPTY_VALS:
         return None
     match = re.search(r"([\d.]+)", val.replace(",", ""))
     if match:
@@ -78,7 +92,7 @@ def _parse_power_mw(val: str | None) -> float | None:
 
 def _parse_whitespace(val: str | None) -> float | None:
     """Parse whitespace/size field to approximate sq ft."""
-    if not val or val.strip().lower() in ("not listed", ""):
+    if not val or val.strip().lower() in _EMPTY_VALS:
         return None
     val = val.strip()
     if "acre" in val.lower():
@@ -102,7 +116,7 @@ def _parse_whitespace(val: str | None) -> float | None:
 
 def _parse_tier(val: str | None) -> str | None:
     """Normalize tier design field."""
-    if not val or val.strip().lower() in ("not listed", ""):
+    if not val or val.strip().lower() in _EMPTY_VALS:
         return None
     val = val.strip()
     val = (
@@ -111,6 +125,14 @@ def _parse_tier(val: str | None) -> str | None:
         .replace("Tier 2", "Tier II")
     )
     return val
+
+
+def _normalise_state(raw: str | None) -> str:
+    """Apply alias mapping and basic cleanup to state names."""
+    if not raw:
+        return "Unknown"
+    cleaned = raw.strip().strip(",").strip()
+    return STATE_ALIASES.get(cleaned, cleaned) or "Unknown"
 
 
 def load_csv_data() -> list[dict]:
@@ -130,16 +152,41 @@ def load_csv_data() -> list[dict]:
     return rows
 
 
-async def seed_data_centers() -> None:
-    """Seed data centers from CSV into the database."""
+async def seed_data_centers(force: bool = False) -> None:
+    """Seed data centers from CSV into the database.
+
+    Auto-reseeds when the database has fewer facilities than the CSV so that
+    deploying a new CSV always results in the full dataset being loaded.
+
+    Args:
+        force: When True, always clear and re-seed regardless of counts.
+    """
+    from sqlalchemy import func as sa_func
+
+    print(f"Using CSV: {CSV_PATH}")
     csv_data = load_csv_data()
+    csv_count = len(csv_data)
+    print(f"Loaded {csv_count} rows from CSV.")
 
     async with async_session_factory() as session:
-        # Check if data already exists
-        existing = await session.execute(select(DataCenterCompany).limit(1))
-        if existing.scalar_one_or_none():
-            print("Data center companies already exist. Skipping seed.")
+        db_count = (
+            await session.execute(select(sa_func.count(DataCenterFacility.id)))
+        ).scalar() or 0
+
+        stale = db_count < csv_count
+        should_reseed = force or stale
+
+        if not should_reseed:
+            print(f"DB already has {db_count} facilities (CSV: {csv_count}). Skipping seed.")
             return
+
+        if db_count > 0:
+            reason = "--force" if force else f"stale (DB={db_count} < CSV={csv_count})"
+            print(f"Reseeding ({reason}): clearing existing DC data...")
+            await session.execute(delete(DataCenterFacility))
+            await session.execute(delete(DataCenterCompany))
+            await session.flush()
+            print("Existing data cleared.")
 
         # Create companies
         company_map: dict[str, DataCenterCompany] = {}
@@ -159,6 +206,7 @@ async def seed_data_centers() -> None:
         await session.flush()
 
         # Create facilities
+        facility_count = 0
         for row in csv_data:
             company_name = row.get("Company Name")
             company = company_map.get(company_name)
@@ -166,8 +214,7 @@ async def seed_data_centers() -> None:
                 continue
 
             city = row.get("City") or row.get("Market") or "Unknown"
-            state = row.get("State") or "Unknown"
-            state = state.strip().strip(",").strip()
+            state = _normalise_state(row.get("State"))
 
             address = row.get("Address")
             postal = row.get("Postal")
@@ -191,13 +238,15 @@ async def seed_data_centers() -> None:
                 date_added=datetime.now(),
             )
             session.add(facility)
+            facility_count += 1
 
         await session.commit()
-        print(f"Seeded {len(company_map)} companies and {len(csv_data)} facilities.")
+        print(f"Seeded {len(company_map)} companies and {facility_count} facilities.")
 
 
 def main() -> None:
-    asyncio.run(seed_data_centers())
+    force = "--force" in sys.argv
+    asyncio.run(seed_data_centers(force=force))
 
 
 if __name__ == "__main__":
