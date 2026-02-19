@@ -52,7 +52,8 @@ const navItems: NavItem[] = [
     path: "/finance",
     label: "Finance",
     children: [
-      { id: "investment-finance", label: "Investment & Finance", path: "/finance/investment-finance" },
+      { id: "finance-intelligence", label: "Finance & Investment Intelligence", path: "/finance/finance-intelligence" },
+      { id: "investment-finance", label: "Investment Guidelines", path: "/finance/investment-finance" },
       { id: "power-trading", label: "Power Trading", path: "/finance/power-trading" },
     ],
   },

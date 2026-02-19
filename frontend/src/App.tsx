@@ -30,7 +30,7 @@ function App() {
         <Route path="/power-data/:section" element={<PowerDataPage />} />
 
         {/* Finance */}
-        <Route path="/finance" element={<Navigate to="/finance/investment-finance" replace />} />
+        <Route path="/finance" element={<Navigate to="/finance/finance-intelligence" replace />} />
         <Route path="/finance/:section" element={<FinancePage />} />
 
         {/* Policy */}
