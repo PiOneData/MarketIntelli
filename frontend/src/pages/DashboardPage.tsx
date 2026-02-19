@@ -10,6 +10,7 @@ import RegionalCapacityCarousel from "../components/dashboard/RegionalCapacityCa
 import EnergyMixChart from "../components/dashboard/EnergyMixChart";
 import TopStatesChart from "../components/dashboard/TopStatesChart";
 import FinancialInsightsChart from "../components/dashboard/FinancialInsightsChart";
+import RECapacityIframe from "../components/dashboard/RECapacityIframe";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ErrorMessage from "../components/common/ErrorMessage";
 
@@ -169,6 +170,9 @@ function DashboardPage() {
           </p>
         </div>
       )}
+
+      {/* RE Installed vs Potential Capacity — NITI ICED */}
+      <RECapacityIframe />
     </div>
   );
 }
