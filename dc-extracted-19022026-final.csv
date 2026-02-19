@@ -1,0 +1,951 @@
+Slno,Data Center Name,Company Name,URL to Website,Address,Postal,City,Market,State,Country,Power (MW),Tier Design,Whitespace
+1,Nxtra Agartala I,Nxtra by Airtel,https://www.nxtra.in,"Nxtra by Airtel
+within Chanmari area of Agartala
+799006 Agartala, India",799006,Agartala,Agartala,Tripura,India,5,Not Specified,7432 sq. ft.
+2,BSNL Ahmedabad IDC,BSNL IDC,https://bsnl.co.in/en,"BSNL IDC
+Bapunagar Telephone Office, 1 General Hospital Rd
+380024 Ahmedabad
+Gujarat, India",380024,Ahmedabad,Ahmedabad,Gujarat,India,Not Specified,Tier 3,Not Specified
+3,CloudETC Data Center,CloudETC,https://cloudetc.in,"CloudETC
+Sarkhej-Gandhinagar Hwy
+380060 Ahmedabad
+Gujarat, India",380060,Ahmedabad,Ahmedabad,Gujarat,India,Not Specified,Tier 3,Not Specified
+4,DEVPETER DATACENTER,DEVPETER DATACENTER PVT. LTD.,https://www.devpeterdatacenter.com,"DEVPETER DATACENTER PVT. LTD.
+427 Block-A, Money Plant High Street
+nr Bsnl Office Jagatpur
+382470 Ahmedabad
+Gujarat, India",382470,Ahmedabad,Ahmedabad,Gujarat,India,0.12,Not Specified,2000 sq. ft.
+5,DataFirst Ahmedabad,Data First,https://www.datafirst.in,"Data First
+Cambay Grand, Gulab Tower Rd
+9th floor
+380054 Ahmedabad
+gujarat, India",380054,Ahmedabad,Ahmedabad,Gujarat,India,Not Specified,Tier 3,Not Specified
+6,ECS Biztech Data Center,ECS Corporation,https://www.ecsbiztech.com,"ECS Corporation
+11-12 Garden View
+380054 Sindhubhavan
+Gujarat, India",380054,Ahmedabad,Ahmedabad,Gujarat,India,Not Specified,Not Specified,465 sq. m.
+7,Go4Hosting Ahmedabad,Go4Hosting,https://go4hosting.in,"Go4Hosting
+F-402 Titanium City Center, 100 Feet Road, Anandnagar, Satellite
+380015 Ahmedabad
+Gujarat, India",380015,Ahmedabad,Ahmedabad,Gujarat,India,Not Specified,Tier 3,Not Specified
+8,Ishan Technologies Gandhinagar,Ishan Infotech Limited,https://ishantechnologies.com,"Ishan Infotech Limited
+Creative Infocity Limited, Infotower 1
+Office No. 115
+382330 Gandhinagar
+India",382330,Gandhinagar,Ahmedabad,Gujarat,India,Not Specified,Not Specified,Not Specified
+9,STT Ahmedabad DC 1,STT GDC India,https://www.sttelemediagdc.com,"STT GDC India
+Building no. 48, Gyan Marg
+382355 Gandhinagar
+Gujarat, India",382355,Gandhinagar,Ahmedabad,Gujarat,India,3,Not Specified,70000 sq. ft.
+10,VD Networks Data center,VD Networks India Pvt.Ltd,https://vdnetworks.com,"VD Networks India Pvt.Ltd
+within Gandhinagar
+382355 Gandhi nagar
+Gujarat, India",382355,Gandhi nagar,Ahmedabad,Gujarat,India,Not Specified,Not Specified,Not Specified
+11,Yotta G1,Yotta,https://yotta.com/datacenter/gujarat-g1,"Yotta
+GIFT City, 12th Floor, Signature Building
+382355 Gujarat
+India",382355,Gandhinagar,Ahmedabad,Gujarat,India,1,Not Specified,1950 sq. ft.
+12,BSNL Cochin IDC,BSNL IDC,https://bsnl.co.in/en,"FF, BSNL Telephone bhavan Cherthala, Cochin",688524,Cochin,Alappuzha,Kerala,India,Not Specified,Not Specified,Not Specified
+13,NetDataVault,NetDataVault IDC,https://www.netdatavault.com/,"NetDataVault IDC
+F-19, RIICO, Phase-1, Bhiwadi
+301019 Delhi NCR
+India",301019,Alwar,Alwar,Rajasthan,India,Not Specified,Tier 3,5000  sq. ft.
+14,BSNL KR Puram IDC,BSNL IDC,https://bsnl.co.in/,"BSNL CACT Complex, Doorwani Nagar, Opp ITI,560016 KR Puram,Karnataka, India",560016,Puram,Bangalore,Karnataka,India,Not Specified,Tier 3,Not Specified
+15,"CapitaLand Data Centre, Bangalore 01",CapitaLand Data Centre,https://www.capitaland.com/,"International Tech Park Bangalore, Whitefield Road,560066 Bangalore,India",560066 ,Bengaluru,Bangalore,Karnataka,India,42,Not Specified,Not Specified
+16,CtrlS Bangalore DC1,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com/,"Veer Sandra, Electronic City,560100 Bengaluru,Karnataka, India",560100 ,Bengaluru,Bangalore,Karnataka,India,12,Tier 4,"106,536 sq. ft."
+17,Cyfuture Bangalore Data Center,Cyfuture Data Center,https://cyfuture.com/,"Akshaya Commercial Complex, Sri Thyagi M Palanivelu Rd, Vicoria Layout,Bengaluru,560047 Bangalore,India",560047 ,Bengaluru,Bangalore,Karnataka,India,3,Tier 3,185 sq. m.
+18,Data Samudra,Data Samudra Data Centre Services,https://www.teleindianetworks.com/,"KIADB IT Park, Mahadeva Kodigehalli,562149 Bangalore,Karnataka, India",562149 ,Bengaluru,Bangalore,Karnataka,India,2,Tier 3,"19,000 sq. ft."
+19,DataSamudra,TeleIndia Networks Private Limited,https://datasamudra.com/,"#85, Road No. 9, KIADB IT Park,562149 Mahadeva Kodigehalli,India",562149,Mahadeva Kodigehalli,Bangalore,Karnataka,India,Not Specified,Tier 3,"1,766 sq. m."
+20,ESDS Bengaluru DC,ESDS Software Solution Pvt. Ltd.,https://www.esds.co.in/,"No. 76, 77 & Part 78, Electronic City,560100 Bengaluru,India",560100 ,Banagalore,Bangalore,Karnataka,India,Not Specified,Tier 3,Not Specified
+21,GDC - Bengaluru 2 Data Center,"NTT DATA, Inc.",https://services.global.ntt/en-,"Plot 88/A S V R Platinum, Electronic City Phase 1,560100 Karnataka,India",560100,Bengaluru,Bangalore,Karnataka,India,4.5,Not Specified,"4,000 sq. m."
+22,GDC - Bengaluru 3 Data Center,"NTT DATA, Inc.",https://services.global.ntt/en-,"Survey No. 146, Kajisonnenehali Village, Bidrahalli,560067 Bengaluru,India",560067,Bengaluru,Bangalore,Karnataka,India,12,Not Specified,"5,800 sq. m."
+23,GDC - Bengaluru 4 Data Center,"NTT DATA, Inc.",https://services.global.ntt/en-,"Prestige Tech Cloud, Navarathna Agrahara, Bengaluru,562110 Bengaluru,India",562110 ,Bengaluru,Bangalore,Karnataka,India,67.2,Tier 3,"17,000 sq. m."
+24,Go4Hosting Bengaluru,Go4Hosting,https://go4hosting.in/,"Akshaya Commercial Complex, No. 26/16, Victoria Road, Austin Town,2nd floor,560047 Bengaluru,Karnataka, India",560047,Bengaluru,Bangalore,Karnataka,India,40,Not Specified,Not Specified
+25,ITI Limited Data Center,ITI Limited,https://www.itiltd.in/,"F-86, Bangalore Plant,560016 Dooravani Nagar,Karnataka, India",560016 ,Dooravani Nagar,Bangalore,Karnataka,India,6,Tier 3,18580 sq. m.
+26,Iron Mountain Data Centers BLR-1,Iron Mountain Data Centers,https://www.ironmountain.com/,"564 Pattandura Agrahara Main Road Whitefield,560048 Bengaluru,India",560048,,Bangalore,Karnataka,India,4,Tier 3,"80,000 sq. ft."
+27,LNT BLR 1,L&T Cloudfiniti,https://lntcloudfiniti.com/,"within the Whitefield area of Bengaluru,560066 Bengaluru,India",560066,Banagalore,Bangalore,Karnataka,India,40,Not Specified,Not Specified
+28,LNT BLR 1,L&T Cloudfiniti,https://larsentoubrovyoma.com/,"within the Whitefield area of Bengaluru,560066 Bengaluru,India",560066 ,Bengaluru,Bangalore,Karnataka,India,40,Not Specified,Not Specified
+29,Medha Hosting Data Center,Medha Cloud,https://www.medhacloud.com,"1003 GF1, 15th Cross & 16th Main, BTM 2nd Stage,560076 Bangalore,India",560076,Bengaluru,Bangalore,Karnataka,India,Not Specified,Not Specified,Not Specified
+30,Micronova Data Center,Micronova Infotex Pvt Ltd,https://www.micronova.in/,"#17, Bull Temple Road,560004 Bangalore,Karnataka, India",560004 ,Bengaluru,Bangalore,Karnataka,India,Not Specified,Tier 3,Not Specified
+31,Nivid Data Center,Nivid Technologies India Pvt Ltd,https://nividtele.com/,"Oceana Chambers, 757/11, 13th Cross, Krishna Rajendra Rd, 7th Block,3rd floor,560082 Bangalore,Karnataka, India",560082,Banagalore,Bangalore,Karnataka,India,Not Specified,Not Specified,Not Specified
+32,NxtGen HDDC,NxtGen Datacenter and Cloud Technologies,https://nxtgen.com/,"Plot No- 25, P-13, Bidadi Industrial Area,562109 Bidadi,Karnataka, India",562109 ,Bidadi,Bangalore,Karnataka,India,20,Not Specified,"12,500 sq. m."
+33,Nxtra Bengaluru I,Nxtra by Airtel,https://www.nxtra.in/,"Plot 111 & 112, EPIP 5 Bharti Airtel Limited, Rd Number 7,560066 Whitefield, India",560066,Whitefield,Bangalore,Karnataka,India,5.5,Not Specified,Not Specified
+34,Nxtra Bengaluru II,Nxtra by Airtel,https://www.nxtra.in/,"within Bengaluru,560066 Bengaluru,India",560066,Banagalore,Bangalore,Karnataka,India,40,Not Specified,"41,806 sq. m."
+35,Reliance IDC Bengaluru #1,Reliance Data Center,https://www.relianceidc.com/,"49, Race Course Rd,560001 Bengaluru,Karnataka, India",560001 ,Bengaluru,Bangalore,Karnataka,India,Not Specified,Not Specified,Not Specified
+36,Reliance IDC Bengaluru #2,Reliance Data Center,https://www.relianceidc.com/,"Pipeline Rd,560022 Bengaluru,Karnataka, India",560022,Bengaluru,Bangalore,Karnataka,India,Not Specified,Not Specified,Not Specified
+37,Reliance IDC Bengaluru #3,Reliance Data Center,https://www.relianceidc.com/,"16, Whitefield Main Road,Sadaramangala Industrial Area,560048 Bengaluru,Karnataka, India",560048 ,Bengaluru,Bangalore,Karnataka,India,Not Specified,Not Specified,Not Specified
+38,Renaissance Data Center,Renaissance Technologies,https://www.renaissanceind.com/,"5AC-952, Ist Block HRBR Outer Ring Road,560043 Banaswadi,Karnataka, India",560043 ,Banaswadi,Bangalore,Karnataka,India,Not Specified,Not Specified,Not Specified
+39,STT Bengaluru DC 1,STT GDC India,https://www.sttelemediagdc.com/,"Videsh Sanchar Bhavan, No. 2 , Keb Layout,560094 Geddalahalli,Karnataka, India",560094,Geddalahalli,Bangalore,Karnataka,India,1.25,Not Specified,"20,000 sq. ft."
+40,STT Bengaluru DC 2,STT GDC India,https://www.sttelemediagdc.com/,"Plot No. 18-19-20, Epip Layout, KIADB,560066 Whitefield,Karnataka, India",560066 ,Whitefield,Bangalore,Karnataka,India,7,Not Specified,"100,000 sq. ft."
+41,STT Bengaluru DC 3,STT GDC India,https://www.sttelemediagdc.com/,"within Whitefield,560066 Bengaluru,Karnataka, India",560066,Banagalore,Bangalore,Karnataka,India,18,Tier 3,"395,000 sq. ft."
+42,Sify Bangalore,Sify Technologies Ltd,https://www.sifytechnologies.com/,"Cyber Park, Plot no:76/77, Doddathogaur Village,3rd Floor,560100 Electronic ,City Phase One,Karnataka, India",560100 ,Electronic City Phase One,Bangalore,Karnataka,India,2.3,Tier 3,"13,450 sq. ft."
+43,Tata Communications Bangalore KIADB,Tata Communications,https://www.tatacommunications.com/,"Plot No.18, 19 & 20, Rd Number 7,KIADB Export Promotion Industrial Area,560066 Bangalore,Karnataka, India",560066,Bengaluru,Bangalore,Karnataka,India,Not Specified,Tier 3,Not Specified
+44,Tata Communications Bangalore VSB,Tata Communications,https://www.tatacommunications.com/,"18, 2nd Cross Rd,560094 Bangalore,Karnataka, India",560094,Bengaluru,Bangalore,Karnataka,India,Not Specified,Tier 3,Not Specified
+45,Trijit India Datacenter,"Trijit Technologies Pvt. Ltd.,",https://www.trijit.in/,"12th A Main Road & 14th A Cross Rd,560064 Bangalore,Karnataka, India",560064,Banagalore,Bangalore,Karnataka,India,Not Specified,Not Specified,Not Specified
+46,CtrlS Bhopal DC1,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com,"within Badwai IT Park, Bhopal",462033,Bhopal,Bhopal,Madhya Pradesh,India,Not Specified,Not Specified,Not Specified
+47,CtrlS Bhubaneswar DC1,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com,"CtrlS Datacenters Pvt Ltd
+Infocity, Chandrasekharpur
+751021 Bhubaneswar
+India",751021,Bhubaneswar,Bhubaneswar,Odisha,India,5,Not Specified,Not Specified
+48,Nxtra Bhubaneswar I,Nxtra by Airtel,https://www.nxtra.in/,"Nxtra by Airtel
+Plot No. E-13/1, Chandaka Industrial Estate
+4th Floor
+751024 Bhubaneswar
+India",751024,Bhubaneswar,Bhubaneswar,Odisha,India,1.8,Not Specified,Not Specified
+49,AdaniConneX Chennai,AdaniConneX,https://www.adaniconnex.com,"SIPCOT IT Park, Plot No H15, Siruseri",603103,Chennai,Chennai,Tamil Nadu,India,17,Tier 3,"19,789 sq. m."
+50,"CapitaLand Data Centre, Chennai 01",CapitaLand Data Centre,https://www.capitaland.com/,"Pattravakkam Road, 600098 Chennai,India",600098,Chennai,Chennai,Tamil Nadu,India,54,Not Specified,Not Specified
+51,Cenmax Chennai,Cenmax,https://cenmax.org/,"19, 2nd main Road Ext, Balaji Nagar,600070 Anakaputhur,Tamil Nadu, India",600070,Anakaputhur,Chennai,Tamil Nadu,India,Not Specified,Tier 3,Not Specified
+52,Colt Chennai,Colt Technology Services,https://www.coltdatacentres.net/,"within Ambattur, Chennai,600053 Ambattur,India",600053,Chennai,Chennai,Tamil Nadu,India,72,Tier 3,"76,000 sq. m."
+53,CtrlS Chennai DC1,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com/,"20, 3rd Main Rd,Ambattur Industrial Estate,600058,Chennai, India",600058,Chennai,Chennai,Tamil Nadu,India,Not Specified,Tier 4,Not Specified
+54,CtrlS Chennai DC2,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com,"20, 3rd Main Rd, Ambattur Industrial Estate",600058,Chennai,Chennai,Tamil Nadu,India,27,Tier 4,"290,000 sq. ft."
+55,Digital Connexion,Digital Connexion,https://digitalconnexion.com/,"Plot No 6, Madras Thiruvallur High Rd,600098 Chennai,Tamil Nadu, India",600098,Chennai,Chennai,Tamil Nadu,India,Not Specified,Not Specified,Not Specified
+56,Equinix CN1,Equinix,https://www.equinix.com/,"SIPCOT IT Park, Plot H12,603103 Siruseri,India",603 103,Siruseri,Chennai,Tamil Nadu,India,24,Not Specified,12000 sq. m.
+57,GDC - Chennai 1 Data Center,"NTT DATA, Inc.",https://services.global.ntt/en-us,"67, Mathiravedu, Velappanchavadi, Poonamallee high road",600077,Chennai,Chennai,Tamil Nadu,India,2,Not Specified,"1,500 sq. m."
+58,GDC - Chennai 2 Data Center,"NTT DATA, Inc.",https://services.global.ntt/en-us,"Plot no.:08, Chennai Tiruvallur High Rd, Sai Nagar, Ambattur",600058,Chennai,Chennai,Tamil Nadu,India,34.8,Not Specified,Not Specified
+59,Hindustan Global Cloud Data Center,HINDUSTAN INDUSTRIAL RESEARCH PRIVATE LIMITE,http://www.hindustancorporate.com/,"Century Plaza, No:560-562, Anna Salai, Thiru Vi Ka Kudiyiruppu, Teynampet,1st Floor,600018 Chennai,Tamil Nadu, India",600018,Chennai,Chennai,Tamil Nadu,India,Not Specified,Tier 3,Not Specified
+60,Hostzop Cloud Services Pvt. Ltd.,Hostzop Cloud Services Pvt. Ltd.,https://www.hostzop.com,"SIPCOT, Siruseri, H 15",603103,Chennai,Chennai,Tamil Nadu,India,17,Tier 3,"3,500 sq. ft."
+61,Iron Mountain Data Centers,Iron Mountain Data Centers,https://www.ironmountain.com/,"Plot No 83, MTH Road,Ambattur Industrial Estate,600 053 Ambattur,India",600 053,Ambattur,Chennai,Tamil Nadu,India,23.2,Not Specified,383540 sq. m.
+62,Iron Mountain Data Centers CHN-2,Iron Mountain Data Centers,https://www.ironmountain.com/,"Plot No 84, MTH Road,Ambattur Industrial Estate,600 053 Ambattur,India",600 053,Ambattur,Chennai,Tamil Nadu,India,19,Not Specified,396075 sq. m.
+63,Ishan Technologies Chennai,Ishan Infotech Limited,https://ishantechnologies.com/,"Fagun Towers,5th Floor,600008 Chennai,India",600008,Chennai,Chennai,Tamil Nadu,India,Not Specified,Tier 3,Not Specified
+64,LNT CHN 1,L&T Cloudfiniti,https://larsentoubrovyoma.com/,"WR25+6WF, Kanchipuram,602108 Kanchipuram,India",602108,Kanchipuram,Chennai,Tamil Nadu,India,30,Not Specified,36046 sq. m.
+65,Lumina Chennai,Lumina CloudInfra Private Limited,https://www.luminadc.com/,"within Ambattur,600053 Chennai,India",600053,Ambattur,Chennai,Tamil Nadu,India,216,Not Specified,Not Specified
+66,Madras Thiruvallur High Rd (MAA10),Digital Realty,https://www.digitalrealty.com,"Digital RealtyMTH Road, Ambattur Industrial Estate",600058,Chennai,Chennai,Tamil Nadu,India,150,Not Specified,6189 sq. m.
+67,Nxtra Chennai I,Nxtra by Airtel,https://www.nxtra.in/,"SIPCOT IT Park, 3rd cross street, First Main Road,F8, 7th Floor,603103 Siruseri,India",603103,Siruseri,Chennai,Tamil Nadu,India,3.5,Not Specified,Not Specified
+68,Nxtra Chennai II,Nxtra by Airtel,https://www.nxtra.in/,"SIPCOT IT Park, 3rd cross street, First Main Road, A32& A33,603103 Siruseri, India",603 103,Siruseri,Chennai,Tamil Nadu,India,24,Not Specified,"25,000 sq. m."
+69,Nxtra Chennai III,Nxtra by Airtel,https://www.nxtra.in/,"101 Santhome High Road,600028 Chennai,India",600028,Chennai,Chennai,Tamil Nadu,India,1.5,Not Specified,Not Specified
+70,RackBank GigaCampus ONE,Rackbank Datacenters Pvt. Ltd.,https://www.rackbank.com/,"Walajabad Road,602106 Sriperumbudur,India",602106,Sriperumbudur,Chennai,Tamil Nadu,India,50,Not Specified,"275,425 sq. m."
+71,Reliance IDC Chennai,Reliance Data Center,https://www.relianceidc.com/,"6 Haddows Rd,600006 Chenai,Tamilnadu, India",600006,Chennai,Chennai,Tamil Nadu,India,Not Specified,Not Specified,Not Specified
+72,STT Chennai Ambattur Campus,STT GDC India,https://www.sttelemediagdc.com/,"226, Surapet Main Rd,600053 Chennai,India",600053,Chennai,Chennai,Tamil Nadu,India,Not Specified,Not Specified,Not Specified
+73,STT Chennai DC 1,STT GDC India,https://www.sttelemediagdc.com,"Videsh Sanchar Bhavan, No.4, Swami Sivananda Salai",600002,Chennai,Chennai,Tamil Nadu,India,5,Not Specified,"80,000 sq. ft."
+74,STT Chennai DC 2,STT GDC India,https://www.sttelemediagdc.com,"226, Surapet Main Rd, Kallikuppam",600053,Kallikuppam,Chennai,Tamil Nadu,India,45,Not Specified,"400,000 sq. ft."
+75,STT Chennai DC 3,STT GDC India,https://www.sttelemediagdc.com/,"226, Surapet Main Rd,600053 Kallikuppam,India",600053,Kallikuppam,Chennai,Tamil Nadu,India,15,Not Specified,Not Specified
+76,STT Chennai DC 4,STT GDC India,https://www.sttelemediagdc.com/,"226, Surapet Main Rd,600053 Chennai,India",600053,Chennai,Chennai,Tamil Nadu,India,18,Not Specified,Not Specified
+77,STT Chennai DC 7,STT GDC India,https://www.sttelemediagdc.com/,"within Siruseri, Chennai,TBA Chennai,India",603103,Siruseri,Chennai,Tamil Nadu,India,9.5,Not Specified,Not Specified
+78,Servernet Services Data Center,Servernet Services P Ltd,https://servernetservices.com/,"73, 1st Main Rd, Second Floor",600041,Chennai,Chennai,Tamil Nadu,India,Not Specified,Not Specified,Not Specified
+79,"Sify Siruseri, Chennai 02",Sify Technologies Ltd,https://www.sifytechnologies.com/,"H11/A, Sipcot IT Park,603 103 Siruseri,India",603 103,Chennai,Chennai,Tamil Nadu,India,130,Tier 3,Not Specified
+80,"Sify Tidel Park, Chennai",Sify Technologies Ltd,https://www.sifytechnologies.com/,"No:4, Rajiv Gandhi Salai, Taramani",600113,Chennai,Chennai,Tamil Nadu,India,1.6,Not Specified,Not Specified
+81,TD Chennai TD-1,Techno Digital Infra Pvt. Ltd.,https://technodigital.in/,"SIPCOT IT Park, Third Cross Road,Plot No 17 / D21 - 1 & 17, Unit D21 - 2, 603103 ,Siruseri,India",603103,Siruseri,Chennai,Tamil Nadu,India,36,Not Specified,23000 sq. m.
+82,Tata Communications Ambattur,Tata Communications,https://www.tatacommunications.com/,"No.226, Red Hills Road Kallikuppam, Ambattur,600053 Chennai,Tamil Nadu, India",600053,Chennai,Chennai,Tamil Nadu,India,Not Specified,Tier 3,Not Specified
+83,Tata Communications Chennai,Tata Communications,https://www.tatacommunications.com/,"4 Swami Sivananda Salai,600002 Chennai,Tamil Nadu, India",600002,Chennai,Chennai,Tamil Nadu,India,Not Specified,Tier 3,Not Specified
+84,Yotta Chennai-Oragadam DC Park,Yotta,https://yotta.com/,"Singaperumal - Oragadam Highway,603204 Oragadam,India",603204,Oragadam,Chennai,Tamil Nadu,India,140,Not Specified,Not Specified
+85,ARIDE OCEAN-DC,ARIDE OCEAN INFOWAY PVT LTD,https://www.arideocean.com,"ARIDE OCEAN INFOWAY PVT LTD
+within Kinfra, Kalamassery
+683503 Ernakulam (Kochi / COCHIN)
+Kerala, India",683503,Ernakulam,Cochin,Kerala,India,Not Specified,Tier 3,Not Specified
+86,Benzy Infotech Data Center,Benzy Infotech PVT LTD,https://www.bidc.in,"Benzy Infotech PVT LTD
+Manimala Road , Edapally
+682024 Cochin
+Kerala, India",682024,Cochin,Cochin,Kerala,India,Not Specified,Tier 3,Not Specified
+87,DTS-NET India,DTS-NET,https://www.dts-net.com,"DTS-NET
+Pulappayil Building, NH Road, Mamangalam,
+682025 Cochin
+Kerala, India",682025,Cochin,Cochin,Kerala,India,Not Specified,Not Specified,Not Specified
+88,IxoraDC Cochin,Aabasoft Technologies India Pvt Ltd,https://www.ixoradc.com,"Aabasoft Technologies India Pvt Ltd
+Chakolas Heights, Seaport - Airport Rd, Near Infopark
+682037 Cochin
+Kerala, India",682037,Cochin,Cochin,Kerala,India,Not Specified,Not Specified,Not Specified
+89,Spectrum IT Park,Spectrum Softtech Solutions (P) Ltd.,https://www.spectrum.net.in,"Spectrum Softtech Solutions ( P ) Ltd.
+Spectrum IT Park, Mahakavi G Road
+682011 Ernakulam
+Kerala, India",682011,Ernakulam,Cochin,Kerala,India,Not Specified,Tier 3,5110 sq. ft.
+90,Stridx Cochin COK01,Stridx Technologies,https://stridx.com,"Stridx Technologies
+within 10 km from the city centre
+682042 Cochin
+Kerala, India",682042,Cochin,Cochin,Kerala,India,Not Specified,Not Specified,Not Specified
+91,ABTInfo.net,ABTInfo.net Data Center,https://abtinfocloud.com,"ABTInfo.net Data Center
+Dr.MCET Campus, Udumalai Road, 04259237676,04259237777
+642003 Pollachi
+Tamilnadu, India",642003,Pollachi,Coimbatore,Tamil Nadu,India,Not Specified,Tier 3,Not Specified
+92,AkashiQ,AkashiQ Data Care India Pvt. Ltd.,https://www.akashiq.com,"AkashiQ Data Care India Pvt.Ltd.
+KCT Tech Park, Thudiyalur Rd
+641 035 Coimbatore
+Tamilnadu, India",641035,Coimbatore,Coimbatore,Tamil Nadu,India,Not Specified,Tier 3,4000 s. ft.
+93,ServerCake Data Center,ServerCake WebHosting India Private Limited,https://www.servercake.in,"ServerCake WebHosting India Private Limited
+41, Kamarajar Road, X Block
+641042 Coimbatore
+Tamil Nadu, India",641042,Coimbatore,Coimbatore,Tamil Nadu,India,100,Tier 3,2000 sq. ft.
+94,BSNL Faridabad IDC,Bharat Sanchar Nigam Limited (BSNL) ” Operated in partnership with NTT (formerly Dimension Data).,https://bsnl.co.in/en,"BSNL Telephone Exchange Building, DLF Industrial Area",121001,Faridabad,Faridabad,Haryana,India,Not Specified,Not Specified,"10,000 - 11,000 sq. ft."
+95,Pi Amaravati,Pi Datacenters,https://pidatacenters.com,"Survey# 49/P, Plot no -12, IT Park, Mangalagiri",522503,Mangalagiri,Guntur,Andhra Pradesh,India,Not Specified,Tier 4,Not Specified
+96,Anant Raj Manesar,Anant Raj Cloud,https://www.anantrajcloud.com,"Anant Raj Cloud
+Anant Raj Tech Park, Sector 8, Imt Manesar
+122051 Gurugram
+India",122051,Gurugram,Gurgaon,Haryana,India,21,Tier 3,"450,000 sq. m."
+97,Catalyst Data Center,Catalyst Business Solutions,https://www.catalyst-us.com,"Catalyst Business Solutions
+221, Udyog Vihar-IV, Gurgaon
+122016 Gurgaon
+Haryana, India",122016,Gurgaon,Gurgaon,Haryana,India,Not Specified,Tier 3,2000  sq. ft.
+98,Nextra Data Center,Nextra Online Services,https://www.nextraone.com,"Nextra Online Services
+Plot No- 17 and 18, Udyog Vihar, Phase 1
+122016 Gurugram
+Haryana, India",122016,Gurugram,Gurgaon,Haryana,India,0.4,Tier 3,"10,000 sq. ft."
+99,Nxtra Manesar I,Nxtra by Airtel,https://www.nxtra.in,"Nxtra by Airtel
+CP-05, Sector 8, IMT Manesar
+1st Floor
+122050 Manesar
+India",122050,Manesar,Gurgaon,Haryana,India,8.5,Not Specified,Not Specified
+100,Progression Infonet Data Center,Progression Infonet,https://www.progression.com,"Progression Infonet
+55, Independent Electronic Modules, Electronic City, Sector 18,
+122015 Gurgaon
+Haryana, India",122015,Gurgaon,Gurgaon,Haryana,India,Not Specified,Not Specified,Not Specified
+101,AdaniConneX Hyderabad,AdaniConneX,https://www.adaniconnex.com/,"AdaniConneX
+Pargi Road
+509410 Elkatta
+India",509410,Elkatta,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+102,Amazon AWS HYD - FAB A,Amazon AWS,https://aws.amazon.com/,"Amazon AWS
+26, FAB City
+Building A
+501359 Kongar Khurd B
+India",501359,Kongar Khurd B,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+103,Amazon AWS HYD - FAB B,Amazon AWS,https://aws.amazon.com/,"Amazon AWS
+26, FAB City
+Building B
+501359 Kongar Khurd B
+India",501359,Kongar Khurd B,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+104,Amazon AWS HYD - FAB Campus,Amazon AWS,https://aws.amazon.com/,"Amazon AWS
+26, FAB City
+501359 Kongar Khurd B
+India",501359,Kongar Khurd B,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+105,Amazon AWS HYD - Kandukur A,Amazon AWS,https://aws.amazon.com/,"Amazon AWS
+Vavillakunta Thanda
+Building A
+501359 Vailkunta Tanda
+India",501359,Vailkunta Tanda,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+106,Amazon AWS HYD - Kandukur B,Amazon AWS,https://ws.amazon.com/,"Amazon AWS
+Vavillakunta Thanda
+Building B
+501359 Vailkunta Tanda
+India",501359,Vailkunta Tanda,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+107,Amazon AWS HYD - Kandukur Campus,Amazon AWS,https://aws.amazon.com/,"Amazon AWS
+Vavillakunta Thanda
+501359 Vailkunta Tanda
+India",501359,Vailkunta Tanda,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+108,Amazon AWS HYD - Shahabad A,Amazon AWS,https://aws.amazon.com/,"Amazon AWS
+Hyathabad - Shahabad Rd
+Building A
+509217 Shahabad
+India",509217,Shahabad,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+109,Amazon AWS HYD - Shahabad B,Amazon AWS,https://aws.amazon.com/,"Amazon AWS
+Hyathabad - Shahabad Rd
+Building B
+509217 Shahabad
+India",509217,Shahabad,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+110,Amazon AWS HYD - Shahabad Campus,Amazon AWS,https://aws.amazon.com/,"Amazon AWS
+Hyathabad - Shahabad Rd
+509217 Shahabad
+India",509217,Shahabad,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+111,BSNL Hyderabad IDC,BSNL IDC,https://www.bsnl.co.in/,"BSNL IDC
+BSNL Telephone Exchange Opp. ICRI SAT
+502319 Patancheru
+Andhra Pradesh, India",502319,Patancheru,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+112,"CapitaLand Data Centre, Hyderabad 01",CapitaLand Data Centre,https://www.capitaland.com,"CapitaLand Data Centre
+Madhapur, Serilingampally Mandal,
+500081 Hyderabad
+Telengana, India",500081,Hyderabad,Hyderabad,Telangana,India,40,Not Specified,Not Specified
+113,CtrlS Chandanvelly Industrial Park,CtrlS Datacenters Pvt Ltd,https://www.ctrls.in/,"CtrlS Datacenters Pvt Ltd
+Hayathabad - Shahabad Rd
+509217 Shabad
+India",509217,Shabad,Hyderabad,Telangana,India,600,Not Specified,Not Specified
+114,CtrlS Hyderabad DC1,CtrlS Datacenters Pvt Ltd,https://www.ctrls.in/,"CtrlS Datacenters Pvt Ltd
+Pioneer Towers, 20 Inorbit Mall Road
+500081 Hyderabad
+Telangana, India",500081,Hyderabad,Hyderabad,Telangana,India,Not Specified,Tier 4,Not Specified
+115,CtrlS Hyderabad DC2,CtrlS Datacenters Pvt Ltd,https://www.ctrls.in/,"CtrlS Datacenters Pvt Ltd
+Nanakramguda Financial District, Bombay stock exchange
+500032 Hyderabad
+India",500032,Hyderabad,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+116,CtrlS Hyderabad DC3,CtrlS Datacenters Pvt Ltd,https://www.ctrls.in/,"CtrlS Datacenters Pvt Ltd
+within Gachibowli Financial District
+500032 Hyderabad
+India",500032,Hyderabad,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+117,CtrlS Hyderabad DC4,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com/datacenter-hyderabad,"CtrlS Datacenters Pvt Ltd
+within Chandanvelly Industrial Park
+509217 Machanpalle
+India",509217,Machanpalle,Hyderabad,Telangana,India,600,Not Specified,Not Specified
+118,Iron Mountain Data Centers HYD-1,Iron Mountain Data Centers,https://www.webwerks.in/hyderabad-data-center/,"Iron Mountain Data Centers
+No. 185 Masidbanda Village, Kondapur
+500084 Hyderabad
+India",500084,Hyderabad,Hyderabad,Telangana,India,5.5,Not Specified,120000 sq. ft.
+119,Kedia Data Center,Kedia Infotech Ltd.,http://www.kediainfo.com,"Kedia Infotech Ltd.
+518, Swapnalok complex, S.D Road
+500003 Secunderabad
+AP, India",500003,Secunderabad,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+120,Kloudya Godavari,Kloudya Networks Limited,https://www.kloudyalimited.com,"Kloudya Networks Limited
+Tanveer Residency, #201
+500008 Gachibowli
+Telangana, India",500008,Gachibowli,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+121,Microsoft HYD01,Microsoft,https://datacenters.microsoft.com,"Microsoft
+within Mekaguda Industrial Area
+509228 Mekaguda
+India",509228,Mekaguda,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+122,Microsoft HYD04,Microsoft,https://datacenters.microsoft.com,"Microsoft
+Pargi Road
+509216 Shadnagar
+India",509216,Shadnagar,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+123,Microsoft HYD11,Microsoft,https://www.microsoft.com/,"Microsoft
+100 Feet Industrial Rd
+501503 Chandenvelly
+India",501503,Chandenvelly,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+124,Microsoft HYD11 - Building 1,Microsoft,https://www.microsoft.com/,"Microsoft
+100 Feet Industrial Rd
+501503 Chandenvelly
+India",501503,Chandenvelly,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+125,Microsoft HYD11 - Building 2,Microsoft,https://www.microsoft.com/,"Microsoft
+100 Feet Industrial Rd
+501503 Chandenvelly
+India",501503,Chandenvelly,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+126,Nettlinx Data Center,Nettlinx Limited,https://www.nettlinx.com,"Nettlinx Limited
+My Home Sarovar Plaza, Secretariat Road
+3rd Floor
+500 063 Hyderabad
+Telangana, India",500063,Hyderabad,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+127,Nxtra Hyderabad I,Nxtra by Airtel,https://www.nxtra.in/,"Nxtra by Airtel
+within International Tech Park Hyderabad
+500081 Hyderabad
+India",500081,Hyderabad,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+128,RailTel Secunderabad Data Center,RailTel Corporation of India Ltd.,https://www.railtelindia.com/,"RailTel Corporation of India Ltd.
+B-Block, Rail Nilayam
+2nd Floor
+500071 Secunderabad
+Telengana, India",500071,Secunderabad,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+129,Reliance IDC Hyderabad,Reliance Data Center,https://www.relianceidc.com,"Reliance Data Center
+Plot No: 25, HITEC City
+500081 Telangana
+Telangana, India",500081,Hyderabad,Hyderabad,Telangana,India,Not Specified,Tier 3,Not Specified
+130,STT Hyderabad DC 1,STT GDC India,https://www.sttelemediagdc.in/,"STT GDC India
+Videsh Sanchar Bhavan, CFC-1, HITEC City
+500081 Madhapur
+Telangana, India",500081,Madhapur,Hyderabad,Telangana,India,Not Specified,Not Specified,Not Specified
+131,Sify Hyderabad,Sify Technologies Ltd,https://www.sifytechnologies.com/,"Survey No. 115/1, Street Name: Financial District, Nanakram Guda
+500032 Hyderabad
+Telangana, India",500032,Hyderabad,Hyderabad,Telangana,India,Not Specified,Tier 3,Not Specified
+132,Tata Communications Hyderabad,Tata Communications,https://www.tatacommunications.com,"Tata Communications
+Hitech City Main Rd
+500081 Hyderabad
+Andhra Pradesh, India",500081,Hyderabad,Hyderabad,Telangana,India,Not Specified,Tier 3,Not Specified
+133,UPC-Volt Bharat,VOLT Data Centers,https://fromvolt.com,"VOLT Data Centers
+within Bharat Future City
+509358 Hyderabad
+India",509358,Hyderabad,Hyderabad,Telangana,India,100,Not Specified,Not Specified
+134,Dinclix GroundWorks,Dinclix GroundWorks,dinclixgroundworks.com,"Dinclix GroundWorks
+55/1, Sanskriti Nagar
+452010 Sukhliya
+India",452010,Indore,Indore,Madhya Pradesh,India,Not Specified,Not Specified,Not Specified
+135,RackBank DC Madya Pradesh,Rackbank Datacenters Pvt. Ltd.,https://www.rackbank.com,"Rackbank Datacenters Pvt. Ltd.
+within Indore, Madhya Pradesh
+452014 Indore
+India",452014,Indore,Indore,Madhya Pradesh,India,Not Specified,Not Specified,Not Specified
+136,RackBank DC SEZ 1,Rackbank Datacenters Pvt. Ltd.,https://www.rackbank.com,"Rackbank Datacenters Pvt. Ltd.
+Crystal IT Park (SEZ), Ring Road
+First Floor, Building 1
+452016 Indore",452016,Indore,Indore,Madhya Pradesh,India,Not Specified,Tier 3,"3,252 sq. m."
+137,BSNL Jaipur IDC,BSNL IDC,https://bsnl.co.in,"BSNL IDC
+Sikar Rd, Sector 2, Fateh Singh Market, Vidyadhar Nagar
+Sector 5, Ground & 1st Floor
+302023 Jaipur
+Rajasthan, India",302023,Jaipur,Jaipur,Rajasthan,India,Not Specified,Not Specified,Not Specified
+138,DataFirst Jaipur,Data First,https://www.datafirst.in,"Data First
+within Kukas Village
+304025 Jaipur
+Rajasthan, India",304025,Jaipur,Jaipur,Rajasthan,India,Not Specified,Tier 3,Not Specified
+139,EverData Jaipur,Everdata Technologies Pvt. Ltd.,https://www.everdata.com,"Everdata Technologies Pvt. Ltd.
+372, Gopalpura Bypass Rd
+302018 Jaipur
+Rajasthan, India",302018,Jaipur,Jaipur,Rajasthan,India,Not Specified,Not Specified,Not Specified
+140,Go4Hosting Jaipur,Go4Hosting,https://go4hosting.in,"Go4Hosting
+G1-227/228, H1 236-239, Export Promotion Industrial Park (EPIP)
+302022 Jaipur
+Rajasthan, India",302022,Jaipur,Jaipur,Rajasthan,India,Not Specified,Tier 3,Not Specified
+141,Serverwala Cloud Data Centers pvt ltd.,Serverwala Cloud Data Centers Pvt. Ltd,https://www.serverwala.com,"Serverwala Cloud Data Centers Pvt. Ltd
+Jaipur Electronic Market, Ridhi Sidhi
+5th Floor
+302018 Jaipur
+Rajasthan, India",302018,Jaipur,Jaipur,Rajasthan,India,11,Tier 4,Not Specified
+142,CtrlS Kolkata DC1,CtrlS Datacenters Ltd,https://www.ctrls.com,"CtrlS Datacenters Pvt Ltd
+Action Area II, Newtown
+700157 Kolkata
+India",700157,Kolkata,Kolkata,West Bengal,India,60,Tier 4,"44,000 sq. ft."
+143,GDC - Kolkata 1 Data Center,"NTT DATA, Inc.",https://services.global.ntt,"NTT DATA, Inc.
+2E/26, Diplomatic Enclave, Action Area 2E
+Biswa Bangla Sarani, Newtown
+700161 Kolkata
+India",700161,Kolkata,Kolkata,West Bengal,India,40,Not Specified,55740 sq. m.
+144,MegaHostZone Data Center,Megahostzone,https://www.megahostzone.com,"Megahostzone
+8/5 Kantanagar Road
+742102 Berhampore
+West Bengal, India",742102,Kolkata,Kolkata,West Bengal,India,Not Specified,Not Specified,Not Specified
+145,Nxtra Kolkata I,Nxtra by Airtel,https://www.nxtra.in,"Nxtra by Airtel
+Action Area IIE
+700157 New Town
+India",700156,Kolkata,Kolkata,West Bengal,India,16,Not Specified,29625 sq. m.
+146,STT Kolkata DC 1,STT GDC India,https://www.sttelemediagdc.com,"STT GDC India
+Videsh Sanchar Bhavan, Ultadanga 1/18, CIT SCHME, VII M
+700054 Kolkata
+West Bengal, India",700054,Kolkata,Kolkata,West Bengal,India,2.4,Not Specified,48000 sq. ft.
+147,STT Kolkata DC 2,STT GDC India,https://www.sttelemediagdc.com,"STT GDC India
+within Bengal Silicon Valley Tech Hub
+TBA Kolkata
+India",700156,Kolkata,Kolkata,West Bengal,India,6,Not Specified,Not Specified
+148,Sify Kolkata,Sify Technologies Ltd,https://www.sifytechnologies.com,"Sify Technologies Ltd
+DLF IT park 1, Tower-C, Premises No-8 Block-AF, Major Arterial Road
+2nd Floor
+700156 Kolkata
+Kolkata, India",700156,Kolkata,Kolkata,West Bengal,India,1.2,Tier 3,"15,000 sq. ft."
+149,Stridx Kolkata CCU01,Stridx Technologies,https://mistlayer.com,"Stridx Technologies
+within 10 kilometers from the Kolkata city
+700054 Kolkata
+West Bengal, India",700054,Kolkata,Kolkata,West Bengal,India,Not Specified,Not Specified,Not Specified
+150,Tata Communications Kolkata,Tata Communications,https://www.tatacommunications.com,"Tata Communications
+CIT Rd, CIT Scheme VII M
+700054 Kolkata
+West Bengal, India",700054,Kolkata,Kolkata,West Bengal,India,Not Specified,Tier 3,Not Specified
+151,Yotta Kolkata Park,Yotta Data Services,https://yotta.com/data-center,"Yotta
+Birla Rd, Hindmotor
+712233 Uttarpara
+India",712233,Kolkata,Kolkata,West Bengal,India,250,Not Specified,Not Specified
+152,CtrlS Lucknow Edge DC1,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com/lucknow-datacenter,"CtrlS Datacenters Pvt Ltd
+Urbanac Business Park, Shaheed Path & Polytechnic Rd
+5th Floor
+226010 Lucknow
+India",226010,Lucknow,Lucknow,Uttar Pradesh,India,Not Specified,Not Specified,Not Specified
+153,Sify Lucknow,Sify Technologies Ltd,https://www.sifytechnologies.com,"Sify Technologies Ltd
+within HCL IT City, Sultanpur Road
+226002 Lucknow
+India",226002,Lucknow,Lucknow,Uttar Pradesh,India,Not Specified,Not Specified,Not Specified
+154,BSNL Ludhiana IDC,BSNL IDC,https://bsnl.co.in/en,"BSNL IDC
+BSNL Telephone Exchange, Transport Nagar
+141003 Ludhiana
+Punjab, India",141003,Ludhiana,Ludhiana,Punjab,India,Not Specified,Not Specified,Not Specified
+155,ESDS Mohali DC,ESDS Software Solution Pvt. Ltd.,https://www.esds.co.in,"ESDS Software Solution Pvt. Ltd.
+Plot No. C, 184, Industrial Area, Sector 75
+160071 Mohali
+India",160071,Mohali,Ludhiana,Punjab,India,Not Specified,Tier 3,Not Specified
+156,Seven Hills,Seven Hills Cloud Technology Private Limited,https://7hillscloud.in,"Seven Hills Cloud Technology Private Limited
+#610, Appanthirupathy
+625301 Madurai
+India",625301,Madurai,Madurai,Tamil Nadu,India,Not Specified,Tier 3,2000  sq. ft.
+157,Kennies IT Mohali,Kennies IT,https://kenniesit.com,"Kennies IT
+Village Jansua, Near Gill Dhaba, Rajpura
+140401 Mohali",140401,Rajpura,Mohali,Punjab,India,2,Tier 3,4600   sq. ft.
+158,BSNL Mumbai IDC,BSNL IDC,https://bsnl.co.in,"BSNL IDC
+MTNL Telephone Exchange Building, Fountain Building II, Fort
+400001 Mumnai
+Maharashtra, India",400001,Mumbai,Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+159,"CapitaLand Data Centre, Mumbai 01",CapitaLand Data Centre,https://www.capitaland.com,"CapitaLand Data Centre
+Plot No 14/2, 15, 37, TTC Industrial Area, MIDC Digha Naka Dighe
+Tower 1
+400708 Dighe
+India",400708,Dighe,Mumbai,Maharashtra,India,108,Not Specified,Not Specified
+160,"CapitaLand Data Centre, Mumbai 02",CapitaLand Data Centre,https://www.capitaland.com,"CapitaLand Data Centre
+Plot No 14/2, 15, 37, TTC Industrial Area
+Tower 2
+400708 Airoli
+India",400708,Airoli,Mumbai,Maharashtra,India,37,Not Specified,Not Specified
+161,CtrlS Mumbai Campus,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com/datacenter-mumbai,"CtrlS Datacenters Pvt Ltd
+Electronic Zone, MIDC Industrial Area
+400710 Mumbai
+India",400710,Mumbai,Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+162,CtrlS Mumbai DC1,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com/datacenter-mumbai,"CtrlS Datacenters Pvt Ltd
+TTC Industrial Area, South Central Road
+Plot No. GEN 72/1/A
+400710 Mumbai
+Maharastra, India",400710,Mumbai,Mumbai,Maharashtra,India,20,Tier 4,296343 sq. ft.
+163,CtrlS Mumbai DC2,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com/datacenter-mumbai,"CtrlS Datacenters Pvt Ltd
+TTC Industrial Area, South Central Road
+Plot No. GEN 72/1/A
+400710 Mumbai
+India",400710,Mumbai,Mumbai,Maharashtra,India,16,Tier 4,Not Specified
+164,CtrlS Mumbai DC3,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com/datacenter-mumbai,"CtrlS Datacenters Pvt Ltd
+DNA Rd, Electronic Zone, MIDC Industrial Area
+400705 Mumbai
+India",400705,Mumbai,Mumbai,Maharashtra,India,10,Tier 4,Not Specified
+165,CtrlS Mumbai DC4,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com/datacenter-mumbai,"CtrlS Datacenters Pvt Ltd
+55, TTC, Electronic Zone, MIDC Industrial Area
+400705 Mumbai
+India",400705,Mumbai,Mumbai,Maharashtra,India,36.75,Tier 4,Not Specified
+166,CtrlS Mumbai DC5,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com/datacenter-mumbai,"CtrlS Datacenters Pvt Ltd
+Electronic Zone, MIDC Industrial Area
+400705 Mumbai
+India",400705,Mumbai,Mumbai,Maharashtra,India,30,Tier 4,Not Specified
+167,Cyfuture Mumbai Data Center,Cyfuture Data Center,https://cyfuture.com,"Cyfuture Data Center
+Plot No. EL-3, TTC Industrial Area, Electronic Zone
+MIDC Industrial Area, Mahape
+400710 Mumbai
+Maharashtra, India",400710,Mumbai,Mumbai,Maharashtra,India,2,Not Specified,Not Specified
+168,Digital Connexion Mumbai,Digital Connexion,https://digitalconnexion.com/india/mumbai,"Digital Connexion
+B2-408 Boomerang Building, Chandivali Farm Road
+400072 Mumbai
+Maharashtra, India",400072,Mumbai,Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+169,Digital Edge Mumbai BOM1,Digital Edge DC,https://www.digitaledgedc.com,"Digital Edge DC
+within Thane
+TBA Thane
+India",400605,Thane,Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+170,ESDS Airoli DC,ESDS Software Solution Pvt. Ltd.,https://www.esds.co.in,"ESDS Software Solution Pvt. Ltd.
+202 B Wing, Central Rd N, Gavate Wadi, MIDC Industrial Area
+400708 Airoli
+India",400708,Airoli,Mumbai,Maharashtra,India,Not Specified,Tier 3,Not Specified
+171,ESDS Mumbai DC,ESDS Software Solution Pvt. Ltd.,https://www.esds.co.in,Plot No. Gen 71/1 & 71/1/1,400710,Mumbai,Mumbai,Maharashtra,India,Not Specified,Tier 3,Not Specified
+172,Equinix MB1,Equinix,https://www.equinix.com,"Equinix
+Unit A-001, Boomerang, Chandivali Farm Road
+400072 Andheri East
+India",400072,Andheri East,Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+173,Equinix MB2,Equinix,https://www.equinix.com,"Equinix
+Plot No.37, Chandivali Farm Road
+400072 Andheri East
+India",400072,Andheri East,Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+174,Equinix MB3,Equinix,https://www.equinix.com,"Equinix
+Plot 15B, Chandivali Farm Road
+400072 Chandivali
+India",400072,Chandivali,Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+175,EverData Mumbai,Everdata Technologies Pvt. Ltd.,https://www.everdata.com/data-center-mumbai,"Everdata Technologies Pvt. Ltd.
+294, CST Road
+400098 Mumbai
+India",400098,Mumbai,Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+176,GDC - Mumbai 2 Data Center,"NTT DATA, Inc.",https://services.global.ntt,"NTT DATA, Inc.
+Mehra Industrial Estate, LBS Marg
+400079 Vikhroli (W)
+Maharashtra, India",400079,Vikhroli (W),Mumbai,Maharashtra,India,2.4,Not Specified,3000 sq. m.
+177,GDC - Mumbai 3 (BSE),"NTT DATA, Inc.",https://services.global.ntt,"NTT DATA, Inc.
+Phiroze Jeejeebhoy Towers, Kala Ghoda, Fort
+400001 Mumbai
+India",400001,Mumbai,Mumbai,Maharashtra,India,0.3,Not Specified,Not Specified
+178,GDC - Mumbai 4 Data Center (Vikhroli IV),"NTT DATA, Inc.",https://services.global.ntt,"NTT DATA, Inc.
+Mehra Industrial Estate, Lal Bahadur Shastri Marg
+400079 Vikhroli West
+India",400079,Vikhroli West,Mumbai,Maharashtra,India,3,Not Specified,Not Specified
+179,GDC - Mumbai 5 Data Center,"NTT DATA, Inc.",https://services.global.ntt,"NTT DATA, Inc.
+Lighthall C Wing, Hiranandani Business Park, Saki Vihar Rd
+40008 Chandivali
+India",400072,Chandivali,Mumbai,Maharashtra,India,12.5,Not Specified,27870sq. m.
+180,GDC - Mumbai 6 Data Center,"NTT DATA, Inc.",https://services.global.ntt,"NTT DATA, Inc.
+Mehra Centre, Marwah Estate, Off Saki Vihar Road
+2nd Floor
+400072 Andheri (E)
+Maharashtra, India",400072,Andheri (E),Mumbai,Maharashtra,India,19.2,Not Specified,8400 sq. m.
+181,GDC - Mumbai 7 Data Center,"NTT DATA, Inc.",https://services.global.ntt,"NTT DATA, Inc.
+Lighthall D Wing, Hiranandani Business Park, Saki Vihar Road
+400072 Andheri
+India",400072,Andheri,Mumbai,Maharashtra,India,25.6,Not Specified,10300  sq. m.
+182,Go4Hosting Mumbai,Go4Hosting,https://go4hosting.in,"Go4Hosting
+105, IJMIMA Commercial Complex, Link Road, Behind INFINITY Mall, Malad - West
+400064 Mumbai
+Maharashtra, India",400064,Mumbai,Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+183,Iron Mountain Data Centers MUM-1,Iron Mountain Data Centers,https://www.ironmountain.com/data-centers/locations/mumbai-data-center,"Iron Mountain Data Centers
+Sigma IT Park, Sector 8
+400701 Rabale
+India",400701,Rabale,Mumbai,Maharashtra,India,2,Tier 3,49999 sq. ft.
+184,Iron Mountain Data Centers MUM-2,Iron Mountain Data Centers,https://www.ironmountain.com/data-centers/locations/mumbai-data-center,"Iron Mountain Data Centers
+R202, Sec-8 Rabale
+400701 Rabale
+India",400701,Rabale,Mumbai,Maharashtra,India,6,Tier 3,120000  sq. ft.
+185,Iron Mountain Data Centers MUM-3,Iron Mountain Data Centers,https://www.ironmountain.com,"Iron Mountain Data Centers
+R-52, Central Rd N, Sector 8, MIDC Industrial Area
+400701 Rabale
+India",400701,Rabale,Mumbai,Maharashtra,India,85,Not Specified,Not Specified
+186,Ishan Technologies Mumbai,Ishan Infotech Limited,https://ishantechnologies.com/data-center-services/colocation/mumbai,"Ishan Infotech Limited
+Boomerang Building, Boomerang 310
+3rd Floor, B2 wing
+400072 Mumbai
+India",400072,Mumbai,Mumbai,Maharashtra,India,Not Specified,Tier 3,Not Specified
+187,Lumina Chandivali,Lumina CloudInfra Private Limited,https://www.luminadc.com,"Lumina CloudInfra Private Limited
+within Chandivali
+400072 Mumbai
+India",400072,Mumbai,Mumbai,Maharashtra,India,60,Not Specified,Not Specified
+188,NTT Balaji IT Park,"NTT DATA, Inc.",https://www.nttdata.com,"NTT DATA, Inc.
+4, Sir Mathuradas Vasanji Rd
+400059 Mumbai
+India",400059,Mumbai,Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+189,Nxtra Mumbai I,Nxtra by Airtel,https://www.sttelemediagdc.com,"Nxtra by Airtel
+14, Thane - Belapur Rd, MIDC INDL Area
+400708 Mumbai
+India",400708,Mumbai,Mumbai,Maharashtra,India,8,Not Specified,Not Specified
+190,Nxtra Mumbai II,Nxtra by Airtel,https://www.nxtra.in,"Nxtra by Airtel
+B1069 Chandiwali Farm Road
+400072 Mumbai
+India",400072,Mumbai,Mumbai,Maharashtra,India,4,Not Specified,Not Specified
+191,Nxtra Mumbai III,Nxtra by Airtel,https://www.nxtra.in,"Nxtra by Airtel
+Khairane Rd, T.T.C. Industrial Area, Sector 2
+400710 Navi Mumbai
+India",400710,Navi Mumbai,Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+192,Princeton Digital MU1,Princeton Digital Group,https://princetondg.com,"Princeton Digital Group
+Airoli Knowledge Park Rd, TTC Industrial Area
+400708 Mumbai
+India",400708,Mumbai,Mumbai,Maharashtra,India,48,Tier 3,Not Specified
+193,Reliance IDC Mumbai #1,Reliance Data Center,https://www.relianceidc.com,"Reliance Data Center
+Dhirubhai Ambani Knowledge City, MIDC Industrial Area
+400710 Navi Mumbai
+Maharashtra, India",400710,Navi Mumbai,Mumbai,Maharashtra,India,Not Specified,Tier 3,Not Specified
+194,STT Mumbai DC 1,STT GDC India,https://www.sttelemediagdc.com,"STT GDC India
+Lokmanya Videsh Sanchar Bhavan, Kashinath Dhuru Marg
+400028 Mumbai
+Maharashtra, India",400028,Mumbai,Mumbai,Maharashtra,India,4.8,Not Specified,"9,032  sq. m.."
+195,STT Mumbai DC 2,STT GDC India,https://www.sttelemediagdc.com,"STT GDC India
+Technopolis Knowledge Park, Mahakali Caves Road, Chakala
+400093 Andheri
+Maharashtra, India",400093,Andheri,Mumbai,Maharashtra,India,Not Specified,Not Specified,5977 sq. m.
+196,STT Mumbai DC 3,STT GDC India,https://www.capitaland.com,"STT GDC India
+Plot no. C21 & C36, G Block, Bandra Kurla Complex, MMRDA
+400051 Bandra
+Maharashtra, India",400051,Bandra,Mumbai,Maharashtra,India,9,Tier 3,"16,708 sq. m."
+197,STT Palava,STT GDC India,https://www.sttelemediagdc.com,"STT Palava
+STT GDC India
+within Mumbai’s Palava region
+421204 Palava
+India",421204,Palava,Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+198,"Sify Rabale, Navi Mumbai",Sify Technologies Ltd,https://www.sifytechnologies.com,"Sify Technologies Ltd
+Reliable Techspace Plot No. 847/1/2, TTC Industrial Area
+400701 Rabale
+Maharashtra, India",400701,Rabale,Mumbai,Maharashtra,India,240,Tier 3,Not Specified
+199,Strad Solutions Data Center,Strad Solutions,https://www.datacentermap.com/india/mumbai/strad-solutions/,"Strad Solutions
+Oshiwara Industrial Center
+400104 Mumbai
+Maharashtra, India",400104,Mumbai,Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+200,Tata Communications Mumbai LVSB,Tata Communications,https://www.tatacommunications.com,"Tata Communications
+Kashinath Dhuru Marg
+400028 Mumbai
+Maharashtra, India",400028,Mumbai,Mumbai,Maharashtra,India,Not Specified,Tier 3,Not Specified
+201,Yotta Chandinvali DC Park,Yotta,https://yotta.com,"Yotta
+121, Saki Vihar Rd
+400076 Powai
+India",400076,Powai,Mumbai,Maharashtra,India,70,Not Specified,Not Specified
+202,Yotta Mumbai-Powai DC Park,Yotta,https://yotta.com,"Yotta
+IIT Area, Hillside Rd
+400076 Powai
+India",400076,Powai,Mumbai,Maharashtra,India,50,Not Specified,Not Specified
+203,Yotta NM1,Yotta,https://colocation.yotta.com,"Yotta
+Survey No. 30, MH SH 76
+Yotta Datacenter Park - Panvel Hiranandani Fortune City
+410206 Panvel
+India",410206,Panvel,Mumbai,Maharashtra,India,50,Tier 4,Not Specified
+204,ixoraDC Mumbai,Aabasoft Technologies India Pvt Ltd,https://www.ixoradc.com,"Aabasoft Technologies India Pvt Ltd
+501, Rupa Solitaire
+Millennium Business Park, Mahape, NaviMumbai
+400710 Mumbai
+India",400710,Mumbai,Mumbai,Maharashtra,India,Not Specified,Tier 3,Not Specified
+205,ESDS Nashik DC,ESDS Software Solution Pvt. Ltd.,https://www.esds.co.in,"ESDS Software Solution Pvt. Ltd.
+Plot No. B- 24 & 25, NICE Industrial Area. Satpur MIDC
+422 007 Nashik
+Maharashtra, India",422 007,Nashik,Nashik,Maharashtra,India,Not Specified,Tier 3,Not Specified
+206,MilesWeb Nashik,MilesWeb,https://www.milesweb.com,"MilesWeb
+2, Soham Elite
+Opposite Children Traffic Education Park
+422002 Nashik
+Maharashtra, India",422002,Nashik,Nashik,Maharashtra,India,Not Specified,Not Specified,Not Specified
+207,AdaniConneX Mumbai,AdaniConneX,https://www.adaniconnex.com,"AdaniConneX
+24 Thane - Belapur Rd, Reliance Corporate Park
+MIDC Industrial Area, Ghansoli
+400701 Navi Mumbai
+India",400701,Navi Mumbai,Navi Mumbai,Maharashtra,India,100,Not Specified,Not Specified
+208,Amazon AWS BOM - MIDC Industrial,Amazon AWS,https://aws.amazon.com/trust-center/data-center,"Amazon AWS
+MIDC Industrial Area
+400701 Rabale
+India",400701,Rabale,Navi Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+209,Amazon AWS BOM - TTC Industrial,Amazon AWS,https://aws.amazon.com/trust-center/data-center,"Amazon AWS
+within TTC Industrial Area
+400708 Airoli
+India",400708,Airoli,Navi Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+210,BDC BBY01,Bridge Data Centres,https://www.bridgedatacentres.com,"Bridge Data Centres
+1, Digha Naka
+400708 Navi Mumbai
+India",400708,Navi Mumbai,Navi Mumbai,Maharashtra,India,20,Not Specified,32516  sq. m.
+211,Colt Mumbai,Colt Technology Services,https://www.coltdatacentres.net/en-GB/our-locations/data-centre-locations-asia/mumbai,"Colt Technology Services
+within Digha Naka, Dighe, Navi Mumbai, 400708 Dighe
+India",400708,Dighe,Navi Mumbai,Maharashtra,India,120,Tier 3,62000 sq. m.
+212,ESR Rabale MU1,ESR Group,https://www.esr.com/our-properties/data-centres,"ESR Group
+Sector 8, MIDC Industrial Area
+400701 Rabale
+India",400701,Rabale,Navi Mumbai,Maharashtra,India,35,Not Specified,Not Specified
+213,Equinix MB4,Equinix,https://www.equinix.com,"Equinix
+Plot 5, Kalwa Industrial Area, Thane Airoli Road
+400708 Navi Mumbai
+India",400708,Navi Mumbai,Navi Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+214,EverYondr Mumbai 1,EverYondr,https://www.evercloud.in,"EverYondr
+Plot D/31-32, Turbhe MIDC Road
+TTC Industrial Area, 400703, Navi Mumbai
+India",400703,Navi Mumbai,Navi Mumbai,Maharashtra,India,60,Not Specified,80000 sq. m.
+215,GDC - Navi Mumbai 1 Data Center,NTT DATA  Inc.,https://services.global.ntt,"NTT DATA, Inc.
+Electronic Zone, MIDC Industrial Area
+400705 Mahape",400705,Mahape,Navi Mumbai,Maharashtra,India,30,Tier 3,37000 sq. m.
+216,GDC - Navi Mumbai 2 Data Center,NTT DATA Inc.,https://services.global.ntt,"NTT DATA, Inc.
+MIDC Rd
+400708 Navi Mumbai
+India",400701,Navi Mumbai,Navi Mumbai,Maharashtra,India,336,Not Specified,Not Specified
+217,LNT NMP 1,L&T Cloudfiniti,https://larsentoubrovyoma.com,"L&T Cloudfiniti
+W663+9GJ, Rees
+410222 Rees
+India",410222,Rees,Navi Mumbai,Maharashtra,India,2,Tier 3,1392 sq. m.
+218,LNT NMP 2,L&T Cloudfiniti,https://lntcloudfiniti.com,"L&T Cloudfiniti
+within the Mahape area of Navi Mumbai
+400710 Mahape
+India",400710,Mahape,Navi Mumbai,Maharashtra,India,30,Not Specified,35303 sq. m.
+219,LeapSwitch Networks Mumbai,LeapSwitch Networks Private Limited,https://leapswitch.com,"LeapSwitch Networks Private Limited
+Unit No 902, Sigma IT Park, Plot No R-203,204, Midc TTC Industrial Area
+400701 Rabale
+Maharashtra, India",400701,Rabale,Navi Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+220,Lumina Airoli,Lumina CloudInfra Private Limited,https://www.luminadc.com,"Lumina CloudInfra Private Limited
+Plot 7&7A, MIDC Industrial Estate, Thane Belapur Road
+400708 Airoli
+India",400708,Airoli,Navi Mumbai,Maharashtra,India,60,Not Specified,Not Specified
+221,Reliance IDC Mumbai #2,Reliance Data Center,https://www.relianceidc.com,"Reliance Data Center
+DAKC Rd, Dhirubhai Ambani Knowledge City, MIDC Industrial Area
+400710 Navi Mumbai
+Maharashtra, India",400710,Navi Mumbai,Navi Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+222,Reliance IDC Mumbai #3,Reliance Data Center,https://www.relianceidc.com,"Reliance Data Center
+NNOC Building, DAKC, Thane - Belapur Rd
+400710 Navi Mumbai
+India",400710,Navi Mumbai,Navi Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+223,Reliance IDC Mumbai #4,Reliance Data Center,https://www.relianceidc.com,"Reliance Data Center
+DAKC Rd, DAKC, MIDC Industrial Area
+400710 Navi Mumbai
+India",400710,Navi Mumbai,Navi Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+224,STT Navi Mumbai Campus,STT GDC India,https://www.sttelemediagdc.com/in-en/locations/mumbai,"STT GDC India
+Mahape Midc Rd
+400701 Navi Mumbai
+India",400701,Navi Mumbai,Navi Mumbai,Maharashtra,India,Not Specified,Not Specified,Not Specified
+225,STT Navi Mumbai DC 1,STT GDC India,https://www.sttelemediagdc.com/in-en/locations/mumbai,"STT GDC India
+Mahape Midc Rd
+400701 Navi Mumbai
+India",400701,Navi Mumbai,Navi Mumbai,Maharashtra,India,28.4,Tier 3,Not Specified
+226,STT Navi Mumbai DC 2,STT GDC India,https://www.sttelemediagdc.com/in-en/locations/mumbai,"STT GDC India
+Mahape Midc Rd
+400701 Navi Mumbai
+India",400701,Navi Mumbai,Navi Mumbai,Maharashtra,India,48,Tier 3,Not Specified
+227,STT Navi Mumbai DC 3,STT GDC India,https://www.sttelemediagdc.com/in-en/locations/mumbai,"STT GDC India
+Mahape Midc Rd
+400701 Navi Mumbai
+India",400701,Navi Mumbai,Navi Mumbai,Maharashtra,India,42,Not Specified,Not Specified
+228,"Sify Airoli, Navi Mumbai",Sify Technologies Ltd,https://www.sifytechnologies.com,"Sify Technologies Ltd
+Reliable Plaza, K-10, Kalwa Industrial Estate, Airoli
+7th floor 400708  Airoli
+Maharashtra, India",400708,Airoli,Navi Mumbai,Maharashtra,India,5.4,Tier 3,95250 sq. ft.
+229,"Sify Vashi, Navi Mumbai",Sify Technologies Ltd,https://www.sifytechnologies.com,"Sify Technologies Ltd
+VAT 251 & 261, Vasi Infotech Park
+5th and 6th floor
+400703 Mumbai
+Maharastra, India",400703,Mumbai,Navi Mumbai,Maharashtra,India,1.2,Tier 2,10325 sq. ft.
+230,Apiculus Data Center,Indiqus Technologies Pvt Ltd,https://www.apiculus.com,"Indiqus Technologies Pvt Ltd
+Plot No 17-18, Udyog Vihar Phase-1
+122016 Gurgaon
+Haryana, India",122016,Gurgaon,New Delhi,Haryana,India,2,Tier 3,Not Specified
+231,BSNL Delhi IDC,BSNL IDC,https://bsnl.co.in,"BSNL IDC
+Shahdara Telephone Exchange, 10 Raj Block
+110032 Delhi
+Uttar Pradesh, India",110032,Delhi,New Delhi,Uttar Pradesh,India,Not Specified,Not Specified,Not Specified
+232,EverData Delhi NCR,Everdata Technologies Pvt. Ltd.,https://www.everdata.com,"Everdata Technologies Pvt. Ltd.
+952, Mahashay Hansram Marg, Block S, Sector 49
+122018 Gurgaon
+India",122018,Gurgaon,New Delhi,Haryana,India,Not Specified,Not Specified,Not Specified
+233,Iron Mountain Data Centers NCR-1,Iron Mountain Data Centers,https://www.ironmountain.com,"Iron Mountain Data Centers
+D-230 Sector 63, Noida
+201301 Noida
+India",201301,Noida,New Delhi,Uttar Pradesh,India,12,Tier 3,6504 sq. ft.
+234,Kennies IT Delhi-NCR,Kennies IT,https://kenniesit.com,"Kennies IT
+METRO Pillar No. 677, TAHSIL, KH No. 1233 and 1299
+201003 Ghaziabad
+Uttar Pradesh, India",201003,Ghaziabad,New Delhi,Uttar Pradesh,India,Not Specified,Tier 3,Not Specified
+235,NetForChoice Data Center,NETFORCHOICE SOLUCTION PVT.LTD,https://www.netforchoice.com,"NETFORCHOICE SOLUCTION PVT.LTD
+A-86, Block A, Sector 57 Noida Uttar Pradesh
+201301 Noida
+Delhi, India",201301,Noida,New Delhi,Uttar Pradesh,India,Not Specified,Not Specified,Not Specified
+236,STT Delhi DC 1,STT GDC India,https://www.sttelemediagdc.com,"STT GDC India
+Videsh Sanchar Bhavan, Bangla Sahib Road
+110001 Delhi
+Delhi, India",110001,New Delhi,New Delhi,Delhi,India,1.6,Not Specified,4500 sq. ft.
+237,STT Delhi DC 2,STT GDC India,https://www.sttelemediagdc.com,"STT GDC India
+IDC Building, Block E, Greater Kailash I
+110048 Greater Kailash
+Delhi, India",110048,Greater Kailash (GK),New Delhi,Delhi,India,2,Not Specified,28000 sq. ft.
+238,STT Delhi DC 3,STT GDC India,https://www.sttelemediagdc.com,"STT GDC India
+Next Gen Tower New IDC Building Block E, Greater Kailash I
+Ground Floor
+110048 Greater Kailash
+Delhi, India",110048,Greater Kailash (GK),New Delhi,Delhi,India,6,Tier 3,120000 sq. ft.
+239,"Sify Noida, Delhi NCR",Sify Technologies Ltd,https://www.sifytechnologies.com,"Sify Technologies Ltd
+B7, Sector 132, Greater Noida Expressway, Near New Delhi
+201301 Noida
+New Delhi, India",201301,Noida,New Delhi,Uttar Pradesh,India,11,Tier 3,60000 sq. ft.
+240,Tata Communications Delhi VSB,Tata Communications,https://www.tatacommunications.com,"Tata Communications
+2 Bangla Sahib Road CP
+110001 New Delhi
+New Delhi, India",110001,New Delhi,New Delhi,New Delhi,India,Not Specified,Tier 3,Not Specified
+241,Tata Communications New Delhi GK1,Tata Communications,https://www.tatacommunications.com,"Tata Communications
+5th, Next Gen Tower, Outer Ring Rd
+110048 New Delhi
+New Delhi, India",110048,New Delhi,New Delhi,New Delhi,India,Not Specified,Tier 3,Not Specified
+242,Utho Data Center,Utho,https://utho.com,"Utho
+91Springboard, Sector-63, Noida, A-130, A Block, Sector 63
+201301 Noida
+UP, India",201301,Noida,New Delhi,Uttar Pradesh,India,Not Specified,Not Specified,Not Specified
+243,AdaniConneX Noida,AdaniConneX,https://www.adaniconnex.com/data-centers#Noida,"AdaniConneX
+C Block, Phase 2, Industrial Area, Sector 62
+201309 Noida
+India",201309,Noida,Noida,Uttar Pradesh,India,100,Not Specified,Not Specified
+244,CEL-ESDS Data Center,ESDS Software Solution Pvt. Ltd.,https://www.esds.co.in,"ESDS Software Solution Pvt. Ltd.
+within Sahibabad, Ghaziabad
+201005 Ghaziabad
+India",201005,Ghaziabad,Noida,Uttar Pradesh,India,30,Not Specified,Not Specified
+245,CloudOYE Data Center Noida,CloudOYE,https://www.cloudoye.com,"CloudOYE
+Plot No. 197, Phase II, Noida Special Economic Zone (NSEZ)
+201305 Noida
+Uttar Pradesh, India",201305,Noida,Noida,Uttar Pradesh,India,0.5,Not Specified,465 sq. m.
+246,CtrlS Noida DC1,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com,"CtrlS Datacenters Pvt Ltd
+Plot no. 13, Sector 127
+201313 Noida
+India",201313,Noida,Noida,Uttar Pradesh,India,8,Not Specified,102000 sq. ft.
+247,Cyfuture Noida Data Center,Cyfuture Data Center,https://cyfuture.com,"Cyfuture Data Center
+G-13/14, SDF Block, Noida Special Economy Zone, Block A, Phase-2
+201305 Noida
+Uttar Pradesh, India",201305,Noida,Noida,Uttar Pradesh,India,3,Not Specified,Not Specified
+248,DC10G,DC10G- Data Center,https://www.dc10g.com,"DC10G- Data Center
+G-232, Sector-63
+2nd floor
+201301 Noida
+Uttar Pradesh, India",201301,Noida,Noida,Uttar Pradesh,India,Not Specified,Not Specified,Not Specified
+249,Dbyte 135 EDC,Dbyte Facility Network Private Limited,https://www.dbytefacility.com,"Dbyte Facility Network Private Limited
+plot no wa-14, village- nagli wazidpur,
+sector-135, noida, gautambuddha nagar
+201305 Noida
+Uttar Pradesh, India",201305,Noida,Noida,Uttar Pradesh,India,Not Specified,Not Specified,Not Specified
+250,GDC - Noida 1 Data Center,NTT DATA  Inc.,https://services.global.ntt,"NTT DATA, Inc.
+H223, Sector 63
+201301 Uttar Pradesh
+India",201301,Noida,Noida,Uttar Pradesh,India,1.5,Not Specified,1800 sq. m.
+251,GDC - Noida 2 Data Center,NTT DATA  Inc.,https://services.global.ntt,"NTT DATA, Inc.
+Plot no. 18, Tech Zone IV, Amrapali Dream Valley
+201009 Noida
+India",201009,Noida,Noida,Uttar Pradesh,India,52.8,Tier 3,27871 sq. ft.
+252,Go4Hosting Noida,Go4Hosting,https://go4hosting.in,"Go4Hosting
+Plot No. 197-198, Noida Special Economic Zone (NSEZ) Phase II
+201305 Noida
+Uttar Pradesh, India",201305,Noida,Noida,Uttar Pradesh,India,Not Specified,Tier 3,Not Specified
+253,Nxtra Noida I,Nxtra by Airtel,https://www.nxtra.in/,"Nxtra by Airtel
+A-14, Dhama Marg, Industrial Area, Sector 62
+201309 Noida
+India",201309,Noida,Noida,Uttar Pradesh,India,4,Not Specified,Not Specified
+254,Nxtra Noida II,Nxtra by Airtel,https://www.nxtra.in/,"Nxtra by Airtel
+B-192, Sector 81
+201305 Noida
+India",201305,Noida,Noida,Uttar Pradesh,India,6,Not Specified,Not Specified
+255,Nxtra Noida III,Nxtra by Airtel,https://www.nxtra.in/,"Nxtra by Airtel
+within Noida
+201305 Noida
+India",201305,Noida,Noida,Uttar Pradesh,India,40,Not Specified,41806 sq. m.
+256,RailTel Silver Jubilee Data Center,RailTel Corporation of India Ltd.,https://www.railtel.in,"RailTel Corporation of India Ltd.
+Plot No. B-209, Block B, Phase-2
+201305 Noida
+India",201305,Noida,Noida,Uttar Pradesh,India,10,Not Specified,17000 sq. m.
+257,SOLOIDC Noida DC,SOLOIDC Technologies Pvt Ltd,https://soloidc.com,"SOLOIDC Technologies Pvt Ltd
+Trimala Ventures, A37, A Block,
+Sector 63, Noida, Uttar Pradesh 201301
+201301 Noida",201301,Noida,Noida,Uttar Pradesh,India,4,Not Specified,4800 sq. m.
+258,STT Noida Campus,STT GDC India,https://www.sttelemediagdc.com/in-en/locations/noida,"STT GDC India
+Sector 143A
+201307 Noida
+India",201307,Noida,Noida,Uttar Pradesh,India,Not Specified,Not Specified,Not Specified
+259,STT Noida DC 1,STT GDC India,https://www.sttelemediagdc.com/in-en/locations/noida,"STT GDC India
+Sector 143A
+201307 Noida
+Uttar Pradesh, India",201307,Noida,Noida,Uttar Pradesh,India,17.3,Not Specified,20235 sq. m.
+260,STT Noida DC 2,STT GDC India,https://www.sttelemediagdc.com/in-en/locations/noida,"STT GDC India
+Sector 143A
+201307 Noida
+India",201307,Noida,Noida,Uttar Pradesh,India,17.5,Not Specified,Not Specified
+261,STT Noida DC 3,STT GDC India,https://www.sttelemediagdc.com/in-en/locations/noida,"STT GDC India
+within Sector 143A
+201307 Noida
+India",201307,Noida,Noida,Uttar Pradesh,India,28.4,Not Specified,Not Specified
+262,Sify Noida 02,Sify Technologies Ltd,https://www.sifytechnologies.com,"Sify Technologies Ltd
+NB-11,12,13, Sector – 132, Gautam Budh Nagar
+201304 Noida
+India",201304,Noida,Noida,Uttar Pradesh,India,78,Not Specified,Not Specified
+263,Yotta D1,Yotta,https://colocation.yotta.com,"Yotta
+Knowledge Park V, Plot No 7
+201301 Tusiana
+India",201301,Tusiana,Noida,Uttar Pradesh,India,28.8,Not Specified,27871 sq. m.
+264,Anant Raj Panchkula,Anant Raj Cloud,https://anantrajlimited.com/,"Anant Raj Tech Park, 4th Floor, Tower B
+134109 Panchkula, India",131029,Sonipat,Panchkula,Haryana,India,50,Tier 4,Not Specified
+265,CtrlS Patna Edge DC1,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com/lucknow-datacenter,"Plot No.18, Patliputra Industrial Area, Patna",800013,Patna,Patna,Bihar,India,Not Specified,Not Specified,Not Specified
+266,Airgenie Data Center,Airgenie Communications,https://airgenie.co.in,"3rd Cross St & Elango Nagar Extn, Puducherry",605013,Puducherry,Pondicherry,Pondicherry,India,Not Specified,Tier 2,Not Specified
+267,AdaniConneX Pune,AdaniConneX,https://www.adaniconnex.com,"AdaniConneX
+within Pimpri industrial zone of Pune's Haveli locality
+431102 Pimpri
+India",431102,Pimpri,Pune,Maharashtra,India,70,Not Specified,Not Specified
+268,DataGalaxy Data Center,DataGalaxy,https://www.datagalaxy.in,"DataGalaxy
+46 Level 5, C Wing, Deepak Nitrate Rd
+411006 Pune
+Maharashtra, India",411006,Pune,Pune,Maharashtra,India,Not Specified,Not Specified,Not Specified
+269,Hostin Services Private Limited,Hostindia.net,https://www.hostindia.net,"Hostindia.net
+IDC, TCL Alandi Road, Dighi
+1st Floor
+411015 Pune
+Maharashtra, India",411015,Pune,Pune,Maharashtra,India,Not Specified,Not Specified,Not Specified
+270,Iron Mountain Data Centers PUN-1,Iron Mountain Data Centers,https://www.ironmountain.com,"Iron Mountain Data Centers
+Plot No 9, Survey No's - 235,245, India Land Global Industrial Park
+411057 Maharashtra
+Hinjewadi, India",411057,Hinjewadi,Pune,Maharashtra,India,2,Tier 3,50186 sq. ft.
+271,LeapSwitch Networks Pune DC,LeapSwitch Networks Private Limited,https://leapswitch.com,"LeapSwitch Networks Private Limited
+Spectra Commercial, Paud Rd
+4th Floor, Office 410
+411038 Kothrud
+Maharashtra, India",411038,Kothrud,Pune,Maharashtra,India,Not Specified,Not Specified,Not Specified
+272,Microsoft Pune - Bhosari,Microsoft,https://datacenters.microsoft.com,"Microsoft
+Mukta Park, 81/B/54, MIDC
+411026 Pimpri-Chinchwad
+India",411026,Pimpri-Chinchwad,Pune,Maharashtra,India,Not Specified,Not Specified,Not Specified
+273,Microsoft Pune - Pimpri,Microsoft,https://azure.microsoft.com,"Microsoft
+Morawadi Rd, Telco Quality Aid Center
+411018 Pimpri-Chinchwad
+India",411018,Pimpri-Chinchwad,Pune,Maharashtra,India,Not Specified,Not Specified,Not Specified
+274,Nxtra Pune I,Nxtra by Airtel,https://nxtra.in,"Nxtra by Airtel
+Plot No. 3 / 1, E Park
+1st Floor
+411014 Pune
+India",411014,Pune,Pune,Maharashtra,India,3,Not Specified,Not Specified
+275,Nxtra Pune II,Nxtra by Airtel,https://www.nxtra.in,"Nxtra by Airtel
+Phase 3, Hinjawadi Rajiv Gandhi Infotech Park
+411057 Pune
+India",411057,Pune,Pune,Maharashtra,India,21,Not Specified,18580 sq. m.
+276,Nxtra Pune III,Nxtra by Airtel,https://nxtra.in/,"Nxtra by Airtel
+within Hinjewadi
+411057 Hinjewadi
+India",411057,Hinjewadi,Pune,Maharashtra,India,110,Not Specified,92903 sq. m.
+277,STT Pune DC 1,STT GDC India,https://www.sttelemediagdc.in/pune-data-centre,"STT GDC India
+Alandi Road, Dighi
+411015 Dighe
+Maharashtra, India",411015,Dighe,Pune,Maharashtra,India,40,Tier 3,23226 sq. ft.
+278,STT Pune DC 2,STT GDC India,https://www.sttelemediagdc.com,"STT GDC India
+Alandi Road, Dighi
+411015 Pune
+India",411015,Pune,Pune,Maharashtra,India,15,Not Specified,Not Specified
+279,STT Pune DC 3,STT GDC India,https://www.sttelemediagdc.in,"STT GDC India
+Alandi Road, Dighi
+411015 Pune
+India",411015,Pune,Pune,Maharashtra,India,15,Not Specified,Not Specified
+280,STT Pune DC 4,STT GDC India,https://www.sttelemediagdc.com,"STT GDC India
+within Dighi, STT Pune DC campus
+411015 Pune
+India",411015,Pune,Pune,Maharashtra,India,18,Not Specified,Not Specified
+281,STT Pune DC 5,STT GDC India,https://www.sttelemediagdc.com,"STT GDC India
+within Dighi, STT Pune DC campus
+411015 Pune
+India",411015,Pune,Pune,Maharashtra,India,14.3,Not Specified,Not Specified
+282,Silvernox Datacenter Pune India,Silvernox Datacenter,https://silvernox.com,"Silvernox Datacenter
+Hinjawadi Phase 1 Rd, GAT No. 236, Plot No 4
+411057 Pune
+India",411057,Pune,Pune,Maharashtra,India,4,Tier 3,8200 sq. ft.
+283,Tata Communications Pune,Tata Communications,https://www.tatacommunications.com,"Tata Communications
+Alandi Rd
+411015 Pune
+Maharashtra, India",411015,Pune,Pune,Maharashtra,India,Not Specified,Not Specified,Not Specified
+284,RackBank Nava Raipur,Rackbank Datacenters Pvt. Ltd.,https://www.rackbank.com,"Rackbank Datacenters Pvt. Ltd.
+CBD Naya Raipur, Sector 22
+492018 Atal Nagar-Nava Raipur",492018,Raipur ,Raipur,Chhattisgarh,India,160,Not Specified,Not Specified
+285,Anant Raj Rai,Anant Raj Cloud,https://anantrajcloud.com/,"Anant Raj Cloud
+Plot No. TP-1, HSIIDC Ethnic City, Sector 38, 131029 Rai' India",131029,Sonipat,Rohtak,Haryana,India,200,Tier 4,Not Specified
+286,AdaniConneX Vizag,AdaniConneX,https://www.adaniconnex.com,"AdaniConneX
+4-76 Rajiv Nagar Road
+530046 Visakhapatnam
+India",530046,Visakhapatnam,Visakhapatnam,Andhra Pradesh,India,100,Not Specified,Not Specified
+287,Sify Visakhapatnam,Sify Technologies Ltd,https://www.sifytechnologies.com,"Sify Technologies Ltd
+within Rushikonda–Madhurawada IT Park
+530045 Visakhapatnam
+India",530045,Visakhapatnam,Visakhapatnam,Andhra Pradesh,India,50,Not Specified,Not Specified
