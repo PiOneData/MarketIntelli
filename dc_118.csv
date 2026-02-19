@@ -77,23 +77,23 @@ Slno,Data Center Name,Company Name,URL to Website,Address,Postal,City,Market,Sta
 76,Reliance IDC Bengaluru #2,Reliance Data Center,https://www.relianceidc.com/,"Pipeline Rd,560022 Bengaluru,Karnataka, India",560022,Bengaluru,Banagalore,Karnataka,India,,,
 77,Reliance IDC Bengaluru #1,Reliance Data Center,https://www.relianceidc.com/,"49, Race Course Rd,560001 Bengaluru,Karnataka, India",560001 ,Bengaluru,Banagalore,Karnataka,India,,,
 78,Reliance IDC Bengaluru #3,Reliance Data Center,https://www.relianceidc.com/,"16, Whitefield Main Road,Sadaramangala Industrial Area,560048 Bengaluru,Karnataka, India",560048 ,Bengaluru,Banagalore,Karnataka,India,,,
-79,Iron Mountain Data Centers HYD-1,Iron Mountain Data Centers,https://www.ironmountain.com/,"No. 185 Masidbanda Village, Kondapur,500084 Hyderabad,India",500084,Hyderabad,Hyderabad,Karnataka,India,5.5 MW,Tier 3,11150 sq.f.
-80,Sify Hyderabad,Sify Technologies Ltd,https://www.sifytechnologies.com/,"Survey No. 115/1, Street Name: Financial District, Nanakram Guda,500032 Hyderabad,Telangana, India",500032 ,Hyderabad,Hyderabad,Karnataka,India,,,
-81,CtrlS Hyderabad DC2,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com,"Nanakramguda Financial, District, Bombay stock exchange, 500032 Hyderabad, India",500032,Hyderabad,Hyderabad,Karnataka,India,7.4 MW,Tier 4,"82,262 sq.f."
-82,CtrlS Hyderabad DC3,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com/,"within Gachibowli Financial District,500032 Hyderabad,India",500032 ,Hyderabad,Hyderabad,Karnataka,India,13 MW,Tier 4,"130,000 sq.f."
-83,CtrlS Hyderabad DC1,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com/,"Pioneer Towers, 20 Inorbit Mall Road,500081 Hyderabad,Telangana, India",500081 ,Hyderabad,Hyderabad,Karnataka,India,4 MW,Tier 4,"40,000 sq.f."
-84,"CapitaLand Data Centre, Hyderabad 01",CapitaLand Data Centre,https://www.capitaland.com/,"Madhapur, Serilingampally Mandal,500081 Hyderabad,Telengana, India",500081,Telengana,Hyderabad,Karnataka,India,40 MW,,
-85,STT Hyderabad DC 1,STT GDC India,https://www.sttelemediagdc.com/,"Videsh Sanchar Bhavan, CFC-1, HITEC City,500081 Madhapur,Telangana, India",500081 ,Telengana,Hyderabad,Karnataka,India,8 MW,,"120,000 sq.f."
-86,Microsoft HYD11 - Building 1,Microsoft,https://datacenters.microsoft.com/,"100 Feet Industrial Rd,501503 Chandenvelly,India",501503,Chandenvelly,Hyderabad,Karnataka,India,48 MW,,"23,087 sq.m"
-87,Microsoft HYD11 - Building 2,Microsoft,https://datacenters.microsoft.com/,"100 Feet Industrial Rd,501503 Chandenvelly,India",501503,Chandenvelly,Hyderabad,Karnataka,India,48 MW,,"23,087 sq.m."
-88,Microsoft HYD11,Microsoft,https://datacenters.microsoft.com/,"100 Feet Industrial Rd,501503 Chandenvelly,India",501503,Chandenvelly,Hyderabad,Karnataka,India,,,
-89,Nxtra Hyderabad ,Nxtra by Airtel,https://www.nxtra.in/,"within International Tech Park Hyderabad,,500081 HyderabadIndia",500081,Hyderabad,Hyderabad,Karnataka,India,40 MW,,"41,806 sq.m."
-90,RailTel Secunderabad Data Center,RailTel Corporation of India Ltd.,https://www.railtel.in/,"B-Block, Rail Nilayam,2nd Floor,500071 Secunderabad,Telengana, India",500071,Telengana,Hyderabad,Karnataka,India,,Tier 3,
-91,Amazon AWS HYD - Kandukur Campus,Amazon AWS,https://aws.amazon.com/,"VavillakuntaThanda,501359 Vailkunta TandaIndia",501359,Tanda,Hyderabad,Karnataka,India,,,
-92,AdaniConneX Hyderabad,AdaniConneX,https://www.adaniconnex.com/,"Pargi Road,509410 Elkatta,India",509410,Elkatta,Hyderabad,Karnataka,India,100 MW,,
-93,Amazon AWS HYD - Shahabad Campus,Amazon AWS,https://aws.amazon.com/,"Hyathabad - Shahabad Rd,509217 Shahabad,India",509217,Shahabad,Hyderabad,Karnataka,India,,,
-94,Amazon AWS HYD - FAB Campus,Amazon AWS,https://aws.amazon.com/,"26, FAB City,501359 Kongar Khurd B,India",501359,Kongar,Hyderabad,Karnataka,India,,,
-95,CtrlS Chandanvelly Industrial Park,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com/,"Hayathabad - Shahabad Rd,509217 Shabad,India",509217,Shabad,Hyderabad,Karnataka,India,600 MW,,
+79,Iron Mountain Data Centers HYD-1,Iron Mountain Data Centers,https://www.ironmountain.com/,"No. 185 Masidbanda Village, Kondapur,500084 Hyderabad,India",500084,Hyderabad,Hyderabad,Telangana,India,5.5 MW,Tier 3,11150 sq.f.
+80,Sify Hyderabad,Sify Technologies Ltd,https://www.sifytechnologies.com/,"Survey No. 115/1, Street Name: Financial District, Nanakram Guda,500032 Hyderabad,Telangana, India",500032 ,Hyderabad,Hyderabad,Telangana,India,,,
+81,CtrlS Hyderabad DC2,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com,"Nanakramguda Financial, District, Bombay stock exchange, 500032 Hyderabad, India",500032,Hyderabad,Hyderabad,Telangana,India,7.4 MW,Tier 4,"82,262 sq.f."
+82,CtrlS Hyderabad DC3,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com/,"within Gachibowli Financial District,500032 Hyderabad,India",500032 ,Hyderabad,Hyderabad,Telangana,India,13 MW,Tier 4,"130,000 sq.f."
+83,CtrlS Hyderabad DC1,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com/,"Pioneer Towers, 20 Inorbit Mall Road,500081 Hyderabad,Telangana, India",500081 ,Hyderabad,Hyderabad,Telangana,India,4 MW,Tier 4,"40,000 sq.f."
+84,"CapitaLand Data Centre, Hyderabad 01",CapitaLand Data Centre,https://www.capitaland.com/,"Madhapur, Serilingampally Mandal,500081 Hyderabad,Telengana, India",500081,Telengana,Hyderabad,Telangana,India,40 MW,,
+85,STT Hyderabad DC 1,STT GDC India,https://www.sttelemediagdc.com/,"Videsh Sanchar Bhavan, CFC-1, HITEC City,500081 Madhapur,Telangana, India",500081 ,Telengana,Hyderabad,Telangana,India,8 MW,,"120,000 sq.f."
+86,Microsoft HYD11 - Building 1,Microsoft,https://datacenters.microsoft.com/,"100 Feet Industrial Rd,501503 Chandenvelly,India",501503,Chandenvelly,Hyderabad,Telangana,India,48 MW,,"23,087 sq.m"
+87,Microsoft HYD11 - Building 2,Microsoft,https://datacenters.microsoft.com/,"100 Feet Industrial Rd,501503 Chandenvelly,India",501503,Chandenvelly,Hyderabad,Telangana,India,48 MW,,"23,087 sq.m."
+88,Microsoft HYD11,Microsoft,https://datacenters.microsoft.com/,"100 Feet Industrial Rd,501503 Chandenvelly,India",501503,Chandenvelly,Hyderabad,Telangana,India,,,
+89,Nxtra Hyderabad ,Nxtra by Airtel,https://www.nxtra.in/,"within International Tech Park Hyderabad,,500081 HyderabadIndia",500081,Hyderabad,Hyderabad,Telangana,India,40 MW,,"41,806 sq.m."
+90,RailTel Secunderabad Data Center,RailTel Corporation of India Ltd.,https://www.railtel.in/,"B-Block, Rail Nilayam,2nd Floor,500071 Secunderabad,Telengana, India",500071,Telengana,Hyderabad,Telangana,India,,Tier 3,
+91,Amazon AWS HYD - Kandukur Campus,Amazon AWS,https://aws.amazon.com/,"VavillakuntaThanda,501359 Vailkunta TandaIndia",501359,Tanda,Hyderabad,Telangana,India,,,
+92,AdaniConneX Hyderabad,AdaniConneX,https://www.adaniconnex.com/,"Pargi Road,509410 Elkatta,India",509410,Elkatta,Hyderabad,Telangana,India,100 MW,,
+93,Amazon AWS HYD - Shahabad Campus,Amazon AWS,https://aws.amazon.com/,"Hyathabad - Shahabad Rd,509217 Shahabad,India",509217,Shahabad,Hyderabad,Telangana,India,,,
+94,Amazon AWS HYD - FAB Campus,Amazon AWS,https://aws.amazon.com/,"26, FAB City,501359 Kongar Khurd B,India",501359,Kongar,Hyderabad,Telangana,India,,,
+95,CtrlS Chandanvelly Industrial Park,CtrlS Datacenters Pvt Ltd,https://www.ctrls.com/,"Hayathabad - Shahabad Rd,509217 Shabad,India",509217,Shabad,Hyderabad,Telangana,India,600 MW,,
 254,AdaniConneX Vizag,AdaniConneX,https://www.adaniconnex.com,"AdaniConneX
 4-76 Rajiv Nagar Road
 530046 Visakhapatnam

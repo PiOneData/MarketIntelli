@@ -45,6 +45,8 @@ function toMapFormat(facilities: DataCenterFacility[]) {
     powerMW: f.power_capacity_mw,
     sizeSqFt: f.size_sqft,
     status: STATUS_DISPLAY[f.status] || f.status,
+    latitude: f.latitude,
+    longitude: f.longitude,
   }));
 }
 
@@ -55,7 +57,7 @@ function IndiaDataCenterAlertPage() {
   const [activeTab, setActiveTab] = useState<"registry" | "map" | "substations">("registry");
 
   // Fetch facilities from API
-  const { data: facilities = [], isLoading, error } = useFacilities({ page_size: 200 });
+  const { data: facilities = [], isLoading, error } = useFacilities({ page_size: 500 });
   const { data: stats } = useFacilityStats();
 
   // Apply client-side filters

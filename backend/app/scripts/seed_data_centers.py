@@ -1,11 +1,12 @@
 """
-Seed script to import data center entries from dc_118.csv into PostgreSQL.
+Seed script to import data center entries from dc-extracted-19022026-final.csv into PostgreSQL.
 
 Usage:
     python -m app.scripts.seed_data_centers
 
 This script:
-1. Reads dc_118.csv
+1. Reads dc-extracted-19022026-final.csv (comprehensive dataset of ~287 data centers)
+   Falls back to dc_118.csv if the primary file is not found.
 2. Creates DataCenterCompany records (one per unique company name)
 3. Creates DataCenterFacility records for each facility, linking them via company_id
 """
@@ -24,12 +25,15 @@ from app.domains.data_center_intelligence.models.data_center import (
     DataCenterFacility,
 )
 
-# CSV file path - check multiple locations
+# CSV file path - prefer the comprehensive extracted dataset, fall back to dc_118.csv
 _SCRIPT_DIR = os.path.dirname(__file__)
 _CANDIDATES = [
-    os.path.join(_SCRIPT_DIR, "..", "..", "..", "dc_118.csv"),  # project root
-    os.path.join(_SCRIPT_DIR, "..", "..", "dc_118.csv"),        # backend/
-    "/app/dc_118.csv",                                          # Docker mount
+    os.path.join(_SCRIPT_DIR, "..", "..", "..", "dc-extracted-19022026-final.csv"),  # project root
+    os.path.join(_SCRIPT_DIR, "..", "..", "dc-extracted-19022026-final.csv"),        # backend/
+    "/app/dc-extracted-19022026-final.csv",                                          # Docker mount
+    os.path.join(_SCRIPT_DIR, "..", "..", "..", "dc_118.csv"),                       # fallback: project root
+    os.path.join(_SCRIPT_DIR, "..", "..", "dc_118.csv"),                             # fallback: backend/
+    "/app/dc_118.csv",                                                               # fallback: Docker mount
 ]
 CSV_PATH = next((p for p in _CANDIDATES if os.path.exists(p)), _CANDIDATES[0])
 
