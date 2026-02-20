@@ -8,6 +8,7 @@ import AlertsPage from "./pages/AlertsPage";
 import IndiaDataCenterAlertPage from "./pages/IndiaDataCenterAlertPage";
 import PowerDataPage from "./pages/PowerDataPage";
 import FinancePage from "./pages/FinancePage";
+import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   return (
@@ -40,6 +41,9 @@ function App() {
         {/* Alerts */}
         <Route path="/alerts" element={<Navigate to="/alerts/news-feed" replace />} />
         <Route path="/alerts/:section" element={<AlertsPage />} />
+
+        {/* Profile */}
+        <Route path="/profile" element={<ProfilePage />} />
       </Route>
     </Routes>
   );

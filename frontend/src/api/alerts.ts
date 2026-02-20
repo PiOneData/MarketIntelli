@@ -64,6 +64,24 @@ export async function addNewsToWatchlist(
   return data;
 }
 
+export async function deleteWatchlist(
+  userId: string,
+  watchlistId: string,
+): Promise<void> {
+  await apiClient.delete(`/alerts/watchlists/${userId}/${watchlistId}`);
+}
+
+export async function bulkDeleteWatchlists(
+  userId: string,
+  watchlistIds: string[],
+): Promise<{ removed: number }> {
+  const { data } = await apiClient.post(
+    `/alerts/watchlists/${userId}/bulk-unwatch`,
+    { watchlist_ids: watchlistIds },
+  );
+  return data;
+}
+
 export async function triggerNewsScrape(): Promise<{ status: string }> {
   const { data } = await apiClient.post("/alerts/news/scrape");
   return data;

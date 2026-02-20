@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
@@ -8,6 +8,7 @@ from app.domains.alerts.schemas.alerts import (
     AlertRead,
     WatchlistRead,
     WatchlistCreate,
+    BulkUnwatchRequest,
     NotificationRead,
     NewsArticleRead,
     NewsWatchlistCreate,
@@ -51,7 +52,7 @@ async def get_watchlists(
         WatchlistRead(
             id=w.id, user_id=w.user_id, name=w.name,
             watch_type=w.watch_type, target_id=w.target_id,
-            is_active=w.is_active,
+            is_active=w.is_active, created_at=w.created_at,
         )
         for w in watchlists
     ]
@@ -70,6 +71,31 @@ async def create_watchlist(
         watch_type=w.watch_type, target_id=w.target_id,
         is_active=w.is_active,
     )
+
+
+@router.delete("/watchlists/{user_id}/{watchlist_id}", status_code=204)
+async def delete_watchlist(
+    user_id: UUID,
+    watchlist_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Remove a single item from the user's watchlist (soft delete)."""
+    service = AlertService(db)
+    deleted = await service.delete_watchlist(user_id, watchlist_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Watchlist item not found")
+
+
+@router.post("/watchlists/{user_id}/bulk-unwatch", response_model=dict)
+async def bulk_unwatch(
+    user_id: UUID,
+    payload: BulkUnwatchRequest,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Remove multiple items from the user's watchlist in one request."""
+    service = AlertService(db)
+    count = await service.bulk_delete_watchlists(user_id, payload.watchlist_ids)
+    return {"removed": count}
 
 
 @router.get("/notifications/{user_id}", response_model=list[NotificationRead])

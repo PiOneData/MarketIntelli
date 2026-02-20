@@ -41,6 +41,28 @@ class AlertService:
         await self.db.refresh(watchlist)
         return watchlist
 
+    async def delete_watchlist(self, user_id: UUID, watchlist_id: UUID) -> bool:
+        result = await self.db.execute(
+            select(Watchlist).where(
+                Watchlist.id == watchlist_id,
+                Watchlist.user_id == user_id,
+            )
+        )
+        watchlist = result.scalar_one_or_none()
+        if not watchlist:
+            return False
+        watchlist.is_active = False
+        await self.db.commit()
+        return True
+
+    async def bulk_delete_watchlists(self, user_id: UUID, watchlist_ids: list[UUID]) -> int:
+        count = 0
+        for wid in watchlist_ids:
+            deleted = await self.delete_watchlist(user_id, wid)
+            if deleted:
+                count += 1
+        return count
+
     async def get_user_notifications(
         self, user_id: UUID, unread_only: bool = False
     ) -> list[Notification]:

@@ -3,6 +3,8 @@ import {
   listAlerts,
   getWatchlists,
   createWatchlist,
+  deleteWatchlist,
+  bulkDeleteWatchlists,
   getNotifications,
   listNews,
   getNewsFilters,
@@ -77,6 +79,26 @@ export function useAddNewsToWatchlist(userId: string) {
   return useMutation({
     mutationFn: ({ articleId, articleTitle }: { articleId: string; articleTitle: string }) =>
       addNewsToWatchlist(articleId, userId, articleTitle),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["watchlists", userId] });
+    },
+  });
+}
+
+export function useDeleteWatchlist(userId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (watchlistId: string) => deleteWatchlist(userId, watchlistId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["watchlists", userId] });
+    },
+  });
+}
+
+export function useBulkDeleteWatchlists(userId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (watchlistIds: string[]) => bulkDeleteWatchlists(userId, watchlistIds),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["watchlists", userId] });
     },

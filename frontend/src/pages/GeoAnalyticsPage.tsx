@@ -1,4 +1,5 @@
 import { useParams } from "react-router-dom";
+import SolarAnalysisWizard from "../components/solar/SolarAnalysisWizard";
 
 function GeoAnalyticsPage() {
   const { section } = useParams<{ section: string }>();
@@ -6,7 +7,9 @@ function GeoAnalyticsPage() {
 
   return (
     <div className="geo-analytics-page">
-      <h2>Geo AI &amp; Spatial Analytics</h2>
+      {activeSection !== "solar-analysis" && (
+        <h2>Geo AI &amp; Spatial Analytics</h2>
+      )}
 
       {activeSection === "solar-potential-mapping" && (
         <section id="solar-potential-mapping" className="geo-layer-placeholder">
@@ -27,6 +30,10 @@ function GeoAnalyticsPage() {
           <h3>Land Availability</h3>
           <p>Analyze available land parcels for renewable energy project development with satellite-based classification.</p>
         </section>
+      )}
+
+      {activeSection === "solar-analysis" && (
+        <SolarAnalysisWizard />
       )}
     </div>
   );

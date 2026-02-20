@@ -17,6 +17,7 @@ export interface Watchlist {
   watch_type: string;
   target_id: string;
   is_active: boolean;
+  created_at?: string | null;
 }
 
 export interface Notification {
