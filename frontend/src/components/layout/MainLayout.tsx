@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useLocation, useNavigate, Link } from "react-router-dom";
 import refexLogo from "../../assets/refex-logo.png";
 
 interface SubItem {
@@ -21,6 +21,7 @@ const navItems: NavItem[] = [
     label: "Geo Analytics",
     children: [
       { id: "solar-potential-mapping", label: "Solar Potential Mapping", path: "/geo-analytics/solar-potential-mapping" },
+      { id: "solar-analysis", label: "Solar Site Analysis", path: "/geo-analytics/solar-analysis" },
       { id: "wind-site-analyser", label: "Wind Site Analyser" },
     ],
   },
@@ -198,6 +199,11 @@ function MainLayout() {
                   aria-label="Search"
                 />
               </form>
+            </li>
+            <li>
+              <Link to="/profile" className="header-profile-btn" title="My Profile" aria-label="Profile">
+                <span className="header-profile-avatar">AS</span>
+              </Link>
             </li>
           </ul>
         </nav>

@@ -270,6 +270,23 @@ function formatPubDate(dateStr: string): string {
   });
 }
 
+function getHostname(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
+function isSpecificPage(url: string): boolean {
+  try {
+    const { pathname } = new URL(url);
+    return pathname.length > 1 && pathname !== "/";
+  } catch {
+    return false;
+  }
+}
+
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -504,13 +521,35 @@ function FinanceIntelligenceSection() {
 
                 {/* Open link */}
                 <div className="finint-doc-footer">
+                  <div className="finint-source-info">
+                    <span className="finint-source-domain">
+                      <svg viewBox="0 0 20 20" fill="currentColor" width="11" height="11">
+                        <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd"/>
+                      </svg>
+                      {getHostname(doc.url)}
+                    </span>
+                    {!isSpecificPage(doc.url) && (
+                      <span className="finint-homepage-note" title="This link goes to the institution's homepage">Homepage</span>
+                    )}
+                  </div>
                   <a
                     href={doc.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="finint-open-btn"
                   >
-                    {doc.doc_type === "pdf" ? "Download PDF" : doc.doc_type === "circular" ? "View Circular" : "Open Document"}
+                    {doc.doc_type === "pdf" ? (
+                      <>
+                        <svg viewBox="0 0 20 20" fill="currentColor" width="13" height="13">
+                          <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd"/>
+                        </svg>
+                        Download PDF ↗
+                      </>
+                    ) : doc.doc_type === "circular" ? (
+                      <>View Circular ↗</>
+                    ) : (
+                      <>Open Source ↗</>
+                    )}
                   </a>
                 </div>
               </div>
@@ -522,7 +561,10 @@ function FinanceIntelligenceSection() {
       {/* Finance News sidebar / bottom */}
       {financeNews.length > 0 && (
         <div className="finint-news-strip">
-          <h4 className="finint-news-strip-title">Latest Finance &amp; RE News</h4>
+          <div className="finint-news-strip-header">
+            <h4 className="finint-news-strip-title">Latest Finance &amp; RE News</h4>
+            <span className="finint-news-strip-desc">Live articles from market sources — click to read at original publisher</span>
+          </div>
           <div className="finint-news-items">
             {financeNews.map((article) => (
               <div key={article.id} className="finint-news-item">
@@ -537,15 +579,35 @@ function FinanceIntelligenceSection() {
                         })
                       : "—"}
                   </span>
+                  {article.url && (
+                    <span className="finint-news-domain">
+                      {getHostname(article.url)}
+                    </span>
+                  )}
                 </div>
-                <a
-                  href={article.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="finint-news-title"
-                >
-                  {article.title}
-                </a>
+                <div className="finint-news-item-body">
+                  <a
+                    href={article.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="finint-news-title"
+                  >
+                    {article.title}
+                  </a>
+                  {article.summary && (
+                    <p className="finint-news-summary">{article.summary}</p>
+                  )}
+                </div>
+                <div className="finint-news-item-footer">
+                  <a
+                    href={article.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="finint-news-read-btn"
+                  >
+                    Read Full Article ↗
+                  </a>
+                </div>
               </div>
             ))}
           </div>

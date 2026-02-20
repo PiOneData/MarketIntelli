@@ -23,6 +23,11 @@ class WatchlistRead(BaseModel):
     watch_type: str
     target_id: str
     is_active: bool
+    created_at: datetime | None = None
+
+
+class BulkUnwatchRequest(BaseModel):
+    watchlist_ids: list[UUID]
 
 
 class WatchlistCreate(BaseModel):

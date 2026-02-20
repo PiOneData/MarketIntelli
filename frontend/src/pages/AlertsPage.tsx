@@ -1,9 +1,17 @@
 import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAlerts, useNews, useNewsFilters, useAddNewsToWatchlist, useWatchlists } from "../hooks/useAlerts";
+import {
+  useAlerts,
+  useNews,
+  useNewsFilters,
+  useAddNewsToWatchlist,
+  useWatchlists,
+  useDeleteWatchlist,
+  useBulkDeleteWatchlists,
+} from "../hooks/useAlerts";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ErrorMessage from "../components/common/ErrorMessage";
-import type { NewsArticle } from "../types/alerts";
+import type { NewsArticle, Watchlist } from "../types/alerts";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                             */
@@ -27,16 +35,21 @@ const CATEGORY_COLORS: Record<string, string> = {
   renewable_energy: "news-badge--renewable",
 };
 
-function formatNewsDate(dateStr: string | null): string {
+const WATCH_TYPE_META: Record<string, { label: string; icon: string; colorClass: string }> = {
+  news_article: { label: "News Article", icon: "📰", colorClass: "news-badge--policy" },
+  developer:    { label: "Developer",    icon: "🏗️", colorClass: "news-badge--solar" },
+  state:        { label: "State",        icon: "🗺️", colorClass: "news-badge--wind" },
+  category:     { label: "Category",     icon: "📂", colorClass: "news-badge--renewable" },
+};
+
+function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return "—";
   return new Date(dateStr).toLocaleDateString("en-IN", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
+    year: "numeric", month: "short", day: "numeric",
   });
 }
 
-function timeAgo(dateStr: string | null): string {
+function timeAgo(dateStr: string | null | undefined): string {
   if (!dateStr) return "";
   const diff = Date.now() - new Date(dateStr).getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -84,7 +97,7 @@ function NewsCard({
       <div className="news-card-footer">
         <div className="news-card-footer-left">
           <span className="news-source">{article.source}</span>
-          <span className="news-date">{formatNewsDate(article.published_at)}</span>
+          <span className="news-date">{formatDate(article.published_at)}</span>
         </div>
         <div className="news-card-footer-right">
           <a
@@ -93,7 +106,7 @@ function NewsCard({
             rel="noopener noreferrer"
             className="news-read-btn"
           >
-            Read Article
+            Read Article ↗
           </a>
           <button
             className={`news-watchlist-btn ${watchlistAdded ? "news-watchlist-btn--added" : ""}`}
@@ -133,7 +146,6 @@ function NewsFeedSection() {
   const availableStates = filters?.states ?? [];
   const availableSources = filters?.sources ?? [];
 
-  // Client-side filtering for immediate responsiveness
   const filtered = useMemo(() => {
     return articles.filter(
       (a) =>
@@ -173,7 +185,6 @@ function NewsFeedSection() {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="pm-filters">
         <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
           <option value="">All Categories</option>
@@ -187,18 +198,14 @@ function NewsFeedSection() {
         <select value={stateFilter} onChange={(e) => setStateFilter(e.target.value)}>
           <option value="">All States</option>
           {availableStates.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
+            <option key={s} value={s}>{s}</option>
           ))}
         </select>
 
         <select value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)}>
           <option value="">All Sources</option>
           {availableSources.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
+            <option key={s} value={s}>{s}</option>
           ))}
         </select>
 
@@ -207,18 +214,13 @@ function NewsFeedSection() {
         {(categoryFilter || stateFilter || sourceFilter) && (
           <button
             className="news-clear-btn"
-            onClick={() => {
-              setCategoryFilter("");
-              setStateFilter("");
-              setSourceFilter("");
-            }}
+            onClick={() => { setCategoryFilter(""); setStateFilter(""); setSourceFilter(""); }}
           >
             Clear Filters
           </button>
         )}
       </div>
 
-      {/* Category quick-filter chips */}
       <div className="news-category-chips">
         {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
           <button
@@ -234,18 +236,10 @@ function NewsFeedSection() {
         ))}
       </div>
 
-      {/* Article grid */}
       {filtered.length === 0 ? (
         <div className="news-empty">
           <p>No articles match the current filters.</p>
-          <button
-            className="news-clear-btn"
-            onClick={() => {
-              setCategoryFilter("");
-              setStateFilter("");
-              setSourceFilter("");
-            }}
-          >
+          <button className="news-clear-btn" onClick={() => { setCategoryFilter(""); setStateFilter(""); setSourceFilter(""); }}>
             Clear Filters
           </button>
         </div>
@@ -266,69 +260,286 @@ function NewsFeedSection() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Custom Watchlists Section                                          */
+/*  Custom Watchlists Section — full overhaul                          */
 /* ------------------------------------------------------------------ */
+
+type SortOption = "date_desc" | "date_asc" | "name_asc" | "name_desc" | "type";
 
 function CustomWatchlistsSection() {
   const { data: watchlists = [], isLoading, isError, refetch } = useWatchlists(DEMO_USER_ID);
+  const deleteOne = useDeleteWatchlist(DEMO_USER_ID);
+  const deleteBulk = useBulkDeleteWatchlists(DEMO_USER_ID);
+
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState<SortOption>("date_desc");
+  const [typeFilter, setTypeFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [confirmBulk, setConfirmBulk] = useState(false);
+  const [confirmSingle, setConfirmSingle] = useState<string | null>(null);
+
+  const allTypes = useMemo(
+    () => [...new Set(watchlists.map((w) => w.watch_type))].sort(),
+    [watchlists]
+  );
+
+  const filtered = useMemo(() => {
+    let items = watchlists.filter((w) => {
+      const matchType = !typeFilter || w.watch_type === typeFilter;
+      const matchStatus =
+        !statusFilter ||
+        (statusFilter === "active" ? w.is_active : !w.is_active);
+      const matchSearch =
+        !searchQuery ||
+        w.name.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchType && matchStatus && matchSearch;
+    });
+
+    switch (sortBy) {
+      case "date_desc":
+        items = [...items].sort((a, b) =>
+          (b.created_at ?? "").localeCompare(a.created_at ?? "")
+        );
+        break;
+      case "date_asc":
+        items = [...items].sort((a, b) =>
+          (a.created_at ?? "").localeCompare(b.created_at ?? "")
+        );
+        break;
+      case "name_asc":
+        items = [...items].sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "name_desc":
+        items = [...items].sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      case "type":
+        items = [...items].sort((a, b) => a.watch_type.localeCompare(b.watch_type));
+        break;
+    }
+    return items;
+  }, [watchlists, typeFilter, statusFilter, searchQuery, sortBy]);
+
+  const allSelected = filtered.length > 0 && filtered.every((w) => selected.has(w.id));
+  const someSelected = selected.size > 0;
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(filtered.map((w) => w.id)));
+    }
+  };
+
+  const handleUnwatchOne = (id: string) => {
+    deleteOne.mutate(id, {
+      onSuccess: () => {
+        setSelected((prev) => { const n = new Set(prev); n.delete(id); return n; });
+        setConfirmSingle(null);
+      },
+    });
+  };
+
+  const handleBulkUnwatch = () => {
+    deleteBulk.mutate([...selected], {
+      onSuccess: () => {
+        setSelected(new Set());
+        setConfirmBulk(false);
+      },
+    });
+  };
 
   if (isLoading) return <LoadingSpinner message="Loading watchlists..." />;
   if (isError) return <ErrorMessage message="Failed to load watchlists" onRetry={() => refetch()} />;
 
-  const newsWatchlists = watchlists.filter((w) => w.watch_type === "news_article");
-  const otherWatchlists = watchlists.filter((w) => w.watch_type !== "news_article");
-
   return (
-    <section id="custom-watchlists">
-      <h3>Custom Watchlists</h3>
-      <p className="pol-section-desc">
-        Articles and topics you are tracking. Add articles to your watchlist from the News Feed.
-      </p>
+    <section className="wl-section">
+      <div className="wl-header">
+        <div>
+          <h3>Custom Watchlists</h3>
+          <p className="pol-section-desc">
+            Articles and topics you are tracking. Add articles to your watchlist from the News Feed.
+          </p>
+        </div>
+        <span className="wl-total-badge">{watchlists.length} items watched</span>
+      </div>
 
       {watchlists.length === 0 ? (
         <div className="news-empty">
+          <div className="wl-empty-icon">☆</div>
           <p>No items in your watchlist yet.</p>
-          <p style={{ fontSize: "0.875rem", color: "var(--color-gray-400)", marginTop: "0.5rem" }}>
-            Go to the <strong>News Feed</strong> and click <strong>Watch</strong> on articles you want to track.
+          <p className="wl-empty-hint">
+            Go to the <strong>News Feed</strong> and click <strong>☆ Watch</strong> on articles you want to track.
           </p>
         </div>
       ) : (
         <>
-          {newsWatchlists.length > 0 && (
-            <div className="watchlist-group">
-              <h4 className="watchlist-group-title">Watched News Articles ({newsWatchlists.length})</h4>
-              <div className="watchlist-cards">
-                {newsWatchlists.map((w) => (
-                  <div key={w.id} className="watchlist-card">
-                    <div className="watchlist-card-type">
-                      <span className="news-badge news-badge--policy">News Article</span>
-                    </div>
-                    <p className="watchlist-card-name">{w.name}</p>
-                    <span className={`pol-status-badge pol-status-badge--${w.is_active ? "active" : "inactive"}`}>
-                      {w.is_active ? "Active" : "Inactive"}
-                    </span>
-                  </div>
+          {/* Toolbar */}
+          <div className="wl-toolbar">
+            <div className="wl-search-wrap">
+              <svg className="wl-search-icon" width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+              <input
+                className="wl-search-input"
+                type="text"
+                placeholder="Search watchlist…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button className="wl-search-clear" onClick={() => setSearchQuery("")}>✕</button>
+              )}
+            </div>
+
+            <div className="wl-filters">
+              <select className="wl-filter-select" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+                <option value="">All Types</option>
+                {allTypes.map((t) => (
+                  <option key={t} value={t}>
+                    {WATCH_TYPE_META[t]?.label ?? t.replace(/_/g, " ")}
+                  </option>
                 ))}
-              </div>
+              </select>
+
+              <select className="wl-filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                <option value="">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+
+              <select className="wl-filter-select" value={sortBy} onChange={(e) => setSortBy(e.target.value as SortOption)}>
+                <option value="date_desc">Newest First</option>
+                <option value="date_asc">Oldest First</option>
+                <option value="name_asc">Name A → Z</option>
+                <option value="name_desc">Name Z → A</option>
+                <option value="type">By Type</option>
+              </select>
+
+              <span className="pm-filter-count">{filtered.length} items</span>
+
+              {(typeFilter || statusFilter || searchQuery) && (
+                <button className="news-clear-btn" onClick={() => { setTypeFilter(""); setStatusFilter(""); setSearchQuery(""); }}>
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Bulk action bar */}
+          {someSelected && (
+            <div className="wl-bulk-bar">
+              <span className="wl-bulk-count">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                {selected.size} selected
+              </span>
+              {confirmBulk ? (
+                <div className="wl-bulk-confirm">
+                  <span>Remove {selected.size} item{selected.size !== 1 ? "s" : ""} from watchlist?</span>
+                  <button className="wl-confirm-yes" onClick={handleBulkUnwatch} disabled={deleteBulk.isPending}>
+                    {deleteBulk.isPending ? "Removing…" : "Yes, Unwatch"}
+                  </button>
+                  <button className="wl-confirm-no" onClick={() => setConfirmBulk(false)}>Cancel</button>
+                </div>
+              ) : (
+                <>
+                  <button className="wl-bulk-unwatch-btn" onClick={() => setConfirmBulk(true)}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    Unwatch Selected ({selected.size})
+                  </button>
+                  <button className="wl-bulk-clear" onClick={() => setSelected(new Set())}>Clear Selection</button>
+                </>
+              )}
             </div>
           )}
-          {otherWatchlists.length > 0 && (
-            <div className="watchlist-group">
-              <h4 className="watchlist-group-title">Other Watchlists ({otherWatchlists.length})</h4>
-              <div className="watchlist-cards">
-                {otherWatchlists.map((w) => (
-                  <div key={w.id} className="watchlist-card">
-                    <div className="watchlist-card-type">
-                      <span className="news-badge news-badge--renewable">{w.watch_type.replace(/_/g, " ")}</span>
+
+          {/* Column header */}
+          <div className="wl-list-header">
+            <label className="wl-checkbox-label">
+              <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="wl-checkbox" />
+              <span className="wl-select-all-label">{allSelected ? "Deselect All" : "Select All"}</span>
+            </label>
+            <span className="wl-col-type">Type</span>
+            <span className="wl-col-added">Date Added</span>
+            <span className="wl-col-status">Status</span>
+            <span className="wl-col-actions">Actions</span>
+          </div>
+
+          {/* Items */}
+          <div className="wl-list">
+            {filtered.map((w: Watchlist) => {
+              const meta = WATCH_TYPE_META[w.watch_type] ?? {
+                label: w.watch_type.replace(/_/g, " "),
+                icon: "📌",
+                colorClass: "news-badge--renewable",
+              };
+              const isSelected = selected.has(w.id);
+              const isPendingDelete = confirmSingle === w.id;
+
+              return (
+                <div
+                  key={w.id}
+                  className={`wl-item${isSelected ? " wl-item--selected" : ""}${!w.is_active ? " wl-item--inactive" : ""}`}
+                >
+                  <label className="wl-item-checkbox-label">
+                    <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(w.id)} className="wl-checkbox" />
+                  </label>
+
+                  <div className="wl-item-body">
+                    <div className="wl-item-icon">{meta.icon}</div>
+                    <div className="wl-item-info">
+                      <p className="wl-item-name">{w.name}</p>
+                      <span className="wl-item-hint">
+                        {w.watch_type === "news_article" ? `News article · ref: ${w.target_id.slice(0, 8)}…` : `${meta.label} · ${w.target_id}`}
+                      </span>
                     </div>
-                    <p className="watchlist-card-name">{w.name}</p>
-                    <span className={`pol-status-badge pol-status-badge--${w.is_active ? "active" : "inactive"}`}>
-                      {w.is_active ? "Active" : "Inactive"}
-                    </span>
                   </div>
-                ))}
-              </div>
-            </div>
+
+                  <div className="wl-item-type">
+                    <span className={`news-badge ${meta.colorClass}`}>{meta.label}</span>
+                  </div>
+
+                  <div className="wl-item-date">
+                    <span className="wl-date-main">{formatDate(w.created_at)}</span>
+                    <span className="wl-date-ago">{timeAgo(w.created_at)}</span>
+                  </div>
+
+                  <div className="wl-item-status">
+                    <span className={`wl-status-dot wl-status-dot--${w.is_active ? "active" : "inactive"}`} />
+                    <span className="wl-status-label">{w.is_active ? "Active" : "Inactive"}</span>
+                  </div>
+
+                  <div className="wl-item-actions">
+                    {isPendingDelete ? (
+                      <div className="wl-inline-confirm">
+                        <span>Remove?</span>
+                        <button className="wl-confirm-yes wl-confirm-yes--sm" onClick={() => handleUnwatchOne(w.id)} disabled={deleteOne.isPending}>
+                          Yes
+                        </button>
+                        <button className="wl-confirm-no wl-confirm-no--sm" onClick={() => setConfirmSingle(null)}>No</button>
+                      </div>
+                    ) : (
+                      <button className="wl-unwatch-btn" onClick={() => setConfirmSingle(w.id)} title="Remove from watchlist" disabled={deleteOne.isPending}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        Unwatch
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {filtered.length === 0 && (
+            <div className="news-empty"><p>No watchlist items match the current filters.</p></div>
           )}
         </>
       )}
@@ -344,8 +555,7 @@ function ActiveAlertsSection() {
   const { data: alerts, isLoading, isError, refetch } = useAlerts();
 
   if (isLoading) return <LoadingSpinner message="Loading alerts..." />;
-  if (isError)
-    return <ErrorMessage message="Failed to load alerts" onRetry={() => refetch()} />;
+  if (isError) return <ErrorMessage message="Failed to load alerts" onRetry={() => refetch()} />;
 
   return (
     <section id="active-alerts">
@@ -366,18 +576,14 @@ function AlertsPage() {
   return (
     <div className="alerts-page">
       <h2>Alert &amp; Notification Engine</h2>
-
       {activeSection === "active-alerts" && <ActiveAlertsSection />}
-
       {activeSection === "custom-watchlists" && <CustomWatchlistsSection />}
-
       {activeSection === "disaster-response-integration" && (
         <section id="disaster-response-integration">
           <h3>Disaster Response Integration</h3>
           <p>Early warnings for extreme weather events affecting solar assets.</p>
         </section>
       )}
-
       {activeSection === "news-feed" && <NewsFeedSection />}
     </div>
   );
