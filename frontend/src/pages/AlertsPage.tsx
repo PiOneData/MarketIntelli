@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import IpoWatchPage from "./IpoWatchPage";
 import {
   useAlerts,
   useNews,
@@ -578,6 +579,7 @@ function AlertsPage() {
       <h2>Alert &amp; Notification Engine</h2>
       {activeSection === "active-alerts" && <ActiveAlertsSection />}
       {activeSection === "custom-watchlists" && <CustomWatchlistsSection />}
+      {activeSection === "ipo-watch" && <IpoWatchPage />}
       {activeSection === "disaster-response-integration" && (
         <section id="disaster-response-integration">
           <h3>Disaster Response Integration</h3>
