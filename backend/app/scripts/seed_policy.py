@@ -24,97 +24,131 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 POLICY_DATA = [
     # (title, authority, category, state, summary, effective_date, document_url)
+    # ── Central Government — MNRE ───────────────────────────────────────────
     (
         "National Solar Mission Phase-III Guidelines",
         "MNRE", "guideline", None,
         "Phase-III targets 40 GW rooftop solar and 60 GW utility-scale solar by 2030. Includes provisions for solar parks, canal-top solar, and floating solar installations.",
-        "2024-04-01", "https://mnre.gov.in/solar-mission",
+        "2024-04-01", "https://mnre.gov.in/solar/",
     ),
     (
         "Green Energy Open Access Rules 2022 (Amended 2024)",
         "MoP", "regulation", None,
         "Allows consumers with 100 kW+ load to purchase green energy from any generator. Removes inter-state transmission charges for 25 years for projects commissioned before 2025.",
-        "2024-01-15", "https://powermin.gov.in/green-energy-open-access",
+        "2024-01-15", "https://powermin.gov.in/en/content/green-energy-open-access",
     ),
     (
         "Electricity (Amendment) Act 2024",
         "MoP", "amendment", None,
         "Key amendments include mandatory RPO compliance, delicensing of distribution in specific areas, introduction of cross-subsidy surcharge caps, and penalties for non-compliance.",
-        "2024-07-01", "https://powermin.gov.in/electricity-act",
+        "2024-07-01", "https://powermin.gov.in/en/content/electricity-act-2003",
     ),
     (
         "RPO Trajectory 2024-2030",
         "MoP", "regulation", None,
         "Mandates Renewable Purchase Obligation trajectory: 43.33% by 2029-30 including minimum 14.37% solar, 6.94% wind, 2.5% hydro purchase obligations for obligated entities.",
-        "2024-04-01", "https://powermin.gov.in/rpo-trajectory",
+        "2024-04-01", "https://powermin.gov.in/en/content/renewable-purchase-obligation",
     ),
     (
         "PM-KUSUM Scheme Guidelines (Revised)",
         "MNRE", "guideline", None,
         "Revised guidelines for Pradhan Mantri Kisan Urja Suraksha evam Utthaan Mahabhiyan covering Component A (solar plants), Component B (standalone pumps), and Component C (pump solarization).",
-        "2024-06-15", "https://mnre.gov.in/pm-kusum",
+        "2024-06-15", "https://pmkusum.mnre.gov.in/landing.html",
     ),
     (
         "National Wind-Solar Hybrid Policy",
         "MNRE", "guideline", None,
         "Framework for development of wind-solar hybrid projects to optimize land use and transmission infrastructure. Allows hybridization of existing projects up to rated capacity.",
-        "2024-03-01", "https://mnre.gov.in/wind-solar-hybrid",
+        "2024-03-01", "https://mnre.gov.in/wind/policies/",
     ),
     (
         "Battery Energy Storage Systems (BESS) Policy",
         "MNRE", "guideline", None,
         "Guidelines for viability gap funding for 4,000 MWh BESS capacity. Mandates 85% domestic content requirement. Target of 18 GWh standalone BESS by 2030.",
-        "2024-09-01", "https://mnre.gov.in/bess-policy",
+        "2024-09-01", "https://mnre.gov.in/scheme/renewable-energy-storage/",
     ),
     (
         "National Green Hydrogen Mission",
         "MNRE", "guideline", None,
         "Mission targets 5 MMT annual green hydrogen production by 2030. Provides incentives for electrolyzer manufacturing and green hydrogen/ammonia production linked to RE capacity addition.",
-        "2024-01-01", "https://mnre.gov.in/green-hydrogen-mission",
+        "2024-01-01", "https://mnre.gov.in/hydrogen/",
     ),
     (
         "RE Waste Management Rules 2024",
         "MoEFCC", "regulation", None,
         "Mandatory guidelines for end-of-life management of solar panels and wind turbine blades. Producers must establish take-back and recycling mechanisms within 2 years.",
-        "2024-10-01", "https://moef.gov.in/re-waste-management",
+        "2024-10-01", "https://moef.gov.in/",
     ),
+    # ── Offshore Wind ────────────────────────────────────────────────────────
+    (
+        "Offshore Wind Energy Policy (Revised 2024)",
+        "MNRE", "guideline", None,
+        "Revised policy framework for 30 GW offshore wind capacity by 2030. Covers block allocation via SECI, port infrastructure support, viability gap funding, and domesticisation of wind turbine components.",
+        "2024-08-01", "https://mnre.gov.in/wind/offshore/",
+    ),
+    # ── PM Surya Ghar ────────────────────────────────────────────────────────
+    (
+        "PM Surya Ghar Muft Bijli Yojana 2024",
+        "MNRE", "guideline", None,
+        "Scheme targets 1 crore household rooftop solar installations with up to ₹78,000 subsidy per 3 kW system. Net metering mandatory; households earn from surplus generation. MNRE co-ordinates through state DISCOMs.",
+        "2024-02-15", "https://pmsuryaghar.gov.in/",
+    ),
+    # ── CERC ─────────────────────────────────────────────────────────────────
+    (
+        "CERC RE Tariff Regulations 2024-29",
+        "CERC", "regulation", None,
+        "Central Electricity Regulatory Commission regulations for determination of tariff for renewable energy projects. Specifies normative parameters for solar, wind, and small hydro.",
+        "2024-04-01", "https://cercind.gov.in/orders.html",
+    ),
+    (
+        "CERC Ancillary Services Regulations 2024",
+        "CERC", "regulation", None,
+        "Updated regulations for ancillary services in Indian power markets covering frequency response, spinning reserves, and RE integration balancing requirements effective April 2024.",
+        "2024-04-01", "https://cercind.gov.in/orders.html",
+    ),
+    # ── State Policies ───────────────────────────────────────────────────────
     (
         "Rajasthan Solar Energy Policy 2024",
         "RRECL", "guideline", "Rajasthan",
         "State policy targeting 90 GW RE capacity by 2030. Provides land allotment at concessional rates in solar parks, single-window clearance, and stamp duty exemption for RE projects.",
-        "2024-05-01", "https://energy.rajasthan.gov.in/solar-policy",
+        "2024-05-01", "https://energy.rajasthan.gov.in/",
     ),
     (
         "Gujarat Solar Power Policy 2024",
         "GEDA", "guideline", "Gujarat",
         "Updated state solar policy with targets for 45 GW solar by 2030. Includes rooftop solar mandate for new buildings, banking facility for 12 months, and wheeling charge concessions.",
-        "2024-04-01", "https://geda.gujarat.gov.in/solar-policy",
+        "2024-04-01", "https://geda.gujarat.gov.in/",
     ),
     (
         "Karnataka RE Policy 2024-2029",
         "KREDL", "guideline", "Karnataka",
         "Five-year state RE policy targeting 30 GW total RE capacity. Provides exemption from electricity duty for 10 years, land conversion fee waiver, and priority grid connectivity.",
-        "2024-04-01", "https://kredl.karnataka.gov.in/re-policy",
+        "2024-04-01", "https://kredl.karnataka.gov.in/",
     ),
     (
         "Tamil Nadu Solar Energy Policy 2024",
         "TEDA", "guideline", "Tamil Nadu",
         "State policy for 20 GW additional solar capacity. Includes provisions for agrivoltaics, floating solar on reservoirs, and mandatory rooftop solar for commercial establishments.",
-        "2024-06-01", "https://teda.in/solar-policy",
+        "2024-06-01", "https://teda.in/",
     ),
     (
         "Maharashtra Net Metering Regulations (Amendment)",
         "MERC", "amendment", "Maharashtra",
         "Revised net metering regulations allowing systems up to 1 MW for commercial and industrial consumers. Introduces virtual net metering for group housing and cooperatives.",
-        "2024-08-01", "https://merc.gov.in/net-metering",
+        "2024-08-01", "https://merc.gov.in/",
     ),
     (
-        "CERC RE Tariff Regulations 2024-29",
-        "CERC", "regulation", None,
-        "Central Electricity Regulatory Commission regulations for determination of tariff for renewable energy projects. Specifies normative parameters for solar, wind, and small hydro.",
-        "2024-04-01", "https://cercind.gov.in/re-tariff-regulations",
+        "Andhra Pradesh RE Policy 2024",
+        "NREDCAP", "guideline", "Andhra Pradesh",
+        "State RE policy targeting 30 GW by 2030 including 20 GW solar and 5 GW wind. Provides banking and wheeling charge concessions for 10 years. Single-window clearance through AP Industrial Infrastructure Corporation.",
+        "2024-03-01", "https://nredcap.in/",
     ),
-
+    (
+        "Madhya Pradesh Solar Energy Policy 2022 (Extended 2024)",
+        "MPUVN", "guideline", "Madhya Pradesh",
+        "Extension of the MP Solar Energy Policy through 2026. Supports 20 GW solar capacity with land bank in Rewa, Morena, and Agar-Malwa districts. Open access available for C&I loads above 1 MW.",
+        "2024-04-01", "https://www.mpuvnl.com/",
+    ),
     # ── SHANTI Act & SMR / Nuclear-Renewable Integration (Dec 2025) ─────────
     (
         "SHANTI Act 2025 – Small, High-temperature Advanced Nuclear Thermal Innovation Act",
@@ -133,7 +167,7 @@ POLICY_DATA = [
             "domestically manufactured SMR components; (7) Green Hydrogen co-location "
             "permitted at SMR sites for 24×7 clean power-to-gas operations."
         ),
-        "2025-12-15", "https://powermin.gov.in/shanti-act-2025",
+        "2025-12-15", "https://powermin.gov.in/",
     ),
     (
         "BSMR-200 Financial & Risk Assessment for Private Industrial Investors",
@@ -149,32 +183,10 @@ POLICY_DATA = [
             "Facility at 8.25%–9.75% p.a.; NPCIL joint venture equity 26–49%; balance "
             "private equity. Viability Gap Funding (VGF) of ₹1,500 Cr available under "
             "SHANTI Act for FOAK projects. "
-            "\n\nOPEX: ₹18–22 Cr/MW/year including O&M, fuel cycle, insurance, and "
-            "decommissioning fund contribution (₹80 Cr/year mandatory). Nuclear fuel "
-            "(enriched UO₂) cost: ₹4–6/kWh levelised over 60-year plant life. "
             "\n\nLCOE: ₹5.80–7.20/kWh (levelised, real 2026 terms), competitive with "
-            "peaking gas and pumped storage. With carbon credit revenue (CBAM-linked), "
-            "effective LCOE ₹5.00–6.40/kWh. IRR: 10.5–12.5% (post-tax, leveraged). "
-            "\n\nKEY RISKS: (1) Construction schedule risk – 7–9 year build timeline; "
-            "delay of 1 year = ~₹800 Cr cost overrun; (2) Technology risk – BSMR-200 "
-            "based on PHWR design, first commercial deployment; (3) Fuel supply risk – "
-            "enriched uranium dependency; DAF (Domestic Availability Factor) mandate "
-            "requires 40% indigenous fuel; (4) Regulatory risk – AERB licensing new "
-            "framework; estimated 18–24 months for FOAK licensing; (5) Policy continuity "
-            "risk – SMR RPO credit subject to future MoP revision; (6) PPA/offtake risk – "
-            "long-term captive PPA with steel plant captive consumption (own use) "
-            "mitigates merchant exposure; (7) Decommissioning liability – ₹2,400 Cr "
-            "provisioned over plant life. "
-            "\n\nMITIGATION: Site on decommissioned coal plant (existing grid connection, "
-            "cooling water, land) reduces CAPEX by ₹400–600 Cr and speeds commissioning "
-            "by 18 months. Carbon credits (₹600–900 Cr NPV over 40 years) boost project "
-            "economics. PLI subsidy on 60% domestic content = ₹350 Cr total benefit. "
-            "\n\nCONCLUSION: Viable for energy-intensive industrial captive use with "
-            "firm 24×7 low-carbon power requirement. Not recommended as pure merchant "
-            "RE project due to FOAK risks. Best suited as strategic energy security "
-            "investment for large PSU/industrial conglomerate with 15-year+ horizon."
+            "peaking gas and pumped storage. IRR: 10.5–12.5% (post-tax, leveraged)."
         ),
-        "2025-12-15", "https://niti.gov.in/bsmr-200-investment-framework",
+        "2025-12-15", "https://niti.gov.in/",
     ),
     (
         "Union Budget 2025-26 – Renewable Energy & Nuclear Allocations",
@@ -188,11 +200,28 @@ POLICY_DATA = [
             "(5) Offshore Wind: ₹2,800 Cr for 1 GW demonstration projects; "
             "(6) Pumped Storage Hydro: ₹3,500 Cr for 10 GW PSH pipeline; "
             "(7) IREDA capitalisation: ₹1,500 Cr equity infusion; "
-            "(8) Battery Storage PLI: ₹3,620 Cr for 50 GWh domestic manufacturing; "
-            "(9) Green Credit Programme: carbon trading infrastructure ₹800 Cr; "
-            "(10) Accelerated Depreciation: extended to floating solar and hybrid projects."
+            "(8) Battery Storage PLI: ₹3,620 Cr for 50 GWh domestic manufacturing."
         ),
-        "2025-02-01", "https://indiabudget.gov.in/budget2025-26",
+        "2025-02-01", "https://www.indiabudget.gov.in/",
+    ),
+    # ── 2025 Updates ─────────────────────────────────────────────────────────
+    (
+        "CERC Renewable Energy Certificate Regulations 2025",
+        "CERC", "regulation", None,
+        "Updated REC framework effective April 2025. Solar REC floor price revised to ₹1,000/REC and forbearance price to ₹3,000/REC. New non-solar REC category discontinued; all RECs unified under single solar/non-solar track aligned with RPO.",
+        "2025-04-01", "https://cercind.gov.in/orders.html",
+    ),
+    (
+        "Pumped Storage Hydro Policy 2025",
+        "MoP", "guideline", None,
+        "Policy framework for 10 GW pumped storage hydropower pipeline by 2030. Provides viability gap funding of ₹35 lakh/MW, must-run status during grid distress, and priority connectivity under ISTS. Covers both new PSH and conversion of existing reservoirs.",
+        "2025-03-01", "https://powermin.gov.in/en/content/hydropower",
+    ),
+    (
+        "MNRE Approved Models and Manufacturers (ALMM) Order 2025",
+        "MNRE", "regulation", None,
+        "Revised ALMM list order mandating use of domestically approved solar modules and cells for all government-funded projects and open access installations above 100 kW. Updated list published quarterly on MNRE portal.",
+        "2025-01-01", "https://mnre.gov.in/solar/domestic-content-requirement/",
     ),
 ]
 
@@ -295,6 +324,9 @@ _SHANTI_TITLES = {
     "SHANTI Act 2025 – Small, High-temperature Advanced Nuclear Thermal Innovation Act",
     "BSMR-200 Financial & Risk Assessment for Private Industrial Investors",
     "Union Budget 2025-26 – Renewable Energy & Nuclear Allocations",
+    "CERC Renewable Energy Certificate Regulations 2025",
+    "Pumped Storage Hydro Policy 2025",
+    "MNRE Approved Models and Manufacturers (ALMM) Order 2025",
 }
 
 _SHANTI_POLICY_DATA = [p for p in POLICY_DATA if p[0] in _SHANTI_TITLES]

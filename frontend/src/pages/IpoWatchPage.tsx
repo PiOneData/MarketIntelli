@@ -19,7 +19,10 @@ interface IpoEntry {
   status: IpoStatus;
   listingGain?: string;
   description: string;
+  /** Canonical link for this company (NSE quote / BSE / SEBI DRHP) */
   source: string;
+  /** Label shown on the link button */
+  sourceLabel: string;
 }
 
 /* ------------------------------------------------------------------ */
@@ -42,7 +45,8 @@ const IPO_DATA: IpoEntry[] = [
     listingGain: "+89%",
     description:
       "India's largest solar PV module manufacturer with 12 GW aggregate installed capacity. Offers modules for utility, commercial and residential segments.",
-    source: "https://www.ipoplatform.com",
+    source: "https://www.nseindia.com/get-quotes/equity?symbol=WAAREEENER",
+    sourceLabel: "View on NSE",
   },
   {
     id: "s2",
@@ -57,7 +61,8 @@ const IPO_DATA: IpoEntry[] = [
     listingGain: "+120%",
     description:
       "Solar cell and module manufacturer with 5.1 GW module capacity and 3.2 GW cell capacity. First Indian company to commercialise n-type TOPCon solar cells.",
-    source: "https://www.ipoplatform.com",
+    source: "https://www.nseindia.com/get-quotes/equity?symbol=PREMIERENE",
+    sourceLabel: "View on NSE",
   },
   {
     id: "s3",
@@ -72,7 +77,8 @@ const IPO_DATA: IpoEntry[] = [
     listingGain: "-13%",
     description:
       "One of India's leading renewable energy IPPs. Operational solar capacity of 1,320 MW with additional 1,500 MW solar and 150 MW wind under construction.",
-    source: "https://www.ipoplatform.com",
+    source: "https://www.nseindia.com/get-quotes/equity?symbol=ACMESOLAR",
+    sourceLabel: "View on NSE",
   },
   {
     id: "s4",
@@ -87,7 +93,8 @@ const IPO_DATA: IpoEntry[] = [
     listingGain: "+38%",
     description:
       "Solar PV module manufacturer and EPC service provider. Annual installed capacity of ~3.80 GW. Revenue grew 100% and PAT rose 113% in FY2025.",
-    source: "https://www.ipoplatform.com",
+    source: "https://www.nseindia.com/get-quotes/equity?symbol=SAATVIKG",
+    sourceLabel: "View on NSE",
   },
   {
     id: "s5",
@@ -101,7 +108,8 @@ const IPO_DATA: IpoEntry[] = [
     status: "Listed",
     description:
       "One of India's leading solar module manufacturers with high-efficiency PERC and TOPCon modules. Significant export-oriented capacity.",
-    source: "https://www.ipoplatform.com",
+    source: "https://www.nseindia.com/get-quotes/equity?symbol=VIKRAMSOLAR",
+    sourceLabel: "View on NSE",
   },
   {
     id: "s6",
@@ -112,10 +120,11 @@ const IPO_DATA: IpoEntry[] = [
     priceRange: "TBA",
     listingDate: "27 Feb 2026",
     ipoOpenDate: "20 Feb 2026",
-    status: "Listed",
+    status: "Upcoming",
     description:
       "India's leading C&I renewable energy company. Provides onsite solar, wind hybrids, and decarbonisation solutions via long-term PPAs to corporates such as Google and Apple.",
-    source: "https://www.ipoplatform.com",
+    source: "https://www.nseindia.com/market-data/all-upcoming-ipos",
+    sourceLabel: "NSE Upcoming IPOs",
   },
   {
     id: "s7",
@@ -128,7 +137,8 @@ const IPO_DATA: IpoEntry[] = [
     status: "Pipeline",
     description:
       "Solar panel manufacturer offering modules for utility-scale and rooftop projects. Filed DRHP with SEBI for a ₹2,900 Cr IPO.",
-    source: "https://www.ipoplatform.com",
+    source: "https://www.sebi.gov.in/sebiweb/other/OtherAction.do?doRecognisedFpi=yes&intmId=1",
+    sourceLabel: "View SEBI DRHP",
   },
   {
     id: "s8",
@@ -141,7 +151,8 @@ const IPO_DATA: IpoEntry[] = [
     status: "Pipeline",
     description:
       "Solar technology solutions provider. Filed DRHP with SEBI in September 2024.",
-    source: "https://www.ipoplatform.com",
+    source: "https://www.sebi.gov.in/sebiweb/other/OtherAction.do?doRecognisedFpi=yes&intmId=1",
+    sourceLabel: "View SEBI DRHP",
   },
 
   /* ---- WIND ---- */
@@ -158,7 +169,8 @@ const IPO_DATA: IpoEntry[] = [
     listingGain: "+5%",
     description:
       "One of India's major wind power O&M service providers. Subsidiary of Inox Wind Ltd. Specialises in long-term O&M contracts for wind energy projects.",
-    source: "https://www.ipoplatform.com",
+    source: "https://www.nseindia.com/get-quotes/equity?symbol=INOXGREEN",
+    sourceLabel: "View on NSE",
   },
   {
     id: "w2",
@@ -171,7 +183,8 @@ const IPO_DATA: IpoEntry[] = [
     status: "Pipeline",
     description:
       "IPP specialising in wind and solar hybrid projects for C&I and utilities. Current operational capacity of 2.22 GWp with 1.31 GWp under construction.",
-    source: "https://www.ipoplatform.com",
+    source: "https://www.sebi.gov.in/sebiweb/other/OtherAction.do?doRecognisedFpi=yes&intmId=1",
+    sourceLabel: "View SEBI DRHP",
   },
 
   /* ---- BIO (Biofuels / Biomass) ---- */
@@ -188,7 +201,8 @@ const IPO_DATA: IpoEntry[] = [
     listingGain: "+67%",
     description:
       "Supplies biomass fuels including pellets and briquettes (132 T/day capacity) to industrial sectors. Benefits from Govt mandate for 5–7% biomass blending in coal thermal plants.",
-    source: "https://www.ipoplatform.com",
+    source: "https://www.nseindia.com/get-quotes/equity?symbol=SHUBHSHREE",
+    sourceLabel: "View on NSE Emerge",
   },
   {
     id: "b2",
@@ -203,7 +217,8 @@ const IPO_DATA: IpoEntry[] = [
     listingGain: "+15%",
     description:
       "Wholly-owned RE subsidiary of NTPC. Business covers solar, wind, hydro, biomass, waste, green hydrogen and tidal energy. Largest renewable PSU (excl. hydro).",
-    source: "https://www.ipoplatform.com",
+    source: "https://www.nseindia.com/get-quotes/equity?symbol=NTPCGREEN",
+    sourceLabel: "View on NSE",
   },
 
   /* ---- HYDRO ---- */
@@ -220,7 +235,8 @@ const IPO_DATA: IpoEntry[] = [
     listingGain: "+56%",
     description:
       "Government of India NBFC under MNRE, financing solar, wind, hydropower, biomass, biofuel, green hydrogen and other RE projects since 1987.",
-    source: "https://www.ipoplatform.com",
+    source: "https://www.nseindia.com/get-quotes/equity?symbol=IREDA",
+    sourceLabel: "View on NSE",
   },
   {
     id: "h2",
@@ -235,7 +251,8 @@ const IPO_DATA: IpoEntry[] = [
     listingGain: "+15%",
     description:
       "NTPC Green operates hydro, solar, wind, and other RE assets. As of Aug 2024, operational capacity included 3,071 MW solar and 100 MW wind across six states.",
-    source: "https://www.ipoplatform.com",
+    source: "https://www.nseindia.com/get-quotes/equity?symbol=NTPCGREEN",
+    sourceLabel: "View on NSE",
   },
 ];
 
@@ -327,9 +344,9 @@ function IpoCard({ ipo }: { ipo: IpoEntry }) {
         target="_blank"
         rel="noopener noreferrer"
         className="ipo-source-link"
-        title="View on IPO Platform"
+        title={ipo.sourceLabel}
       >
-        View on IPOPlatform ↗
+        {ipo.sourceLabel} ↗
       </a>
     </div>
   );
@@ -382,13 +399,17 @@ function IpoWatchPage() {
           <div>
             <h2 className="ipo-watch-title">Power Sector IPO Watch</h2>
             <p className="ipo-watch-subtitle">
-              Renewable energy IPOs — Solar, Wind, Bio &amp; Hydro — tracked from{" "}
-              <a
-                href="https://www.ipoplatform.com/main-board/know-your-sector/solar"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                IPOPlatform.com
+              India renewable energy IPOs — Solar, Wind, Bio &amp; Hydro — sourced from{" "}
+              <a href="https://www.nseindia.com/market-data/all-upcoming-ipos" target="_blank" rel="noopener noreferrer">
+                NSE
+              </a>
+              {" · "}
+              <a href="https://www.bseindia.com/markets/publicissues/ipo_eq.aspx" target="_blank" rel="noopener noreferrer">
+                BSE
+              </a>
+              {" · "}
+              <a href="https://www.sebi.gov.in/sebiweb/other/OtherAction.do?doRecognisedFpi=yes&intmId=1" target="_blank" rel="noopener noreferrer">
+                SEBI DRHP
               </a>
             </p>
           </div>
@@ -491,12 +512,14 @@ function IpoWatchPage() {
 
       {/* Disclaimer */}
       <p className="ipo-disclaimer">
-        * Data sourced from{" "}
-        <a href="https://www.ipoplatform.com/main-board/know-your-sector/solar" target="_blank" rel="noopener noreferrer">
-          IPOPlatform.com
-        </a>{" "}
-        (Solar), Wind, Bio &amp; Hydro sector pages. Listing gains are approximate. Not investment advice. Verify
-        with NSE/BSE before investing.
+        * Listed companies link directly to{" "}
+        <a href="https://www.nseindia.com" target="_blank" rel="noopener noreferrer">NSE</a>
+        {" / "}
+        <a href="https://www.bseindia.com" target="_blank" rel="noopener noreferrer">BSE</a>{" "}
+        equity quote pages. Pipeline companies link to{" "}
+        <a href="https://www.sebi.gov.in" target="_blank" rel="noopener noreferrer">SEBI</a>{" "}
+        DRHP filings. Listing gains are approximate. Not investment advice.
+        Always verify with NSE/BSE before investing.
       </p>
     </div>
   );
