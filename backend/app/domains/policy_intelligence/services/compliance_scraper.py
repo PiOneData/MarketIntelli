@@ -1,16 +1,19 @@
 """Compliance alert scraper — fetches real regulatory notices from MNRE, MoP Gazette,
 CERC/SERC orders via RSS feeds and stores them as compliance alerts.
 
-Sources:
-- PIB India (Press Information Bureau): covers MNRE Notifications and MoP Gazette
+Sources (India-only):
+- PIB India (Press Information Bureau): covers MNRE Notifications
   https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=3
-- Mercom India: covers CERC/SERC regulatory orders
+- PIB India: covers Ministry of Power Gazette
+  https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=33
+- Mercom India: covers CERC/SERC regulatory orders for Indian power sector
   https://mercomindia.com/feed/
-- Solar Quarter: covers SERC tariff orders and RE policy
+- Solar Quarter India Policy & Regulation section
   https://solarquarter.com/feed/
-- Economic Times Energy: regulatory coverage
+- Economic Times India Energy/Power
   https://economictimes.indiatimes.com/industry/energy/power/rssfeeds/13358489.cms
 
+All content is filtered for India-specific regulatory relevance before storage.
 Scheduled to run twice daily (every 12 hours).
 """
 
@@ -56,19 +59,19 @@ COMPLIANCE_RSS_SOURCES = [
     },
     {
         "url": "https://solarquarter.com/feed/",
-        "source": "Solar Quarter – RE Regulations",
-        "data_source_label": "CERC/SERC Orders",
+        "source": "Solar Quarter – India RE Regulations",
+        "data_source_label": "Solar Quarter India",
         "base_url": "https://solarquarter.com",
     },
     {
         "url": "https://economictimes.indiatimes.com/industry/energy/power/rssfeeds/13358489.cms",
-        "source": "Economic Times – Energy Policy",
-        "data_source_label": "MNRE Notifications",
+        "source": "Economic Times – India Energy Policy",
+        "data_source_label": "ET Energy India",
         "base_url": "https://economictimes.indiatimes.com",
     },
 ]
 
-# Keywords indicating compliance-relevant content
+# Keywords indicating compliance-relevant content for India's power/RE sector
 COMPLIANCE_KEYWORDS = [
     "regulation", "regulatory", "notification", "gazette", "amendment",
     "cerc", "serc", "mnre", "mop", "tariff order", "compliance",
@@ -78,10 +81,30 @@ COMPLIANCE_KEYWORDS = [
     "electricity act", "electricity rules", "approval", "clearance",
 ]
 
+# Keywords that confirm India-specific content — at least one must be present
+INDIA_KEYWORDS = [
+    "india", "indian", "mnre", "cerc", "serc", "mop", "ministry of power",
+    "ministry of new and renewable energy", "seci", "ntpc", "ireda", "discoms",
+    "discom", "electricity act", "central electricity", "state electricity",
+    "rajasthan", "gujarat", "karnataka", "maharashtra", "tamil nadu",
+    "andhra pradesh", "telangana", "madhya pradesh", "uttar pradesh",
+    "odisha", "haryana", "punjab", "chhattisgarh", "jharkhand", "bihar",
+    "renewable purchase obligation", "pm-kusum", "pm surya ghar",
+    "national solar mission", "green hydrogen mission", "bess",
+    "solar energy corporation", "power finance corporation",
+    "rural electrification", "pfc", "rec ltd", "iex", "energy exchange",
+]
+
 
 def _is_compliance_relevant(title: str, summary: str | None) -> bool:
     combined = (title + " " + (summary or "")).lower()
     return any(kw in combined for kw in COMPLIANCE_KEYWORDS)
+
+
+def _is_india_specific(title: str, summary: str | None) -> bool:
+    """Return True only if the article is clearly about India's energy/power sector."""
+    combined = (title + " " + (summary or "")).lower()
+    return any(kw in combined for kw in INDIA_KEYWORDS)
 
 
 def _detect_compliance_category(title: str, summary: str | None) -> str:
@@ -105,16 +128,26 @@ def _detect_authority(title: str, summary: str | None, source: str) -> str:
         return "CERC"
     if "serc" in combined or "state electricity" in combined:
         return "SERC"
-    if "mnre" in combined or "ministry of new" in combined:
+    if "mnre" in combined or "ministry of new and renewable" in combined:
         return "MNRE"
     if "mop" in combined or "ministry of power" in combined:
         return "MoP"
-    if "seci" in combined:
+    if "seci" in combined or "solar energy corporation" in combined:
         return "SECI"
+    if "moef" in combined or "ministry of environment" in combined:
+        return "MoEFCC"
+    if "ireda" in combined:
+        return "IREDA"
+    if "pib" in source.lower() and "mnre" in source.lower():
+        return "MNRE"
+    if "pib" in source.lower() and "mop" in source.lower():
+        return "MoP"
     if "pib" in source.lower():
         return "MNRE/MoP"
-    if "mercom" in source.lower():
+    if "mercom" in source.lower() or "solar quarter" in source.lower():
         return "CERC/SERC"
+    if "economic times" in source.lower():
+        return "MNRE/MoP"
     return "MNRE"
 
 
@@ -155,7 +188,9 @@ def _parse_feed(xml_text: str, source_name: str, data_source_label: str) -> list
         summary = _strip_html(summary_raw)[:600] if summary_raw else None
         pub_date = _parse_rfc822_date(date_el.text if date_el is not None else None)
 
-        if title and url and _is_compliance_relevant(title, summary):
+        if (title and url
+                and _is_compliance_relevant(title, summary)
+                and _is_india_specific(title, summary)):
             articles.append({
                 "title": title[:500],
                 "url": url[:2000],
@@ -179,7 +214,9 @@ def _parse_feed(xml_text: str, source_name: str, data_source_label: str) -> list
             summary = _strip_html(summary_raw)[:600] if summary_raw else None
             pub_date = _parse_rfc822_date(date_el.text if date_el is not None else None)
 
-            if title and url and _is_compliance_relevant(title, summary):
+            if (title and url
+                    and _is_compliance_relevant(title, summary)
+                    and _is_india_specific(title, summary)):
                 articles.append({
                     "title": title[:500],
                     "url": url[:2000],

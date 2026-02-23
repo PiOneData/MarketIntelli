@@ -58,8 +58,17 @@ function PolicyRepositorySection() {
       <p className="pol-section-desc">
         Centralized access to MNRE, SECI, SERC, and state-level renewable energy regulations and guidelines.
       </p>
-      <div className="pol-data-source">
-        Data sources: MNRE, MoP, CERC, SERC, State Nodal Agencies
+      <div className="pol-data-source" style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
+        <span>India sources:</span>
+        <a href="https://mnre.gov.in/notifications/" target="_blank" rel="noopener noreferrer" className="pol-link">MNRE</a>
+        <span>·</span>
+        <a href="https://powermin.gov.in/en/content/acts-rules-regulations" target="_blank" rel="noopener noreferrer" className="pol-link">MoP</a>
+        <span>·</span>
+        <a href="https://cercind.gov.in/orders.html" target="_blank" rel="noopener noreferrer" className="pol-link">CERC</a>
+        <span>·</span>
+        <a href="https://mercomindia.com/category/regulation/" target="_blank" rel="noopener noreferrer" className="pol-link">Mercom India (SERC)</a>
+        <span>·</span>
+        <a href="https://www.seci.co.in/" target="_blank" rel="noopener noreferrer" className="pol-link">SECI</a>
       </div>
       <div className="pm-filters">
         <select value={authorityFilter} onChange={(e) => setAuthorityFilter(e.target.value)}>
@@ -220,19 +229,30 @@ function TariffTrackerSection() {
 /* ------------------------------------------------------------------ */
 
 const DATA_SOURCE_LINKS: Record<string, string> = {
-  "MNRE Notifications": "https://pib.gov.in/AllRelease.aspx",
-  "MoP Gazette": "https://pib.gov.in/AllRelease.aspx",
-  "CERC/SERC Orders": "https://mercomindia.com/category/regulation/",
+  "MNRE Notifications (PIB)": "https://pib.gov.in/allRel.aspx?regid=3",
+  "MoP Gazette (PIB)": "https://pib.gov.in/allRel.aspx?regid=33",
+  "CERC/SERC Orders (Mercom India)": "https://mercomindia.com/category/regulation/",
+  "Solar Quarter Policy": "https://solarquarter.com/category/india-policy-regulation/",
+  "Economic Times Energy": "https://economictimes.indiatimes.com/industry/energy/power",
 };
 
 const AUTHORITY_LINKS: Record<string, string> = {
-  "MNRE": "https://mnre.gov.in",
-  "MoP": "https://powermin.gov.in",
-  "CERC": "https://cercind.gov.in",
+  "MNRE": "https://mnre.gov.in/notifications/",
+  "MoP": "https://powermin.gov.in/en/content/acts-rules-regulations",
+  "CERC": "https://cercind.gov.in/orders.html",
   "SERC": "https://mercomindia.com/category/regulation/",
-  "MNRE/MoP": "https://pib.gov.in/AllRelease.aspx",
-  "CERC/SERC": "https://mercomindia.com/category/regulation/",
-  "SECI": "https://www.seci.co.in",
+  "MNRE/MoP": "https://pib.gov.in/allRel.aspx?regid=3",
+  "CERC/SERC": "https://cercind.gov.in/orders.html",
+  "SECI": "https://www.seci.co.in/",
+  "MoEFCC": "https://moef.gov.in/",
+  "RRECL": "https://energy.rajasthan.gov.in/",
+  "GEDA": "https://geda.gujarat.gov.in/",
+  "KREDL": "https://kredl.karnataka.gov.in/",
+  "TEDA": "https://teda.in/",
+  "MERC": "https://merc.gov.in/",
+  "MoP / DAE": "https://powermin.gov.in/",
+  "DAE / NITI Aayog": "https://dae.gov.in/",
+  "MoF": "https://www.indiabudget.gov.in/",
 };
 
 function ComplianceAlertsSection() {
@@ -265,27 +285,35 @@ function ComplianceAlertsSection() {
     <section className="pol-section">
       <h3>Compliance Alerts</h3>
       <p className="pol-section-desc">
-        Track new regulations, amendments, and upcoming compliance deadlines for renewable energy projects.
-        Data refreshed twice daily from official sources.
+        Track new regulations, amendments, and upcoming compliance deadlines for India renewable energy projects.
+        Data refreshed twice daily from official Indian regulatory portals (PIB, CERC, Mercom India).
       </p>
 
-      {/* Real data source links */}
+      {/* Real data source links — India regulatory portals */}
       <div className="pol-data-source" style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
-        <span>Data sources:</span>
-        <a href="https://pib.gov.in/AllRelease.aspx" target="_blank" rel="noopener noreferrer" className="pol-link">
+        <span>India sources:</span>
+        <a href="https://pib.gov.in/allRel.aspx?regid=3" target="_blank" rel="noopener noreferrer" className="pol-link">
           MNRE Notifications (PIB)
         </a>
         <span>·</span>
-        <a href="https://pib.gov.in/AllRelease.aspx" target="_blank" rel="noopener noreferrer" className="pol-link">
+        <a href="https://pib.gov.in/allRel.aspx?regid=33" target="_blank" rel="noopener noreferrer" className="pol-link">
           MoP Gazette (PIB)
         </a>
         <span>·</span>
-        <a href="https://mercomindia.com/category/regulation/" target="_blank" rel="noopener noreferrer" className="pol-link">
-          CERC/SERC Orders (Mercom India)
+        <a href="https://cercind.gov.in/orders.html" target="_blank" rel="noopener noreferrer" className="pol-link">
+          CERC Orders
         </a>
         <span>·</span>
-        <a href="https://solarquarter.com/category/policy/" target="_blank" rel="noopener noreferrer" className="pol-link">
-          Solar Quarter Policy
+        <a href="https://mercomindia.com/category/regulation/" target="_blank" rel="noopener noreferrer" className="pol-link">
+          Mercom India Regulation
+        </a>
+        <span>·</span>
+        <a href="https://solarquarter.com/category/india-policy-regulation/" target="_blank" rel="noopener noreferrer" className="pol-link">
+          Solar Quarter India Policy
+        </a>
+        <span>·</span>
+        <a href="https://economictimes.indiatimes.com/industry/energy/power" target="_blank" rel="noopener noreferrer" className="pol-link">
+          ET Energy (India)
         </a>
         {dataUpdatedAt > 0 && (
           <span style={{ marginLeft: "auto", fontSize: "0.78rem", color: "var(--color-gray-400)" }}>
