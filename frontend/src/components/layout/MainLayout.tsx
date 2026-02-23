@@ -23,6 +23,7 @@ const navItems: NavItem[] = [
       { id: "solar-potential-mapping", label: "Solar Potential Mapping", path: "/geo-analytics/solar-potential-mapping" },
       { id: "solar-analysis", label: "Solar Site Analysis", path: "/geo-analytics/solar-analysis" },
       { id: "wind-site-analyser", label: "Wind Site Analyser" },
+      { id: "tn-land-record", label: "TN Land Record", path: "/geo-analytics/tn-land-record" },
     ],
   },
   {
@@ -76,7 +77,6 @@ const navItems: NavItem[] = [
       { id: "active-alerts", label: "Active Alerts", path: "/alerts/active-alerts" },
       { id: "custom-watchlists", label: "Custom Watchlists", path: "/alerts/custom-watchlists" },
       { id: "ipo-watch", label: "IPO Watch", path: "/alerts/ipo-watch" },
-      { id: "disaster-response-integration", label: "Disaster Response Integration", path: "/alerts/disaster-response-integration" },
     ],
   },
 ];
