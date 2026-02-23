@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   RadarChart,
   PolarGrid,
@@ -18,6 +18,8 @@ import {
   LineChart,
   Line,
   ReferenceLine,
+  Area,
+  AreaChart,
 } from "recharts";
 
 export interface SiteData {
@@ -69,15 +71,17 @@ const DEFAULT_SITE: SiteData = {
 };
 
 const SEASON_DATA = [
-  { season: "Winter (Nov–Feb)", performance: 97, irradiance: 72, temp: 20.3, label: "95–100%" },
-  { season: "Summer (Mar–May)", performance: 88, irradiance: 100, temp: 38.4, label: "85–92%" },
-  { season: "Monsoon (Jun–Sep)", performance: 75, irradiance: 60, temp: 28, label: "70–80%" },
-  { season: "Post-Monsoon (Oct)", performance: 92, irradiance: 85, temp: 24, label: "90–95%" },
+  { season: "Winter (Nov–Feb)", months: "Nov – Feb", performance: 97, irradiance: 72, temp: 20.3, label: "95–100%", color: "#2563eb", icon: "❄️", bg: "linear-gradient(135deg,#dbeafe,#bfdbfe)" },
+  { season: "Summer (Mar–May)", months: "Mar – May", performance: 88, irradiance: 100, temp: 38.4, label: "85–92%", color: "#d97706", icon: "☀️", bg: "linear-gradient(135deg,#fef3c7,#fde68a)" },
+  { season: "Monsoon (Jun–Sep)", months: "Jun – Sep", performance: 75, irradiance: 60, temp: 28, label: "70–80%", color: "#0f766e", icon: "🌧️", bg: "linear-gradient(135deg,#d1fae5,#a7f3d0)" },
+  { season: "Post-Monsoon (Oct)", months: "October", performance: 92, irradiance: 85, temp: 24, label: "90–95%", color: "#7c3aed", icon: "🍂", bg: "linear-gradient(135deg,#ede9fe,#ddd6fe)" },
 ];
 
 const DEGRADATION_DATA = Array.from({ length: 26 }, (_, i) => ({
   year: `Y${i}`,
-  performance: Math.max(0, 100 - i * 0.5).toFixed(1),
+  performance: parseFloat(Math.max(0, 100 - i * 0.5).toFixed(1)),
+  lower: parseFloat(Math.max(0, 100 - i * 0.65).toFixed(1)),
+  upper: parseFloat(Math.max(0, 100 - i * 0.35).toFixed(1)),
 }));
 
 const RADAR_DATA = [
@@ -188,6 +192,159 @@ type ReportSection =
   | "risk"
   | "economic";
 
+// ─── Animation hooks ──────────────────────────────────────────
+
+function useCountUp(target: number, decimals = 0, duration = 1400): string {
+  const [val, setVal] = useState(0);
+  const raf = useRef<number>(0);
+  useEffect(() => {
+    setVal(0);
+    if (target === 0) return;
+    let t0: number | null = null;
+    const step = (ts: number) => {
+      if (!t0) t0 = ts;
+      const p = Math.min((ts - t0) / duration, 1);
+      setVal(target * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) raf.current = requestAnimationFrame(step);
+      else setVal(target);
+    };
+    raf.current = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf.current);
+  }, [target, duration]);
+  return val.toFixed(decimals);
+}
+
+// ─── Animated SVG ring ────────────────────────────────────────
+
+function AnimatedRing({ pct, color, label }: { pct: number; color: string; label: string }) {
+  const [live, setLive] = useState(0);
+  useEffect(() => {
+    setLive(0);
+    const t = setTimeout(() => setLive(pct), 220);
+    return () => clearTimeout(t);
+  }, [pct]);
+  const r = 30, circ = 2 * Math.PI * r;
+  return (
+    <div className="sar-ring-wrap">
+      <svg width="84" height="84" viewBox="0 0 84 84">
+        <circle cx="42" cy="42" r={r} fill="none" stroke="#e5e7eb" strokeWidth="9" />
+        <circle cx="42" cy="42" r={r} fill="none" stroke={color} strokeWidth="9"
+          strokeDasharray={`${(live / 100) * circ} ${circ}`}
+          strokeLinecap="round" transform="rotate(-90 42 42)"
+          style={{ transition: "stroke-dasharray 1.6s cubic-bezier(0.34,1.3,0.64,1)" }} />
+        <text x="42" y="38" textAnchor="middle" fontSize="14" fontWeight="800" fill={color}>{pct}%</text>
+        <text x="42" y="51" textAnchor="middle" fontSize="9" fill="#9ca3af">capacity</text>
+      </svg>
+      <p className="sar-ring-label">{label}</p>
+    </div>
+  );
+}
+
+// ─── Animated progress bar ────────────────────────────────────
+
+function AnimatedBar({ pct, color = "#0f766e", label, delay = 0 }: {
+  pct: number; color?: string; label: string; delay?: number;
+}) {
+  const [w, setW] = useState(0);
+  useEffect(() => {
+    setW(0);
+    const t = setTimeout(() => setW(pct), 320 + delay);
+    return () => clearTimeout(t);
+  }, [pct, delay]);
+  return (
+    <div className="sar-anim-bar-track">
+      <div className="sar-anim-bar-fill" style={{
+        width: `${w}%`,
+        background: `linear-gradient(90deg,${color},${color}bb)`,
+        transition: `width 1.4s cubic-bezier(0.34,1.1,0.64,1) ${delay}ms`,
+      }}>
+        <span className="sar-anim-bar-text">{label}</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Animated severity bar ────────────────────────────────────
+
+function AnimatedSeverityBar({ level, delay = 0 }: { level: number; delay?: number }) {
+  const [filled, setFilled] = useState(-1);
+  useEffect(() => {
+    setFilled(-1);
+    const t = setTimeout(() => setFilled(level), 150 + delay);
+    return () => clearTimeout(t);
+  }, [level, delay]);
+  return (
+    <div className="sar-severity-bar">
+      {[0, 1, 2, 3, 4].map((i) => (
+        <div key={i} className="sar-severity-segment" style={{
+          background: i <= filled ? SEVERITY_COLORS[level] : "var(--color-gray-200,#e5e7eb)",
+          transition: `background 0.22s ease ${i * 65}ms`,
+          transform: i <= filled ? "scaleY(1.2)" : "scaleY(1)",
+        }} />
+      ))}
+    </div>
+  );
+}
+
+// ─── Animated yield number ────────────────────────────────────
+
+function AnimatedYield({ target }: { target: number }) {
+  const [v, setV] = useState(0);
+  const raf = useRef<number>(0);
+  useEffect(() => {
+    setV(0);
+    let t0: number | null = null;
+    const id = setTimeout(() => {
+      const step = (ts: number) => {
+        if (!t0) t0 = ts;
+        const p = Math.min((ts - t0) / 1500, 1);
+        setV(Math.floor(target * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) raf.current = requestAnimationFrame(step);
+        else setV(target);
+      };
+      raf.current = requestAnimationFrame(step);
+    }, 250);
+    return () => { clearTimeout(id); cancelAnimationFrame(raf.current); };
+  }, [target]);
+  return <span className="sar-yield-value">{v.toLocaleString()}</span>;
+}
+
+// ─── Suitability ring (header panel) ─────────────────────────
+
+function SuitabilityRing() {
+  const [live, setLive] = useState(0);
+  useEffect(() => { const t = setTimeout(() => setLive(90), 300); return () => clearTimeout(t); }, []);
+  const r = 42, circ = 2 * Math.PI * r;
+  return (
+    <svg width="110" height="110" viewBox="0 0 110 110">
+      <circle cx="55" cy="55" r={r} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="10" />
+      <circle cx="55" cy="55" r={r} fill="none" stroke="#fbbf24" strokeWidth="10"
+        strokeDasharray={`${(live / 100) * circ} ${circ}`}
+        strokeLinecap="round" transform="rotate(-90 55 55)"
+        style={{ transition: "stroke-dasharray 1.8s cubic-bezier(0.34,1.2,0.64,1)" }} />
+      <text x="55" y="48" textAnchor="middle" fontSize="10" fill="rgba(255,255,255,0.65)">HIGHLY</text>
+      <text x="55" y="62" textAnchor="middle" fontSize="10" fontWeight="800" fill="#fbbf24">SUITABLE</text>
+    </svg>
+  );
+}
+
+// ─── Performance ratio bar ────────────────────────────────────
+
+function PRBar() {
+  const [w, setW] = useState(0);
+  useEffect(() => { const t = setTimeout(() => setW(77.5), 400); return () => clearTimeout(t); }, []);
+  return (
+    <div>
+      <div className="sar-pr-track">
+        <div className="sar-pr-fill" style={{ width: `${w}%`, transition: "width 1.6s cubic-bezier(0.34,1.1,0.64,1)" }}>
+          <span>75–80% PR · Industry-standard for inland India</span>
+        </div>
+      </div>
+      <div className="sar-pr-markers"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+    </div>
+  );
+}
+
 interface Props {
   site?: SiteData;
   onClose?: () => void;
@@ -227,11 +384,15 @@ function SectionNav({
   );
 }
 
-function MetricBadge({ value, label, unit, color }: { value: string | number; label: string; unit?: string; color?: string }) {
+function MetricBadge({ value, label, unit, color, decimals = 0, index = 0 }: {
+  value: string | number; label: string; unit?: string; color?: string; decimals?: number; index?: number;
+}) {
+  const isNum = typeof value === "number";
+  const animated = useCountUp(isNum ? (value as number) : 0, decimals);
   return (
-    <div className="sar-metric-badge" style={{ borderColor: color || "var(--color-primary)" }}>
+    <div className="sar-metric-badge" style={{ borderColor: color || "var(--color-primary)", animationDelay: `${index * 85}ms` }}>
       <span className="sar-metric-value" style={{ color: color || "var(--color-primary)" }}>
-        {value}{unit}
+        {isNum ? animated : value}{unit}
       </span>
       <span className="sar-metric-label">{label}</span>
     </div>
@@ -239,24 +400,22 @@ function MetricBadge({ value, label, unit, color }: { value: string | number; la
 }
 
 function SeverityBar({ level }: { level: number }) {
-  return (
-    <div className="sar-severity-bar">
-      {[0, 1, 2, 3, 4].map((i) => (
-        <div
-          key={i}
-          className="sar-severity-segment"
-          style={{
-            background: i <= level ? SEVERITY_COLORS[level] : "var(--color-gray-200)",
-          }}
-        />
-      ))}
-    </div>
-  );
+  return <AnimatedSeverityBar level={level} />;
 }
 
 export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload }: Props) {
   const [activeSection, setActiveSection] = useState<ReportSection>("executive");
   const [expandedRisk, setExpandedRisk] = useState<string | null>(null);
+  const [sectionKey, setSectionKey] = useState(0);
+  const [headerReady, setHeaderReady] = useState(false);
+
+  useEffect(() => { const t = setTimeout(() => setHeaderReady(true), 80); return () => clearTimeout(t); }, []);
+
+  function handleSectionChange(s: ReportSection) {
+    setActiveSection(s);
+    setSectionKey((k) => k + 1);
+    setExpandedRisk(null);
+  }
 
   const suitabilityColor =
     site.overallRating === "HIGHLY SUITABLE"
@@ -269,35 +428,38 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
     <div className="sar-root">
       {/* Report Header */}
       <div className="sar-header">
-        <div className="sar-header-brand">
-          <div className="sar-header-icon">☀️</div>
-          <div>
-            <h1 className="sar-header-title">Solar Site Analysis Report</h1>
-            <p className="sar-header-subtitle">
-              MarketIntelli · Geo Analytics · Solar Assessment
-            </p>
-          </div>
+        {/* Animated background rays */}
+        <div className="sar-header-rays" aria-hidden>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="sar-ray" style={{ transform: `rotate(${i * 45}deg)`, animationDelay: `${i * 0.18}s` }} />
+          ))}
         </div>
-        <div className="sar-header-actions">
-          <div
-            className="sar-rating-badge"
-            style={{ background: suitabilityColor }}
-          >
-            {site.overallRating}
+
+        <div className="sar-header-inner">
+          <div className="sar-header-brand">
+            <div className={`sar-header-icon${headerReady ? " sar-icon-loaded" : ""}`}>☀️</div>
+            <div>
+              <h1 className="sar-header-title">Solar Site Analysis Report</h1>
+              <p className="sar-header-subtitle">MarketIntelli · Geo Analytics · Solar Assessment</p>
+            </div>
           </div>
-          {onDownload && (
-            <button className="sar-action-btn" onClick={onDownload}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-              </svg>
-              Download PDF
-            </button>
-          )}
-          {onClose && (
-            <button className="sar-close-btn" onClick={onClose} aria-label="Close report">
-              ✕
-            </button>
-          )}
+          <div className="sar-header-actions">
+            <div className="sar-rating-badge sar-rating-pulse">
+              <span className="sar-rating-dot" />
+              {site.overallRating}
+            </div>
+            {onDownload && (
+              <button className="sar-action-btn" onClick={onDownload}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+                Download PDF
+              </button>
+            )}
+            {onClose && (
+              <button className="sar-close-btn" onClick={onClose} aria-label="Close report">✕</button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -331,12 +493,12 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
 
       {/* Main Layout */}
       <div className="sar-body">
-        <SectionNav active={activeSection} onChange={setActiveSection} />
+        <SectionNav active={activeSection} onChange={handleSectionChange} />
 
         <div className="sar-content">
           {/* EXECUTIVE SUMMARY */}
           {activeSection === "executive" && (
-            <div className="sar-section">
+            <div key={`exec-${sectionKey}`} className="sar-section">
               <h2 className="sar-section-title">Executive Summary</h2>
               <div className="sar-exec-summary">
                 <p className="sar-exec-text">
@@ -349,23 +511,20 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
               </div>
 
               <div className="sar-kpi-grid">
-                <MetricBadge value={site.dailyAvg} unit=" kWh/m²/day" label="Daily Avg Irradiance" color="#0f766e" />
-                <MetricBadge value={site.irradiance.toLocaleString()} unit=" kWh/m²/yr" label="Annual GHI" color="#0d5f59" />
-                <MetricBadge value={site.maxTemp} unit="°C" label="Peak Temperature" color="#ef4444" />
-                <MetricBadge value={site.aod} label="Aerosol Optical Depth" color="#f59e0b" />
-                <MetricBadge value={site.meanWindSpeed} unit=" m/s" label="Mean Wind Speed" color="#2563eb" />
-                <MetricBadge value={site.annualRainfall} unit=" mm/yr" label="Annual Rainfall" color="#0891b2" />
-                <MetricBadge value={site.humidity} unit="%" label="Mean Humidity" color="#7c3aed" />
-                <MetricBadge value={`${site.degradationRate}%`} unit="/yr" label="Degradation Rate" color="#475569" />
+                <MetricBadge value={site.dailyAvg} decimals={2} unit=" kWh/m²/day" label="Daily Avg Irradiance" color="#0f766e" index={0} />
+                <MetricBadge value={site.irradiance} decimals={0} unit=" kWh/m²/yr" label="Annual GHI" color="#0d5f59" index={1} />
+                <MetricBadge value={site.maxTemp} decimals={1} unit="°C" label="Peak Temperature" color="#ef4444" index={2} />
+                <MetricBadge value={site.aod} decimals={3} label="Aerosol Optical Depth" color="#f59e0b" index={3} />
+                <MetricBadge value={site.meanWindSpeed} decimals={2} unit=" m/s" label="Mean Wind Speed" color="#2563eb" index={4} />
+                <MetricBadge value={site.annualRainfall} decimals={0} unit=" mm/yr" label="Annual Rainfall" color="#0891b2" index={5} />
+                <MetricBadge value={site.humidity} decimals={0} unit="%" label="Mean Humidity" color="#7c3aed" index={6} />
+                <MetricBadge value={`${site.degradationRate}%`} unit="/yr" label="Degradation Rate" color="#475569" index={7} />
               </div>
 
               <div className="sar-suitability-panel">
                 <div className="sar-suitability-left">
-                  <h3>Site Suitability Assessment</h3>
-                  <div className="sar-suitability-rating" style={{ color: suitabilityColor }}>
-                    {site.overallRating}
-                  </div>
-                  <p>for commercial solar development</p>
+                  <SuitabilityRing />
+                  <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 11, marginTop: 6 }}>for commercial solar development</p>
                 </div>
                 <div className="sar-suitability-right">
                   <div className="sar-strengths">
@@ -390,19 +549,14 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
                 </div>
               </div>
 
-              <div className="sar-radar-section">
-                <h3>Site Performance Radar</h3>
-                <ResponsiveContainer width="100%" height={320}>
-                  <RadarChart data={RADAR_DATA}>
-                    <PolarGrid stroke="var(--color-gray-200)" />
-                    <PolarAngleAxis dataKey="metric" tick={{ fontSize: 12, fill: "var(--color-gray-600)" }} />
-                    <Radar
-                      name="Score"
-                      dataKey="value"
-                      stroke="#0f766e"
-                      fill="#0f766e"
-                      fillOpacity={0.3}
-                    />
+              <div className="sar-chart-card" style={{ marginTop: 16 }}>
+                <h3 className="sar-chart-title">Site Performance Radar</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <RadarChart data={RADAR_DATA} margin={{ top: 10, right: 30, bottom: 10, left: 30 }}>
+                    <PolarGrid stroke="var(--color-gray-200,#e5e7eb)" />
+                    <PolarAngleAxis dataKey="metric" tick={{ fontSize: 12, fill: "var(--color-gray-600,#4b5563)" }} />
+                    <Radar name="Score" dataKey="value" stroke="#0f766e" fill="#0f766e" fillOpacity={0.3}
+                      isAnimationActive animationDuration={1200} animationEasing="ease-out" />
                   </RadarChart>
                 </ResponsiveContainer>
               </div>
@@ -411,7 +565,7 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
 
           {/* SOLAR RESOURCE */}
           {activeSection === "solar-resource" && (
-            <div className="sar-section">
+            <div key={`sr-${sectionKey}`} className="sar-section">
               <h2 className="sar-section-title">Solar Resource Assessment</h2>
 
               <div className="sar-info-cards">
@@ -477,12 +631,12 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
 
           {/* ENVIRONMENTAL */}
           {activeSection === "environmental" && (
-            <div className="sar-section">
+            <div key={`env-${sectionKey}`} className="sar-section">
               <h2 className="sar-section-title">Environmental Challenges & Mitigation</h2>
 
               <div className="sar-env-grid">
                 {/* Temperature */}
-                <div className="sar-env-card">
+                <div className="sar-env-card" style={{ animationDelay: "0ms" }}>
                   <div className="sar-env-card-header" style={{ background: "linear-gradient(135deg, #fef3c7, #fde68a)" }}>
                     <span className="sar-env-icon">🌡️</span>
                     <h3>Temperature Management</h3>
@@ -514,7 +668,7 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
                 </div>
 
                 {/* Soiling */}
-                <div className="sar-env-card">
+                <div className="sar-env-card" style={{ animationDelay: "80ms" }}>
                   <div className="sar-env-card-header" style={{ background: "linear-gradient(135deg, #fee2e2, #fecaca)" }}>
                     <span className="sar-env-icon">🌫️</span>
                     <h3>Soiling & Aerosol Loading</h3>
@@ -546,7 +700,7 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
                 </div>
 
                 {/* Precipitation */}
-                <div className="sar-env-card">
+                <div className="sar-env-card" style={{ animationDelay: "160ms" }}>
                   <div className="sar-env-card-header" style={{ background: "linear-gradient(135deg, #dbeafe, #bfdbfe)" }}>
                     <span className="sar-env-icon">🌧️</span>
                     <h3>Precipitation Patterns</h3>
@@ -577,7 +731,7 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
                 </div>
 
                 {/* Humidity & PID */}
-                <div className="sar-env-card">
+                <div className="sar-env-card" style={{ animationDelay: "240ms" }}>
                   <div className="sar-env-card-header" style={{ background: "linear-gradient(135deg, #d1fae5, #a7f3d0)" }}>
                     <span className="sar-env-icon">💧</span>
                     <h3>Humidity & PID Risk</h3>
@@ -607,7 +761,7 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
                 </div>
 
                 {/* Wind */}
-                <div className="sar-env-card">
+                <div className="sar-env-card" style={{ animationDelay: "320ms" }}>
                   <div className="sar-env-card-header" style={{ background: "linear-gradient(135deg, #ede9fe, #ddd6fe)" }}>
                     <span className="sar-env-icon">💨</span>
                     <h3>Wind & Structural</h3>
@@ -659,80 +813,60 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
 
           {/* SEASONAL */}
           {activeSection === "seasonal" && (
-            <div className="sar-section">
+            <div key={`sea-${sectionKey}`} className="sar-section">
               <h2 className="sar-section-title">Seasonal Performance Modeling</h2>
 
               <div className="sar-seasonal-grid">
-                {SEASON_DATA.map((s) => {
-                  const colors: Record<string, { bg: string; accent: string; icon: string }> = {
-                    "Winter (Nov–Feb)": { bg: "linear-gradient(135deg, #dbeafe, #bfdbfe)", accent: "#2563eb", icon: "❄️" },
-                    "Summer (Mar–May)": { bg: "linear-gradient(135deg, #fef3c7, #fde68a)", accent: "#d97706", icon: "☀️" },
-                    "Monsoon (Jun–Sep)": { bg: "linear-gradient(135deg, #d1fae5, #a7f3d0)", accent: "#0f766e", icon: "🌧️" },
-                    "Post-Monsoon (Oct)": { bg: "linear-gradient(135deg, #ede9fe, #ddd6fe)", accent: "#7c3aed", icon: "🍂" },
-                  };
-                  const c = colors[s.season] || { bg: "var(--color-gray-50)", accent: "#0f766e", icon: "📅" };
-
-                  return (
-                    <div key={s.season} className="sar-season-card">
-                      <div className="sar-season-header" style={{ background: c.bg }}>
-                        <span className="sar-season-icon">{c.icon}</span>
-                        <h3>{s.season}</h3>
-                      </div>
-                      <div className="sar-season-body">
-                        <div className="sar-season-perf">
-                          <div
-                            className="sar-perf-ring"
-                            style={{
-                              background: `conic-gradient(${c.accent} ${s.performance * 3.6}deg, var(--color-gray-200) 0deg)`,
-                            }}
-                          >
-                            <div className="sar-perf-ring-inner">
-                              <span style={{ color: c.accent, fontWeight: 700, fontSize: "1.1rem" }}>{s.performance}%</span>
-                              <span style={{ fontSize: "0.65rem", color: "var(--color-gray-500)" }}>capacity</span>
-                            </div>
-                          </div>
-                          <div className="sar-season-label">Expected: {s.label}</div>
-                        </div>
-                        <div className="sar-season-stats">
-                          <div className="sar-season-stat">
-                            <span>Avg Temp</span>
-                            <strong>{s.temp}°C</strong>
-                          </div>
-                          <div className="sar-season-stat">
-                            <span>Irradiance Index</span>
-                            <strong>{s.irradiance}%</strong>
-                          </div>
-                        </div>
-                        <div className="sar-season-insights">
-                          {s.season === "Winter (Nov–Feb)" && (
-                            <>
-                              <span className="sar-pro">✓ Low temperatures, minimal soiling, low cloud cover</span>
-                              <span className="sar-con">− Slightly lower sun angles</span>
-                            </>
-                          )}
-                          {s.season === "Summer (Mar–May)" && (
-                            <>
-                              <span className="sar-pro">✓ Maximum irradiance, long daylight hours</span>
-                              <span className="sar-con">− Peak temps (38.4°C avg, 46.3°C max), high dust</span>
-                            </>
-                          )}
-                          {s.season === "Monsoon (Jun–Sep)" && (
-                            <>
-                              <span className="sar-pro">✓ Natural panel cleaning, cooler temperatures</span>
-                              <span className="sar-con">− 66%+ cloud cover, 818mm rainfall</span>
-                            </>
-                          )}
-                          {s.season === "Post-Monsoon (Oct)" && (
-                            <>
-                              <span className="sar-pro">✓ Clean panels, moderate temps, improving weather</span>
-                              <span className="sar-con">− Transitional period</span>
-                            </>
-                          )}
-                        </div>
+                {SEASON_DATA.map((s, i) => (
+                  <div key={s.season} className="sar-season-card" style={{ animationDelay: `${i * 100}ms` }}>
+                    <div className="sar-season-header" style={{ background: s.bg }}>
+                      <span className="sar-season-icon">{s.icon}</span>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: 13, fontWeight: 700 }}>{s.season}</h3>
+                        <p style={{ margin: 0, fontSize: 11, opacity: 0.7 }}>{s.months}</p>
                       </div>
                     </div>
-                  );
-                })}
+                    <div className="sar-season-body">
+                      <AnimatedRing pct={s.performance} color={s.color} label={`Expected: ${s.label}`} />
+                      <div className="sar-season-stats">
+                        <div className="sar-season-stat">
+                          <span>Avg Temp</span>
+                          <strong style={{ color: s.color }}>{s.temp}°C</strong>
+                        </div>
+                        <div className="sar-season-stat">
+                          <span>Irradiance Index</span>
+                          <strong style={{ color: s.color }}>{s.irradiance}%</strong>
+                        </div>
+                      </div>
+                      <div className="sar-season-insights">
+                        {s.season === "Winter (Nov–Feb)" && (
+                          <>
+                            <span className="sar-pro">✓ Low temperatures, minimal soiling, low cloud cover</span>
+                            <span className="sar-con">− Slightly lower sun angles</span>
+                          </>
+                        )}
+                        {s.season === "Summer (Mar–May)" && (
+                          <>
+                            <span className="sar-pro">✓ Maximum irradiance, long daylight hours</span>
+                            <span className="sar-con">− Peak temps (38.4°C avg, 46.3°C max), high dust</span>
+                          </>
+                        )}
+                        {s.season === "Monsoon (Jun–Sep)" && (
+                          <>
+                            <span className="sar-pro">✓ Natural panel cleaning, cooler temperatures</span>
+                            <span className="sar-con">− 66%+ cloud cover, 818mm rainfall</span>
+                          </>
+                        )}
+                        {s.season === "Post-Monsoon (Oct)" && (
+                          <>
+                            <span className="sar-pro">✓ Clean panels, moderate temps, improving weather</span>
+                            <span className="sar-con">− Transitional period</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div className="sar-chart-card">
@@ -777,7 +911,7 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
 
           {/* DEGRADATION */}
           {activeSection === "degradation" && (
-            <div className="sar-section">
+            <div key={`deg-${sectionKey}`} className="sar-section">
               <h2 className="sar-section-title">Degradation & Longevity Outlook</h2>
 
               <div className="sar-degrad-summary">
@@ -787,37 +921,46 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
                   <span className="sar-degrad-desc">Conservative estimate — below industry average</span>
                 </div>
                 <div className="sar-degrad-projections">
-                  <div className="sar-proj-item">
-                    <span className="sar-proj-year">Year 10</span>
-                    <div className="sar-proj-bar-wrap">
-                      <div className="sar-proj-bar" style={{ width: "95%" }}>
-                        <span>~95% capacity</span>
-                      </div>
+                  <h4 style={{ margin: "0 0 12px", fontSize: 12, fontWeight: 700, color: "var(--color-gray-700,#374151)" }}>Long-term Capacity Projections</h4>
+                  {[
+                    { year: "Year 10", pct: 95, color: "#0f766e", delay: 0 },
+                    { year: "Year 15", pct: 92.5, color: "#0891b2", delay: 120 },
+                    { year: "Year 20", pct: 90, color: "#7c3aed", delay: 240 },
+                    { year: "Year 25", pct: 87.5, color: "#f59e0b", delay: 360 },
+                  ].map((p) => (
+                    <div key={p.year} className="sar-proj-item">
+                      <span className="sar-proj-year">{p.year}</span>
+                      <AnimatedBar pct={p.pct} color={p.color} label={`~${p.pct}% capacity`} delay={p.delay} />
                     </div>
-                  </div>
-                  <div className="sar-proj-item">
-                    <span className="sar-proj-year">Year 25</span>
-                    <div className="sar-proj-bar-wrap">
-                      <div className="sar-proj-bar sar-proj-bar--warn" style={{ width: "87.5%" }}>
-                        <span>~87.5% capacity</span>
-                      </div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
 
               <div className="sar-chart-card">
-                <h3>25-Year Performance Trajectory</h3>
+                <h3 className="sar-chart-title">25-Year Performance Trajectory</h3>
                 <ResponsiveContainer width="100%" height={280}>
-                  <LineChart data={DEGRADATION_DATA} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-gray-100)" />
+                  <AreaChart data={DEGRADATION_DATA} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+                    <defs>
+                      <linearGradient id="degGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#0f766e" stopOpacity={0.25} />
+                        <stop offset="95%" stopColor="#0f766e" stopOpacity={0.02} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-gray-100,#f3f4f6)" />
                     <XAxis dataKey="year" tick={{ fontSize: 11 }} interval={4} />
                     <YAxis domain={[80, 102]} tick={{ fontSize: 12 }} tickFormatter={(v) => `${v}%`} />
-                    <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} formatter={(v: string) => [`${v}%`, "Performance"]} />
-                    <ReferenceLine y={80} stroke="#ef4444" strokeDasharray="4 4" label={{ value: "80% threshold", position: "right", fontSize: 10 }} />
-                    <Line type="monotone" dataKey="performance" name="Performance" stroke="#0f766e" strokeWidth={2.5} dot={false} />
-                  </LineChart>
+                    <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} formatter={(v: number) => [`${v}%`, "Performance"]} />
+                    <ReferenceLine y={80} stroke="#ef4444" strokeDasharray="4 4" label={{ value: "80% floor", position: "right", fontSize: 10 }} />
+                    <Area type="monotone" dataKey="upper" stroke="none" fill="#0f766e" fillOpacity={0.08} isAnimationActive animationDuration={1600} />
+                    <Area type="monotone" dataKey="performance" name="Expected" stroke="#0f766e" strokeWidth={2.5} fill="url(#degGrad)" isAnimationActive animationDuration={1400} />
+                    <Area type="monotone" dataKey="lower" stroke="#94a3b8" strokeWidth={1.5} strokeDasharray="4 3" fill="none" isAnimationActive animationDuration={1600} />
+                  </AreaChart>
                 </ResponsiveContainer>
+                <div className="sar-chart-legend">
+                  <span><span className="sar-legend-dot" style={{ background: "#0f766e" }} />Expected trajectory</span>
+                  <span><span className="sar-legend-dot" style={{ background: "#94a3b8" }} />±0.15%/yr confidence band</span>
+                  <span><span className="sar-legend-dot" style={{ background: "#ef4444" }} />80% performance floor</span>
+                </div>
               </div>
 
               <div className="sar-degrad-breakdown">
@@ -873,11 +1016,11 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
 
           {/* SYSTEM DESIGN */}
           {activeSection === "system-design" && (
-            <div className="sar-section">
+            <div key={`sd-${sectionKey}`} className="sar-section">
               <h2 className="sar-section-title">System Design Recommendations</h2>
 
               <div className="sar-design-grid">
-                <div className="sar-design-card">
+                <div className="sar-design-card" style={{ animationDelay: "0ms" }}>
                   <div className="sar-design-icon">🔋</div>
                   <h3>Module Selection</h3>
                   <ol className="sar-design-list">
@@ -887,7 +1030,7 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
                     <li>Robust junction boxes for high-temperature environments</li>
                   </ol>
                 </div>
-                <div className="sar-design-card">
+                <div className="sar-design-card" style={{ animationDelay: "100ms" }}>
                   <div className="sar-design-icon">🏗️</div>
                   <h3>Mounting & Racking</h3>
                   <ul className="sar-design-list">
@@ -897,7 +1040,7 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
                     <li>Ground clearance ≥ <strong>500mm</strong> (airflow + monsoon splash)</li>
                   </ul>
                 </div>
-                <div className="sar-design-card">
+                <div className="sar-design-card" style={{ animationDelay: "200ms" }}>
                   <div className="sar-design-icon">⚡</div>
                   <h3>Electrical Infrastructure</h3>
                   <ul className="sar-design-list">
@@ -906,7 +1049,7 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
                     <li>DC cable sizing uprated <strong>+25%</strong> for high-temp resistance</li>
                   </ul>
                 </div>
-                <div className="sar-design-card">
+                <div className="sar-design-card" style={{ animationDelay: "300ms" }}>
                   <div className="sar-design-icon">🔧</div>
                   <h3>O&M Operations</h3>
                   <ul className="sar-design-list">
@@ -941,37 +1084,32 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
 
           {/* RISK ASSESSMENT */}
           {activeSection === "risk" && (
-            <div className="sar-section">
+            <div key={`risk-${sectionKey}`} className="sar-section">
               <h2 className="sar-section-title">Risk Assessment & Mitigation</h2>
 
               <div className="sar-risk-overview">
-                <div className="sar-risk-stat sar-risk-stat--verylow">
-                  <span>0</span>
-                  <small>Very Low</small>
-                </div>
-                <div className="sar-risk-stat sar-risk-stat--low">
-                  <span>3</span>
-                  <small>Low</small>
-                </div>
-                <div className="sar-risk-stat sar-risk-stat--moderate">
-                  <span>2</span>
-                  <small>Moderate</small>
-                </div>
-                <div className="sar-risk-stat sar-risk-stat--high">
-                  <span>1</span>
-                  <small>Moderate-High</small>
-                </div>
-                <div className="sar-risk-stat sar-risk-stat--critical">
-                  <span>0</span>
-                  <small>Critical</small>
-                </div>
+                {[
+                  { label: "Very Low", count: 1, color: "#16a34a", bg: "#dcfce7" },
+                  { label: "Low", count: 3, color: "#22c55e", bg: "#f0fdf4" },
+                  { label: "Moderate", count: 2, color: "#f59e0b", bg: "#fffbeb" },
+                  { label: "Mod-High", count: 1, color: "#ef4444", bg: "#fef2f2" },
+                  { label: "Critical", count: 0, color: "#9ca3af", bg: "#f9fafb" },
+                ].map((r, i) => (
+                  <div key={r.label} className="sar-risk-stat" style={{
+                    background: r.bg, border: `1px solid ${r.color}33`, animationDelay: `${i * 70}ms`,
+                  }}>
+                    <span className="sar-risk-stat-value" style={{ color: r.color }}>{r.count}</span>
+                    <span className="sar-risk-stat-label" style={{ color: r.color }}>{r.label}</span>
+                  </div>
+                ))}
               </div>
 
               <div className="sar-risk-list">
-                {RISK_DATA.map((r) => (
+                {RISK_DATA.map((r, i) => (
                   <div
                     key={r.factor}
                     className={`sar-risk-item${expandedRisk === r.factor ? " sar-risk-item--expanded" : ""}`}
+                    style={{ animationDelay: `${i * 60}ms` }}
                     onClick={() => setExpandedRisk(expandedRisk === r.factor ? null : r.factor)}
                   >
                     <div className="sar-risk-row">
@@ -1039,28 +1177,22 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
 
           {/* ECONOMIC INDICATORS */}
           {activeSection === "economic" && (
-            <div className="sar-section">
+            <div key={`eco-${sectionKey}`} className="sar-section">
               <h2 className="sar-section-title">Economic Performance Indicators</h2>
 
               <div className="sar-yield-cards">
-                <div className="sar-yield-card sar-yield-card--conservative">
-                  <span className="sar-yield-label">Conservative</span>
-                  <span className="sar-yield-value">{site.yieldConservative.toLocaleString()}</span>
-                  <span className="sar-yield-unit">kWh/kWp/year</span>
-                  <p>Full loss accounting, worst-case O&M</p>
-                </div>
-                <div className="sar-yield-card sar-yield-card--expected">
-                  <span className="sar-yield-label">Expected</span>
-                  <span className="sar-yield-value">{site.yieldExpected.toLocaleString()}</span>
-                  <span className="sar-yield-unit">kWh/kWp/year</span>
-                  <p>Realistic scenario with standard O&M</p>
-                </div>
-                <div className="sar-yield-card sar-yield-card--optimistic">
-                  <span className="sar-yield-label">Optimistic</span>
-                  <span className="sar-yield-value">{site.yieldOptimistic.toLocaleString()}</span>
-                  <span className="sar-yield-unit">kWh/kWp/year</span>
-                  <p>Best-case with excellent O&M execution</p>
-                </div>
+                {[
+                  { label: "Conservative", value: site.yieldConservative, desc: "Full loss accounting, worst-case O&M", gradient: "linear-gradient(135deg,#475569,#334155)", delay: 0 },
+                  { label: "Expected", value: site.yieldExpected, desc: "Realistic scenario with standard O&M", gradient: "linear-gradient(135deg,#0f766e,#0d5f59)", delay: 110 },
+                  { label: "Optimistic", value: site.yieldOptimistic, desc: "Best-case with excellent O&M execution", gradient: "linear-gradient(135deg,#d97706,#b45309)", delay: 220 },
+                ].map((c) => (
+                  <div key={c.label} className="sar-yield-card" style={{ background: c.gradient, animationDelay: `${c.delay}ms` }}>
+                    <span className="sar-yield-label">{c.label}</span>
+                    <AnimatedYield target={c.value} />
+                    <span className="sar-yield-unit">kWh/kWp/year</span>
+                    <p style={{ margin: "6px 0 0", fontSize: 10, opacity: 0.75 }}>{c.desc}</p>
+                  </div>
+                ))}
               </div>
 
               <div className="sar-chart-card">
@@ -1116,20 +1248,7 @@ export function SolarAssessmentReport({ site = DEFAULT_SITE, onClose, onDownload
 
               <div className="sar-perf-ratio">
                 <h3>Performance Ratio Assumptions</h3>
-                <div className="sar-pr-bar-wrap">
-                  <div className="sar-pr-track">
-                    <div className="sar-pr-fill" style={{ width: "77.5%" }}>
-                      <span>75–80% PR (Industry-standard for inland India)</span>
-                    </div>
-                  </div>
-                  <div className="sar-pr-markers">
-                    <span>0%</span>
-                    <span>25%</span>
-                    <span>50%</span>
-                    <span>75%</span>
-                    <span>100%</span>
-                  </div>
-                </div>
+                <PRBar />
               </div>
 
               <div className="sar-conclusion-box">
