@@ -3,6 +3,8 @@ import type {
   SolarPotentialZone,
   GridInfrastructure,
   DisasterRiskZone,
+  GroundwaterFeatureCollection,
+  GoogleServiceCredential,
 } from "../types/geoAnalytics";
 
 export async function getSolarPotentialZones(params?: {
@@ -32,5 +34,29 @@ export async function getDisasterRiskZones(params?: {
   const { data } = await apiClient.get("/geo-analytics/disaster-risk", {
     params,
   });
+  return data;
+}
+
+// ---------------------------------------------------------------------------
+// Groundwater Resource Assessment (SolarWindAssessment integration)
+// ---------------------------------------------------------------------------
+
+export async function getGroundwaterResources(params?: {
+  state?: string;
+  classification?: string;
+  district?: string;
+}): Promise<GroundwaterFeatureCollection> {
+  const { data } = await apiClient.get("/geo-analytics/groundwater", {
+    params,
+  });
+  return data;
+}
+
+// ---------------------------------------------------------------------------
+// Google Service Credentials (SolarWindAssessment integration)
+// ---------------------------------------------------------------------------
+
+export async function getActiveGoogleCredential(): Promise<GoogleServiceCredential> {
+  const { data } = await apiClient.get("/geo-analytics/google-credentials");
   return data;
 }

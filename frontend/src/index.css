@@ -9454,3 +9454,366 @@ a.geo-layer-tab:hover {
   border: none;
   display: block;
 }
+
+/* ==========================================================================
+   GROUNDWATER ASSESSMENT TAB (SolarWindAssessment integration)
+   ========================================================================== */
+
+/* Root layout */
+.gw-assessment-root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 1rem);
+  padding: var(--space-4, 1rem);
+  min-height: 0;
+}
+
+/* Header */
+.gw-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3, 0.75rem);
+}
+
+.gw-header-title {
+  font-size: var(--font-size-2xl, 1.5rem);
+  font-weight: 700;
+  color: var(--color-gray-900, #0f172a);
+  margin: 0;
+}
+
+.gw-header-subtitle {
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--color-gray-500, #64748b);
+  margin: 0.25rem 0 0;
+}
+
+/* Filter bar */
+.gw-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 0.5rem);
+  align-items: center;
+}
+
+.gw-filter-input,
+.gw-filter-select {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--color-gray-300, #cbd5e1);
+  border-radius: var(--radius-md, 0.5rem);
+  font-size: var(--font-size-sm, 0.875rem);
+  background: var(--color-white, #fff);
+  color: var(--color-gray-800, #1e293b);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.gw-filter-input:focus,
+.gw-filter-select:focus {
+  border-color: var(--color-primary, #0f766e);
+}
+
+.gw-filter-btn {
+  padding: 0.4rem 1.1rem;
+  background: var(--color-primary, #0f766e);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md, 0.5rem);
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.gw-filter-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.gw-filter-btn:not(:disabled):hover {
+  background: var(--color-primary-dark, #0d5f59);
+}
+
+/* Error & loading states */
+.gw-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+  background: #fef2f2;
+  color: var(--color-error, #dc2626);
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-md, 0.5rem);
+  font-size: var(--font-size-sm, 0.875rem);
+}
+
+.gw-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-12, 3rem);
+  color: var(--color-gray-500, #64748b);
+  font-size: var(--font-size-sm, 0.875rem);
+}
+
+.gw-loading-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid var(--color-gray-200, #e2e8f0);
+  border-top-color: var(--color-primary, #0f766e);
+  border-radius: 50%;
+  animation: gw-spin 0.7s linear infinite;
+}
+
+@keyframes gw-spin {
+  to { transform: rotate(360deg); }
+}
+
+.gw-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-12, 3rem);
+  color: var(--color-gray-500, #64748b);
+  font-size: var(--font-size-sm, 0.875rem);
+}
+
+/* Map + info panel two-column layout */
+.gw-map-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: var(--space-4, 1rem);
+  min-height: 540px;
+}
+
+/* Map container */
+.gw-map-wrap {
+  position: relative;
+  border-radius: var(--radius-lg, 0.75rem);
+  overflow: hidden;
+  border: 1px solid var(--color-gray-200, #e2e8f0);
+}
+
+.gw-leaflet-map {
+  width: 100%;
+  height: 100%;
+  min-height: 540px;
+}
+
+.gw-map-loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.6);
+  z-index: 1000;
+}
+
+/* Legend – positioned inside Leaflet map via Leaflet control overlay */
+.gw-legend {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--color-gray-200, #e2e8f0);
+  border-radius: var(--radius-md, 0.5rem);
+  padding: 0.6rem 0.8rem;
+  position: absolute;
+  bottom: 1.5rem;
+  right: 0.5rem;
+  z-index: 800;
+  font-size: 0.75rem;
+  min-width: 140px;
+  box-shadow: var(--shadow-md);
+}
+
+.gw-legend-title {
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: var(--color-gray-700, #334155);
+  margin-bottom: 0.4rem;
+}
+
+.gw-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.15rem 0;
+  color: var(--color-gray-700, #334155);
+}
+
+.gw-legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* Info panel */
+.gw-info-panel {
+  background: var(--color-white, #fff);
+  border: 1px solid var(--color-gray-200, #e2e8f0);
+  border-radius: var(--radius-lg, 0.75rem);
+  overflow-y: auto;
+  padding: var(--space-4, 1rem);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 1rem);
+  font-size: var(--font-size-sm, 0.875rem);
+}
+
+.gw-info-panel--empty {
+  align-items: center;
+  justify-content: center;
+}
+
+.gw-info-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  color: var(--color-gray-400, #94a3b8);
+  text-align: center;
+  padding: var(--space-6, 1.5rem);
+  font-size: var(--font-size-sm, 0.875rem);
+}
+
+.gw-info-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.gw-info-badge {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 100px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.gw-info-title {
+  font-size: var(--font-size-lg, 1.125rem);
+  font-weight: 700;
+  color: var(--color-gray-900, #0f172a);
+  margin: 0;
+}
+
+.gw-info-subtitle {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--color-gray-500, #64748b);
+  margin: 0;
+}
+
+.gw-info-section {
+  border-top: 1px solid var(--color-gray-100, #f1f5f9);
+  padding-top: var(--space-3, 0.75rem);
+}
+
+.gw-info-section h4 {
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-gray-500, #64748b);
+  margin: 0 0 0.5rem;
+}
+
+/* Stage bar */
+.gw-stage-bar {
+  height: 6px;
+  background: var(--color-gray-200, #e2e8f0);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 0.3rem;
+}
+
+.gw-stage-fill {
+  height: 100%;
+  border-radius: 3px;
+  max-width: 100%;
+  transition: width 0.4s ease;
+}
+
+.gw-stage-label {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--color-gray-500, #64748b);
+  margin: 0;
+}
+
+/* Key-value grid */
+.gw-kv-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.2rem 0.75rem;
+  font-size: var(--font-size-xs, 0.75rem);
+}
+
+.gw-kv-grid span {
+  color: var(--color-gray-600, #475569);
+}
+
+.gw-kv-grid strong {
+  color: var(--color-gray-800, #1e293b);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.gw-kv-grid--xs {
+  font-size: 0.7rem;
+}
+
+/* Stats summary bar */
+.gw-stats-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 0.5rem);
+  align-items: center;
+}
+
+.gw-stats-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid var(--color-gray-200, #e2e8f0);
+  border-radius: 100px;
+  font-size: 0.72rem;
+  background: var(--color-white, #fff);
+}
+
+.gw-stats-chip--total {
+  font-weight: 600;
+  background: var(--color-gray-100, #f1f5f9);
+}
+
+.gw-stats-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.gw-stats-label {
+  color: var(--color-gray-600, #475569);
+}
+
+.gw-stats-count {
+  color: var(--color-gray-900, #0f172a);
+}
+
+/* Responsive: stack on small screens */
+@media (max-width: 900px) {
+  .gw-map-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .gw-info-panel {
+    min-height: 220px;
+  }
+}

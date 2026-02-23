@@ -24,6 +24,7 @@ const navItems: NavItem[] = [
       { id: "solar-analysis", label: "Solar Site Analysis", path: "/geo-analytics/solar-analysis" },
       { id: "wind-site-analyser", label: "Wind Site Analyser" },
       { id: "tn-land-record", label: "TN Land Record", path: "/geo-analytics/tn-land-record" },
+      { id: "assessment", label: "Assessment", path: "/geo-analytics/assessment" },
     ],
   },
   {
