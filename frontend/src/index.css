@@ -8840,3 +8840,617 @@ a.geo-layer-tab:hover {
   background: var(--color-primary, #2563eb);
   color: #fff;
 }
+
+/* ============================================================
+   Solar Report (sr-*) — Atmakur Site Analysis Report
+   ============================================================ */
+
+.sr-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-gray-50, #f8fafc);
+  overflow-y: auto;
+  z-index: 200;
+}
+
+.sr-container {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+/* Back button */
+.sr-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid var(--color-gray-300, #cbd5e1);
+  color: var(--color-gray-600, #475569);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 28px;
+  transition: background 0.15s, color 0.15s;
+}
+.sr-back-btn:hover {
+  background: var(--color-white, #fff);
+  color: var(--color-gray-900, #0f172a);
+}
+
+/* Header */
+.sr-header {
+  background: linear-gradient(135deg, #0f766e 0%, #065f46 100%);
+  border-radius: 16px;
+  padding: 40px 40px 36px;
+  margin-bottom: 32px;
+  color: #fff;
+}
+.sr-header-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+}
+.sr-title {
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 6px;
+  line-height: 1.2;
+}
+.sr-subtitle {
+  font-size: 1.05rem;
+  color: rgba(255,255,255,0.8);
+  margin: 0 0 20px;
+}
+.sr-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+.sr-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.75);
+}
+.sr-rating-pill {
+  display: inline-block;
+  background: #16a34a;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 6px 18px;
+  border-radius: 30px;
+}
+
+/* Sections */
+.sr-section {
+  background: #fff;
+  border: 1px solid var(--color-gray-200, #e2e8f0);
+  border-radius: 14px;
+  padding: 32px 36px;
+  margin-bottom: 20px;
+}
+.sr-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-gray-900, #0f172a);
+  margin: 0 0 22px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--color-gray-100, #f1f5f9);
+}
+.sr-section-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.sr-subsection-title {
+  font-size: 0.975rem;
+  font-weight: 600;
+  color: var(--color-gray-700, #334155);
+  margin: 0 0 10px;
+}
+.sr-body {
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--color-gray-600, #475569);
+  margin: 0 0 14px;
+}
+
+/* KPI grid */
+.sr-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-top: 18px;
+}
+@media (max-width: 700px) { .sr-kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+.sr-kpi {
+  background: var(--color-gray-50, #f8fafc);
+  border: 1px solid var(--color-gray-200, #e2e8f0);
+  border-radius: 10px;
+  padding: 18px 16px;
+  text-align: center;
+}
+.sr-kpi-value {
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: #0f766e;
+  line-height: 1.1;
+}
+.sr-kpi-unit {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-gray-400, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+.sr-kpi-label {
+  font-size: 0.78rem;
+  color: var(--color-gray-500, #64748b);
+  margin-top: 6px;
+  line-height: 1.3;
+}
+
+/* Highlight boxes */
+.sr-highlight-box {
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+.sr-highlight-box--green {
+  background: #f0fdf4;
+  border-left: 4px solid #16a34a;
+  color: #14532d;
+}
+.sr-highlight-box--amber {
+  background: #fffbeb;
+  border-left: 4px solid #d97706;
+  color: #78350f;
+}
+.sr-highlight-box--blue {
+  background: #eff6ff;
+  border-left: 4px solid #2563eb;
+  color: #1e3a8a;
+}
+
+/* Bullet lists */
+.sr-bullet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+.sr-bullet-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: var(--color-gray-600, #475569);
+  line-height: 1.55;
+}
+.sr-bullet-dot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #0f766e;
+  margin-top: 6px;
+}
+
+/* Temperature cards */
+.sr-temp-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 16px;
+}
+@media (max-width: 600px) { .sr-temp-row { grid-template-columns: 1fr; } }
+.sr-temp-card {
+  border-radius: 10px;
+  padding: 18px 20px;
+  text-align: center;
+}
+.sr-temp-card--hot  { background: #fef2f2; border: 1px solid #fecaca; }
+.sr-temp-card--mild { background: #fefce8; border: 1px solid #fde68a; }
+.sr-temp-card--cool { background: #eff6ff; border: 1px solid #bfdbfe; }
+.sr-temp-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-gray-500, #64748b);
+  margin-bottom: 8px;
+}
+.sr-temp-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-gray-800, #1e293b);
+  line-height: 1;
+}
+.sr-temp-sub {
+  font-size: 0.78rem;
+  color: var(--color-gray-500, #64748b);
+  margin-top: 4px;
+}
+
+/* Seasonal grid */
+.sr-season-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+@media (max-width: 700px) { .sr-season-grid { grid-template-columns: repeat(2, 1fr); } }
+.sr-season-card {
+  background: var(--color-gray-50, #f8fafc);
+  border: 1px solid var(--color-gray-200, #e2e8f0);
+  border-radius: 10px;
+  padding: 20px 16px;
+  text-align: center;
+}
+.sr-season-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-gray-700, #334155);
+  margin-bottom: 2px;
+}
+.sr-season-months {
+  font-size: 0.75rem;
+  color: var(--color-gray-400, #94a3b8);
+  margin-bottom: 12px;
+}
+.sr-season-perf {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.sr-season-perf--excellent { color: #16a34a; }
+.sr-season-perf--good      { color: #d97706; }
+.sr-season-perf--moderate  { color: #2563eb; }
+.sr-season-note {
+  font-size: 0.76rem;
+  color: var(--color-gray-500, #64748b);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* Summary box */
+.sr-summary-box {
+  background: var(--color-gray-50, #f8fafc);
+  border: 1px solid var(--color-gray-200, #e2e8f0);
+  border-radius: 10px;
+  padding: 20px 22px;
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--color-gray-700, #334155);
+  margin-bottom: 22px;
+}
+
+/* Degradation */
+.sr-degrade-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.sr-degrade-card {
+  flex: 1;
+  min-width: 160px;
+  background: var(--color-gray-50, #f8fafc);
+  border: 1px solid var(--color-gray-200, #e2e8f0);
+  border-radius: 10px;
+  padding: 22px 20px;
+  text-align: center;
+}
+.sr-degrade-year {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-gray-400, #94a3b8);
+  margin-bottom: 8px;
+}
+.sr-degrade-pct {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0f766e;
+  line-height: 1;
+}
+.sr-degrade-sub {
+  font-size: 0.78rem;
+  color: var(--color-gray-500, #64748b);
+  margin-top: 4px;
+}
+
+/* Recommendations grid */
+.sr-rec-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+@media (max-width: 600px) { .sr-rec-grid { grid-template-columns: 1fr; } }
+.sr-rec-card {
+  background: var(--color-gray-50, #f8fafc);
+  border: 1px solid var(--color-gray-200, #e2e8f0);
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+.sr-rec-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-gray-700, #334155);
+  margin: 0 0 12px;
+}
+
+/* Numbered list */
+.sr-numbered-list { display: flex; flex-direction: column; gap: 8px; }
+.sr-numbered-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--color-gray-600, #475569);
+  line-height: 1.5;
+}
+.sr-num {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #0f766e;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+/* Risk table */
+.sr-table-wrap { overflow-x: auto; }
+.sr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.sr-table th {
+  background: var(--color-gray-50, #f8fafc);
+  color: var(--color-gray-500, #64748b);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 2px solid var(--color-gray-200, #e2e8f0);
+}
+.sr-table td {
+  padding: 11px 14px;
+  color: var(--color-gray-700, #334155);
+  border-bottom: 1px solid var(--color-gray-100, #f1f5f9);
+  vertical-align: middle;
+  line-height: 1.5;
+}
+.sr-table tr:last-child td { border-bottom: none; }
+.sr-table tr:hover td { background: var(--color-gray-50, #f8fafc); }
+.sr-severity {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.sr-severity--high     { background: #fef2f2; color: #b91c1c; }
+.sr-severity--moderate { background: #fffbeb; color: #92400e; }
+.sr-severity--low      { background: #f0fdf4; color: #166534; }
+.sr-severity--vlow     { background: #f0fdf4; color: #166534; }
+
+/* Yield grid */
+.sr-yield-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+@media (max-width: 600px) { .sr-yield-grid { grid-template-columns: 1fr; } }
+.sr-yield-card {
+  border-radius: 10px;
+  padding: 24px 20px;
+  text-align: center;
+  border: 2px solid transparent;
+}
+.sr-yield-card--conservative { background: #f8fafc; border-color: var(--color-gray-200, #e2e8f0); }
+.sr-yield-card--expected     { background: #f0fdf4; border-color: #86efac; }
+.sr-yield-card--optimistic   { background: #eff6ff; border-color: #93c5fd; }
+.sr-yield-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-gray-500, #64748b);
+  margin-bottom: 10px;
+}
+.sr-yield-value {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--color-gray-900, #0f172a);
+  line-height: 1;
+}
+.sr-yield-unit {
+  font-size: 0.78rem;
+  color: var(--color-gray-400, #94a3b8);
+  margin-top: 4px;
+  font-weight: 600;
+}
+.sr-yield-note {
+  font-size: 0.78rem;
+  color: var(--color-gray-500, #64748b);
+  margin-top: 8px;
+}
+
+/* Conclusion */
+.sr-conclusion-banner {
+  background: linear-gradient(135deg, #0f766e, #065f46);
+  border-radius: 12px;
+  padding: 28px 24px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.sr-conclusion-rating {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.04em;
+}
+.sr-conclusion-sub {
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.75);
+  margin-top: 4px;
+}
+.sr-pros-cons-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+@media (max-width: 600px) { .sr-pros-cons-row { grid-template-columns: 1fr; } }
+.sr-pros-card, .sr-cons-card {
+  border-radius: 10px;
+  padding: 20px 22px;
+}
+.sr-pros-card { background: #f0fdf4; border: 1px solid #bbf7d0; }
+.sr-cons-card { background: #fffbeb; border: 1px solid #fde68a; }
+.sr-pros-title, .sr-cons-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+.sr-pros-title { color: #166534; }
+.sr-cons-title { color: #78350f; }
+.sr-check-list, .sr-warn-list { display: flex; flex-direction: column; gap: 8px; }
+.sr-check-item, .sr-warn-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.sr-check-item { color: #14532d; }
+.sr-warn-item  { color: #78350f; }
+.sr-check-item svg, .sr-warn-item svg { flex-shrink: 0; margin-top: 2px; }
+.sr-final-note {
+  background: var(--color-gray-50, #f8fafc);
+  border: 1px solid var(--color-gray-200, #e2e8f0);
+  border-radius: 10px;
+  padding: 18px 20px;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--color-gray-700, #334155);
+}
+
+/* Footer */
+.sr-footer {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-gray-200, #e2e8f0);
+  text-align: center;
+}
+.sr-footer-meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.78rem;
+  color: var(--color-gray-400, #94a3b8);
+}
+
+/* ============================================================
+   Geo Analytics — Iframe embed (TN Land Record, etc.)
+   ============================================================ */
+
+.geo-iframe-section {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 120px);
+  min-height: 500px;
+}
+
+.geo-iframe-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 14px;
+  border-bottom: 1px solid var(--color-gray-200, #e2e8f0);
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+
+.geo-iframe-title {
+  font-size: var(--font-size-lg, 1.125rem);
+  font-weight: 700;
+  color: var(--color-gray-900, #0f172a);
+  margin: 0 0 3px;
+}
+
+.geo-iframe-subtitle {
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--color-gray-500, #64748b);
+  margin: 0;
+}
+
+.geo-iframe-open-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--color-gray-300, #cbd5e1);
+  background: var(--color-white, #fff);
+  color: var(--color-gray-600, #475569);
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.geo-iframe-open-btn:hover {
+  background: var(--color-gray-50, #f8fafc);
+  color: var(--color-gray-900, #0f172a);
+}
+
+.geo-iframe-wrap {
+  flex: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--color-gray-200, #e2e8f0);
+  background: var(--color-gray-100, #f1f5f9);
+}
+
+.geo-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
