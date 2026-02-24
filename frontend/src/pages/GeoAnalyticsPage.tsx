@@ -1,6 +1,12 @@
+import { lazy, Suspense } from "react";
 import { useParams } from "react-router-dom";
 import SolarAnalysisWizard from "../components/solar/SolarAnalysisWizard";
-import SolarWindAssessmentPage from "../components/solar-wind-assessment/SolarWindAssessmentPage";
+
+// Lazy-load so missing optional deps (maplibre-gl, framer-motion, lucide-react)
+// don't break other geo-analytics pages if the container hasn't been rebuilt yet.
+const SolarWindAssessmentPage = lazy(
+  () => import("../components/solar-wind-assessment/SolarWindAssessmentPage")
+);
 
 function GeoAnalyticsPage() {
   const { section } = useParams<{ section: string }>();
@@ -69,7 +75,9 @@ function GeoAnalyticsPage() {
       )}
 
       {activeSection === "assessment" && (
-        <SolarWindAssessmentPage />
+        <Suspense fallback={<div style={{ padding: "2rem", color: "#64748b" }}>Loading assessment…</div>}>
+          <SolarWindAssessmentPage />
+        </Suspense>
       )}
     </div>
   );
