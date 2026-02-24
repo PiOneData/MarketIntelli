@@ -1,0 +1,2607 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    76.3029183684533,
+                    10.022550552742983
+                ]
+            },
+            "properties": {
+                "id": "benzy-kochi",
+                "name": "Benzy Infotech Data Center",
+                "company": "Benzy Infotech PVT LTD",
+                "url": "https://www.bidc.in",
+                "address": "Manimala Road, Edapally, Kochi, Ernakulam",
+                "postal": "682024",
+                "city": "Cochin",
+                "market": "Cochin",
+                "state": "Kerala",
+                "country": "India",
+                "power_mw": "Not Specified",
+                "tier": "Tier 3",
+                "whitespace": "Not Specified",
+                "lat": 10.022550552742983,
+                "lng": 76.3029183684533,
+                "analysis": {
+                    "wind": {
+                        "resource": {
+                            "grade": "F",
+                            "label": "Unsuitable",
+                            "ws_100": 2.907,
+                            "pd_100": 27.45,
+                            "ad_100": 1.1525,
+                            "ad_loss_pct": 5.92
+                        },
+                        "profile": {
+                            "heights": [
+                                10,
+                                50,
+                                100,
+                                150,
+                                200
+                            ],
+                            "speeds": [
+                                1.242,
+                                2.26,
+                                2.907,
+                                3.042,
+                                3.053
+                            ],
+                            "densities": [
+                                3.04,
+                                15.15,
+                                27.45,
+                                33.41,
+                                37.53
+                            ],
+                            "air_density": [
+                                1.1618,
+                                1.1577,
+                                1.1525,
+                                1.1473,
+                                1.1422
+                            ]
+                        },
+                        "capacity_factors": {
+                            "cf_iec1": 0.0259,
+                            "cf_iec2": 0.0357,
+                            "cf_iec3": 0.0428,
+                            "cf_best": 0.0428,
+                            "best_class": "IEC Class 3 \u2014 Low Wind (5.0\u20136.5 m/s)"
+                        },
+                        "physics": {
+                            "shear_alpha": 0.369,
+                            "shear_ratio": 2.341,
+                            "air_density": 1.1525
+                        },
+                        "terrain": {
+                            "rix": 0.0,
+                            "elevation": 12.0,
+                            "slope": 0.0
+                        },
+                        "yield_est": {
+                            "annual_kwh_2mw": 749856.0,
+                            "annual_mwh_2mw": 749.9
+                        },
+                        "score": 13.5,
+                        "rating": "VERY POOR"
+                    },
+                    "solar": {
+                        "core": {
+                            "ghi_kwh_m2_day": 5.278,
+                            "gti_kwh_m2_day": 5.407,
+                            "pvout_kwh_kwp_day": 4.271,
+                            "pvout_kwh_kwp_year": 1558.9,
+                            "ghi_kwh_m2_year": 1926.5,
+                            "optimal_tilt": 14.0,
+                            "avg_temp": 26.8,
+                            "dif_fraction": 0.496,
+                            "temp_derate_pct": 0.72
+                        },
+                        "monthly": {
+                            "values": [
+                                5.048,
+                                5.255,
+                                5.139,
+                                4.549,
+                                4.002,
+                                3.233,
+                                3.3,
+                                3.701,
+                                4.262,
+                                4.096,
+                                4.141,
+                                4.583
+                            ],
+                            "best_month": "Feb",
+                            "best_val": 5.255,
+                            "worst_month": "Jun",
+                            "worst_val": 3.233,
+                            "range": 2.022,
+                            "stability": "High \u2014 Strong monsoon dip"
+                        },
+                        "terrain": {
+                            "elevation_m": 10.2,
+                            "slope_deg": 3.099,
+                            "aspect_deg": 156.1
+                        },
+                        "atmospheric": {
+                            "aod": 0.3828,
+                            "aod_label": "Moderate Aerosol/Haze",
+                            "transmittance": 0.582,
+                            "cloud_pct": 69.66,
+                            "cloud_frac": 0.6966,
+                            "clear_days_yr": 110,
+                            "cloud_label": "Frequently Overcast"
+                        },
+                        "validation": {
+                            "era5_ghi_day": 4.8426,
+                            "gsa_ghi_day": 5.278,
+                            "agreement_pct": 91.8,
+                            "era5_ghi_diff_pct": 8.2
+                        },
+                        "score": 49.1,
+                        "rating": "MODERATE"
+                    },
+                    "water": {
+                        "precipitation": {
+                            "daily_mm": 9.9407,
+                            "annual_mm": 3628.4,
+                            "period": "2019\u20132024"
+                        },
+                        "surface_water": {
+                            "occurrence_pct": 96.57,
+                            "seasonality_months": 11.356,
+                            "max_extent_fraction": 0.3395,
+                            "flood_risk": "Flood-Prone Zone"
+                        },
+                        "soil_moisture": {
+                            "layer_0_10cm": 0,
+                            "root_zone": 0
+                        },
+                        "terraclimate": {
+                            "pdsi": 1.763,
+                            "pdsi_label": "Near Normal",
+                            "water_deficit_mm_month": 22.02,
+                            "deficit_label": "Low Stress",
+                            "actual_et_mm_month": 109.78,
+                            "actual_et_annual_mm": 1317.4,
+                            "soil_moisture_mm": 333.89,
+                            "runoff_mm_month": 17.66,
+                            "runoff_annual_mm": 211.9
+                        },
+                        "modis_et": {
+                            "et_kg_m2_8day": 23.938,
+                            "et_monthly_est": 89.767,
+                            "et_annual_est_mm": 1092.2
+                        },
+                        "groundwater_grace": {
+                            "lwe_thickness_cm": -0.061,
+                            "uncertainty_cm": 1.69,
+                            "status_label": "Near Baseline \u2014 Stable",
+                            "trend": "Depletion"
+                        },
+                        "ndwi_landsat9": {
+                            "ndwi_value": -0.3795,
+                            "ndwi_label": "Very Dry / Barren Surface",
+                            "scenes_used": 22,
+                            "period": "2022\u20132024"
+                        },
+                        "infrastructure": {
+                            "name": "Peringalkuthu Extention Left Bank Powerhouse",
+                            "dist_km": 47.72,
+                            "cap_mw": 16.0,
+                            "river": "<Null>",
+                            "energy_mu": 38.0
+                        },
+                        "admin": {
+                            "block": "Edappally",
+                            "cat": "Safe",
+                            "extract_pct": 59.2670209,
+                            "avail": 3831.76,
+                            "usage": 2270.97
+                        },
+                        "composite_risk_score": 79.0,
+                        "water_rating": "ABUNDANT"
+                    },
+                    "location": {
+                        "lat": 10.022550552742983,
+                        "lon": 76.3029183684533
+                    },
+                    "timestamp": "2026-02-22T15:03:35.903111"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    76.35174799991186,
+                    9.995045244259591
+                ]
+            },
+            "properties": {
+                "id": "ixoradc-cochin",
+                "name": "IxoraDC Cochin",
+                "company": "Aabasoft Technologies India Pvt Ltd",
+                "url": "https://www.ixoradc.com",
+                "address": "Chakolas Heights, Seaport - Airport Rd, Near Infopark, 682037 Cochin, Kerala, India",
+                "postal": "682037",
+                "city": "Cochin",
+                "market": "Cochin",
+                "state": "Kerala",
+                "country": "India",
+                "power_mw": "Not Specified",
+                "tier": "Not Specified",
+                "whitespace": "Not Specified",
+                "lat": 9.995045244259591,
+                "lng": 76.35174799991186,
+                "analysis": {
+                    "wind": {
+                        "resource": {
+                            "grade": "F",
+                            "label": "Unsuitable",
+                            "ws_100": 2.734,
+                            "pd_100": 22.37,
+                            "ad_100": 1.153,
+                            "ad_loss_pct": 5.88
+                        },
+                        "profile": {
+                            "heights": [
+                                10,
+                                50,
+                                100,
+                                150,
+                                200
+                            ],
+                            "speeds": [
+                                1.17,
+                                2.187,
+                                2.734,
+                                2.827,
+                                2.868
+                            ],
+                            "densities": [
+                                2.67,
+                                13.95,
+                                22.37,
+                                27.04,
+                                32.17
+                            ],
+                            "air_density": [
+                                1.1623,
+                                1.1581,
+                                1.153,
+                                1.1478,
+                                1.1426
+                            ]
+                        },
+                        "capacity_factors": {
+                            "cf_iec1": 0.0192,
+                            "cf_iec2": 0.0271,
+                            "cf_iec3": 0.0326,
+                            "cf_best": 0.0326,
+                            "best_class": "IEC Class 3 \u2014 Low Wind (5.0\u20136.5 m/s)"
+                        },
+                        "physics": {
+                            "shear_alpha": 0.369,
+                            "shear_ratio": 2.337,
+                            "air_density": 1.153
+                        },
+                        "terrain": {
+                            "rix": 0.0,
+                            "elevation": 7.0,
+                            "slope": 1.26
+                        },
+                        "yield_est": {
+                            "annual_kwh_2mw": 571152.0,
+                            "annual_mwh_2mw": 571.2
+                        },
+                        "score": 12.8,
+                        "rating": "VERY POOR"
+                    },
+                    "solar": {
+                        "core": {
+                            "ghi_kwh_m2_day": 5.197,
+                            "gti_kwh_m2_day": 5.322,
+                            "pvout_kwh_kwp_day": 4.204,
+                            "pvout_kwh_kwp_year": 1534.5,
+                            "ghi_kwh_m2_year": 1896.9,
+                            "optimal_tilt": 14.0,
+                            "avg_temp": 26.6,
+                            "dif_fraction": 0.511,
+                            "temp_derate_pct": 0.64
+                        },
+                        "monthly": {
+                            "values": [
+                                5.023,
+                                5.203,
+                                5.046,
+                                4.43,
+                                3.939,
+                                3.197,
+                                3.244,
+                                3.625,
+                                4.175,
+                                4.007,
+                                4.072,
+                                4.551
+                            ],
+                            "best_month": "Feb",
+                            "best_val": 5.203,
+                            "worst_month": "Jun",
+                            "worst_val": 3.197,
+                            "range": 2.006,
+                            "stability": "High \u2014 Strong monsoon dip"
+                        },
+                        "terrain": {
+                            "elevation_m": 12.9,
+                            "slope_deg": 4.4,
+                            "aspect_deg": 166.7
+                        },
+                        "atmospheric": {
+                            "aod": 0.3746,
+                            "aod_label": "Moderate Aerosol/Haze",
+                            "transmittance": 0.5887,
+                            "cloud_pct": 71.95,
+                            "cloud_frac": 0.7195,
+                            "clear_days_yr": 102,
+                            "cloud_label": "Frequently Overcast"
+                        },
+                        "validation": {
+                            "era5_ghi_day": 4.8373,
+                            "gsa_ghi_day": 5.197,
+                            "agreement_pct": 93.1,
+                            "era5_ghi_diff_pct": 6.9
+                        },
+                        "score": 47.4,
+                        "rating": "MODERATE"
+                    },
+                    "water": {
+                        "precipitation": {
+                            "daily_mm": 9.9963,
+                            "annual_mm": 3648.6,
+                            "period": "2019\u20132024"
+                        },
+                        "surface_water": {
+                            "occurrence_pct": 94.84,
+                            "seasonality_months": 11.034,
+                            "max_extent_fraction": 0.2348,
+                            "flood_risk": "Flood-Prone Zone"
+                        },
+                        "soil_moisture": {
+                            "layer_0_10cm": 28.013,
+                            "layer_10_40cm": 84.197,
+                            "layer_40_100cm": 166.278,
+                            "root_zone": 550.944
+                        },
+                        "terraclimate": {
+                            "pdsi": 1.631,
+                            "pdsi_label": "Near Normal",
+                            "water_deficit_mm_month": 21.67,
+                            "deficit_label": "Low Stress",
+                            "actual_et_mm_month": 110.04,
+                            "actual_et_annual_mm": 1320.5,
+                            "soil_moisture_mm": 336.42,
+                            "runoff_mm_month": 17.62,
+                            "runoff_annual_mm": 211.4
+                        },
+                        "modis_et": {
+                            "et_kg_m2_8day": 25.56,
+                            "et_monthly_est": 95.85,
+                            "et_annual_est_mm": 1166.2
+                        },
+                        "groundwater_grace": {
+                            "lwe_thickness_cm": -0.348,
+                            "uncertainty_cm": 1.754,
+                            "status_label": "Near Baseline \u2014 Stable",
+                            "trend": "Depletion"
+                        },
+                        "ndwi_landsat9": {
+                            "ndwi_value": -0.4776,
+                            "ndwi_label": "Very Dry / Barren Surface",
+                            "scenes_used": 22,
+                            "period": "2022\u20132024"
+                        },
+                        "infrastructure": {
+                            "name": "Peringalkuthu Extention Left Bank Powerhouse",
+                            "dist_km": 46.26,
+                            "cap_mw": 16.0,
+                            "river": "<Null>",
+                            "energy_mu": 38.0
+                        },
+                        "admin": {
+                            "block": "Vazhakkulam",
+                            "cat": "Safe",
+                            "extract_pct": 52.36299558,
+                            "avail": 4744.19,
+                            "usage": 2484.2
+                        },
+                        "composite_risk_score": 79.8,
+                        "water_rating": "ABUNDANT"
+                    },
+                    "location": {
+                        "lat": 9.995045244259591,
+                        "lon": 76.35174799991186
+                    },
+                    "timestamp": "2026-02-22T15:03:54.265175"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    77.07076989592622,
+                    28.500755562788605
+                ]
+            },
+            "properties": {
+                "id": "progression-gurgaon",
+                "name": "Progression Infonet Data Center",
+                "company": "Progression Infonet",
+                "url": "https://www.progression.com",
+                "address": "55, Independent Electronic Modules, Electronic City, Sector 18, Gurgaon, Haryana, India",
+                "postal": "122015",
+                "city": "Gurgaon",
+                "market": "Gurgaon",
+                "state": "Haryana",
+                "country": "India",
+                "power_mw": "Not Specified",
+                "tier": "Not Specified",
+                "whitespace": "Not Specified",
+                "lat": 28.500755562788605,
+                "lng": 77.07076989592622,
+                "analysis": {
+                    "wind": {
+                        "resource": {
+                            "grade": "F",
+                            "label": "Unsuitable",
+                            "ws_100": 3.87,
+                            "pd_100": 69.4,
+                            "ad_100": 1.1299,
+                            "ad_loss_pct": 7.76
+                        },
+                        "profile": {
+                            "heights": [
+                                10,
+                                50,
+                                100,
+                                150,
+                                200
+                            ],
+                            "speeds": [
+                                1.597,
+                                3.003,
+                                3.87,
+                                4.438,
+                                4.816
+                            ],
+                            "densities": [
+                                7.7,
+                                39.96,
+                                69.4,
+                                109.14,
+                                153.08
+                            ],
+                            "air_density": [
+                                1.1393,
+                                1.1351,
+                                1.1299,
+                                1.1247,
+                                1.1196
+                            ]
+                        },
+                        "capacity_factors": {
+                            "cf_iec1": 0.0794,
+                            "cf_iec2": 0.1013,
+                            "cf_iec3": 0.1181,
+                            "cf_best": 0.1181,
+                            "best_class": "IEC Class 3 \u2014 Low Wind (5.0\u20136.5 m/s)"
+                        },
+                        "physics": {
+                            "shear_alpha": 0.384,
+                            "shear_ratio": 2.423,
+                            "air_density": 1.1299
+                        },
+                        "terrain": {
+                            "rix": 0.0,
+                            "elevation": 234.0,
+                            "slope": 0.4
+                        },
+                        "yield_est": {
+                            "annual_kwh_2mw": 2069112.0,
+                            "annual_mwh_2mw": 2069.1
+                        },
+                        "score": 20.7,
+                        "rating": "POOR"
+                    },
+                    "solar": {
+                        "core": {
+                            "ghi_kwh_m2_day": 4.725,
+                            "gti_kwh_m2_day": 5.139,
+                            "pvout_kwh_kwp_day": 4.024,
+                            "pvout_kwh_kwp_year": 1468.8,
+                            "ghi_kwh_m2_year": 1724.6,
+                            "optimal_tilt": 27.0,
+                            "avg_temp": 25.0,
+                            "dif_fraction": 0.532,
+                            "temp_derate_pct": 0.0
+                        },
+                        "monthly": {
+                            "values": [
+                                3.226,
+                                4.316,
+                                4.905,
+                                4.867,
+                                4.386,
+                                3.909,
+                                3.438,
+                                3.694,
+                                4.265,
+                                4.272,
+                                3.678,
+                                3.38
+                            ],
+                            "best_month": "Mar",
+                            "best_val": 4.905,
+                            "worst_month": "Jan",
+                            "worst_val": 3.226,
+                            "range": 1.679,
+                            "stability": "Moderate \u2014 Monsoon impact"
+                        },
+                        "terrain": {
+                            "elevation_m": 234.1,
+                            "slope_deg": 3.634,
+                            "aspect_deg": 171.7
+                        },
+                        "atmospheric": {
+                            "aod": 0.7814,
+                            "aod_label": "Severe Pollution",
+                            "transmittance": 0.3312,
+                            "cloud_pct": 47.11,
+                            "cloud_frac": 0.4711,
+                            "clear_days_yr": 193,
+                            "cloud_label": "Partly Cloudy"
+                        },
+                        "validation": {
+                            "era5_ghi_day": 5.2451,
+                            "gsa_ghi_day": 4.725,
+                            "agreement_pct": 89.0,
+                            "era5_ghi_diff_pct": 11.0
+                        },
+                        "score": 43.7,
+                        "rating": "MODERATE"
+                    },
+                    "water": {
+                        "precipitation": {
+                            "daily_mm": 2.0595,
+                            "annual_mm": 751.7,
+                            "period": "2019\u20132024"
+                        },
+                        "surface_water": {
+                            "occurrence_pct": 23.98,
+                            "seasonality_months": 5.01,
+                            "max_extent_fraction": 0.0129,
+                            "flood_risk": "Very Low Flood Risk"
+                        },
+                        "soil_moisture": {
+                            "layer_0_10cm": 25.017,
+                            "layer_10_40cm": 77.184,
+                            "layer_40_100cm": 154.065,
+                            "root_zone": 126.772
+                        },
+                        "terraclimate": {
+                            "pdsi": 1.764,
+                            "pdsi_label": "Near Normal",
+                            "water_deficit_mm_month": 65.51,
+                            "deficit_label": "Moderate Stress",
+                            "actual_et_mm_month": 56.06,
+                            "actual_et_annual_mm": 672.7,
+                            "soil_moisture_mm": 65.24,
+                            "runoff_mm_month": 0.35,
+                            "runoff_annual_mm": 4.2
+                        },
+                        "modis_et": {
+                            "et_kg_m2_8day": 7.138,
+                            "et_monthly_est": 26.767,
+                            "et_annual_est_mm": 325.7
+                        },
+                        "groundwater_grace": {
+                            "lwe_thickness_cm": -75.553,
+                            "uncertainty_cm": 2.716,
+                            "status_label": "Critical Depletion",
+                            "trend": "Depletion"
+                        },
+                        "ndwi_landsat9": {
+                            "ndwi_value": -0.3495,
+                            "ndwi_label": "Very Dry / Barren Surface",
+                            "scenes_used": 83,
+                            "period": "2022\u20132024"
+                        },
+                        "infrastructure": {
+                            "name": "Nirgajini  Power House",
+                            "dist_km": 159.23,
+                            "cap_mw": 5.0,
+                            "river": "Ganga",
+                            "energy_mu": 43.8
+                        },
+                        "admin": {
+                            "block": "Gurgaon",
+                            "cat": "Over Exploited",
+                            "extract_pct": 263.9722063,
+                            "avail": 7352.74,
+                            "usage": 19409.19
+                        },
+                        "composite_risk_score": 27.1,
+                        "water_rating": "CRITICAL"
+                    },
+                    "location": {
+                        "lat": 28.500755562788605,
+                        "lon": 77.07076989592622
+                    },
+                    "timestamp": "2026-02-22T15:04:10.454992"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    91.27526165343235,
+                    23.829203863851678
+                ]
+            },
+            "properties": {
+                "id": "nxtra-agartala",
+                "name": "Nxtra Agartala I",
+                "company": "Nxtra by Airtel",
+                "url": "https://www.nxtra.in",
+                "address": "within Chanmari area of Agartala",
+                "postal": "799006",
+                "city": "Agartala",
+                "market": "Agartala",
+                "state": "Tripura",
+                "country": "India",
+                "power_mw": "5",
+                "tier": "Not Specified",
+                "whitespace": "7432 sq. ft.",
+                "lat": 23.829203863851678,
+                "lng": 91.27526165343235,
+                "analysis": {
+                    "wind": {
+                        "resource": {
+                            "grade": "F",
+                            "label": "Unsuitable",
+                            "ws_100": 4.167,
+                            "pd_100": 85.83,
+                            "ad_100": 1.1586,
+                            "ad_loss_pct": 5.42
+                        },
+                        "profile": {
+                            "heights": [
+                                10,
+                                50,
+                                100,
+                                150,
+                                200
+                            ],
+                            "speeds": [
+                                1.65,
+                                3.182,
+                                4.167,
+                                4.902,
+                                5.472
+                            ],
+                            "densities": [
+                                7.23,
+                                44.0,
+                                85.83,
+                                135.58,
+                                191.27
+                            ],
+                            "air_density": [
+                                1.1681,
+                                1.1639,
+                                1.1586,
+                                1.1534,
+                                1.1481
+                            ]
+                        },
+                        "capacity_factors": {
+                            "cf_iec1": 0.102,
+                            "cf_iec2": 0.1293,
+                            "cf_iec3": 0.1506,
+                            "cf_best": 0.1506,
+                            "best_class": "IEC Class 3 \u2014 Low Wind (5.0\u20136.5 m/s)"
+                        },
+                        "physics": {
+                            "shear_alpha": 0.402,
+                            "shear_ratio": 2.525,
+                            "air_density": 1.1586
+                        },
+                        "terrain": {
+                            "rix": 0.0,
+                            "elevation": 17.0,
+                            "slope": 0.26
+                        },
+                        "yield_est": {
+                            "annual_kwh_2mw": 2638512.0,
+                            "annual_mwh_2mw": 2638.5
+                        },
+                        "score": 24.1,
+                        "rating": "POOR"
+                    },
+                    "solar": {
+                        "core": {
+                            "ghi_kwh_m2_day": 4.565,
+                            "gti_kwh_m2_day": 4.897,
+                            "pvout_kwh_kwp_day": 3.868,
+                            "pvout_kwh_kwp_year": 1411.8,
+                            "ghi_kwh_m2_year": 1666.2,
+                            "optimal_tilt": 24.0,
+                            "avg_temp": 25.4,
+                            "dif_fraction": 0.556,
+                            "temp_derate_pct": 0.16
+                        },
+                        "monthly": {
+                            "values": [
+                                3.802,
+                                4.438,
+                                4.584,
+                                4.294,
+                                3.709,
+                                3.264,
+                                3.348,
+                                3.47,
+                                3.543,
+                                3.894,
+                                4.286,
+                                3.832
+                            ],
+                            "best_month": "Mar",
+                            "best_val": 4.584,
+                            "worst_month": "Jun",
+                            "worst_val": 3.264,
+                            "range": 1.32,
+                            "stability": "Moderate \u2014 Monsoon impact"
+                        },
+                        "terrain": {
+                            "elevation_m": 20.4,
+                            "slope_deg": 3.438,
+                            "aspect_deg": 168.6
+                        },
+                        "atmospheric": {
+                            "aod": 0.5473,
+                            "aod_label": "High \u2014 Dust/Pollution",
+                            "transmittance": 0.4612,
+                            "cloud_pct": 59.82,
+                            "cloud_frac": 0.5982,
+                            "clear_days_yr": 146,
+                            "cloud_label": "Mostly Cloudy"
+                        },
+                        "validation": {
+                            "era5_ghi_day": 4.6116,
+                            "gsa_ghi_day": 4.565,
+                            "agreement_pct": 99.0,
+                            "era5_ghi_diff_pct": 1.0
+                        },
+                        "score": 40.3,
+                        "rating": "MODERATE"
+                    },
+                    "water": {
+                        "precipitation": {
+                            "daily_mm": 6.4122,
+                            "annual_mm": 2340.5,
+                            "period": "2019\u20132024"
+                        },
+                        "surface_water": {
+                            "occurrence_pct": 34.04,
+                            "seasonality_months": 2.565,
+                            "max_extent_fraction": 0.1814,
+                            "flood_risk": "Flood-Prone Zone"
+                        },
+                        "soil_moisture": {
+                            "layer_0_10cm": 25.845,
+                            "layer_10_40cm": 80.595,
+                            "layer_40_100cm": 165.427,
+                            "root_zone": 343.155
+                        },
+                        "terraclimate": {
+                            "pdsi": -2.695,
+                            "pdsi_label": "Moderate Drought",
+                            "water_deficit_mm_month": 21.84,
+                            "deficit_label": "Low Stress",
+                            "actual_et_mm_month": 87.72,
+                            "actual_et_annual_mm": 1052.6,
+                            "soil_moisture_mm": 149.61,
+                            "runoff_mm_month": 5.45,
+                            "runoff_annual_mm": 65.4
+                        },
+                        "modis_et": {
+                            "et_kg_m2_8day": 21.788,
+                            "et_monthly_est": 81.705,
+                            "et_annual_est_mm": 994.1
+                        },
+                        "groundwater_grace": {
+                            "lwe_thickness_cm": 8.771,
+                            "uncertainty_cm": 4.556,
+                            "status_label": "Moderate Surplus",
+                            "trend": "Recharge/Stable"
+                        },
+                        "ndwi_landsat9": {
+                            "ndwi_value": -0.4567,
+                            "ndwi_label": "Very Dry / Barren Surface",
+                            "scenes_used": 123,
+                            "period": "2022\u20132024"
+                        },
+                        "infrastructure": {
+                            "name": "Gumti Power House",
+                            "dist_km": 76.7,
+                            "cap_mw": 15.0,
+                            "river": "<Null>",
+                            "energy_mu": 52.0
+                        },
+                        "admin": {
+                            "block": "Amc",
+                            "cat": "Safe",
+                            "extract_pct": 52.70267987,
+                            "avail": 1775.83,
+                            "usage": 935.91
+                        },
+                        "composite_risk_score": 66.9,
+                        "water_rating": "GOOD"
+                    },
+                    "location": {
+                        "lat": 23.829203863851678,
+                        "lon": 91.27526165343235
+                    },
+                    "timestamp": "2026-02-22T15:04:36.241934"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    72.52057010729322,
+                    23.07416368643137
+                ]
+            },
+            "properties": {
+                "id": "cloudetc-ahmedabad",
+                "name": "CloudETC Data Center",
+                "company": "CloudETC",
+                "url": "https://cloudetc.in",
+                "address": "Sarkhej-Gandhinagar Hwy",
+                "postal": "380060",
+                "city": "Ahmedabad",
+                "market": "Ahmedabad",
+                "state": "Gujarat",
+                "country": "India",
+                "power_mw": "Not Specified",
+                "tier": "Tier 3",
+                "whitespace": "Not Specified",
+                "lat": 23.07416368643137,
+                "lng": 72.52057010729322,
+                "analysis": {
+                    "wind": {
+                        "resource": {
+                            "grade": "F",
+                            "label": "Unsuitable",
+                            "ws_100": 4.458,
+                            "pd_100": 93.67,
+                            "ad_100": 1.1444,
+                            "ad_loss_pct": 6.58
+                        },
+                        "profile": {
+                            "heights": [
+                                10,
+                                50,
+                                100,
+                                150,
+                                200
+                            ],
+                            "speeds": [
+                                1.963,
+                                3.517,
+                                4.458,
+                                5.259,
+                                5.803
+                            ],
+                            "densities": [
+                                12.48,
+                                55.04,
+                                93.67,
+                                157.06,
+                                219.62
+                            ],
+                            "air_density": [
+                                1.1538,
+                                1.1496,
+                                1.1444,
+                                1.1392,
+                                1.1341
+                            ]
+                        },
+                        "capacity_factors": {
+                            "cf_iec1": 0.1098,
+                            "cf_iec2": 0.1388,
+                            "cf_iec3": 0.1611,
+                            "cf_best": 0.1611,
+                            "best_class": "IEC Class 3 \u2014 Low Wind (5.0\u20136.5 m/s)"
+                        },
+                        "physics": {
+                            "shear_alpha": 0.356,
+                            "shear_ratio": 2.271,
+                            "air_density": 1.1444
+                        },
+                        "terrain": {
+                            "rix": 0.0,
+                            "elevation": 52.0,
+                            "slope": 0.17
+                        },
+                        "yield_est": {
+                            "annual_kwh_2mw": 2822472.0,
+                            "annual_mwh_2mw": 2822.5
+                        },
+                        "score": 26.1,
+                        "rating": "POOR"
+                    },
+                    "solar": {
+                        "core": {
+                            "ghi_kwh_m2_day": 5.544,
+                            "gti_kwh_m2_day": 6.08,
+                            "pvout_kwh_kwp_day": 4.694,
+                            "pvout_kwh_kwp_year": 1713.3,
+                            "ghi_kwh_m2_year": 2023.6,
+                            "optimal_tilt": 27.0,
+                            "avg_temp": 27.2,
+                            "dif_fraction": 0.403,
+                            "temp_derate_pct": 0.88
+                        },
+                        "monthly": {
+                            "values": [
+                                5.163,
+                                5.603,
+                                5.668,
+                                5.45,
+                                5.065,
+                                4.043,
+                                2.868,
+                                3.199,
+                                4.278,
+                                5.215,
+                                4.949,
+                                4.905
+                            ],
+                            "best_month": "Mar",
+                            "best_val": 5.668,
+                            "worst_month": "Jul",
+                            "worst_val": 2.868,
+                            "range": 2.8,
+                            "stability": "High \u2014 Strong monsoon dip"
+                        },
+                        "terrain": {
+                            "elevation_m": 53.1,
+                            "slope_deg": 2.905,
+                            "aspect_deg": 163.7
+                        },
+                        "atmospheric": {
+                            "aod": 0.413,
+                            "aod_label": "High \u2014 Dust/Pollution",
+                            "transmittance": 0.5576,
+                            "cloud_pct": 39.13,
+                            "cloud_frac": 0.3913,
+                            "clear_days_yr": 222,
+                            "cloud_label": "Partly Cloudy"
+                        },
+                        "validation": {
+                            "era5_ghi_day": 5.3507,
+                            "gsa_ghi_day": 5.544,
+                            "agreement_pct": 96.5,
+                            "era5_ghi_diff_pct": 3.5
+                        },
+                        "score": 63.7,
+                        "rating": "GOOD"
+                    },
+                    "water": {
+                        "precipitation": {
+                            "daily_mm": 2.6657,
+                            "annual_mm": 973.0,
+                            "period": "2019\u20132024"
+                        },
+                        "surface_water": {
+                            "occurrence_pct": 41.53,
+                            "seasonality_months": 5.047,
+                            "max_extent_fraction": 0.022,
+                            "flood_risk": "Very Low Flood Risk"
+                        },
+                        "soil_moisture": {
+                            "layer_0_10cm": 19.396,
+                            "layer_10_40cm": 59.892,
+                            "layer_40_100cm": 120.467,
+                            "root_zone": 166.025
+                        },
+                        "terraclimate": {
+                            "pdsi": 1.909,
+                            "pdsi_label": "Near Normal",
+                            "water_deficit_mm_month": 85.04,
+                            "deficit_label": "Moderate Stress",
+                            "actual_et_mm_month": 57.93,
+                            "actual_et_annual_mm": 695.2,
+                            "soil_moisture_mm": 102.77,
+                            "runoff_mm_month": 1.61,
+                            "runoff_annual_mm": 19.3
+                        },
+                        "modis_et": {
+                            "et_kg_m2_8day": 8.667,
+                            "et_monthly_est": 32.501,
+                            "et_annual_est_mm": 395.4
+                        },
+                        "groundwater_grace": {
+                            "lwe_thickness_cm": -4.552,
+                            "uncertainty_cm": 3.251,
+                            "status_label": "Mild Depletion",
+                            "trend": "Depletion"
+                        },
+                        "ndwi_landsat9": {
+                            "ndwi_value": -0.3354,
+                            "ndwi_label": "Very Dry / Barren Surface",
+                            "scenes_used": 89,
+                            "period": "2022\u20132024"
+                        },
+                        "infrastructure": {
+                            "name": "Kadana Power House",
+                            "dist_km": 148.13,
+                            "cap_mw": 240.0,
+                            "river": "Mahi",
+                            "energy_mu": 518.0
+                        },
+                        "admin": {
+                            "block": "Ahmedabad City & Das",
+                            "cat": "Semi-Critical",
+                            "extract_pct": 82.58362065,
+                            "avail": 20091.03,
+                            "usage": 16591.9
+                        },
+                        "composite_risk_score": 45.2,
+                        "water_rating": "MODERATE"
+                    },
+                    "location": {
+                        "lat": 23.07416368643137,
+                        "lon": 72.52057010729322
+                    },
+                    "timestamp": "2026-02-22T15:11:31.569443"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    72.5387039957374,
+                    23.114599565186136
+                ]
+            },
+            "properties": {
+                "id": "devpeter-ahmedabad",
+                "name": "DEVPETER DATACENTER",
+                "company": "DEVPETER DATACENTER PVT. LTD.",
+                "url": "https://www.devpeterdatacenter.com",
+                "address": "427 Block-A, Money Plant High Street, nr Bsnl Office Jagatpur",
+                "postal": "382470",
+                "city": "Ahmedabad",
+                "market": "Ahmedabad",
+                "state": "Gujarat",
+                "country": "India",
+                "power_mw": "0.12",
+                "tier": "Not Specified",
+                "whitespace": "2000 sq. ft.",
+                "lat": 23.114599565186136,
+                "lng": 72.5387039957374,
+                "analysis": {
+                    "wind": {
+                        "resource": {
+                            "grade": "D",
+                            "label": "Marginal suitability",
+                            "ws_100": 4.789,
+                            "pd_100": 119.71,
+                            "ad_100": 1.1437,
+                            "ad_loss_pct": 6.64
+                        },
+                        "profile": {
+                            "heights": [
+                                10,
+                                50,
+                                100,
+                                150,
+                                200
+                            ],
+                            "speeds": [
+                                2.767,
+                                4.01,
+                                4.789,
+                                5.564,
+                                6.104
+                            ],
+                            "densities": [
+                                35.28,
+                                85.17,
+                                119.71,
+                                190.7,
+                                259.96
+                            ],
+                            "air_density": [
+                                1.153,
+                                1.1489,
+                                1.1437,
+                                1.1385,
+                                1.1334
+                            ]
+                        },
+                        "capacity_factors": {
+                            "cf_iec1": 0.1381,
+                            "cf_iec2": 0.1712,
+                            "cf_iec3": 0.1964,
+                            "cf_best": 0.1964,
+                            "best_class": "IEC Class 3 \u2014 Low Wind (5.0\u20136.5 m/s)"
+                        },
+                        "physics": {
+                            "shear_alpha": 0.238,
+                            "shear_ratio": 1.731,
+                            "air_density": 1.1437
+                        },
+                        "terrain": {
+                            "rix": 0.0,
+                            "elevation": 58.0,
+                            "slope": 0.44
+                        },
+                        "yield_est": {
+                            "annual_kwh_2mw": 3440928.0,
+                            "annual_mwh_2mw": 3440.9
+                        },
+                        "score": 30.4,
+                        "rating": "POOR"
+                    },
+                    "solar": {
+                        "core": {
+                            "ghi_kwh_m2_day": 5.542,
+                            "gti_kwh_m2_day": 6.078,
+                            "pvout_kwh_kwp_day": 4.692,
+                            "pvout_kwh_kwp_year": 1712.6,
+                            "ghi_kwh_m2_year": 2022.8,
+                            "optimal_tilt": 27.0,
+                            "avg_temp": 27.3,
+                            "dif_fraction": 0.402,
+                            "temp_derate_pct": 0.92
+                        },
+                        "monthly": {
+                            "values": [
+                                5.171,
+                                5.604,
+                                5.665,
+                                5.452,
+                                5.063,
+                                4.04,
+                                2.856,
+                                3.18,
+                                4.273,
+                                5.22,
+                                4.953,
+                                4.91
+                            ],
+                            "best_month": "Mar",
+                            "best_val": 5.665,
+                            "worst_month": "Jul",
+                            "worst_val": 2.856,
+                            "range": 2.809,
+                            "stability": "High \u2014 Strong monsoon dip"
+                        },
+                        "terrain": {
+                            "elevation_m": 57.9,
+                            "slope_deg": 2.801,
+                            "aspect_deg": 163.4
+                        },
+                        "atmospheric": {
+                            "aod": 0.413,
+                            "aod_label": "High \u2014 Dust/Pollution",
+                            "transmittance": 0.5576,
+                            "cloud_pct": 39.13,
+                            "cloud_frac": 0.3913,
+                            "clear_days_yr": 222,
+                            "cloud_label": "Partly Cloudy"
+                        },
+                        "validation": {
+                            "era5_ghi_day": 5.3525,
+                            "gsa_ghi_day": 5.542,
+                            "agreement_pct": 96.6,
+                            "era5_ghi_diff_pct": 3.4
+                        },
+                        "score": 63.7,
+                        "rating": "GOOD"
+                    },
+                    "water": {
+                        "precipitation": {
+                            "daily_mm": 2.6625,
+                            "annual_mm": 971.8,
+                            "period": "2019\u20132024"
+                        },
+                        "surface_water": {
+                            "occurrence_pct": 41.53,
+                            "seasonality_months": 5.186,
+                            "max_extent_fraction": 0.0201,
+                            "flood_risk": "Very Low Flood Risk"
+                        },
+                        "soil_moisture": {
+                            "layer_0_10cm": 21.176,
+                            "layer_10_40cm": 64.887,
+                            "layer_40_100cm": 130.953,
+                            "root_zone": 143.231
+                        },
+                        "terraclimate": {
+                            "pdsi": 1.847,
+                            "pdsi_label": "Near Normal",
+                            "water_deficit_mm_month": 85.42,
+                            "deficit_label": "Moderate Stress",
+                            "actual_et_mm_month": 57.71,
+                            "actual_et_annual_mm": 692.5,
+                            "soil_moisture_mm": 103.38,
+                            "runoff_mm_month": 1.52,
+                            "runoff_annual_mm": 18.2
+                        },
+                        "modis_et": {
+                            "et_kg_m2_8day": 8.701,
+                            "et_monthly_est": 32.629,
+                            "et_annual_est_mm": 397.0
+                        },
+                        "groundwater_grace": {
+                            "lwe_thickness_cm": -4.869,
+                            "uncertainty_cm": 3.288,
+                            "status_label": "Mild Depletion",
+                            "trend": "Depletion"
+                        },
+                        "ndwi_landsat9": {
+                            "ndwi_value": -0.3673,
+                            "ndwi_label": "Very Dry / Barren Surface",
+                            "scenes_used": 89,
+                            "period": "2022\u20132024"
+                        },
+                        "infrastructure": {
+                            "name": "Kadana Power House",
+                            "dist_km": 145.29,
+                            "cap_mw": 240.0,
+                            "river": "Mahi",
+                            "energy_mu": 518.0
+                        },
+                        "admin": {
+                            "block": "Ahmedabad City & Das",
+                            "cat": "Semi-Critical",
+                            "extract_pct": 82.58362065,
+                            "avail": 20091.03,
+                            "usage": 16591.9
+                        },
+                        "composite_risk_score": 45.1,
+                        "water_rating": "MODERATE"
+                    },
+                    "location": {
+                        "lat": 23.114599565186136,
+                        "lon": 72.5387039957374
+                    },
+                    "timestamp": "2026-02-22T15:11:35.634231"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    72.52290164543842,
+                    23.059329800731263
+                ]
+            },
+            "properties": {
+                "id": "datafirst-ahmedabad",
+                "name": "DataFirst Ahmedabad",
+                "company": "Data First",
+                "url": "https://www.datafirst.in",
+                "address": "Cambay Grand, Gulab Tower Rd, 9th floor",
+                "postal": "380054",
+                "city": "Ahmedabad",
+                "market": "Ahmedabad",
+                "state": "Gujarat",
+                "country": "India",
+                "power_mw": "Not Specified",
+                "tier": "Tier 3",
+                "whitespace": "Not Specified",
+                "lat": 23.059329800731263,
+                "lng": 72.52290164543842,
+                "analysis": {
+                    "wind": {
+                        "resource": {
+                            "grade": "F",
+                            "label": "Unsuitable",
+                            "ws_100": 4.336,
+                            "pd_100": 85.78,
+                            "ad_100": 1.1443,
+                            "ad_loss_pct": 6.59
+                        },
+                        "profile": {
+                            "heights": [
+                                10,
+                                50,
+                                100,
+                                150,
+                                200
+                            ],
+                            "speeds": [
+                                1.839,
+                                3.405,
+                                4.336,
+                                5.189,
+                                5.739
+                            ],
+                            "densities": [
+                                9.56,
+                                49.35,
+                                85.78,
+                                148.62,
+                                209.77
+                            ],
+                            "air_density": [
+                                1.1537,
+                                1.1495,
+                                1.1443,
+                                1.1391,
+                                1.134
+                            ]
+                        },
+                        "capacity_factors": {
+                            "cf_iec1": 0.1004,
+                            "cf_iec2": 0.1278,
+                            "cf_iec3": 0.149,
+                            "cf_best": 0.149,
+                            "best_class": "IEC Class 3 \u2014 Low Wind (5.0\u20136.5 m/s)"
+                        },
+                        "physics": {
+                            "shear_alpha": 0.373,
+                            "shear_ratio": 2.358,
+                            "air_density": 1.1443
+                        },
+                        "terrain": {
+                            "rix": 0.0,
+                            "elevation": 51.0,
+                            "slope": 0.38
+                        },
+                        "yield_est": {
+                            "annual_kwh_2mw": 2610480.0,
+                            "annual_mwh_2mw": 2610.5
+                        },
+                        "score": 24.6,
+                        "rating": "POOR"
+                    },
+                    "solar": {
+                        "core": {
+                            "ghi_kwh_m2_day": 5.542,
+                            "gti_kwh_m2_day": 6.077,
+                            "pvout_kwh_kwp_day": 4.693,
+                            "pvout_kwh_kwp_year": 1712.9,
+                            "ghi_kwh_m2_year": 2022.8,
+                            "optimal_tilt": 27.0,
+                            "avg_temp": 27.2,
+                            "dif_fraction": 0.403,
+                            "temp_derate_pct": 0.88
+                        },
+                        "monthly": {
+                            "values": [
+                                5.163,
+                                5.603,
+                                5.669,
+                                5.449,
+                                5.064,
+                                4.039,
+                                2.868,
+                                3.202,
+                                4.277,
+                                5.213,
+                                4.948,
+                                4.904
+                            ],
+                            "best_month": "Mar",
+                            "best_val": 5.669,
+                            "worst_month": "Jul",
+                            "worst_val": 2.868,
+                            "range": 2.801,
+                            "stability": "High \u2014 Strong monsoon dip"
+                        },
+                        "terrain": {
+                            "elevation_m": 52.4,
+                            "slope_deg": 2.946,
+                            "aspect_deg": 163.8
+                        },
+                        "atmospheric": {
+                            "aod": 0.413,
+                            "aod_label": "High \u2014 Dust/Pollution",
+                            "transmittance": 0.5576,
+                            "cloud_pct": 39.13,
+                            "cloud_frac": 0.3913,
+                            "clear_days_yr": 222,
+                            "cloud_label": "Partly Cloudy"
+                        },
+                        "validation": {
+                            "era5_ghi_day": 5.3507,
+                            "gsa_ghi_day": 5.542,
+                            "agreement_pct": 96.5,
+                            "era5_ghi_diff_pct": 3.5
+                        },
+                        "score": 63.7,
+                        "rating": "GOOD"
+                    },
+                    "water": {
+                        "precipitation": {
+                            "daily_mm": 2.6755,
+                            "annual_mm": 976.6,
+                            "period": "2019\u20132024"
+                        },
+                        "surface_water": {
+                            "occurrence_pct": 41.41,
+                            "seasonality_months": 4.989,
+                            "max_extent_fraction": 0.0225,
+                            "flood_risk": "Very Low Flood Risk"
+                        },
+                        "soil_moisture": {
+                            "layer_0_10cm": 19.826,
+                            "layer_10_40cm": 61.098,
+                            "layer_40_100cm": 122.999,
+                            "root_zone": 160.521
+                        },
+                        "terraclimate": {
+                            "pdsi": 1.937,
+                            "pdsi_label": "Near Normal",
+                            "water_deficit_mm_month": 84.82,
+                            "deficit_label": "Moderate Stress",
+                            "actual_et_mm_month": 58.09,
+                            "actual_et_annual_mm": 697.1,
+                            "soil_moisture_mm": 103.2,
+                            "runoff_mm_month": 1.63,
+                            "runoff_annual_mm": 19.6
+                        },
+                        "modis_et": {
+                            "et_kg_m2_8day": 8.68,
+                            "et_monthly_est": 32.55,
+                            "et_annual_est_mm": 396.0
+                        },
+                        "groundwater_grace": {
+                            "lwe_thickness_cm": -4.605,
+                            "uncertainty_cm": 3.257,
+                            "status_label": "Mild Depletion",
+                            "trend": "Depletion"
+                        },
+                        "ndwi_landsat9": {
+                            "ndwi_value": -0.321,
+                            "ndwi_label": "Very Dry / Barren Surface",
+                            "scenes_used": 89,
+                            "period": "2022\u20132024"
+                        },
+                        "infrastructure": {
+                            "name": "Kadana Power House",
+                            "dist_km": 148.23,
+                            "cap_mw": 240.0,
+                            "river": "Mahi",
+                            "energy_mu": 518.0
+                        },
+                        "admin": {
+                            "block": "Ahmedabad City & Das",
+                            "cat": "Semi-Critical",
+                            "extract_pct": 82.58362065,
+                            "avail": 20091.03,
+                            "usage": 16591.9
+                        },
+                        "composite_risk_score": 45.2,
+                        "water_rating": "MODERATE"
+                    },
+                    "location": {
+                        "lat": 23.059329800731263,
+                        "lon": 72.52290164543842
+                    },
+                    "timestamp": "2026-02-22T15:11:39.701462"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    72.53054825340678,
+                    23.02977115284802
+                ]
+            },
+            "properties": {
+                "id": "ecs-ahmedabad",
+                "name": "ECS Biztech Data Center",
+                "company": "ECS Corporation",
+                "url": "https://www.ecsbiztech.com",
+                "address": "11-12 Garden View",
+                "postal": "380054",
+                "city": "Ahmedabad",
+                "market": "Ahmedabad",
+                "state": "Gujarat",
+                "country": "India",
+                "power_mw": "Not Specified",
+                "tier": "Not Specified",
+                "whitespace": "465 sq. m.",
+                "lat": 23.02977115284802,
+                "lng": 72.53054825340678,
+                "analysis": {
+                    "wind": {
+                        "resource": {
+                            "grade": "F",
+                            "label": "Unsuitable",
+                            "ws_100": 4.335,
+                            "pd_100": 85.92,
+                            "ad_100": 1.1443,
+                            "ad_loss_pct": 6.59
+                        },
+                        "profile": {
+                            "heights": [
+                                10,
+                                50,
+                                100,
+                                150,
+                                200
+                            ],
+                            "speeds": [
+                                1.84,
+                                3.452,
+                                4.335,
+                                5.19,
+                                5.761
+                            ],
+                            "densities": [
+                                9.37,
+                                51.75,
+                                85.92,
+                                150.25,
+                                214.3
+                            ],
+                            "air_density": [
+                                1.1537,
+                                1.1495,
+                                1.1443,
+                                1.1391,
+                                1.134
+                            ]
+                        },
+                        "capacity_factors": {
+                            "cf_iec1": 0.1007,
+                            "cf_iec2": 0.1281,
+                            "cf_iec3": 0.1493,
+                            "cf_best": 0.1493,
+                            "best_class": "IEC Class 3 \u2014 Low Wind (5.0\u20136.5 m/s)"
+                        },
+                        "physics": {
+                            "shear_alpha": 0.372,
+                            "shear_ratio": 2.356,
+                            "air_density": 1.1443
+                        },
+                        "terrain": {
+                            "rix": 0.0,
+                            "elevation": 49.0,
+                            "slope": 0.26
+                        },
+                        "yield_est": {
+                            "annual_kwh_2mw": 2615736.0,
+                            "annual_mwh_2mw": 2615.7
+                        },
+                        "score": 24.6,
+                        "rating": "POOR"
+                    },
+                    "solar": {
+                        "core": {
+                            "ghi_kwh_m2_day": 5.545,
+                            "gti_kwh_m2_day": 6.073,
+                            "pvout_kwh_kwp_day": 4.692,
+                            "pvout_kwh_kwp_year": 1712.6,
+                            "ghi_kwh_m2_year": 2023.9,
+                            "optimal_tilt": 27.0,
+                            "avg_temp": 27.2,
+                            "dif_fraction": 0.404,
+                            "temp_derate_pct": 0.88
+                        },
+                        "monthly": {
+                            "values": [
+                                5.164,
+                                5.598,
+                                5.666,
+                                5.452,
+                                5.061,
+                                4.02,
+                                2.878,
+                                3.22,
+                                4.282,
+                                5.198,
+                                4.942,
+                                4.899
+                            ],
+                            "best_month": "Mar",
+                            "best_val": 5.666,
+                            "worst_month": "Jul",
+                            "worst_val": 2.878,
+                            "range": 2.788,
+                            "stability": "High \u2014 Strong monsoon dip"
+                        },
+                        "terrain": {
+                            "elevation_m": 49.5,
+                            "slope_deg": 3.098,
+                            "aspect_deg": 164.2
+                        },
+                        "atmospheric": {
+                            "aod": 0.413,
+                            "aod_label": "High \u2014 Dust/Pollution",
+                            "transmittance": 0.5576,
+                            "cloud_pct": 39.13,
+                            "cloud_frac": 0.3913,
+                            "clear_days_yr": 222,
+                            "cloud_label": "Partly Cloudy"
+                        },
+                        "validation": {
+                            "era5_ghi_day": 5.3507,
+                            "gsa_ghi_day": 5.545,
+                            "agreement_pct": 96.5,
+                            "era5_ghi_diff_pct": 3.5
+                        },
+                        "score": 63.6,
+                        "rating": "GOOD"
+                    },
+                    "water": {
+                        "precipitation": {
+                            "daily_mm": 2.7015,
+                            "annual_mm": 986.0,
+                            "period": "2019\u20132024"
+                        },
+                        "surface_water": {
+                            "occurrence_pct": 41.13,
+                            "seasonality_months": 4.904,
+                            "max_extent_fraction": 0.0238,
+                            "flood_risk": "Very Low Flood Risk"
+                        },
+                        "soil_moisture": {
+                            "layer_0_10cm": 20.52,
+                            "layer_10_40cm": 63.047,
+                            "layer_40_100cm": 127.09,
+                            "root_zone": 151.629
+                        },
+                        "terraclimate": {
+                            "pdsi": 1.998,
+                            "pdsi_label": "Near Normal",
+                            "water_deficit_mm_month": 84.3,
+                            "deficit_label": "Moderate Stress",
+                            "actual_et_mm_month": 58.5,
+                            "actual_et_annual_mm": 702.0,
+                            "soil_moisture_mm": 104.63,
+                            "runoff_mm_month": 1.67,
+                            "runoff_annual_mm": 20.0
+                        },
+                        "modis_et": {
+                            "et_kg_m2_8day": 8.705,
+                            "et_monthly_est": 32.644,
+                            "et_annual_est_mm": 397.2
+                        },
+                        "groundwater_grace": {
+                            "lwe_thickness_cm": -4.733,
+                            "uncertainty_cm": 3.272,
+                            "status_label": "Mild Depletion",
+                            "trend": "Depletion"
+                        },
+                        "ndwi_landsat9": {
+                            "ndwi_value": -0.2907,
+                            "ndwi_label": "Very Dry / Barren Surface",
+                            "scenes_used": 89,
+                            "period": "2022\u20132024"
+                        },
+                        "infrastructure": {
+                            "name": "Kadana Power House",
+                            "dist_km": 148.17,
+                            "cap_mw": 240.0,
+                            "river": "Mahi",
+                            "energy_mu": 518.0
+                        },
+                        "admin": {
+                            "block": "Ahmedabad City & Das",
+                            "cat": "Semi-Critical",
+                            "extract_pct": 82.58362065,
+                            "avail": 20091.03,
+                            "usage": 16591.9
+                        },
+                        "composite_risk_score": 45.3,
+                        "water_rating": "MODERATE"
+                    },
+                    "location": {
+                        "lat": 23.02977115284802,
+                        "lon": 72.53054825340678
+                    },
+                    "timestamp": "2026-02-22T15:11:43.785284"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    72.5607672129303,
+                    23.028661756257854
+                ]
+            },
+            "properties": {
+                "id": "go4hosting-ahmedabad",
+                "name": "Go4Hosting Ahmedabad",
+                "company": "Go4Hosting",
+                "url": "https://go4hosting.in",
+                "address": "F-402 Titanium City Center, 100 Feet Road, Anandnagar, Satellite",
+                "postal": "380015",
+                "city": "Ahmedabad",
+                "market": "Ahmedabad",
+                "state": "Gujarat",
+                "country": "India",
+                "power_mw": "Not Specified",
+                "tier": "Tier 3",
+                "whitespace": "Not Specified",
+                "lat": 23.028661756257854,
+                "lng": 72.5607672129303,
+                "analysis": {
+                    "wind": {
+                        "resource": {
+                            "grade": "F",
+                            "label": "Unsuitable",
+                            "ws_100": 4.255,
+                            "pd_100": 82.53,
+                            "ad_100": 1.1443,
+                            "ad_loss_pct": 6.59
+                        },
+                        "profile": {
+                            "heights": [
+                                10,
+                                50,
+                                100,
+                                150,
+                                200
+                            ],
+                            "speeds": [
+                                1.808,
+                                3.364,
+                                4.255,
+                                5.101,
+                                5.702
+                            ],
+                            "densities": [
+                                9.05,
+                                48.16,
+                                82.53,
+                                145.94,
+                                210.7
+                            ],
+                            "air_density": [
+                                1.1536,
+                                1.1494,
+                                1.1443,
+                                1.1391,
+                                1.1339
+                            ]
+                        },
+                        "capacity_factors": {
+                            "cf_iec1": 0.0964,
+                            "cf_iec2": 0.1228,
+                            "cf_iec3": 0.1432,
+                            "cf_best": 0.1432,
+                            "best_class": "IEC Class 3 \u2014 Low Wind (5.0\u20136.5 m/s)"
+                        },
+                        "physics": {
+                            "shear_alpha": 0.372,
+                            "shear_ratio": 2.353,
+                            "air_density": 1.1443
+                        },
+                        "terrain": {
+                            "rix": 0.0,
+                            "elevation": 51.0,
+                            "slope": 0.43
+                        },
+                        "yield_est": {
+                            "annual_kwh_2mw": 2508864.0,
+                            "annual_mwh_2mw": 2508.9
+                        },
+                        "score": 23.9,
+                        "rating": "POOR"
+                    },
+                    "solar": {
+                        "core": {
+                            "ghi_kwh_m2_day": 5.535,
+                            "gti_kwh_m2_day": 6.057,
+                            "pvout_kwh_kwp_day": 4.679,
+                            "pvout_kwh_kwp_year": 1707.8,
+                            "ghi_kwh_m2_year": 2020.3,
+                            "optimal_tilt": 27.0,
+                            "avg_temp": 27.2,
+                            "dif_fraction": 0.405,
+                            "temp_derate_pct": 0.88
+                        },
+                        "monthly": {
+                            "values": [
+                                5.153,
+                                5.585,
+                                5.66,
+                                5.449,
+                                5.064,
+                                4.013,
+                                2.862,
+                                3.203,
+                                4.244,
+                                5.177,
+                                4.932,
+                                4.883
+                            ],
+                            "best_month": "Mar",
+                            "best_val": 5.66,
+                            "worst_month": "Jul",
+                            "worst_val": 2.862,
+                            "range": 2.798,
+                            "stability": "High \u2014 Strong monsoon dip"
+                        },
+                        "terrain": {
+                            "elevation_m": 50.5,
+                            "slope_deg": 3.151,
+                            "aspect_deg": 164.0
+                        },
+                        "atmospheric": {
+                            "aod": 0.413,
+                            "aod_label": "High \u2014 Dust/Pollution",
+                            "transmittance": 0.5576,
+                            "cloud_pct": 39.13,
+                            "cloud_frac": 0.3913,
+                            "clear_days_yr": 222,
+                            "cloud_label": "Partly Cloudy"
+                        },
+                        "validation": {
+                            "era5_ghi_day": 5.3507,
+                            "gsa_ghi_day": 5.535,
+                            "agreement_pct": 96.7,
+                            "era5_ghi_diff_pct": 3.3
+                        },
+                        "score": 63.4,
+                        "rating": "GOOD"
+                    },
+                    "water": {
+                        "precipitation": {
+                            "daily_mm": 2.7226,
+                            "annual_mm": 993.7,
+                            "period": "2019\u20132024"
+                        },
+                        "surface_water": {
+                            "occurrence_pct": 40.71,
+                            "seasonality_months": 5.055,
+                            "max_extent_fraction": 0.0214,
+                            "flood_risk": "Very Low Flood Risk"
+                        },
+                        "soil_moisture": {
+                            "layer_0_10cm": 22.912,
+                            "layer_10_40cm": 69.758,
+                            "layer_40_100cm": 141.178,
+                            "root_zone": 121.001
+                        },
+                        "terraclimate": {
+                            "pdsi": 2.004,
+                            "pdsi_label": "Moderately to Extremely Wet",
+                            "water_deficit_mm_month": 84.12,
+                            "deficit_label": "Moderate Stress",
+                            "actual_et_mm_month": 58.67,
+                            "actual_et_annual_mm": 704.0,
+                            "soil_moisture_mm": 105.76,
+                            "runoff_mm_month": 1.65,
+                            "runoff_annual_mm": 19.8
+                        },
+                        "modis_et": {
+                            "et_kg_m2_8day": 8.606,
+                            "et_monthly_est": 32.273,
+                            "et_annual_est_mm": 392.6
+                        },
+                        "groundwater_grace": {
+                            "lwe_thickness_cm": -5.251,
+                            "uncertainty_cm": 3.333,
+                            "status_label": "Mild Depletion",
+                            "trend": "Depletion"
+                        },
+                        "ndwi_landsat9": {
+                            "ndwi_value": -0.2521,
+                            "ndwi_label": "Very Dry / Barren Surface",
+                            "scenes_used": 89,
+                            "period": "2022\u20132024"
+                        },
+                        "infrastructure": {
+                            "name": "Kadana Power House",
+                            "dist_km": 144.91,
+                            "cap_mw": 240.0,
+                            "river": "Mahi",
+                            "energy_mu": 518.0
+                        },
+                        "admin": {
+                            "block": "Ahmedabad City & Das",
+                            "cat": "Semi-Critical",
+                            "extract_pct": 82.58362065,
+                            "avail": 20091.03,
+                            "usage": 16591.9
+                        },
+                        "composite_risk_score": 45.3,
+                        "water_rating": "MODERATE"
+                    },
+                    "location": {
+                        "lat": 23.028661756257854,
+                        "lon": 72.5607672129303
+                    },
+                    "timestamp": "2026-02-22T15:11:47.824870"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    72.63775033991973,
+                    23.193793651674593
+                ]
+            },
+            "properties": {
+                "id": "ishan-gandhinagar",
+                "name": "Ishan Technologies Gandhinagar",
+                "company": "Ishan Infotech Limited",
+                "url": "https://ishantechnologies.com",
+                "address": "Creative Infocity Limited, Infotower 1, Office No. 115",
+                "postal": "382330",
+                "city": "Gandhinagar",
+                "market": "Ahmedabad",
+                "state": "Gujarat",
+                "country": "India",
+                "power_mw": "Not Specified",
+                "tier": "Not Specified",
+                "whitespace": "Not Specified",
+                "lat": 23.193793651674593,
+                "lng": 72.63775033991973,
+                "analysis": {
+                    "wind": {
+                        "resource": {
+                            "grade": "D",
+                            "label": "Marginal suitability",
+                            "ws_100": 4.9,
+                            "pd_100": 131.06,
+                            "ad_100": 1.1416,
+                            "ad_loss_pct": 6.81
+                        },
+                        "profile": {
+                            "heights": [
+                                10,
+                                50,
+                                100,
+                                150,
+                                200
+                            ],
+                            "speeds": [
+                                2.493,
+                                4.038,
+                                4.9,
+                                5.688,
+                                6.253
+                            ],
+                            "densities": [
+                                28.99,
+                                89.02,
+                                131.06,
+                                209.39,
+                                282.68
+                            ],
+                            "air_density": [
+                                1.1509,
+                                1.1467,
+                                1.1416,
+                                1.1364,
+                                1.1312
+                            ]
+                        },
+                        "capacity_factors": {
+                            "cf_iec1": 0.1513,
+                            "cf_iec2": 0.1863,
+                            "cf_iec3": 0.213,
+                            "cf_best": 0.213,
+                            "best_class": "IEC Class 3 \u2014 Low Wind (5.0\u20136.5 m/s)"
+                        },
+                        "physics": {
+                            "shear_alpha": 0.293,
+                            "shear_ratio": 1.966,
+                            "air_density": 1.1416
+                        },
+                        "terrain": {
+                            "rix": 0.0,
+                            "elevation": 77.0,
+                            "slope": 0.44
+                        },
+                        "yield_est": {
+                            "annual_kwh_2mw": 3731760.0,
+                            "annual_mwh_2mw": 3731.8
+                        },
+                        "score": 32.2,
+                        "rating": "POOR"
+                    },
+                    "solar": {
+                        "core": {
+                            "ghi_kwh_m2_day": 5.537,
+                            "gti_kwh_m2_day": 6.075,
+                            "pvout_kwh_kwp_day": 4.691,
+                            "pvout_kwh_kwp_year": 1712.2,
+                            "ghi_kwh_m2_year": 2021.0,
+                            "optimal_tilt": 27.0,
+                            "avg_temp": 27.2,
+                            "dif_fraction": 0.401,
+                            "temp_derate_pct": 0.88
+                        },
+                        "monthly": {
+                            "values": [
+                                5.168,
+                                5.601,
+                                5.661,
+                                5.454,
+                                5.064,
+                                4.031,
+                                2.845,
+                                3.165,
+                                4.273,
+                                5.229,
+                                4.966,
+                                4.918
+                            ],
+                            "best_month": "Mar",
+                            "best_val": 5.661,
+                            "worst_month": "Jul",
+                            "worst_val": 2.845,
+                            "range": 2.816,
+                            "stability": "High \u2014 Strong monsoon dip"
+                        },
+                        "terrain": {
+                            "elevation_m": 71.2,
+                            "slope_deg": 2.887,
+                            "aspect_deg": 163.6
+                        },
+                        "atmospheric": {
+                            "aod": 0.413,
+                            "aod_label": "High \u2014 Dust/Pollution",
+                            "transmittance": 0.5576,
+                            "cloud_pct": 39.13,
+                            "cloud_frac": 0.3913,
+                            "clear_days_yr": 222,
+                            "cloud_label": "Partly Cloudy"
+                        },
+                        "validation": {
+                            "era5_ghi_day": 5.3464,
+                            "gsa_ghi_day": 5.537,
+                            "agreement_pct": 96.6,
+                            "era5_ghi_diff_pct": 3.4
+                        },
+                        "score": 63.6,
+                        "rating": "GOOD"
+                    },
+                    "water": {
+                        "precipitation": {
+                            "daily_mm": 2.7632,
+                            "annual_mm": 1008.6,
+                            "period": "2019\u20132024"
+                        },
+                        "surface_water": {
+                            "occurrence_pct": 35.69,
+                            "seasonality_months": 4.949,
+                            "max_extent_fraction": 0.0147,
+                            "flood_risk": "Very Low Flood Risk"
+                        },
+                        "soil_moisture": {
+                            "layer_0_10cm": 24.456,
+                            "layer_10_40cm": 74.088,
+                            "layer_40_100cm": 150.267,
+                            "root_zone": 101.241
+                        },
+                        "terraclimate": {
+                            "pdsi": 1.802,
+                            "pdsi_label": "Near Normal",
+                            "water_deficit_mm_month": 85.44,
+                            "deficit_label": "Moderate Stress",
+                            "actual_et_mm_month": 57.64,
+                            "actual_et_annual_mm": 691.7,
+                            "soil_moisture_mm": 108.82,
+                            "runoff_mm_month": 1.32,
+                            "runoff_annual_mm": 15.8
+                        },
+                        "modis_et": {
+                            "et_kg_m2_8day": 9.184,
+                            "et_monthly_est": 34.44,
+                            "et_annual_est_mm": 419.0
+                        },
+                        "groundwater_grace": {
+                            "lwe_thickness_cm": -6.401,
+                            "uncertainty_cm": 3.468,
+                            "status_label": "Mild Depletion",
+                            "trend": "Depletion"
+                        },
+                        "ndwi_landsat9": {
+                            "ndwi_value": -0.4267,
+                            "ndwi_label": "Very Dry / Barren Surface",
+                            "scenes_used": 89,
+                            "period": "2022\u20132024"
+                        },
+                        "infrastructure": {
+                            "name": "Kadana Power House",
+                            "dist_km": 133.09,
+                            "cap_mw": 240.0,
+                            "river": "Mahi",
+                            "energy_mu": 518.0
+                        },
+                        "admin": {
+                            "block": "Gandhinagar",
+                            "cat": "Over Exploited",
+                            "extract_pct": 138.5383249,
+                            "avail": 13182.41,
+                            "usage": 18262.69
+                        },
+                        "composite_risk_score": 44.4,
+                        "water_rating": "SCARCE"
+                    },
+                    "location": {
+                        "lat": 23.193793651674593,
+                        "lon": 72.63775033991973
+                    },
+                    "timestamp": "2026-02-22T15:11:51.863568"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    72.69070102642684,
+                    23.16560530665043
+                ]
+            },
+            "properties": {
+                "id": "stt-gandhinagar",
+                "name": "STT Ahmedabad DC 1",
+                "company": "STT GDC India",
+                "url": "https://www.sttelemediagdc.com",
+                "address": "Building no. 48, Gyan Marg",
+                "postal": "382355",
+                "city": "Gandhinagar",
+                "market": "Ahmedabad",
+                "state": "Gujarat",
+                "country": "India",
+                "power_mw": "3",
+                "tier": "Not Specified",
+                "whitespace": "70000 sq. ft.",
+                "lat": 23.16560530665043,
+                "lng": 72.69070102642684,
+                "analysis": {
+                    "wind": {
+                        "resource": {
+                            "grade": "D",
+                            "label": "Marginal suitability",
+                            "ws_100": 4.938,
+                            "pd_100": 135.09,
+                            "ad_100": 1.1423,
+                            "ad_loss_pct": 6.75
+                        },
+                        "profile": {
+                            "heights": [
+                                10,
+                                50,
+                                100,
+                                150,
+                                200
+                            ],
+                            "speeds": [
+                                2.841,
+                                4.119,
+                                4.938,
+                                5.737,
+                                6.343
+                            ],
+                            "densities": [
+                                39.41,
+                                95.03,
+                                135.09,
+                                214.99,
+                                291.6
+                            ],
+                            "air_density": [
+                                1.1516,
+                                1.1475,
+                                1.1423,
+                                1.1371,
+                                1.1319
+                            ]
+                        },
+                        "capacity_factors": {
+                            "cf_iec1": 0.1556,
+                            "cf_iec2": 0.1911,
+                            "cf_iec3": 0.218,
+                            "cf_best": 0.218,
+                            "best_class": "IEC Class 3 \u2014 Low Wind (5.0\u20136.5 m/s)"
+                        },
+                        "physics": {
+                            "shear_alpha": 0.24,
+                            "shear_ratio": 1.738,
+                            "air_density": 1.1423
+                        },
+                        "terrain": {
+                            "rix": 0.0,
+                            "elevation": 69.0,
+                            "slope": 0.43
+                        },
+                        "yield_est": {
+                            "annual_kwh_2mw": 3819360.0,
+                            "annual_mwh_2mw": 3819.4
+                        },
+                        "score": 32.8,
+                        "rating": "POOR"
+                    },
+                    "solar": {
+                        "core": {
+                            "ghi_kwh_m2_day": 5.531,
+                            "gti_kwh_m2_day": 6.074,
+                            "pvout_kwh_kwp_day": 4.687,
+                            "pvout_kwh_kwp_year": 1710.8,
+                            "ghi_kwh_m2_year": 2018.8,
+                            "optimal_tilt": 27.0,
+                            "avg_temp": 27.3,
+                            "dif_fraction": 0.403,
+                            "temp_derate_pct": 0.92
+                        },
+                        "monthly": {
+                            "values": [
+                                5.166,
+                                5.605,
+                                5.666,
+                                5.455,
+                                5.072,
+                                4.043,
+                                2.836,
+                                3.136,
+                                4.248,
+                                5.223,
+                                4.967,
+                                4.913
+                            ],
+                            "best_month": "Mar",
+                            "best_val": 5.666,
+                            "worst_month": "Jul",
+                            "worst_val": 2.836,
+                            "range": 2.83,
+                            "stability": "High \u2014 Strong monsoon dip"
+                        },
+                        "terrain": {
+                            "elevation_m": 67.5,
+                            "slope_deg": 2.786,
+                            "aspect_deg": 163.7
+                        },
+                        "atmospheric": {
+                            "aod": 0.413,
+                            "aod_label": "High \u2014 Dust/Pollution",
+                            "transmittance": 0.5576,
+                            "cloud_pct": 39.13,
+                            "cloud_frac": 0.3913,
+                            "clear_days_yr": 222,
+                            "cloud_label": "Partly Cloudy"
+                        },
+                        "validation": {
+                            "era5_ghi_day": 5.3464,
+                            "gsa_ghi_day": 5.531,
+                            "agreement_pct": 96.7,
+                            "era5_ghi_diff_pct": 3.3
+                        },
+                        "score": 63.6,
+                        "rating": "GOOD"
+                    },
+                    "water": {
+                        "precipitation": {
+                            "daily_mm": 2.805,
+                            "annual_mm": 1023.8,
+                            "period": "2019\u20132024"
+                        },
+                        "surface_water": {
+                            "occurrence_pct": 36.54,
+                            "seasonality_months": 5.067,
+                            "max_extent_fraction": 0.0143,
+                            "flood_risk": "Very Low Flood Risk"
+                        },
+                        "soil_moisture": {
+                            "layer_0_10cm": 24.456,
+                            "layer_10_40cm": 74.088,
+                            "layer_40_100cm": 150.267,
+                            "root_zone": 101.241
+                        },
+                        "terraclimate": {
+                            "pdsi": 1.828,
+                            "pdsi_label": "Near Normal",
+                            "water_deficit_mm_month": 84.98,
+                            "deficit_label": "Moderate Stress",
+                            "actual_et_mm_month": 57.84,
+                            "actual_et_annual_mm": 694.1,
+                            "soil_moisture_mm": 109.04,
+                            "runoff_mm_month": 1.38,
+                            "runoff_annual_mm": 16.6
+                        },
+                        "modis_et": {
+                            "et_kg_m2_8day": 9.235,
+                            "et_monthly_est": 34.631,
+                            "et_annual_est_mm": 421.3
+                        },
+                        "groundwater_grace": {
+                            "lwe_thickness_cm": -7.215,
+                            "uncertainty_cm": 3.564,
+                            "status_label": "Mild Depletion",
+                            "trend": "Depletion"
+                        },
+                        "ndwi_landsat9": {
+                            "ndwi_value": -0.4655,
+                            "ndwi_label": "Very Dry / Barren Surface",
+                            "scenes_used": 89,
+                            "period": "2022\u20132024"
+                        },
+                        "infrastructure": {
+                            "name": "Kadana Power House",
+                            "dist_km": 127.64,
+                            "cap_mw": 240.0,
+                            "river": "Mahi",
+                            "energy_mu": 518.0
+                        },
+                        "admin": {
+                            "block": "Gandhinagar",
+                            "cat": "Over Exploited",
+                            "extract_pct": 138.5383249,
+                            "avail": 13182.41,
+                            "usage": 18262.69
+                        },
+                        "composite_risk_score": 44.5,
+                        "water_rating": "SCARCE"
+                    },
+                    "location": {
+                        "lat": 23.16560530665043,
+                        "lon": 72.69070102642684
+                    },
+                    "timestamp": "2026-02-22T15:11:55.955297"
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    72.62415011107858,
+                    23.02638094141746
+                ]
+            },
+            "properties": {
+                "id": "bsnl-ahmedabad",
+                "name": "BSNL Ahmedabad IDC",
+                "company": "BSNL IDC",
+                "url": "https://bsnl.co.in/en",
+                "address": "Bapunagar Telephone Office, 1 General Hospital Rd",
+                "postal": "380024",
+                "city": "Ahmedabad",
+                "market": "Ahmedabad",
+                "state": "Gujarat",
+                "country": "India",
+                "power_mw": "Not Specified",
+                "tier": "Tier 3",
+                "whitespace": "Not Specified",
+                "lat": 23.02638094141746,
+                "lng": 72.62415011107858,
+                "analysis": {
+                    "wind": {
+                        "resource": {
+                            "grade": "F",
+                            "label": "Unsuitable",
+                            "ws_100": 4.148,
+                            "pd_100": 77.02,
+                            "ad_100": 1.1441,
+                            "ad_loss_pct": 6.6
+                        },
+                        "profile": {
+                            "heights": [
+                                10,
+                                50,
+                                100,
+                                150,
+                                200
+                            ],
+                            "speeds": [
+                                1.798,
+                                3.284,
+                                4.148,
+                                5.005,
+                                5.63
+                            ],
+                            "densities": [
+                                9.0,
+                                45.15,
+                                77.02,
+                                138.68,
+                                204.23
+                            ],
+                            "air_density": [
+                                1.1535,
+                                1.1493,
+                                1.1441,
+                                1.139,
+                                1.1338
+                            ]
+                        },
+                        "capacity_factors": {
+                            "cf_iec1": 0.0892,
+                            "cf_iec2": 0.1141,
+                            "cf_iec3": 0.1333,
+                            "cf_best": 0.1333,
+                            "best_class": "IEC Class 3 \u2014 Low Wind (5.0\u20136.5 m/s)"
+                        },
+                        "physics": {
+                            "shear_alpha": 0.363,
+                            "shear_ratio": 2.307,
+                            "air_density": 1.1441
+                        },
+                        "terrain": {
+                            "rix": 0.0,
+                            "elevation": 54.0,
+                            "slope": 0.17
+                        },
+                        "yield_est": {
+                            "annual_kwh_2mw": 2335416.0,
+                            "annual_mwh_2mw": 2335.4
+                        },
+                        "score": 22.8,
+                        "rating": "POOR"
+                    },
+                    "solar": {
+                        "core": {
+                            "ghi_kwh_m2_day": 5.512,
+                            "gti_kwh_m2_day": 6.03,
+                            "pvout_kwh_kwp_day": 4.66,
+                            "pvout_kwh_kwp_year": 1700.9,
+                            "ghi_kwh_m2_year": 2011.9,
+                            "optimal_tilt": 26.0,
+                            "avg_temp": 27.3,
+                            "dif_fraction": 0.408,
+                            "temp_derate_pct": 0.92
+                        },
+                        "monthly": {
+                            "values": [
+                                5.141,
+                                5.572,
+                                5.659,
+                                5.453,
+                                5.072,
+                                4.007,
+                                2.832,
+                                3.165,
+                                4.15,
+                                5.153,
+                                4.925,
+                                4.871
+                            ],
+                            "best_month": "Mar",
+                            "best_val": 5.659,
+                            "worst_month": "Jul",
+                            "worst_val": 2.832,
+                            "range": 2.827,
+                            "stability": "High \u2014 Strong monsoon dip"
+                        },
+                        "terrain": {
+                            "elevation_m": 52.7,
+                            "slope_deg": 2.739,
+                            "aspect_deg": 162.4
+                        },
+                        "atmospheric": {
+                            "aod": 0.413,
+                            "aod_label": "High \u2014 Dust/Pollution",
+                            "transmittance": 0.5576,
+                            "cloud_pct": 39.13,
+                            "cloud_frac": 0.3913,
+                            "clear_days_yr": 222,
+                            "cloud_label": "Partly Cloudy"
+                        },
+                        "validation": {
+                            "era5_ghi_day": 5.3443,
+                            "gsa_ghi_day": 5.512,
+                            "agreement_pct": 97.0,
+                            "era5_ghi_diff_pct": 3.0
+                        },
+                        "score": 63.2,
+                        "rating": "GOOD"
+                    },
+                    "water": {
+                        "precipitation": {
+                            "daily_mm": 2.7735,
+                            "annual_mm": 1012.3,
+                            "period": "2019\u20132024"
+                        },
+                        "surface_water": {
+                            "occurrence_pct": 42.5,
+                            "seasonality_months": 5.429,
+                            "max_extent_fraction": 0.0177,
+                            "flood_risk": "Very Low Flood Risk"
+                        },
+                        "soil_moisture": {
+                            "layer_0_10cm": 24.456,
+                            "layer_10_40cm": 74.088,
+                            "layer_40_100cm": 150.267,
+                            "root_zone": 101.241
+                        },
+                        "terraclimate": {
+                            "pdsi": 2.017,
+                            "pdsi_label": "Moderately to Extremely Wet",
+                            "water_deficit_mm_month": 83.83,
+                            "deficit_label": "Moderate Stress",
+                            "actual_et_mm_month": 58.89,
+                            "actual_et_annual_mm": 706.7,
+                            "soil_moisture_mm": 107.59,
+                            "runoff_mm_month": 1.63,
+                            "runoff_annual_mm": 19.6
+                        },
+                        "modis_et": {
+                            "et_kg_m2_8day": 8.646,
+                            "et_monthly_est": 32.422,
+                            "et_annual_est_mm": 394.5
+                        },
+                        "groundwater_grace": {
+                            "lwe_thickness_cm": -6.231,
+                            "uncertainty_cm": 3.448,
+                            "status_label": "Mild Depletion",
+                            "trend": "Depletion"
+                        },
+                        "ndwi_landsat9": {
+                            "ndwi_value": -0.2417,
+                            "ndwi_label": "Very Dry / Barren Surface",
+                            "scenes_used": 89,
+                            "period": "2022\u20132024"
+                        },
+                        "infrastructure": {
+                            "name": "Kadana Power House",
+                            "dist_km": 138.13,
+                            "cap_mw": 240.0,
+                            "river": "Mahi",
+                            "energy_mu": 518.0
+                        },
+                        "admin": {
+                            "block": "Ahmedabad City & Das",
+                            "cat": "Semi-Critical",
+                            "extract_pct": 82.58362065,
+                            "avail": 20091.03,
+                            "usage": 16591.9
+                        },
+                        "composite_risk_score": 45.6,
+                        "water_rating": "MODERATE"
+                    },
+                    "location": {
+                        "lat": 23.02638094141746,
+                        "lon": 72.62415011107858
+                    },
+                    "timestamp": "2026-02-22T15:17:44.063155"
+                }
+            }
+        }
+    ]
+}
