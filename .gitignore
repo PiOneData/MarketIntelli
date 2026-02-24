@@ -38,6 +38,5 @@ Thumbs.db
 htmlcov/
 .pytest_cache/
 
-# Alembic
-backend/alembic/versions/*.py
-!backend/alembic/versions/.gitkeep
+# Alembic – track migration scripts; only exclude compiled bytecode
+!backend/alembic/versions/*.py
