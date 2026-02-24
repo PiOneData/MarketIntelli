@@ -17,6 +17,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
+import L from "leaflet";
 import type { Layer, LeafletMouseEvent, PathOptions } from "leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 import { getGroundwaterResources } from "../../api/geoAnalytics";
@@ -88,15 +89,12 @@ function FitBounds({ geojson }: { geojson: FeatureCollection | null }) {
   const map = useMap();
   useEffect(() => {
     if (!geojson || geojson.features.length === 0) return;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const L = (window as any).L;
-    if (!L) return;
     try {
       const layer = L.geoJSON(geojson);
       const bounds = layer.getBounds();
       if (bounds.isValid()) map.fitBounds(bounds, { padding: [20, 20] });
     } catch {
-      // silently ignore if bounds computation fails
+      // silently ignore if bounds computation fails (e.g. empty geometry)
     }
   }, [geojson, map]);
   return null;
