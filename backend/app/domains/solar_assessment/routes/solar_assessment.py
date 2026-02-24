@@ -4,14 +4,23 @@ Provides analyze, live-weather, and static GeoJSON endpoints.
 Optional dependencies (earthengine-api, openmeteo-requests, requests-cache,
 retry-requests) are imported lazily so the backend starts cleanly even when
 those packages haven't been installed yet.
+
+Google Earth Engine credentials are loaded from the `google_service_credentials`
+DB table (the active row).  If no DB credentials exist, the route falls back to
+the legacy key file on disk.
 """
 import asyncio
 import logging
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db.session import get_db
+from app.domains.geo_analytics.models.spatial import GoogleServiceCredential
 
 logger = logging.getLogger(__name__)
 
@@ -30,13 +39,57 @@ _assessment_service = None
 _openmeteo_client = None
 
 
-def _get_assessment_service():
-    global _assessment_service
-    if _assessment_service is None:
-        from app.domains.solar_assessment.services.assessment_service import (
-            AssessmentService,
+async def _fetch_db_credentials(db: AsyncSession) -> dict | None:
+    """Fetch the active Google service account credentials row from DB."""
+    try:
+        result = await db.execute(
+            select(GoogleServiceCredential).where(
+                GoogleServiceCredential.is_active == True  # noqa: E712
+            )
         )
-        _assessment_service = AssessmentService(str(DATA_DIR), str(EE_KEY_PATH))
+        cred = result.scalar_one_or_none()
+        if cred and cred.client_email and cred.private_key:
+            return {
+                "type": cred.credential_type,
+                "project_id": cred.project_id,
+                "private_key_id": cred.private_key_id,
+                "private_key": cred.private_key,
+                "client_email": cred.client_email,
+                "client_id": cred.client_id,
+                "auth_uri": cred.auth_uri,
+                "token_uri": cred.token_uri,
+                "auth_provider_x509_cert_url": cred.auth_provider_x509_cert_url,
+                "client_x509_cert_url": cred.client_x509_cert_url,
+            }
+    except Exception as exc:
+        logger.error(f"[EE] Failed to fetch credentials from DB: {exc}")
+    return None
+
+
+def _get_assessment_service(credentials_dict: dict | None = None):
+    """Return (and lazily create) the AssessmentService singleton.
+
+    If the current singleton is not yet EE-initialised, we re-create it so
+    that newly added DB credentials are picked up without a restart.
+    """
+    global _assessment_service
+    if _assessment_service is not None and _assessment_service._ee_initialized:
+        return _assessment_service
+
+    from app.domains.solar_assessment.services.assessment_service import (
+        AssessmentService,
+    )
+
+    if credentials_dict:
+        _assessment_service = AssessmentService(
+            str(DATA_DIR),
+            credentials_dict=credentials_dict,
+        )
+    else:
+        _assessment_service = AssessmentService(
+            str(DATA_DIR),
+            ee_key_path=str(EE_KEY_PATH),
+        )
     return _assessment_service
 
 
@@ -94,14 +147,23 @@ async def api_live_weather(loc: LocationRequest):
 
 
 @router.post("/analyze")
-async def api_analyze(loc: LocationRequest):
+async def api_analyze(
+    loc: LocationRequest,
+    db: AsyncSession = Depends(get_db),
+):
     """
     Run a full wind / solar / water site analysis via Google Earth Engine.
-    Returns HTTP 503 if Earth Engine credentials are not configured,
-    or if the earthengine-api package is not installed.
+
+    Credentials are fetched from the `google_service_credentials` DB table
+    (active row).  Falls back to a key file on disk if no DB record exists.
+    Returns HTTP 503 if no credentials are configured or if the
+    earthengine-api package is not installed.
     """
+    # Fetch DB credentials first; fall back to file-based init
+    credentials_dict = await _fetch_db_credentials(db)
+
     try:
-        service = _get_assessment_service()
+        service = _get_assessment_service(credentials_dict)
     except ImportError as exc:
         raise HTTPException(
             status_code=503,
@@ -113,7 +175,9 @@ async def api_analyze(loc: LocationRequest):
             status_code=503,
             detail=(
                 "Google Earth Engine credentials are not configured. "
-                f"Upload the service account key to {EE_KEY_PATH} and restart."
+                "Insert a row into the google_service_credentials table "
+                "(is_active = true) or upload a key file to "
+                f"{EE_KEY_PATH} and restart."
             ),
         )
 

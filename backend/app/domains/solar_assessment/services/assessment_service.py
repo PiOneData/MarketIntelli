@@ -66,15 +66,23 @@ class DiskCache:
 # ASSESSMENT SERVICE
 # ============================================================
 class AssessmentService:
-    def __init__(self, data_dir: str, ee_key_path: str):
+    def __init__(
+        self,
+        data_dir: str,
+        ee_key_path: str | None = None,
+        credentials_dict: dict | None = None,
+    ):
         self.data_dir = data_dir
-        self.ee_key_path = ee_key_path
         self.cache = DiskCache(os.path.join(data_dir, "gee_cache.sqlite"))
         self._ee_initialized = False
-        self._init_earth_engine()
 
-    def _init_earth_engine(self) -> None:
-        """Initialize Google Earth Engine with service account credentials."""
+        if credentials_dict:
+            self._init_earth_engine_from_dict(credentials_dict)
+        elif ee_key_path:
+            self._init_earth_engine_from_file(ee_key_path)
+
+    def _init_earth_engine_from_file(self, ee_key_path: str) -> None:
+        """Initialize Google Earth Engine with a service account key file."""
         try:
             import ee as _ee  # noqa: PLC0415
             self._ee = _ee
@@ -82,22 +90,45 @@ class AssessmentService:
             logger.warning("[EE] earthengine-api not installed. Analysis unavailable.")
             return
 
-        if not os.path.exists(self.ee_key_path):
+        if not os.path.exists(ee_key_path):
             logger.warning(
-                f"[EE] Credential file not found at {self.ee_key_path}. "
+                f"[EE] Credential file not found at {ee_key_path}. "
                 "Earth Engine analysis will be unavailable."
             )
             return
         try:
             credentials = self._ee.ServiceAccountCredentials(
                 email=None,
-                key_file=self.ee_key_path
+                key_file=ee_key_path,
             )
             self._ee.Initialize(credentials=credentials)
             self._ee_initialized = True
-            logger.info("[EE] Earth Engine initialized successfully.")
+            logger.info("[EE] Earth Engine initialized from key file.")
         except Exception as e:
-            logger.error(f"[EE] Initialization failed: {e}")
+            logger.error(f"[EE] Initialization from file failed: {e}")
+
+    def _init_earth_engine_from_dict(self, credentials_dict: dict) -> None:
+        """Initialize Google Earth Engine from a credentials dict (from DB)."""
+        try:
+            import ee as _ee  # noqa: PLC0415
+            self._ee = _ee
+        except ImportError:
+            logger.warning("[EE] earthengine-api not installed. Analysis unavailable.")
+            return
+
+        try:
+            credentials = self._ee.ServiceAccountCredentials(
+                email=credentials_dict.get("client_email", ""),
+                key_data=json.dumps(credentials_dict),
+            )
+            self._ee.Initialize(credentials=credentials)
+            self._ee_initialized = True
+            logger.info(
+                f"[EE] Earth Engine initialized from DB credentials "
+                f"({credentials_dict.get('client_email')})."
+            )
+        except Exception as e:
+            logger.error(f"[EE] Initialization from DB credentials failed: {e}")
 
     def _require_ee(self) -> None:
         if not self._ee_initialized:

@@ -38,6 +38,7 @@ interface Props {
     lng: number,
     dcProps: Record<string, unknown>,
   ) => void;
+  onLocationAnalyze?: (lat: number, lng: number) => void;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -86,7 +87,7 @@ const LAYER_DEFS: { id: string; group: LayerGroup }[] = [
 ];
 
 // ── Component ────────────────────────────────────────────────────────────────
-export default function SolarWindMap({ onDatacenterClick }: Props) {
+export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: Props) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const marker = useRef<maplibregl.Marker | null>(null);
@@ -98,6 +99,7 @@ export default function SolarWindMap({ onDatacenterClick }: Props) {
     dc: true,
   });
   const [dcPopup, setDcPopup] = useState<DcPopupState | null>(null);
+  const [markerPos, setMarkerPos] = useState<{ lat: number; lng: number } | null>(null);
   const [dcList, setDcList] = useState<DcEntry[]>([]);
   const [dcSearch, setDcSearch] = useState("");
 
@@ -345,6 +347,13 @@ export default function SolarWindMap({ onDatacenterClick }: Props) {
       } else {
         marker.current.setLngLat([lng, lat]);
       }
+
+      // Store position in state and populate the coordinate form
+      setMarkerPos({ lat, lng });
+      setSearchCoords({
+        lat: lat.toFixed(6),
+        lng: lng.toFixed(6),
+      });
     });
 
     return () => {
@@ -401,6 +410,8 @@ export default function SolarWindMap({ onDatacenterClick }: Props) {
         marker.current.setLngLat([lng, lat]);
       }
     }
+    setMarkerPos({ lat, lng });
+    onLocationAnalyze?.(lat, lng);
   };
 
   const filteredDcs =
@@ -548,6 +559,54 @@ export default function SolarWindMap({ onDatacenterClick }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Custom location analyze panel */}
+      <AnimatePresence>
+        {markerPos && !dcPopup && (
+          <motion.div
+            key="location-panel"
+            initial={{ opacity: 0, y: 60, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 60, scale: 0.95 }}
+            className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 w-[480px] max-w-[95vw]"
+          >
+            <div className="bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_48px_-12px_rgba(0,0,0,0.25)] border border-white/50 ring-1 ring-black/[0.05] px-8 py-5 flex items-center gap-6">
+              <div className="p-3 bg-blue-50 rounded-2xl border border-blue-100">
+                <MapPin size={18} className="text-blue-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                  Custom Location Selected
+                </div>
+                <div className="font-mono font-bold text-slate-700 text-[11px] tabular-nums">
+                  {markerPos.lat.toFixed(5)}°N &nbsp;·&nbsp; {markerPos.lng.toFixed(5)}°E
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setMarkerPos(null);
+                  if (marker.current) {
+                    marker.current.remove();
+                    marker.current = null;
+                  }
+                }}
+                className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0"
+              >
+                <X size={16} />
+              </button>
+              <button
+                onClick={() => {
+                  onLocationAnalyze?.(markerPos.lat, markerPos.lng);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-5 py-2.5 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg shadow-blue-200 flex-shrink-0"
+              >
+                <Search size={13} />
+                Analyze
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Datacenter popup card */}
       <AnimatePresence>
