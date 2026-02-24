@@ -17,7 +17,13 @@ from app.domains.data_center_intelligence.models.data_center import DataCenterCo
 from app.domains.project_intelligence.models.projects import Developer, SolarProject, Tender
 from app.domains.policy_intelligence.models.policy import Policy, TariffRecord, Subsidy
 from app.domains.alerts.models.alerts import Alert, Watchlist, Notification
-from app.domains.geo_analytics.models import spatial
+from app.domains.geo_analytics.models.spatial import (
+    SolarPotentialZone,
+    GridInfrastructure,
+    DisasterRiskZone,
+    GroundwaterResource,
+    GoogleServiceCredential,
+)
 
 
 async def create_tables():
