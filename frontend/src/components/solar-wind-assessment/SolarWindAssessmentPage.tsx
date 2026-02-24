@@ -155,7 +155,10 @@ export default function SolarWindAssessmentPage() {
         className="w-full h-full absolute inset-0"
         style={{ visibility: view === "report" ? "hidden" : "visible" }}
       >
-        <SolarWindMap onDatacenterClick={handleDatacenterClick} />
+        <SolarWindMap
+          onDatacenterClick={handleDatacenterClick}
+          onLocationAnalyze={(lat, lng) => fetchAnalysis(lat, lng)}
+        />
       </div>
 
       {/* LOADING OVERLAY */}
