@@ -1,0 +1,3 @@
+[submodule "SolarWindAssessment"]
+	path = SolarWindAssessment
+	url = https://github.com/Ramsdale00/SolarWindAssessment.git
