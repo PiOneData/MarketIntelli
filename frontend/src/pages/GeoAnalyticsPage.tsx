@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import SolarAnalysisWizard from "../components/solar/SolarAnalysisWizard";
-import GroundwaterAssessmentTab from "../components/assessment/GroundwaterAssessmentTab";
+import SolarWindAssessmentPage from "../components/solar-wind-assessment/SolarWindAssessmentPage";
 
 function GeoAnalyticsPage() {
   const { section } = useParams<{ section: string }>();
@@ -69,7 +69,7 @@ function GeoAnalyticsPage() {
       )}
 
       {activeSection === "assessment" && (
-        <GroundwaterAssessmentTab />
+        <SolarWindAssessmentPage />
       )}
     </div>
   );

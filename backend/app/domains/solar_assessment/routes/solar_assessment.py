@@ -1,48 +1,67 @@
 """
 Solar & Wind Assessment Routes
 Provides analyze, live-weather, and static GeoJSON endpoints.
+Optional dependencies (earthengine-api, openmeteo-requests, requests-cache,
+retry-requests) are imported lazily so the backend starts cleanly even when
+those packages haven't been installed yet.
 """
 import asyncio
-import os
 import logging
 from pathlib import Path
 
-import requests_cache
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from retry_requests import retry
-import openmeteo_requests
-
-from app.domains.solar_assessment.services.assessment_service import AssessmentService
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 # ── Paths ──────────────────────────────────────────────────────────────────
-BASE_DIR = Path(__file__).resolve().parents[4]  # backend/
+# __file__ = backend/app/domains/solar_assessment/routes/solar_assessment.py
+# parents[4] resolves to the backend/ root (or /app inside Docker)
+BASE_DIR = Path(__file__).resolve().parents[4]
 DATA_DIR = BASE_DIR / "data"
 EE_KEY_PATH = DATA_DIR / "ee-dharanv2006-02c1bec957ad.json"
 WIND_SOLAR_GEOJSON = DATA_DIR / "wind_solar_data.geojson"
 
-# ── Service singleton ───────────────────────────────────────────────────────
-_assessment_service: AssessmentService | None = None
+# ── Lazy singletons ─────────────────────────────────────────────────────────
+_assessment_service = None
+_openmeteo_client = None
 
 
-def get_assessment_service() -> AssessmentService:
+def _get_assessment_service():
     global _assessment_service
     if _assessment_service is None:
+        from app.domains.solar_assessment.services.assessment_service import (
+            AssessmentService,
+        )
         _assessment_service = AssessmentService(str(DATA_DIR), str(EE_KEY_PATH))
     return _assessment_service
 
 
-# ── Open-Meteo client (cached) ──────────────────────────────────────────────
-_cache_session = requests_cache.CachedSession(
-    str(DATA_DIR / ".weather_cache"), expire_after=3600
-)
-_retry_session = retry(_cache_session, retries=5, backoff_factor=0.2)
-_openmeteo = openmeteo_requests.Client(session=_retry_session)
+def _get_openmeteo():
+    global _openmeteo_client
+    if _openmeteo_client is None:
+        try:
+            import requests_cache
+            from retry_requests import retry
+            import openmeteo_requests
+
+            cache_session = requests_cache.CachedSession(
+                str(DATA_DIR / ".weather_cache"), expire_after=3600
+            )
+            retry_session = retry(cache_session, retries=5, backoff_factor=0.2)
+            _openmeteo_client = openmeteo_requests.Client(session=retry_session)
+        except ImportError as exc:
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    f"Live weather service is unavailable: {exc}. "
+                    "Install openmeteo-requests, requests-cache, retry-requests."
+                ),
+            ) from exc
+    return _openmeteo_client
 
 
 # ── Pydantic models ─────────────────────────────────────────────────────────
@@ -69,7 +88,7 @@ async def serve_wind_solar_geojson():
 async def api_live_weather(loc: LocationRequest):
     """Fetch real-time atmospheric data at 80m / 120m / 180m hub heights."""
     result = await asyncio.to_thread(_get_live_forecast, loc.lat, loc.lon)
-    if not result:
+    if result is None:
         raise HTTPException(status_code=500, detail="Live weather data fetch failed")
     return result
 
@@ -77,32 +96,43 @@ async def api_live_weather(loc: LocationRequest):
 @router.post("/analyze")
 async def api_analyze(loc: LocationRequest):
     """
-    Run a full wind / solar / water site analysis.
-    Returns HTTP 503 if Earth Engine credentials are not configured.
+    Run a full wind / solar / water site analysis via Google Earth Engine.
+    Returns HTTP 503 if Earth Engine credentials are not configured,
+    or if the earthengine-api package is not installed.
     """
-    service = get_assessment_service()
+    try:
+        service = _get_assessment_service()
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Earth Engine package not installed: {exc}",
+        ) from exc
 
     if not service._ee_initialized:
         raise HTTPException(
             status_code=503,
             detail=(
-                "Google Earth Engine credentials are not configured on this server. "
-                "Please upload the service account key file at "
-                f"{EE_KEY_PATH} and restart the backend."
+                "Google Earth Engine credentials are not configured. "
+                f"Upload the service account key to {EE_KEY_PATH} and restart."
             ),
         )
 
     try:
         result = await asyncio.to_thread(service.analyze, loc.lat, loc.lon)
         return result
-    except Exception as e:
-        logger.error(f"[analyze] Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as exc:
+        logger.error(f"[analyze] Error: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 # ── Live weather helper ──────────────────────────────────────────────────────
 
 def _get_live_forecast(lat: float, lon: float) -> dict | None:
+    try:
+        client = _get_openmeteo()
+    except HTTPException:
+        return None
+
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
         "latitude": lat,
@@ -118,7 +148,7 @@ def _get_live_forecast(lat: float, lon: float) -> dict | None:
         "forecast_days": 1,
     }
     try:
-        responses = _openmeteo.weather_api(url, params=params)
+        responses = client.weather_api(url, params=params)
         if not responses:
             return None
 
@@ -127,9 +157,10 @@ def _get_live_forecast(lat: float, lon: float) -> dict | None:
         def get_val(idx: int) -> float:
             try:
                 var = hourly.Variables(idx)
-                if not var or var.ValuesAsNumpy().size == 0:
+                if not var:
                     return 0.0
-                return float(var.ValuesAsNumpy()[0])
+                arr = var.ValuesAsNumpy()
+                return float(arr[0]) if arr.size > 0 else 0.0
             except Exception:
                 return 0.0
 
@@ -154,6 +185,6 @@ def _get_live_forecast(lat: float, lon: float) -> dict | None:
             "visibility": round(get_val(11) / 1000, 1),
             "apparent_temp": round(get_val(12), 1),
         }
-    except Exception as e:
-        logger.error(f"[live-weather] OpenMeteo error: {type(e).__name__}: {e}")
+    except Exception as exc:
+        logger.error(f"[live-weather] OpenMeteo error: {type(exc).__name__}: {exc}")
         return None

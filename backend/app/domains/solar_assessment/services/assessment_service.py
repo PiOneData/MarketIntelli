@@ -2,17 +2,15 @@
 Solar & Wind Assessment Service
 Adapted from SolarWindAssessment/backend/assessment_service.py
 Uses Google Earth Engine to analyze wind/solar/water potential at a location.
+earthengine-api and numpy are imported lazily so the backend starts even if
+those packages are not yet installed in the current environment.
 """
-import ee
 import json
 import os
-import math
-import numpy as np
-from datetime import datetime
-from functools import lru_cache
 import sqlite3
 import hashlib
 import logging
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +75,13 @@ class AssessmentService:
 
     def _init_earth_engine(self) -> None:
         """Initialize Google Earth Engine with service account credentials."""
+        try:
+            import ee as _ee  # noqa: PLC0415
+            self._ee = _ee
+        except ImportError:
+            logger.warning("[EE] earthengine-api not installed. Analysis unavailable.")
+            return
+
         if not os.path.exists(self.ee_key_path):
             logger.warning(
                 f"[EE] Credential file not found at {self.ee_key_path}. "
@@ -84,11 +89,11 @@ class AssessmentService:
             )
             return
         try:
-            credentials = ee.ServiceAccountCredentials(
+            credentials = self._ee.ServiceAccountCredentials(
                 email=None,
                 key_file=self.ee_key_path
             )
-            ee.Initialize(credentials=credentials)
+            self._ee.Initialize(credentials=credentials)
             self._ee_initialized = True
             logger.info("[EE] Earth Engine initialized successfully.")
         except Exception as e:
@@ -112,25 +117,25 @@ class AssessmentService:
         self._require_ee()
 
         try:
-            point = ee.Geometry.Point([lon, lat])
+            point = self._ee.Geometry.Point([lon, lat])
 
-            ws_img = ee.Image("projects/sat-io/open-datasets/global_wind_atlas/wind-speed").select("b1")
-            pd_img = ee.Image("projects/sat-io/open-datasets/global_wind_atlas/power-density").select("b1")
-            ad_img = ee.Image("projects/sat-io/open-datasets/global_wind_atlas/air-density").select("b1")
-            rix_img = ee.Image("projects/sat-io/open-datasets/global_wind_atlas/ruggedness-index").select("b1")
-            cf1_img = ee.Image("projects/sat-io/open-datasets/global_wind_atlas/capacity-factor").select("b1")
-            cf2_img = ee.Image("projects/sat-io/open-datasets/global_wind_atlas/capacity-factor").select("b2")
-            cf3_img = ee.Image("projects/sat-io/open-datasets/global_wind_atlas/capacity-factor").select("b3")
-            srtm = ee.Image("USGS/SRTMGL1_003")
-            slope_img = ee.Terrain.slope(srtm)
+            ws_img = self._ee.Image("projects/sat-io/open-datasets/global_wind_atlas/wind-speed").select("b1")
+            pd_img = self._ee.Image("projects/sat-io/open-datasets/global_wind_atlas/power-density").select("b1")
+            ad_img = self._ee.Image("projects/sat-io/open-datasets/global_wind_atlas/air-density").select("b1")
+            rix_img = self._ee.Image("projects/sat-io/open-datasets/global_wind_atlas/ruggedness-index").select("b1")
+            cf1_img = self._ee.Image("projects/sat-io/open-datasets/global_wind_atlas/capacity-factor").select("b1")
+            cf2_img = self._ee.Image("projects/sat-io/open-datasets/global_wind_atlas/capacity-factor").select("b2")
+            cf3_img = self._ee.Image("projects/sat-io/open-datasets/global_wind_atlas/capacity-factor").select("b3")
+            srtm = self._ee.Image("USGS/SRTMGL1_003")
+            slope_img = self._ee.Terrain.slope(srtm)
             elev_img = srtm.select("elevation")
 
-            combined = ee.Image.cat([
+            combined = self._ee.Image.cat([
                 ws_img, pd_img, ad_img, rix_img, cf1_img, cf2_img, cf3_img,
                 slope_img, elev_img
             ])
             values = combined.reduceRegion(
-                reducer=ee.Reducer.mean(),
+                reducer=self._ee.Reducer.mean(),
                 geometry=point,
                 scale=250
             ).getInfo()
@@ -180,17 +185,17 @@ class AssessmentService:
         self._require_ee()
 
         try:
-            point = ee.Geometry.Point([lon, lat])
+            point = self._ee.Geometry.Point([lon, lat])
 
-            ghi_img = ee.Image("projects/sat-io/open-datasets/global_solar_atlas/ghi").select("b1")
-            dni_img = ee.Image("projects/sat-io/open-datasets/global_solar_atlas/dni").select("b1")
-            dif_img = ee.Image("projects/sat-io/open-datasets/global_solar_atlas/dif").select("b1")
-            pvout_img = ee.Image("projects/sat-io/open-datasets/global_solar_atlas/pvout").select("b1")
-            ltdi_img = ee.Image("projects/sat-io/open-datasets/global_solar_atlas/ltdi").select("b1")
+            ghi_img = self._ee.Image("projects/sat-io/open-datasets/global_solar_atlas/ghi").select("b1")
+            dni_img = self._ee.Image("projects/sat-io/open-datasets/global_solar_atlas/dni").select("b1")
+            dif_img = self._ee.Image("projects/sat-io/open-datasets/global_solar_atlas/dif").select("b1")
+            pvout_img = self._ee.Image("projects/sat-io/open-datasets/global_solar_atlas/pvout").select("b1")
+            ltdi_img = self._ee.Image("projects/sat-io/open-datasets/global_solar_atlas/ltdi").select("b1")
 
-            combined = ee.Image.cat([ghi_img, dni_img, dif_img, pvout_img, ltdi_img])
+            combined = self._ee.Image.cat([ghi_img, dni_img, dif_img, pvout_img, ltdi_img])
             values = combined.reduceRegion(
-                reducer=ee.Reducer.mean(),
+                reducer=self._ee.Reducer.mean(),
                 geometry=point,
                 scale=1000
             ).getInfo()
@@ -251,24 +256,24 @@ class AssessmentService:
         self._require_ee()
 
         try:
-            point = ee.Geometry.Point([lon, lat])
+            point = self._ee.Geometry.Point([lon, lat])
             region = point.buffer(50000)
 
             # GRACE groundwater anomaly
-            grace = (ee.ImageCollection("NASA/GRACE/MASS_GRIDS/LAND")
+            grace = (self._ee.ImageCollection("NASA/GRACE/MASS_GRIDS/LAND")
                      .filterDate("2002-01-01", "2017-01-01")
                      .select("lwe_thickness_jpl")
                      .mean())
 
             # PDSI drought index
-            pdsi = (ee.ImageCollection("GRIDMET/DROUGHT")
+            pdsi = (self._ee.ImageCollection("GRIDMET/DROUGHT")
                     .filterDate("2015-01-01", "2022-01-01")
                     .select("pdsi")
                     .mean())
 
-            combined = ee.Image.cat([grace, pdsi])
+            combined = self._ee.Image.cat([grace, pdsi])
             values = combined.reduceRegion(
-                reducer=ee.Reducer.mean(),
+                reducer=self._ee.Reducer.mean(),
                 geometry=region,
                 scale=5000
             ).getInfo()
