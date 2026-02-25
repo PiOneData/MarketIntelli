@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Loader2, Server, Zap } from "lucide-react";
 import {
@@ -170,7 +170,7 @@ export default function SolarWindAssessmentPage() {
   });
   const [loadingFromCache, setLoadingFromCache] = useState(false);
 
-  const fetchAnalysis = async (
+  const fetchAnalysis = useCallback(async (
     lat: number,
     lng: number,
     datacenter: DatacenterProps | null = null,
@@ -261,7 +261,25 @@ export default function SolarWindAssessmentPage() {
       const message = err instanceof Error ? err.message : "An unknown error occurred";
       alert("Error: " + message);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-trigger analysis when navigated from DataCenterMap with a pending DC
+  useEffect(() => {
+    const pending = sessionStorage.getItem("pending_dc_assessment");
+    if (!pending) return;
+    try {
+      const { props, lat, lng } = JSON.parse(pending) as {
+        props: DatacenterProps;
+        lat: number;
+        lng: number;
+      };
+      sessionStorage.removeItem("pending_dc_assessment");
+      void fetchAnalysis(lat, lng, props);
+    } catch {
+      sessionStorage.removeItem("pending_dc_assessment");
+    }
+  }, [fetchAnalysis]);
 
   const handleDatacenterClick = (
     lat: number,
