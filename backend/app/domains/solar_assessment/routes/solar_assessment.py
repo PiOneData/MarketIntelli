@@ -48,19 +48,42 @@ async def _fetch_db_credentials(db: AsyncSession) -> dict | None:
             )
         )
         cred = result.scalar_one_or_none()
-        if cred and cred.client_email and cred.private_key:
-            return {
-                "type": cred.credential_type,
-                "project_id": cred.project_id,
-                "private_key_id": cred.private_key_id,
-                "private_key": cred.private_key,
-                "client_email": cred.client_email,
-                "client_id": cred.client_id,
-                "auth_uri": cred.auth_uri,
-                "token_uri": cred.token_uri,
-                "auth_provider_x509_cert_url": cred.auth_provider_x509_cert_url,
-                "client_x509_cert_url": cred.client_x509_cert_url,
-            }
+        if cred is None:
+            logger.warning("[EE] No active row found in google_service_credentials.")
+            return None
+        if not cred.client_email or not cred.private_key:
+            logger.warning(
+                "[EE] DB credential row found but client_email or private_key is empty."
+            )
+            return None
+
+        # GCP service account JSON stores the RSA private key with '\n' escape
+        # sequences (actual newlines).  If the value was inserted via a tool that
+        # serialised the JSON twice, those newlines may have been stored as the
+        # two-character literal string r'\n'.  Normalise them to real newlines so
+        # the PEM block is valid when we pass it to the EE SDK.
+        private_key: str = cred.private_key
+        if "\\n" in private_key:
+            private_key = private_key.replace("\\n", "\n")
+
+        credentials_dict = {
+            "type": cred.credential_type or "service_account",
+            "project_id": cred.project_id,
+            "private_key_id": cred.private_key_id,
+            "private_key": private_key,
+            "client_email": cred.client_email,
+            "client_id": cred.client_id,
+            "auth_uri": cred.auth_uri,
+            "token_uri": cred.token_uri,
+            "auth_provider_x509_cert_url": cred.auth_provider_x509_cert_url,
+            "client_x509_cert_url": cred.client_x509_cert_url,
+        }
+        logger.info(
+            f"[EE] Loaded DB credentials for {cred.client_email} "
+            f"(key_id={cred.private_key_id!r}, "
+            f"key_starts={private_key[:40]!r})"
+        )
+        return credentials_dict
     except Exception as exc:
         logger.error(f"[EE] Failed to fetch credentials from DB: {exc}")
     return None
@@ -171,15 +194,15 @@ async def api_analyze(
         ) from exc
 
     if not service._ee_initialized:
-        raise HTTPException(
-            status_code=503,
-            detail=(
-                "Google Earth Engine credentials are not configured. "
-                "Insert a row into the google_service_credentials table "
-                "(is_active = true) or upload a key file to "
-                f"{EE_KEY_PATH} and restart."
-            ),
+        ee_error = getattr(service, "_ee_init_error", None)
+        detail = (
+            "Google Earth Engine credentials are not configured. "
+            "Insert a row into the google_service_credentials table "
+            f"(is_active = true) or upload a key file to {EE_KEY_PATH} and restart."
         )
+        if ee_error:
+            detail += f" EE init error: {ee_error}"
+        raise HTTPException(status_code=503, detail=detail)
 
     try:
         result = await asyncio.to_thread(service.analyze, loc.lat, loc.lon)

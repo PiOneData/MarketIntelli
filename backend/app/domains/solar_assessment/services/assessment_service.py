@@ -75,6 +75,7 @@ class AssessmentService:
         self.data_dir = data_dir
         self.cache = DiskCache(os.path.join(data_dir, "gee_cache.sqlite"))
         self._ee_initialized = False
+        self._ee_init_error: str | None = None
 
         if credentials_dict:
             self._init_earth_engine_from_dict(credentials_dict)
@@ -105,7 +106,8 @@ class AssessmentService:
             self._ee_initialized = True
             logger.info("[EE] Earth Engine initialized from key file.")
         except Exception as e:
-            logger.error(f"[EE] Initialization from file failed: {e}")
+            self._ee_init_error = str(e)
+            logger.error(f"[EE] Initialization from file failed: {type(e).__name__}: {e}")
 
     def _init_earth_engine_from_dict(self, credentials_dict: dict) -> None:
         """Initialize Google Earth Engine from a credentials dict (from DB)."""
@@ -128,7 +130,8 @@ class AssessmentService:
                 f"({credentials_dict.get('client_email')})."
             )
         except Exception as e:
-            logger.error(f"[EE] Initialization from DB credentials failed: {e}")
+            self._ee_init_error = str(e)
+            logger.error(f"[EE] Initialization from DB credentials failed: {type(e).__name__}: {e}")
 
     def _require_ee(self) -> None:
         if not self._ee_initialized:
