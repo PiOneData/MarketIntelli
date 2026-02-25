@@ -233,41 +233,335 @@ async def api_analyze(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Run a full wind / solar / water site analysis via Google Earth Engine.
+    Run a full wind / solar / water site analysis.
 
-    Credentials are fetched from the `google_service_credentials` DB table
-    (active row).  Falls back to a key file on disk if no DB record exists.
-    Returns HTTP 503 if no credentials are configured or if the
-    earthengine-api package is not installed.
+    Tries Google Earth Engine first (GWA v3 + GSA data).  Falls back to
+    Open-Meteo (real-time wind) + PVGIS (solar climatology) when EE is
+    unavailable, so the report always returns useful data.
     """
-    # Fetch DB credentials first; fall back to file-based init
     credentials_dict = await _fetch_db_credentials(db)
 
+    ee_available = False
+    service = None
     try:
         service = _get_assessment_service(credentials_dict)
-    except ImportError as exc:
-        raise HTTPException(
-            status_code=503,
-            detail=f"Earth Engine package not installed: {exc}",
-        ) from exc
+        ee_available = service._ee_initialized
+    except ImportError:
+        logger.warning("[analyze] earthengine-api not installed — using free-API fallback.")
 
-    if not service._ee_initialized:
-        ee_error = getattr(service, "_ee_init_error", None)
-        detail = (
-            "Google Earth Engine credentials are not configured. "
-            "Insert a row into the google_service_credentials table "
-            f"(is_active = true) or upload a key file to {EE_KEY_PATH} and restart."
-        )
-        if ee_error:
-            detail += f" EE init error: {ee_error}"
-        raise HTTPException(status_code=503, detail=detail)
+    if not ee_available:
+        logger.info("[analyze] EE not available — computing from Open-Meteo + PVGIS.")
+        result = await _analyze_fallback(loc.lat, loc.lon)
+        return result
 
+    # EE is available — run full analysis
     try:
-        result = await asyncio.to_thread(service.analyze, loc.lat, loc.lon)
+        result = await asyncio.to_thread(service.analyze, loc.lat, loc.lon)  # type: ignore[union-attr]
+        # Supplement any empty wind section with live-weather fallback
+        if not result.get("wind") or not result["wind"].get("score"):
+            live = await asyncio.to_thread(_get_live_forecast, loc.lat, loc.lon)
+            if live:
+                result["wind"] = _compute_wind_from_live_data(live)
         return result
     except Exception as exc:
-        logger.error(f"[analyze] Error: {exc}")
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        logger.error(f"[analyze] EE error: {exc} — falling back to free APIs.")
+        result = await _analyze_fallback(loc.lat, loc.lon)
+        return result
+
+
+# ── Free-API fallback helpers ────────────────────────────────────────────────
+
+async def _analyze_fallback(lat: float, lon: float) -> dict:
+    """Best-effort analysis from Open-Meteo + PVGIS when EE is unavailable."""
+    from datetime import datetime
+
+    live_task  = asyncio.to_thread(_get_live_forecast, lat, lon)
+    solar_task = asyncio.to_thread(_fetch_pvgis_solar, lat, lon)
+    hydro_task = asyncio.to_thread(_fetch_open_meteo_hydrology, lat, lon)
+
+    live, solar_data, hydro_data = await asyncio.gather(
+        live_task, solar_task, hydro_task, return_exceptions=True
+    )
+
+    live        = live        if isinstance(live,       dict) else None
+    solar_data  = solar_data  if isinstance(solar_data, dict) else None
+    hydro_data  = hydro_data  if isinstance(hydro_data, dict) else None
+
+    wind_data: dict = _compute_wind_from_live_data(live) if live else {}
+    solar_res: dict = solar_data or {}
+    water_res: dict = hydro_data or {}
+
+    w_score = wind_data.get("score", 0)
+    s_score = solar_res.get("score", 0)
+    wt_score = water_res.get("composite_risk_score", 0)
+    overall = round((w_score * 0.35) + (s_score * 0.35) + (wt_score * 0.30), 1)
+
+    if overall >= 75: rating = "PREMIUM SITE"
+    elif overall >= 60: rating = "OPTIMAL"
+    elif overall >= 45: rating = "VIABLE"
+    else: rating = "CHALLENGING"
+
+    return {
+        "wind":  wind_data,
+        "solar": solar_res,
+        "water": water_res,
+        "suitability": {
+            "overall_score": overall,
+            "rating": rating,
+            "insights": [
+                "Analysis computed from real-time Open-Meteo & PVGIS data.",
+                "Configure Google Earth Engine for full GWA v3 wind atlas precision.",
+            ],
+            "components": {"solar": s_score, "wind": w_score, "water": wt_score},
+        },
+        "location":  {"lat": lat, "lon": lon},
+        "timestamp": datetime.now().isoformat(),
+        "source":    "open-meteo+pvgis-fallback",
+    }
+
+
+def _compute_wind_from_live_data(live: dict) -> dict:
+    """Derive a full wind analysis dict from Open-Meteo hub-height observations."""
+    import math
+    from app.domains.solar_assessment.services.assessment_service import (
+        _analyze_wind_potential,
+    )
+
+    ws80  = float(live.get("wind_speed_80m",  0) or 0)
+    ws120 = float(live.get("wind_speed_120m", 0) or 0)
+    ws180 = float(live.get("wind_speed_180m", 0) or 0)
+    ad    = float(live.get("air_density_120m", 1.225) or 1.225)
+
+    # Interpolate at 100 m AGL (linear between 80 m and 120 m)
+    ws100 = ws80 + (ws120 - ws80) * 0.5 if (ws80 > 0 or ws120 > 0) else 0.0
+
+    pd_val = 0.5 * ad * (ws100 ** 3)  # W/m²
+
+    # Hellmann wind-shear exponent (log-law)
+    shear_alpha = 0.143
+    shear_ratio = 0.0
+    if ws80 > 0 and ws120 > 0:
+        try:
+            shear_alpha = math.log(ws120 / ws80) / math.log(120.0 / 80.0)
+        except (ValueError, ZeroDivisionError):
+            pass
+    if ws80 > 0:
+        shear_ratio = round(ws100 / ws80, 3)
+
+    # Simplified empirical IEC capacity-factor estimates
+    def _cf(ws: float, rated: float) -> float:
+        if ws < 3.0 or ws > 25.0:
+            return 0.0
+        return min(0.48, ((ws - 3.0) / max(rated - 3.0, 1)) ** 2.5 * 0.48)
+
+    cf1 = round(_cf(ws100, 13.5), 3)
+    cf2 = round(_cf(ws100, 11.5), 3)
+    cf3 = round(_cf(ws100,  9.5), 3)
+
+    raw = {
+        "ws_100": round(ws100, 2), "pd_100": round(pd_val, 1), "ad_100": round(ad, 3),
+        "ruggedness_index": 0.0, "cf_iec1": cf1, "cf_iec2": cf2, "cf_iec3": cf3,
+        "slope": 0.0, "elevation": 0.0,
+    }
+    result = _analyze_wind_potential(raw)
+
+    if pd_val >= 600: score = 90
+    elif pd_val >= 400: score = 75
+    elif pd_val >= 300: score = 60
+    elif pd_val >= 200: score = 45
+    elif pd_val >= 100: score = 30
+    else: score = 10
+
+    result["score"]   = score
+    result["terrain"] = {"slope": 0.0, "elevation": 0.0}
+    result["metadata"] = {
+        "source":      "Open-Meteo Real-Time Atmospheric Data",
+        "provider":    "Open-Meteo (live fallback — configure Earth Engine for GWA v3)",
+        "methodology": "Empirical power-law interpolation from hub-height observations",
+    }
+    result["profile"] = {
+        "heights":     [80, 100, 120, 180],
+        "speeds":      [ws80, round(ws100, 2), ws120, ws180],
+        "densities":   [
+            round(0.5 * ad * ws80  ** 3, 1),
+            round(pd_val, 1),
+            round(0.5 * ad * ws120 ** 3, 1),
+            round(0.5 * ad * ws180 ** 3, 1),
+        ],
+        "air_density": [ad, ad, ad, ad],
+    }
+    result["physics"] = {
+        "shear_alpha": round(shear_alpha, 3),
+        "shear_ratio": shear_ratio,
+    }
+    cf_best = max(cf1, cf2, cf3)
+    result["yield_est"] = {
+        "annual_kwh_2mw": round(2000 * cf_best * 8760),
+        "annual_mwh_2mw": round(2000 * cf_best * 8760 / 1000, 1),
+    }
+    return result
+
+
+def _fetch_pvgis_solar(lat: float, lon: float) -> dict | None:
+    """Fetch solar resource data from PVGIS 5.2 (EU JRC). No API key required."""
+    import json, urllib.parse, urllib.request
+    try:
+        params = urllib.parse.urlencode({
+            "lat": round(lat, 4), "lon": round(lon, 4),
+            "peakpower": 1, "loss": 14, "outputformat": "json", "browser": 0,
+        })
+        url = f"https://re.jrc.ec.europa.eu/api/v5_2/PVcalc?{params}"
+        req = urllib.request.Request(url, headers={"User-Agent": "MarketIntelli/1.0"})
+        with urllib.request.urlopen(req, timeout=12) as resp:
+            data = json.loads(resp.read().decode())
+
+        totals  = data.get("outputs", {}).get("totals", {}).get("fixed", {})
+        monthly_raw = data.get("outputs", {}).get("monthly", {}).get("fixed", [])
+
+        ghi_y   = float(totals.get("H(i)_y", 0) or 0)
+        pvout_y = float(totals.get("E_y",    0) or 0)
+        if ghi_y == 0 and monthly_raw:
+            ghi_y = sum(float(m.get("H(i)_m", 0) or 0) for m in monthly_raw)
+
+        if ghi_y >= 2000: score = 90; grade = "A+"; label = "World-class irradiance"
+        elif ghi_y >= 1800: score = 75; grade = "A";  label = "Excellent solar resource"
+        elif ghi_y >= 1600: score = 60; grade = "B";  label = "Good commercial viability"
+        elif ghi_y >= 1400: score = 45; grade = "C";  label = "Moderate resource"
+        else:               score = 25; grade = "D";  label = "Marginal resource"
+
+        monthly_vals = [float(m.get("H(i)_m", 0) or 0) for m in monthly_raw]
+
+        # Estimate DNI ≈ 60–65 % of GHI for Indian subcontinent
+        dni_est = round(ghi_y * 0.62, 1)
+        dif_est = round(ghi_y - dni_est, 1)
+
+        return {
+            "score": score,
+            "resource": {
+                "grade": grade, "label": label,
+                "ghi":   round(ghi_y, 1),
+                "dni":   dni_est,
+                "dif":   dif_est,
+                "pvout": round(pvout_y, 1),
+                "ltdi":  round(dif_est / ghi_y, 3) if ghi_y > 0 else 0,
+            },
+            "monthly": {"values": monthly_vals},
+            "metadata": {
+                "source":      "PVGIS 5.2",
+                "provider":    "EU JRC / Copernicus SARAH-2",
+                "unit_ghi":   "kWh/m²/year",
+                "unit_pvout": "kWh/kWp/year",
+            },
+        }
+    except Exception as exc:
+        logger.warning(f"[PVGIS] Solar data fetch failed: {type(exc).__name__}: {exc}")
+        return None
+
+
+def _fetch_open_meteo_hydrology(lat: float, lon: float) -> dict | None:
+    """Fetch soil moisture + ET data from Open-Meteo (no API key required)."""
+    try:
+        client = _get_openmeteo()
+    except HTTPException:
+        return None
+
+    url = "https://api.open-meteo.com/v1/forecast"
+    params = {
+        "latitude": lat, "longitude": lon,
+        "daily": [
+            "et0_fao_evapotranspiration",
+            "precipitation_sum",
+            "rain_sum",
+        ],
+        "hourly": [
+            "soil_moisture_0_to_1cm",
+            "soil_moisture_1_to_3cm",
+            "soil_moisture_3_to_9cm",
+            "soil_moisture_9_to_27cm",
+        ],
+        "timezone": "auto",
+        "forecast_days": 1,
+    }
+    try:
+        responses = client.weather_api(url, params=params)
+        if not responses:
+            return None
+
+        r = responses[0]
+        daily  = r.Daily()
+        hourly = r.Hourly()
+
+        def daily_val(idx: int) -> float:
+            try:
+                arr = daily.Variables(idx).ValuesAsNumpy()
+                return float(arr[0]) if arr.size > 0 else 0.0
+            except Exception:
+                return 0.0
+
+        def hourly_val(idx: int) -> float:
+            try:
+                arr = hourly.Variables(idx).ValuesAsNumpy()
+                return float(arr[0]) if arr.size > 0 else 0.0
+            except Exception:
+                return 0.0
+
+        et0   = daily_val(0)
+        precip = daily_val(1)
+
+        sm0   = hourly_val(0)
+        sm1   = hourly_val(1)
+        sm3   = hourly_val(2)
+        sm9   = hourly_val(3)
+
+        # Composite water availability score (0–100)
+        et_norm    = max(0, min(100, (1 - et0 / 10) * 100))
+        precip_norm = max(0, min(100, precip / 20 * 100))
+        composite  = round((et_norm * 0.4) + (precip_norm * 0.6), 1)
+
+        interp = (
+            "Water-stressed region" if composite < 30
+            else "Moderate water availability" if composite < 60
+            else "Good water availability"
+        )
+
+        return {
+            "composite_risk_score": composite,
+            "grace_anomaly": 0.0,
+            "pdsi": 0.0,
+            "interpretation": interp,
+            "soil_moisture": {
+                "layer_0_10cm": round(sm0, 3),
+                "shallow_1_3cm": round(sm1, 3),
+                "mid_3_9cm": round(sm3, 3),
+                "deep_9_27cm": round(sm9, 3),
+            },
+            "terraclimate": {
+                "actual_et_mm_month": round(et0 * 30, 1),
+                "actual_et_annual_mm": round(et0 * 365, 1),
+                "pdsi": 0.0,
+                "pdsi_label": "No EE data",
+                "soil_moisture_mm": round((sm0 + sm1 + sm3 + sm9) * 250, 1),
+                "runoff_mm_month": 0.0,
+                "runoff_annual_mm": 0.0,
+            },
+            "modis_et": {
+                "et_kg_m2_8day": round(et0 * 8, 2),
+                "et_monthly_est": round(et0 * 30, 1),
+                "et_annual_est_mm": round(et0 * 365, 1),
+            },
+            "precipitation": {
+                "daily_mm": round(precip, 2),
+                "annual_mm": round(precip * 365, 1),
+                "period": "Open-Meteo forecast",
+            },
+            "metadata": {
+                "source":  "Open-Meteo",
+                "provider": "Open-Meteo (live fallback — configure Earth Engine for GRACE/PDSI)",
+            },
+        }
+    except Exception as exc:
+        logger.error(f"[hydrology] Open-Meteo error: {type(exc).__name__}: {exc}")
+        return None
 
 
 # ── Live weather helper ──────────────────────────────────────────────────────

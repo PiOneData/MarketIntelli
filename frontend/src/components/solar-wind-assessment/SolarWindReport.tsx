@@ -142,6 +142,75 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
 
   const shearExp = num(get(wd, "physics", "shear_alpha"), 0.143);
 
+  // ── Solar extended fields (populated from GeoJSON or PVGIS fallback) ────────
+  const atmosphericData  = (get(sd, "atmospheric")  ?? {}) as Record<string, unknown>;
+  const solarTerrainData = (get(sd, "terrain")      ?? {}) as Record<string, unknown>;
+  const validationData   = (get(sd, "validation")   ?? {}) as Record<string, unknown>;
+
+  const cloudPct      = num(atmosphericData["cloud_pct"]);
+  const clearDays     = num(atmosphericData["clear_days_yr"]);
+  const cloudLabel    = str(atmosphericData["cloud_label"]);
+  const aod           = num(atmosphericData["aod"]);
+  const aodLabel      = str(atmosphericData["aod_label"]);
+  const transmittance = num(atmosphericData["transmittance"]);
+
+  const solarElevM     = num(solarTerrainData["elevation_m"]);
+  const solarSlopeDeg  = num(solarTerrainData["slope_deg"]);
+  const solarAspectDeg = num(solarTerrainData["aspect_deg"]);
+  const optimalTilt    = num(get(sd, "core", "optimal_tilt"));
+  const avgTemp        = num(get(sd, "core", "avg_temp"));
+
+  const agreementPct = num(validationData["agreement_pct"]);
+  const era5Diff     = num(validationData["era5_ghi_diff_pct"]);
+  const era5GhiDay   = num(validationData["era5_ghi_day"]);
+  const gsaGhiDay    = num(validationData["gsa_ghi_day"]);
+
+  const monthlyBest      = str(get(sd, "monthly", "best_month"));
+  const monthlyWorst     = str(get(sd, "monthly", "worst_month"));
+  const monthlyBestVal   = num(get(sd, "monthly", "best_val"));
+  const monthlyWorstVal  = num(get(sd, "monthly", "worst_val"));
+  const monthlyStability = str(get(sd, "monthly", "stability"));
+
+  // ── Water extended fields ─────────────────────────────────────────────────
+  const precipData     = (get(wtd, "precipitation")      ?? {}) as Record<string, unknown>;
+  const terraclimate   = (get(wtd, "terraclimate")       ?? {}) as Record<string, unknown>;
+  const modisEtData    = (get(wtd, "modis_et")           ?? {}) as Record<string, unknown>;
+  const soilMData      = (get(wtd, "soil_moisture")      ?? {}) as Record<string, unknown>;
+  const ndwiData       = (get(wtd, "ndwi_landsat9")      ?? {}) as Record<string, unknown>;
+  const surfaceWater   = (get(wtd, "surface_water")      ?? {}) as Record<string, unknown>;
+  const gwGrace        = (get(wtd, "groundwater_grace")  ?? {}) as Record<string, unknown>;
+
+  const precipDaily  = num(precipData["daily_mm"]);
+  const precipAnnual = num(precipData["annual_mm"]);
+  const precipPeriod = str(precipData["period"]);
+
+  const tcSoilMm      = num(terraclimate["soil_moisture_mm"]);
+  const tcEtMonth     = num(terraclimate["actual_et_mm_month"]);
+  const tcEtAnnual    = num(terraclimate["actual_et_annual_mm"]);
+  const tcRunoffMonth = num(terraclimate["runoff_mm_month"]);
+  const tcPdsiLabel   = str(terraclimate["pdsi_label"]);
+
+  const modisEtMonth  = num(modisEtData["et_monthly_est"]);
+  const modisEtAnnual = num(modisEtData["et_annual_est_mm"]);
+
+  const sm0_1   = num(soilMData["layer_0_10cm"] ?? soilMData["surface_0_1cm"]);
+  const smRoot  = num(soilMData["root_zone"]);
+  const sm1_3   = num(soilMData["shallow_1_3cm"]);
+  const sm3_9   = num(soilMData["mid_3_9cm"]);
+  const sm9_27  = num(soilMData["deep_9_27cm"]);
+
+  const ndwiValue  = num(ndwiData["ndwi_value"]);
+  const ndwiLabel  = str(ndwiData["ndwi_label"]);
+  const ndwiPeriod = str(ndwiData["period"]);
+  const ndwiScenes = num(ndwiData["scenes_used"]);
+
+  const swOccurrence  = num(surfaceWater["occurrence_pct"]);
+  const swFloodRisk   = str(surfaceWater["flood_risk"]);
+  const swSeasonality = num(surfaceWater["seasonality_months"]);
+
+  const gwTrend       = str(gwGrace["trend"]);
+  const gwStatusLabel = str(gwGrace["status_label"]);
+
   const TABS: { id: TabId; icon: React.ReactNode; label: string; activeClass: string }[] = [
     ...(datacenter ? [{ id: "datacenter" as TabId, icon: <Server size={13} />, label: "Data Center", activeClass: "bg-teal-700 text-white shadow-sm" }] : []),
     { id: "wind",  icon: <Wind size={13} />,  label: "Wind",      activeClass: "bg-sky-600 text-white shadow-sm"    },
@@ -684,12 +753,12 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
               </div>
 
               {/* Monthly bar chart */}
-              {monthlySolarData.length > 0 && (
-                <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
-                  <div className="px-8 pt-8 pb-3">
-                    <div className="text-sm font-semibold text-slate-800">Monthly Generation Profile</div>
-                    <div className="text-xs text-slate-400 mt-0.5">GSA Long-Term Climatology · kWh / kWp per month</div>
-                  </div>
+              <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+                <div className="px-8 pt-8 pb-3">
+                  <div className="text-sm font-semibold text-slate-800">Monthly Generation Profile</div>
+                  <div className="text-xs text-slate-400 mt-0.5">GSA Long-Term Climatology · kWh / kWp per month</div>
+                </div>
+                {monthlySolarData.length > 0 ? (
                   <div className="px-4 pb-4 h-[240px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={monthlySolarData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
@@ -703,22 +772,142 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="grid grid-cols-4 border-t border-slate-100">
+                ) : (
+                  <div className="px-8 pb-6 text-xs text-slate-400">No monthly data available for this location.</div>
+                )}
+                <div className="grid grid-cols-4 border-t border-slate-100">
+                  {[
+                    { label: "GHI",   value: str(get(sd, "resource", "ghi")),   unit: "kWh/m²/yr",    color: "text-amber-500"  },
+                    { label: "PVOUT", value: str(get(sd, "resource", "pvout")),  unit: "kWh/kWp/yr",   color: "text-orange-500" },
+                    { label: "DNI",   value: str(get(sd, "resource", "dni")),    unit: "kWh/m²/yr",    color: "text-yellow-600" },
+                    { label: "Grade", value: str(get(sd, "resource", "grade")),  unit: str(get(sd, "resource", "label")), color: "text-rose-500" },
+                  ].map((p, i) => (
+                    <div key={p.label} className={`px-6 py-5 text-center ${i < 3 ? "border-r border-slate-100" : ""}`}>
+                      <div className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">{p.label}</div>
+                      <div className={`text-xl font-bold ${p.color}`}>{p.value}</div>
+                      <div className="text-xs text-slate-300 font-medium mt-1">{p.unit}</div>
+                    </div>
+                  ))}
+                </div>
+                {(monthlyBest !== "—" || monthlyWorst !== "—") && (
+                  <div className="grid grid-cols-3 border-t border-slate-100 divide-x divide-slate-100">
+                    <div className="px-6 py-4 text-center">
+                      <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Best Month</div>
+                      <div className="text-sm font-bold text-amber-500">{monthlyBest} <span className="text-xs text-slate-400 font-medium">· {monthlyBestVal.toFixed(2)} kWh/m²</span></div>
+                    </div>
+                    <div className="px-6 py-4 text-center">
+                      <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Worst Month</div>
+                      <div className="text-sm font-bold text-orange-400">{monthlyWorst} <span className="text-xs text-slate-400 font-medium">· {monthlyWorstVal.toFixed(2)} kWh/m²</span></div>
+                    </div>
+                    <div className="px-6 py-4 text-center">
+                      <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Stability</div>
+                      <div className="text-sm font-bold text-slate-600">{monthlyStability}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Sky Quality Index */}
+              <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 rounded-xl bg-amber-50"><Sun size={16} className="text-amber-500" /></div>
+                  <div>
+                    <div className="text-sm font-semibold text-slate-800">Sky Quality Index</div>
+                    <div className="text-xs text-slate-400">Cloud cover · Aerosol · Atmospheric transmittance</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                  {[
+                    { label: "Cloud Cover", value: cloudPct > 0 ? `${cloudPct.toFixed(1)}%` : "—", sub: cloudLabel, col: "text-sky-600", bg: "bg-sky-50", border: "border-sky-100" },
+                    { label: "Clear Days/yr", value: clearDays > 0 ? String(Math.round(clearDays)) : "—", sub: "annual clear-sky days", col: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
+                    { label: "Transmittance", value: transmittance > 0 ? transmittance.toFixed(3) : "—", sub: "atmospheric clarity", col: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
+                    { label: "AOD", value: aod > 0 ? aod.toFixed(4) : "—", sub: aodLabel, col: "text-orange-600", bg: "bg-orange-50", border: "border-orange-100" },
+                    { label: "Avg Temp", value: avgTemp !== 0 ? `${avgTemp.toFixed(1)}°C` : "—", sub: "site temperature", col: "text-rose-600", bg: "bg-rose-50", border: "border-rose-100" },
+                    { label: "Sky Class", value: cloudPct > 70 ? "Overcast" : cloudPct > 40 ? "Partly Cloudy" : cloudPct > 20 ? "Mostly Clear" : "Clear", sub: "daytime sky condition", col: "text-violet-600", bg: "bg-violet-50", border: "border-violet-100" },
+                  ].map(({ label, value, sub, col, bg, border }) => (
+                    <div key={label} className={`${bg} border ${border} rounded-xl p-4`}>
+                      <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</div>
+                      <div className={`text-xl font-bold ${col}`}>{value}</div>
+                      <div className="text-[9px] text-slate-400 font-medium mt-1">{sub}</div>
+                    </div>
+                  ))}
+                </div>
+                {cloudPct > 0 && (
+                  <div>
+                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Cloud Cover</div>
+                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <motion.div className="h-full rounded-full bg-gradient-to-r from-sky-300 to-slate-400"
+                        initial={{ width: 0 }} animate={{ width: `${Math.min(cloudPct, 100)}%` }}
+                        transition={{ duration: 1.1, ease: "easeOut" }} />
+                    </div>
+                    <div className="flex justify-between text-[9px] text-slate-400 font-medium mt-1">
+                      <span>Clear sky</span><span>{cloudPct.toFixed(1)}% overcast</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Site Terrain */}
+              <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 rounded-xl bg-emerald-50"><Globe size={16} className="text-emerald-600" /></div>
+                  <div>
+                    <div className="text-sm font-semibold text-slate-800">Site Terrain</div>
+                    <div className="text-xs text-slate-400">Elevation · Slope · Aspect · Optimal tilt</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { label: "Elevation", value: solarElevM > 0 ? `${solarElevM.toFixed(0)} m` : "—", sub: "above mean sea level", col: "text-slate-700" },
+                    { label: "Slope", value: solarSlopeDeg > 0 ? `${solarSlopeDeg.toFixed(1)}°` : "—", sub: "terrain incline", col: "text-amber-600" },
+                    { label: "Aspect", value: solarAspectDeg > 0 ? `${solarAspectDeg.toFixed(1)}°` : "—", sub: "surface facing direction", col: "text-sky-600" },
+                    { label: "Optimal Tilt", value: optimalTilt > 0 ? `${optimalTilt.toFixed(1)}°` : "—", sub: "for max annual yield", col: "text-emerald-600" },
+                  ].map(({ label, value, sub, col }) => (
+                    <div key={label} className="bg-slate-50 border border-slate-100 rounded-xl p-5 text-center">
+                      <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">{label}</div>
+                      <div className={`text-2xl font-bold ${col}`}>{value}</div>
+                      <div className="text-[9px] text-slate-400 font-medium mt-1">{sub}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Data Validation Context */}
+              <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 rounded-xl bg-teal-50"><ShieldCheck size={16} className="text-teal-600" /></div>
+                  <div>
+                    <div className="text-sm font-semibold text-slate-800">Data Validation Context</div>
+                    <div className="text-xs text-slate-400">Cross-source agreement · ERA5 vs GSA</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
                     {[
-                      { label: "GHI",   value: str(get(sd, "resource", "ghi")),   unit: "kWh/m²/yr",    color: "text-amber-500"  },
-                      { label: "PVOUT", value: str(get(sd, "resource", "pvout")),  unit: "kWh/kWp/yr",   color: "text-orange-500" },
-                      { label: "DNI",   value: str(get(sd, "resource", "dni")),    unit: "kWh/m²/yr",    color: "text-yellow-600" },
-                      { label: "Grade", value: str(get(sd, "resource", "grade")),  unit: str(get(sd, "resource", "label")), color: "text-rose-500" },
-                    ].map((p, i) => (
-                      <div key={p.label} className={`px-6 py-5 text-center ${i < 3 ? "border-r border-slate-100" : ""}`}>
-                        <div className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">{p.label}</div>
-                        <div className={`text-xl font-bold ${p.color}`}>{p.value}</div>
-                        <div className="text-xs text-slate-300 font-medium mt-1">{p.unit}</div>
+                      { label: "GSA GHI (daily)", value: gsaGhiDay > 0 ? `${gsaGhiDay.toFixed(2)} kWh/m²/day` : "—", col: "text-amber-600" },
+                      { label: "ERA5 GHI (daily)", value: era5GhiDay > 0 ? `${era5GhiDay.toFixed(2)} kWh/m²/day` : "—", col: "text-sky-600" },
+                      { label: "ERA5 Deviation", value: era5Diff > 0 ? `${era5Diff.toFixed(1)}%` : "—", col: era5Diff < 10 ? "text-emerald-600" : "text-orange-500" },
+                    ].map(({ label, value, col }) => (
+                      <div key={label} className="flex justify-between items-center p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                        <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">{label}</span>
+                        <span className={`text-sm font-bold ${col}`}>{value}</span>
                       </div>
                     ))}
                   </div>
+                  <div className="flex flex-col items-center justify-center bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-100 rounded-2xl p-6">
+                    <div className="text-[9px] font-black text-teal-400 uppercase tracking-widest mb-2">Data Agreement</div>
+                    <div className={`text-5xl font-black ${agreementPct > 90 ? "text-emerald-600" : agreementPct > 80 ? "text-amber-500" : "text-rose-500"}`}>
+                      {agreementPct > 0 ? `${agreementPct.toFixed(1)}%` : "—"}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-2">
+                      {agreementPct > 90 ? "Excellent cross-source agreement" : agreementPct > 80 ? "Good agreement" : "Moderate variance"}
+                    </div>
+                    <div className="mt-3 text-[9px] text-slate-400 font-medium text-center">
+                      {str(get(sd, "metadata", "source"), "PVGIS 5.2 / Global Solar Atlas")} · {str(get(sd, "metadata", "provider"), "EU JRC")}
+                    </div>
+                  </div>
                 </div>
-              )}
+              </div>
             </motion.div>
           )}
 
@@ -830,6 +1019,243 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                       {unit && <div className="text-xs font-medium text-slate-400">{unit}</div>}
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Climate Water Balance */}
+              <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2.5 bg-sky-50 border border-sky-100 rounded-xl text-sky-600"><Cloud size={18} /></div>
+                  <div>
+                    <h2 className="text-base font-semibold text-slate-800">Climate Water Balance</h2>
+                    <p className="text-xs text-slate-400 mt-0.5">Precipitation · Runoff · PDSI drought index · {precipPeriod}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  {[
+                    { label: "Daily Precip",   value: precipDaily  > 0 ? `${precipDaily.toFixed(2)} mm`  : str(waterData.grace_anomaly) !== "—" ? "GRACE data" : "—", unit: "per day",      col: "text-sky-600",     bg: "bg-sky-50",     border: "border-sky-100"     },
+                    { label: "Annual Precip",  value: precipAnnual > 0 ? `${precipAnnual.toFixed(0)} mm` : "—",                                                         unit: "per year",     col: "text-blue-600",    bg: "bg-blue-50",    border: "border-blue-100"    },
+                    { label: "Runoff/Month",   value: tcRunoffMonth > 0 ? `${tcRunoffMonth.toFixed(1)} mm` : "—",                                                       unit: "monthly mean", col: "text-indigo-600",  bg: "bg-indigo-50",  border: "border-indigo-100"  },
+                    { label: "PDSI Status",    value: tcPdsiLabel !== "—" ? tcPdsiLabel : (num(waterData.pdsi) < -2 ? "Drought" : num(waterData.pdsi) > 2 ? "Moist" : "Near Normal"), unit: "drought index", col: "text-violet-600", bg: "bg-violet-50", border: "border-violet-100" },
+                  ].map(({ label, value, unit, col, bg, border }) => (
+                    <div key={label} className={`${bg} border ${border} rounded-xl p-5`}>
+                      <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</div>
+                      <div className={`text-lg font-bold ${col}`}>{value}</div>
+                      <div className="text-[9px] text-slate-400 font-medium mt-1">{unit}</div>
+                    </div>
+                  ))}
+                </div>
+                {(num(waterData.grace_anomaly) !== 0 || num(waterData.pdsi) !== 0) && (
+                  <div className="space-y-3">
+                    {[
+                      { label: "GRACE Groundwater Anomaly", val: Math.abs(num(waterData.grace_anomaly)), max: 50, unit: "cm LWE", col: "#22d3ee", note: gwStatusLabel },
+                      { label: "PDSI Drought Index",        val: Math.abs(num(waterData.pdsi)), max: 6, unit: "index", col: "#818cf8", note: tcPdsiLabel },
+                    ].map(({ label, val, max, unit, col, note }) => (
+                      <div key={label}>
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
+                          <span className="text-xs font-bold" style={{ color: col }}>{val.toFixed(2)} <span className="text-slate-400 font-medium text-[9px]">{unit}</span> {note !== "—" && <span className="text-slate-400">· {note}</span>}</span>
+                        </div>
+                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <motion.div className="h-full rounded-full" style={{ background: col }}
+                            initial={{ width: 0 }} animate={{ width: `${Math.min(val / max * 100, 100)}%` }}
+                            transition={{ duration: 1, ease: "easeOut" }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Soil Moisture Profile */}
+              <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-600"><Droplets size={18} /></div>
+                  <div>
+                    <h2 className="text-base font-semibold text-slate-800">Soil Moisture Profile</h2>
+                    <p className="text-xs text-slate-400 mt-0.5">Volumetric water content at depth layers · m³/m³</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  {[
+                    { label: "0–1 cm",   val: sm0_1,  col: "from-teal-500 to-cyan-400"     },
+                    { label: "1–3 cm",   val: sm1_3,  col: "from-cyan-500 to-sky-400"      },
+                    { label: "3–9 cm",   val: sm3_9,  col: "from-sky-500 to-blue-400"      },
+                    { label: "9–27 cm",  val: sm9_27, col: "from-blue-500 to-indigo-400"   },
+                  ].map(({ label, val, col }) => (
+                    <div key={label} className="flex flex-col items-center bg-slate-50 border border-slate-100 rounded-2xl p-5">
+                      <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">{label} depth</div>
+                      <div className="relative w-20 h-20 flex items-center justify-center mb-2">
+                        <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90">
+                          <circle cx="40" cy="40" r="30" fill="none" stroke="#e2e8f0" strokeWidth="8" />
+                          <motion.circle cx="40" cy="40" r="30" fill="none" strokeWidth="8" strokeLinecap="round"
+                            className={`stroke-current`}
+                            style={{ stroke: `url(#sm${label.replace(/\W/g,"")})` }}
+                            strokeDasharray="188.5"
+                            initial={{ strokeDashoffset: 188.5 }}
+                            animate={{ strokeDashoffset: 188.5 - Math.min(val, 0.6) / 0.6 * 188.5 }}
+                            transition={{ duration: 1.2, ease: "easeOut" }} />
+                          <defs><linearGradient id={`sm${label.replace(/\W/g,"")}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#06b6d4" /><stop offset="100%" stopColor="#3b82f6" />
+                          </linearGradient></defs>
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className={`text-sm font-black bg-gradient-to-br ${col} bg-clip-text text-transparent`}>{val > 0 ? val.toFixed(3) : "—"}</span>
+                        </div>
+                      </div>
+                      <div className="text-[9px] text-slate-400">m³/m³</div>
+                    </div>
+                  ))}
+                </div>
+                {(tcSoilMm > 0 || smRoot > 0) && (
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
+                      <div className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-1">TerraClimate Soil Moisture</div>
+                      <div className="text-2xl font-bold text-emerald-700">{tcSoilMm > 0 ? `${tcSoilMm.toFixed(0)} mm` : "—"}</div>
+                      <div className="text-[9px] text-emerald-500 mt-1">column water equivalent</div>
+                    </div>
+                    <div className="bg-teal-50 border border-teal-100 rounded-xl p-4">
+                      <div className="text-[9px] font-black text-teal-400 uppercase tracking-widest mb-1">Root Zone Storage</div>
+                      <div className="text-2xl font-bold text-teal-700">{smRoot > 0 ? `${smRoot.toFixed(3)} m³/m³` : "—"}</div>
+                      <div className="text-[9px] text-teal-500 mt-1">plant-available water</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Evapotranspiration */}
+              <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2.5 bg-cyan-50 border border-cyan-100 rounded-xl text-cyan-600"><TrendingUp size={18} /></div>
+                  <div>
+                    <h2 className="text-base font-semibold text-slate-800">Evapotranspiration</h2>
+                    <p className="text-xs text-slate-400 mt-0.5">TerraClimate actual ET · MODIS-ET · FAO Penman-Monteith ET₀</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {[
+                    { label: "TC Actual ET/month", value: tcEtMonth  > 0 ? `${tcEtMonth.toFixed(1)} mm` : "—", sub: "TerraClimate",  col: "text-cyan-700",  bg: "bg-cyan-50",   border: "border-cyan-100"  },
+                    { label: "TC Annual ET",        value: tcEtAnnual > 0 ? `${tcEtAnnual.toFixed(0)} mm` : "—", sub: "TerraClimate annual", col: "text-sky-700", bg: "bg-sky-50", border: "border-sky-100" },
+                    { label: "MODIS ET/month",      value: modisEtMonth  > 0 ? `${modisEtMonth.toFixed(1)} mm` : "—", sub: "MODIS-ET estimate",  col: "text-indigo-700", bg: "bg-indigo-50", border: "border-indigo-100" },
+                    { label: "MODIS Annual ET",     value: modisEtAnnual > 0 ? `${modisEtAnnual.toFixed(0)} mm` : "—", sub: "MODIS annual",  col: "text-violet-700", bg: "bg-violet-50", border: "border-violet-100" },
+                    { label: "ET₀ (Penman-M.)",     value: (tcEtMonth > 0 ? tcEtMonth : modisEtMonth) > 0 ? `${((tcEtMonth > 0 ? tcEtMonth : modisEtMonth) / 30).toFixed(2)} mm/day` : "—", sub: "reference ET₀", col: "text-blue-700", bg: "bg-blue-50", border: "border-blue-100" },
+                    { label: "Water Demand",        value: tcEtAnnual > 1000 ? "High" : tcEtAnnual > 600 ? "Moderate" : tcEtAnnual > 0 ? "Low" : "—", sub: "relative classification", col: tcEtAnnual > 1000 ? "text-rose-600" : tcEtAnnual > 600 ? "text-amber-600" : "text-emerald-600", bg: "bg-slate-50", border: "border-slate-100" },
+                  ].map(({ label, value, sub, col, bg, border }) => (
+                    <div key={label} className={`${bg} border ${border} rounded-xl p-4`}>
+                      <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</div>
+                      <div className={`text-lg font-bold ${col}`}>{value}</div>
+                      <div className="text-[9px] text-slate-400 font-medium mt-1">{sub}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* NDWI Index */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-sm">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2.5 bg-blue-50 border border-blue-100 rounded-xl text-blue-600"><Satellite size={18} /></div>
+                    <div>
+                      <h2 className="text-base font-semibold text-slate-800">NDWI Index</h2>
+                      <p className="text-xs text-slate-400 mt-0.5">Normalised Difference Water Index · Landsat-9</p>
+                    </div>
+                  </div>
+                  {ndwiValue !== 0 || ndwiLabel !== "—" ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-5xl font-black" style={{ color: ndwiValue > 0.2 ? "#22c55e" : ndwiValue > -0.1 ? "#f59e0b" : "#ef4444" }}>
+                            {ndwiValue.toFixed(4)}
+                          </div>
+                          <div className="text-sm font-medium text-slate-600 mt-1">{ndwiLabel}</div>
+                        </div>
+                        <div className="text-right text-xs text-slate-400 space-y-1">
+                          <div>Period: {ndwiPeriod}</div>
+                          <div>{ndwiScenes > 0 ? `${ndwiScenes} scenes` : ""}</div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-[9px] font-black text-slate-400 uppercase mb-1.5">
+                          <span>Dry (-1)</span><span>Water (+1)</span>
+                        </div>
+                        <div className="relative h-3 bg-gradient-to-r from-amber-200 via-emerald-200 to-blue-400 rounded-full">
+                          <motion.div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-slate-700 shadow"
+                            initial={{ left: "50%" }}
+                            animate={{ left: `${((ndwiValue + 1) / 2) * 100}%` }}
+                            transition={{ duration: 1.2, ease: "easeOut" }} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 text-center gap-2 pt-2">
+                        {[["< -0.1", "Dry/Barren", "text-amber-500"], ["-0.1 to 0.2", "Moderate", "text-yellow-500"], ["> 0.2", "Water/Moist", "text-blue-500"]].map(([range, label, col]) => (
+                          <div key={range} className="bg-slate-50 border border-slate-100 rounded-lg p-2">
+                            <div className={`text-[10px] font-bold ${col}`}>{range}</div>
+                            <div className="text-[9px] text-slate-400">{label}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
+                      <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center">
+                        <Satellite size={24} className="text-slate-300" />
+                      </div>
+                      <div className="text-sm font-semibold text-slate-500">NDWI data unavailable</div>
+                      <div className="text-xs text-slate-400 max-w-xs">Configure Google Earth Engine for Landsat-9 NDWI analysis at this location.</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Flood Zone Analysis */}
+                <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-sm">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2.5 bg-blue-50 border border-blue-100 rounded-xl text-blue-600"><Droplets size={18} /></div>
+                    <div>
+                      <h2 className="text-base font-semibold text-slate-800">Flood Zone Analysis</h2>
+                      <p className="text-xs text-slate-400 mt-0.5">JRC surface water · seasonality · flood risk</p>
+                    </div>
+                  </div>
+                  {swOccurrence > 0 || swFloodRisk !== "—" ? (
+                    <div className="space-y-4">
+                      <div className={`px-5 py-4 rounded-2xl border ${swFloodRisk.toLowerCase().includes("flood") ? "bg-rose-50 border-rose-200" : swFloodRisk.toLowerCase().includes("low") || swFloodRisk === "—" ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"}`}>
+                        <div className="text-[9px] font-black uppercase tracking-widest mb-1 text-slate-400">Flood Risk Classification</div>
+                        <div className={`text-xl font-bold ${swFloodRisk.toLowerCase().includes("flood") ? "text-rose-600" : "text-emerald-600"}`}>
+                          {swFloodRisk !== "—" ? swFloodRisk : "Low Risk"}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
+                          <div className="text-[9px] font-black text-slate-400 uppercase mb-1">Water Occurrence</div>
+                          <div className="text-2xl font-bold text-sky-600">{swOccurrence > 0 ? `${swOccurrence.toFixed(1)}%` : "—"}</div>
+                          <div className="text-[9px] text-slate-400 mt-1">of time surface water present</div>
+                        </div>
+                        <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
+                          <div className="text-[9px] font-black text-slate-400 uppercase mb-1">Seasonality</div>
+                          <div className="text-2xl font-bold text-indigo-600">{swSeasonality > 0 ? `${swSeasonality.toFixed(1)} mo` : "—"}</div>
+                          <div className="text-[9px] text-slate-400 mt-1">months with water per year</div>
+                        </div>
+                      </div>
+                      {gwTrend !== "—" && (
+                        <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex justify-between items-center">
+                          <div>
+                            <div className="text-[9px] font-black text-slate-400 uppercase mb-1">Groundwater Trend</div>
+                            <div className="text-sm font-bold text-slate-700">{gwTrend}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-[9px] font-black text-slate-400 uppercase mb-1">Status</div>
+                            <div className="text-sm font-bold text-slate-600">{gwStatusLabel}</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
+                      <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center">
+                        <Droplets size={24} className="text-slate-300" />
+                      </div>
+                      <div className="text-sm font-semibold text-slate-500">Flood data unavailable</div>
+                      <div className="text-xs text-slate-400 max-w-xs">Configure Google Earth Engine for JRC Global Surface Water flood zone analysis.</div>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>

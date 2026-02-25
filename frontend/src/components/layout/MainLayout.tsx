@@ -20,9 +20,6 @@ const navItems: NavItem[] = [
     path: "/geo-analytics",
     label: "Geo Analytics",
     children: [
-      { id: "solar-potential-mapping", label: "Solar Potential Mapping", path: "/geo-analytics/solar-potential-mapping" },
-      { id: "solar-analysis", label: "Solar Site Analysis", path: "/geo-analytics/solar-analysis" },
-      { id: "wind-site-analyser", label: "Wind Site Analyser" },
       { id: "tn-land-record", label: "TN Land Record", path: "/geo-analytics/tn-land-record" },
       { id: "assessment", label: "RE Potential Assessment", path: "/geo-analytics/assessment" },
     ],
@@ -82,9 +79,7 @@ const navItems: NavItem[] = [
   },
 ];
 
-const EXTERNAL_LINKS: Record<string, string> = {
-  "wind-site-analyser": "https://dharanv2006.users.earthengine.app/view/wind-site-analyser",
-};
+const EXTERNAL_LINKS: Record<string, string> = {};
 
 function Sidenav({
   items,
