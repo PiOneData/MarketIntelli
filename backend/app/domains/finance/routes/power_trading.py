@@ -194,3 +194,52 @@ async def get_gtam_data() -> dict:
         "source": fallback["source"],
         "last_updated": fallback["last_updated"],
     }
+
+
+# ── External link checker ─────────────────────────────────────────────────────
+
+@router.get("/check-link")
+async def check_external_link(url: str) -> dict:
+    """
+    Check whether an external URL is accessible (HTTP 2xx/3xx).
+    Used by the Finance Intelligence UI to detect broken document links
+    and show an in-app error instead of redirecting to a 404 page.
+    Only HTTPS URLs are accepted; private/internal addresses are blocked.
+    """
+    from urllib.parse import urlparse
+
+    # Allow only http(s) — reject anything else
+    if not url.startswith(("https://", "http://")):
+        return {"accessible": False, "status_code": 0, "error": "Invalid URL scheme"}
+
+    # Block private / loopback hosts (basic SSRF guard)
+    parsed = urlparse(url)
+    hostname = (parsed.hostname or "").lower()
+    if (
+        hostname in {"localhost", "127.0.0.1", "0.0.0.0", "::1"}
+        or hostname.startswith("192.168.")
+        or hostname.startswith("10.")
+        or (hostname.startswith("172.") and any(
+            hostname.startswith(f"172.{i}.") for i in range(16, 32)
+        ))
+    ):
+        return {"accessible": False, "status_code": 0, "error": "Private address not allowed"}
+
+    headers = {
+        "User-Agent": "MarketIntelli/2.0 link-checker (contact: support@refex.com)",
+        "Accept": "text/html,application/xhtml+xml,application/pdf,*/*",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+            resp = await client.head(url, headers=headers)
+            if resp.status_code == 405:
+                # Server doesn't allow HEAD — try a ranged GET
+                resp = await client.get(
+                    url,
+                    headers={**headers, "Range": "bytes=0-1023"},
+                )
+            accessible = resp.status_code < 400
+            return {"accessible": accessible, "status_code": resp.status_code}
+    except Exception as exc:
+        logger.warning(f"[check-link] {url}: {type(exc).__name__}: {exc}")
+        return {"accessible": False, "status_code": 0, "error": "Connection failed"}

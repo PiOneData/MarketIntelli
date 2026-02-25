@@ -95,10 +95,10 @@ const ACTIVITIES: Activity[] = [
 ];
 
 const STATS = [
-  { label: "Reports Generated", value: "24", icon: "📋", color: "#0f766e" },
-  { label: "Sites Analysed", value: "17", icon: "📍", color: "#2563eb" },
-  { label: "States Covered", value: "8", icon: "🗺️", color: "#7c3aed" },
-  { label: "MW Capacity Studied", value: "4,820", icon: "⚡", color: "#f59e0b" },
+  { label: "Reports Generated", value: "24", icon: "📋", color: "#2e7d32" },
+  { label: "Sites Analysed", value: "17", icon: "📍", color: "#1565c0" },
+  { label: "States Covered", value: "8", icon: "🗺️", color: "#6a1b9a" },
+  { label: "MW Capacity Studied", value: "4,820", icon: "⚡", color: "#e65100" },
 ];
 
 type ProfileTab = "overview" | "reports" | "activity" | "settings";
@@ -543,7 +543,6 @@ function ProfilePage() {
     { id: "overview", label: "Overview", icon: "👤" },
     { id: "reports", label: "Saved Reports", icon: "📋" },
     { id: "activity", label: "Recent Activity", icon: "🕐" },
-    { id: "settings", label: "Settings", icon: "⚙️" },
   ];
 
   if (viewingReportId === "1") {
@@ -552,12 +551,32 @@ function ProfilePage() {
 
   return (
     <div className="profile-page">
-      {/* Hero / Cover */}
+      {/* Hero / Cover — Refex brand: deep green gradient */}
       <div className="profile-hero">
-        <div className="profile-hero-cover" />
+        <div
+          className="profile-hero-cover"
+          style={{
+            background: "linear-gradient(135deg, #1a5e26 0%, #2e7d32 45%, #1b5e20 70%, #4caf50 100%)",
+          }}
+        >
+          {/* Refex logo watermark */}
+          <img
+            src="/refex-logo.png"
+            alt=""
+            aria-hidden="true"
+            style={{
+              position: "absolute", right: "2rem", top: "50%", transform: "translateY(-50%)",
+              height: "48px", opacity: 0.18, filter: "brightness(0) invert(1)",
+              pointerEvents: "none",
+            }}
+          />
+        </div>
         <div className="profile-hero-body">
           <div className="profile-avatar">
-            <div className="profile-avatar-circle">
+            <div
+              className="profile-avatar-circle"
+              style={{ background: "#2e7d32", color: "#fff", border: "3px solid #fff" }}
+            >
               {USER.avatarInitials}
             </div>
             <div className="profile-avatar-online" />
@@ -565,7 +584,7 @@ function ProfilePage() {
           <div className="profile-hero-info">
             <h1 className="profile-name">{profileForm.name}</h1>
             <p className="profile-role">{profileForm.role}</p>
-            <p className="profile-org">
+            <p className="profile-org" style={{ color: "#2e7d32" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
               {profileForm.organization}
             </p>
@@ -578,6 +597,7 @@ function ProfilePage() {
             <button
               className={`profile-edit-btn${editMode ? " profile-edit-btn--cancel" : ""}`}
               onClick={() => setEditMode((e) => !e)}
+              style={editMode ? {} : { background: "#2e7d32", borderColor: "#2e7d32", color: "#fff" }}
             >
               {editMode ? "Cancel" : "Edit Profile"}
             </button>
