@@ -3,6 +3,7 @@ from uuid import UUID, uuid4
 
 from geoalchemy2 import Geometry
 from sqlalchemy import Boolean, String, Float, DateTime, Integer, Text, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -132,6 +133,32 @@ class GoogleServiceCredential(Base):
         String(500), default="https://www.googleapis.com/oauth2/v1/certs"
     )
     client_x509_cert_url: Mapped[str] = mapped_column(String(500), default="")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), init=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), init=False
+    )
+
+
+class GeeJsonCredential(Base):
+    """Stores a complete Google service-account JSON key for Earth Engine access.
+
+    Paste the entire contents of your downloaded service-account JSON file into
+    the ``credential_json`` JSONB column.  The backend will read it directly and
+    pass it to ``ee.ServiceAccountCredentials(key_data=...)``.
+
+    Only one row should have ``is_active = True`` at a time.  The assessment
+    route checks this table before falling back to ``google_service_credentials``.
+    """
+
+    __tablename__ = "gee_json_credentials"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4, init=False)
+    name: Mapped[str] = mapped_column(String(255))  # human-readable label, e.g. "prod-key"
+    # The full service-account JSON dict stored as JSONB
+    credential_json: Mapped[dict] = mapped_column(JSONB, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), init=False

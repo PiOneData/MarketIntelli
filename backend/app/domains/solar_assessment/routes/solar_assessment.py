@@ -20,7 +20,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
-from app.domains.geo_analytics.models.spatial import GoogleServiceCredential
+from app.domains.geo_analytics.models.spatial import (
+    GeeJsonCredential,
+    GoogleServiceCredential,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +43,35 @@ _openmeteo_client = None
 
 
 async def _fetch_db_credentials(db: AsyncSession) -> dict | None:
-    """Fetch the active Google service account credentials row from DB."""
+    """Fetch the active Google service account credentials from DB.
+
+    Checks ``gee_json_credentials`` first (full JSON blob, easiest to insert).
+    Falls back to the older ``google_service_credentials`` table that stores
+    individual fields.
+    """
+    # ── 1. Try the JSON-blob table first ────────────────────────────────────
+    try:
+        json_result = await db.execute(
+            select(GeeJsonCredential).where(
+                GeeJsonCredential.is_active == True  # noqa: E712
+            )
+        )
+        json_cred = json_result.scalar_one_or_none()
+        if json_cred is not None and json_cred.credential_json:
+            creds = dict(json_cred.credential_json)
+            # Normalise escaped newlines in private_key if stored that way
+            pk = creds.get("private_key", "")
+            if isinstance(pk, str) and "\\n" in pk:
+                creds["private_key"] = pk.replace("\\n", "\n")
+            logger.info(
+                f"[EE] Loaded JSON-blob credentials '{json_cred.name}' "
+                f"for {creds.get('client_email', '?')}"
+            )
+            return creds
+    except Exception as exc:
+        logger.warning(f"[EE] Could not read gee_json_credentials: {exc}")
+
+    # ── 2. Fall back to the legacy column-per-field table ───────────────────
     try:
         result = await db.execute(
             select(GoogleServiceCredential).where(
@@ -79,7 +110,7 @@ async def _fetch_db_credentials(db: AsyncSession) -> dict | None:
             "client_x509_cert_url": cred.client_x509_cert_url,
         }
         logger.info(
-            f"[EE] Loaded DB credentials for {cred.client_email} "
+            f"[EE] Loaded legacy DB credentials for {cred.client_email} "
             f"(key_id={cred.private_key_id!r}, "
             f"key_starts={private_key[:40]!r})"
         )
@@ -146,7 +177,112 @@ class LocationRequest(BaseModel):
     lon: float
 
 
+class GeeJsonCredentialCreate(BaseModel):
+    name: str
+    credential_json: dict
+
+
+class GeeJsonCredentialRead(BaseModel):
+    id: str
+    name: str
+    is_active: bool
+    client_email: str = ""
+
+    model_config = {"from_attributes": True}
+
+
 # ── Endpoints ───────────────────────────────────────────────────────────────
+
+# ── GEE JSON credential management ──────────────────────────────────────────
+
+@router.get("/gee-credentials", response_model=list[GeeJsonCredentialRead])
+async def list_gee_credentials(
+    db: AsyncSession = Depends(get_db),
+) -> list[GeeJsonCredentialRead]:
+    """List all stored GEE JSON credential records (without the raw key data)."""
+    result = await db.execute(select(GeeJsonCredential))
+    rows = result.scalars().all()
+    out = []
+    for r in rows:
+        cj = r.credential_json or {}
+        out.append(
+            GeeJsonCredentialRead(
+                id=str(r.id),
+                name=r.name,
+                is_active=r.is_active,
+                client_email=cj.get("client_email", ""),
+            )
+        )
+    return out
+
+
+@router.post("/gee-credentials", status_code=201)
+async def create_gee_credential(
+    data: GeeJsonCredentialCreate,
+    db: AsyncSession = Depends(get_db),
+) -> GeeJsonCredentialRead:
+    """Store a new GEE service-account JSON credential.
+
+    Paste the full contents of your downloaded JSON key file into
+    ``credential_json``.  If ``is_active`` is True (the default) any existing
+    active row is deactivated first so only one credential is active at a time.
+    The global AssessmentService singleton is reset so it re-initialises with
+    the new key on the next ``/analyze`` call.
+    """
+    # Deactivate any existing active rows
+    from sqlalchemy import update as sa_update
+
+    await db.execute(
+        sa_update(GeeJsonCredential)
+        .where(GeeJsonCredential.is_active == True)  # noqa: E712
+        .values(is_active=False)
+    )
+    await db.flush()
+
+    new_cred = GeeJsonCredential(
+        name=data.name,
+        credential_json=data.credential_json,
+    )
+    db.add(new_cred)
+    await db.commit()
+    await db.refresh(new_cred)
+
+    # Force re-init of the assessment service singleton on next request
+    global _assessment_service
+    _assessment_service = None
+
+    return GeeJsonCredentialRead(
+        id=str(new_cred.id),
+        name=new_cred.name,
+        is_active=new_cred.is_active,
+        client_email=data.credential_json.get("client_email", ""),
+    )
+
+
+@router.delete("/gee-credentials/{credential_id}", status_code=204)
+async def delete_gee_credential(
+    credential_id: str,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Delete a stored GEE JSON credential."""
+    import uuid as _uuid
+
+    result = await db.execute(
+        select(GeeJsonCredential).where(
+            GeeJsonCredential.id == _uuid.UUID(credential_id)
+        )
+    )
+    row = result.scalar_one_or_none()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Credential not found")
+    await db.delete(row)
+    await db.commit()
+
+    global _assessment_service
+    _assessment_service = None
+
+
+# ── Geocode ──────────────────────────────────────────────────────────────────
 
 @router.get("/geocode")
 async def geocode_address(

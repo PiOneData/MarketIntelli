@@ -104,9 +104,9 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
     } as FeatureCollection;
   }, [dataCenters]);
 
-  // Load individual DC entries from datacenters.geojson for search
+  // Load individual DC entries from DB via API for search
   useEffect(() => {
-    fetch("/datacenters.geojson")
+    fetch("/api/v1/data-centers/facilities/geojson")
       .then((res) => res.json())
       .then((data: FeatureCollection) => {
         const list: DcGeoEntry[] = data.features
@@ -155,7 +155,7 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
           },
           "datacenters-geojson": {
             type: "geojson",
-            data: "/datacenters.geojson",
+            data: "/api/v1/data-centers/facilities/geojson",
           },
           "registry-circles": {
             type: "geojson",

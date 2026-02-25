@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
@@ -151,6 +152,54 @@ async def list_facilities(
             )
         )
     return result
+
+
+@router.get("/facilities/geojson")
+async def facilities_geojson(
+    db: AsyncSession = Depends(get_db),
+) -> JSONResponse:
+    """Return all facilities that have coordinates as a GeoJSON FeatureCollection.
+
+    The ``address`` property is populated from ``location_detail`` so that
+    MapLibre GL filters that test for a non-empty ``address`` field work
+    correctly without any client-side changes.
+    """
+    service = DataCenterService(db)
+    # Fetch up to 2000 — adjust if the dataset grows beyond that
+    facilities, _ = await service.list_facilities(page=1, page_size=2000)
+    features = []
+    for f in facilities:
+        if f.latitude is None or f.longitude is None:
+            continue
+        await db.refresh(f, ["company"])
+        # Build a meaningful address from whatever is available
+        address_parts = [p for p in [f.location_detail, f.city, f.state] if p]
+        address = ", ".join(address_parts) if address_parts else ""
+        features.append({
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [f.longitude, f.latitude],
+            },
+            "properties": {
+                "id": str(f.id),
+                "name": f.name,
+                "company": f.company.name if f.company else "",
+                "address": address,
+                "tier": f.tier_level or "Tier III",
+                "lat": f.latitude,
+                "lng": f.longitude,
+                "city": f.city,
+                "state": f.state,
+                "power_mw": f.power_capacity_mw,
+                "status": f.status,
+            },
+        })
+    geojson = {"type": "FeatureCollection", "features": features}
+    return JSONResponse(
+        content=geojson,
+        headers={"Cache-Control": "public, max-age=60"},
+    )
 
 
 @router.get("/facilities/stats", response_model=FacilityStats)

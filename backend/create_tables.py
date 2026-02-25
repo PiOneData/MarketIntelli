@@ -23,6 +23,7 @@ from app.domains.geo_analytics.models.spatial import (
     DisasterRiskZone,
     GroundwaterResource,
     GoogleServiceCredential,
+    GeeJsonCredential,
 )
 
 

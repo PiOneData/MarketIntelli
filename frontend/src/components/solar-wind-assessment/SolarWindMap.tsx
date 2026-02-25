@@ -109,9 +109,9 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
     setLayerVis((prev) => ({ ...prev, [group]: !prev[group] }));
   };
 
-  // Load DC list for search autocomplete
+  // Load DC list for search autocomplete — sourced from the DB via API
   useEffect(() => {
-    fetch("/datacenters.geojson")
+    fetch("/api/v1/data-centers/facilities/geojson")
       .then((res) => res.json())
       .then((data: GeoJSON.FeatureCollection) => {
         const list: DcEntry[] = data.features
@@ -161,7 +161,7 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
           },
           datacenters: {
             type: "geojson",
-            data: "/datacenters.geojson",
+            data: "/api/v1/data-centers/facilities/geojson",
           },
         },
         layers: [

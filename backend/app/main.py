@@ -13,7 +13,7 @@ from app.db.session import engine
 
 # Import all models so they are registered with Base.metadata
 from app.domains.dashboard.models.market_overview import InstalledCapacity, FinancialInsight  # noqa: F401
-from app.domains.geo_analytics.models.spatial import SolarPotentialZone, GridInfrastructure, DisasterRiskZone, GroundwaterResource, GoogleServiceCredential  # noqa: F401
+from app.domains.geo_analytics.models.spatial import SolarPotentialZone, GridInfrastructure, DisasterRiskZone, GroundwaterResource, GoogleServiceCredential, GeeJsonCredential  # noqa: F401
 from app.domains.data_center_intelligence.models.data_center import DataCenterCompany, DataCenterFacility  # noqa: F401
 from app.domains.project_intelligence.models.projects import Developer, SolarProject, Tender  # noqa: F401
 from app.domains.policy_intelligence.models.policy import Policy, TariffRecord, Subsidy, ComplianceAlert  # noqa: F401
