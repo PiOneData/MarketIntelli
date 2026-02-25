@@ -90,24 +90,6 @@ async def list_projects(
     ]
 
 
-@router.get("/{project_id}", response_model=SolarProjectRead)
-async def get_project(
-    project_id: UUID,
-    db: AsyncSession = Depends(get_db),
-) -> SolarProjectRead:
-    service = ProjectService(db)
-    project = await service.get_project(project_id)
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-    return SolarProjectRead(
-        id=project.id, name=project.name, state=project.state,
-        capacity_mw=project.capacity_mw, status=project.status,
-        developer_id=project.developer_id,
-        commissioning_date=project.commissioning_date,
-        latitude=project.latitude, longitude=project.longitude,
-    )
-
-
 @router.get("/developers/", response_model=list[DeveloperRead])
 async def list_developers(db: AsyncSession = Depends(get_db)) -> list[DeveloperRead]:
     """Developer profiles with historical performance and risk scoring."""
@@ -189,3 +171,21 @@ async def get_dc_company_stocks() -> dict:
         "stocks": stocks,
         "fetched_at": datetime.now(tz=timezone.utc).isoformat(),
     }
+
+
+@router.get("/{project_id}", response_model=SolarProjectRead)
+async def get_project(
+    project_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> SolarProjectRead:
+    service = ProjectService(db)
+    project = await service.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return SolarProjectRead(
+        id=project.id, name=project.name, state=project.state,
+        capacity_mw=project.capacity_mw, status=project.status,
+        developer_id=project.developer_id,
+        commissioning_date=project.commissioning_date,
+        latitude=project.latitude, longitude=project.longitude,
+    )
