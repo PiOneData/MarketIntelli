@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                               */
@@ -277,6 +277,98 @@ const STATUS_META: Record<IpoStatus, { color: string; bg: string }> = {
 const SECTORS: IpoSector[] = ["Solar", "Wind", "Bio", "Hydro"];
 
 /* ------------------------------------------------------------------ */
+/*  KPI Strip                                                           */
+/* ------------------------------------------------------------------ */
+
+interface IpoKpi {
+  label: string;
+  value: string;
+  sub: string;
+  color: string;
+  bg: string;
+  icon: string;
+}
+
+function IpoKpiStrip({ ipos }: { ipos: IpoEntry[] }) {
+  const kpis: IpoKpi[] = useMemo(() => {
+    const listed   = ipos.filter((i) => i.status === "Listed");
+    const open     = ipos.filter((i) => i.status === "Open");
+    const upcoming = ipos.filter((i) => i.status === "Upcoming");
+    const pipeline = ipos.filter((i) => i.status === "Pipeline");
+
+    // Sum of issue sizes for listed IPOs (parse ₹X,XXX Cr)
+    const totalFunds = listed.reduce((sum, i) => {
+      const match = i.issueSize.match(/[\d,]+/);
+      return sum + (match ? parseFloat(match[0].replace(/,/g, "")) : 0);
+    }, 0);
+
+    // Average listing gain among listed IPOs that have one
+    const gains = listed
+      .filter((i) => i.listingGain)
+      .map((i) => parseFloat((i.listingGain ?? "0").replace("%", "")));
+    const avgGain = gains.length
+      ? gains.reduce((a, b) => a + b, 0) / gains.length
+      : 0;
+
+    return [
+      {
+        label: "Total IPOs Tracked",
+        value: String(ipos.length),
+        sub: `${SECTORS.length} renewable sectors`,
+        color: "#0f766e",
+        bg: "#f0fdfa",
+        icon: "📊",
+      },
+      {
+        label: "Listed & Trading",
+        value: String(listed.length),
+        sub: `${open.length} open · ${upcoming.length} upcoming`,
+        color: "#166534",
+        bg: "#dcfce7",
+        icon: "✅",
+      },
+      {
+        label: "Pipeline (SEBI Filed)",
+        value: String(pipeline.length),
+        sub: "DRHP filed, awaiting approval",
+        color: "#6b7280",
+        bg: "#f3f4f6",
+        icon: "⏳",
+      },
+      {
+        label: "Avg. Listing Gain",
+        value: avgGain >= 0 ? `+${avgGain.toFixed(0)}%` : `${avgGain.toFixed(0)}%`,
+        sub: `across ${gains.length} listed IPOs`,
+        color: avgGain >= 0 ? "#16a34a" : "#dc2626",
+        bg: avgGain >= 0 ? "#dcfce7" : "#fee2e2",
+        icon: avgGain >= 0 ? "📈" : "📉",
+      },
+      {
+        label: "Total Funds Raised",
+        value: `₹${(totalFunds / 1000).toFixed(0)}K Cr`,
+        sub: "by listed RE companies",
+        color: "#1d4ed8",
+        bg: "#dbeafe",
+        icon: "💰",
+      },
+    ];
+  }, [ipos]);
+
+  return (
+    <div className="ipo-kpi-strip">
+      {kpis.map((k) => (
+        <div key={k.label} className="ipo-kpi-card" style={{ background: k.bg }}>
+          <div className="ipo-kpi-icon">{k.icon}</div>
+          <div className="ipo-kpi-value" style={{ color: k.color }}>{k.value}</div>
+          <div className="ipo-kpi-label">{k.label}</div>
+          <div className="ipo-kpi-sub">{k.sub}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  IPO Card                                                            */
 /* ------------------------------------------------------------------ */
 
@@ -456,6 +548,9 @@ function IpoWatchPage() {
           })}
         </div>
       </div>
+
+      {/* KPI Strip */}
+      <IpoKpiStrip ipos={IPO_DATA} />
 
       {/* Filters */}
       <div className="ipo-filters">

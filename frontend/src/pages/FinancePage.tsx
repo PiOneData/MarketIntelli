@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useInvestmentGuidelines } from "../hooks/usePowerMarket";
 import { useAlerts, useNews } from "../hooks/useAlerts";
 import PowerTradingPage from "./PowerTradingPage";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ErrorMessage from "../components/common/ErrorMessage";
+import apiClient from "../api/client";
 
 /* ------------------------------------------------------------------ */
 /*  Types & static data                                                 */
@@ -301,6 +302,119 @@ function formatNumber(n: number | null | undefined): string {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Safe External Link — checks URL before opening; shows in-app error */
+/* ------------------------------------------------------------------ */
+
+type LinkState = "idle" | "checking" | "ok" | "broken";
+
+function useLinkChecker() {
+  const [states, setStates] = useState<Record<string, LinkState>>({});
+
+  const openSafe = useCallback(
+    async (url: string, e: { preventDefault(): void }) => {
+      e.preventDefault();
+
+      // Already known broken — show error without re-checking
+      if (states[url] === "broken") return;
+
+      setStates((prev: Record<string, LinkState>) => ({ ...prev, [url]: "checking" }));
+
+      try {
+        const { data } = await apiClient.get<{ accessible: boolean; status_code: number }>(
+          "/finance/check-link",
+          { params: { url } },
+        );
+        if (data.accessible) {
+          setStates((prev: Record<string, LinkState>) => ({ ...prev, [url]: "ok" }));
+          window.open(url, "_blank", "noopener,noreferrer");
+          // Reset to idle after a moment so button reverts
+          setTimeout(() => setStates((prev: Record<string, LinkState>) => ({ ...prev, [url]: "idle" })), 2000);
+        } else {
+          setStates((prev: Record<string, LinkState>) => ({ ...prev, [url]: "broken" }));
+        }
+      } catch {
+        // Network error checking — fall back to just opening
+        setStates((prev: Record<string, LinkState>) => ({ ...prev, [url]: "idle" }));
+        window.open(url, "_blank", "noopener,noreferrer");
+      }
+    },
+    [states],
+  );
+
+  const reset = useCallback((url: string) => {
+    setStates((prev: Record<string, LinkState>) => ({ ...prev, [url]: "idle" }));
+  }, []);
+
+  return { states, openSafe, reset };
+}
+
+interface SafeExternalLinkProps {
+  href: string;
+  className?: string;
+  children: unknown;
+  linkState: LinkState;
+  onOpen: (url: string, e: { preventDefault(): void }) => void;
+}
+
+function SafeExternalLink({ href, className, children, linkState, onOpen }: SafeExternalLinkProps) {
+  if (linkState === "broken") {
+    return (
+      <span
+        className={`${className ?? ""} finint-link-broken`}
+        title="This resource appears to be unavailable at the linked URL"
+      >
+        <svg viewBox="0 0 20 20" fill="currentColor" width="13" height="13">
+          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+        </svg>
+        Resource Unavailable
+      </span>
+    );
+  }
+
+  return (
+    <a
+      href={href}
+      className={`${className ?? ""}${linkState === "checking" ? " finint-link-checking" : ""}`}
+      onClick={(e: { preventDefault(): void }) => onOpen(href, e)}
+      rel="noopener noreferrer"
+    >
+      {linkState === "checking" ? (
+        <span className="finint-link-spinner" />
+      ) : null}
+      {children}
+    </a>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Broken-link inline notice                                           */
+/* ------------------------------------------------------------------ */
+
+function BrokenLinkNotice({ url, onRetry }: { url: string; onRetry: () => void }) {
+  return (
+    <div className="finint-broken-notice">
+      <div className="finint-broken-notice-icon">
+        <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+          <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd"/>
+        </svg>
+      </div>
+      <div className="finint-broken-notice-body">
+        <strong>Resource not available</strong>
+        <p>
+          The linked document could not be reached at{" "}
+          <span className="finint-broken-domain">{getHostname(url)}</span>.
+          It may have moved or been taken offline. Try searching for it
+          directly on the institution's website.
+        </p>
+      </div>
+      <button className="finint-broken-retry" onClick={onRetry} title="Try again">
+        ↺ Retry
+      </button>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Finance Intelligence Section                                        */
 /* ------------------------------------------------------------------ */
 
@@ -315,6 +429,7 @@ const ALERT_CATEGORY_MAP: Record<string, DocCategory[]> = {
 function FinanceIntelligenceSection() {
   const [activeCategory, setActiveCategory] = useState<DocCategory | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const { states: linkStates, openSafe, reset: resetLink } = useLinkChecker();
 
   // Pull live finance/policy alerts from backend
   const { data: alerts = [] } = useAlerts({ active_only: true });
@@ -481,14 +596,21 @@ function FinanceIntelligenceSection() {
                 {/* Card body */}
                 <div className="finint-doc-institution">{doc.institution}</div>
                 <h4 className="finint-doc-title">
-                  <a href={doc.url} target="_blank" rel="noopener noreferrer">
+                  <SafeExternalLink
+                    href={doc.url}
+                    linkState={linkStates[doc.url] ?? "idle"}
+                    onOpen={openSafe}
+                  >
                     {doc.title}
                     <svg viewBox="0 0 20 20" fill="currentColor" width="11" height="11" className="finint-ext-icon">
                       <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
                       <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
                     </svg>
-                  </a>
+                  </SafeExternalLink>
                 </h4>
+                {(linkStates[doc.url] === "broken") && (
+                  <BrokenLinkNotice url={doc.url} onRetry={() => resetLink(doc.url)} />
+                )}
                 <p className="finint-doc-desc">{doc.description}</p>
 
                 {/* Tags */}
@@ -532,11 +654,11 @@ function FinanceIntelligenceSection() {
                       <span className="finint-homepage-note" title="This link goes to the institution's homepage">Homepage</span>
                     )}
                   </div>
-                  <a
+                  <SafeExternalLink
                     href={doc.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="finint-open-btn"
+                    linkState={linkStates[doc.url] ?? "idle"}
+                    onOpen={openSafe}
                   >
                     {doc.doc_type === "pdf" ? (
                       <>
@@ -550,7 +672,7 @@ function FinanceIntelligenceSection() {
                     ) : (
                       <>Open Source ↗</>
                     )}
-                  </a>
+                  </SafeExternalLink>
                 </div>
               </div>
             );
@@ -586,27 +708,30 @@ function FinanceIntelligenceSection() {
                   )}
                 </div>
                 <div className="finint-news-item-body">
-                  <a
+                  <SafeExternalLink
                     href={article.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="finint-news-title"
+                    linkState={linkStates[article.url] ?? "idle"}
+                    onOpen={openSafe}
                   >
                     {article.title}
-                  </a>
+                  </SafeExternalLink>
+                  {(linkStates[article.url] === "broken") && (
+                    <BrokenLinkNotice url={article.url} onRetry={() => resetLink(article.url)} />
+                  )}
                   {article.summary && (
                     <p className="finint-news-summary">{article.summary}</p>
                   )}
                 </div>
                 <div className="finint-news-item-footer">
-                  <a
+                  <SafeExternalLink
                     href={article.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="finint-news-read-btn"
+                    linkState={linkStates[article.url] ?? "idle"}
+                    onOpen={openSafe}
                   >
                     Read Full Article ↗
-                  </a>
+                  </SafeExternalLink>
                 </div>
               </div>
             ))}

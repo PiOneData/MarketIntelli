@@ -70,8 +70,8 @@ const TOGGLE_GROUPS: {
     key: "dc",
     label: "Data Centers",
     icon: <Server size={12} />,
-    bgOn: "bg-violet-500",
-    borderOn: "border-violet-400",
+    bgOn: "bg-teal-600",
+    borderOn: "border-teal-500",
   },
 ];
 
@@ -84,7 +84,9 @@ const LAYER_DEFS: { id: string; group: LayerGroup }[] = [
   { id: "solar-core", group: "solar" },
   { id: "dc-glow", group: "dc" },
   { id: "dc-core", group: "dc" },
+  { id: "dc-label", group: "dc" },
 ];
+
 
 // ── Component ────────────────────────────────────────────────────────────────
 export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: Props) {
@@ -141,6 +143,8 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
       container: mapContainer.current,
       style: {
         version: 8,
+        // Free OpenMapTiles glyphs — required for symbol/label layers
+        glyphs: "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
         sources: {
           "satellite-source": {
             type: "raster",
@@ -268,29 +272,74 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               "circle-opacity": 1,
             },
           },
-          // Data centers glow
+          // Data centers glow — only features with complete addresses
           {
             id: "dc-glow",
             type: "circle",
             source: "datacenters",
+            filter: ["all", ["has", "address"], ["!=", ["get", "address"], ""]],
             paint: {
               "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 10, 10, 22, 14, 32],
-              "circle-color": "#a855f7",
-              "circle-opacity": 0.3,
+              "circle-color": "#0f766e",
+              "circle-opacity": 0.25,
               "circle-blur": 0.5,
             },
           },
-          // Data centers core
+          // Data centers core — only features with complete addresses
           {
             id: "dc-core",
             type: "circle",
             source: "datacenters",
+            filter: ["all", ["has", "address"], ["!=", ["get", "address"], ""]],
             paint: {
               "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 6, 10, 12, 14, 16],
-              "circle-color": "#c084fc",
+              "circle-color": "#0f766e",
               "circle-stroke-color": "#ffffff",
               "circle-stroke-width": 2.5,
               "circle-opacity": 1,
+            },
+          },
+          // Data centers label — name at zoom 10+, name + coordinates at zoom 13+
+          {
+            id: "dc-label",
+            type: "symbol",
+            source: "datacenters",
+            minzoom: 10,
+            filter: ["all", ["has", "address"], ["!=", ["get", "address"], ""]],
+            layout: {
+              "text-field": [
+                "step",
+                ["zoom"],
+                ["get", "name"],
+                13,
+                [
+                  "format",
+                  ["get", "name"], { "font-scale": 1.0 },
+                  "\n", {},
+                  [
+                    "concat",
+                    ["number-format", ["to-number", ["get", "lat"]], { "max-fraction-digits": 4 }],
+                    "°N  ",
+                    ["number-format", ["to-number", ["get", "lng"]], { "max-fraction-digits": 4 }],
+                    "°E",
+                  ],
+                  { "font-scale": 0.78 },
+                ],
+              ],
+              "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
+              "text-size": 11,
+              "text-anchor": "top",
+              "text-offset": [0, 1.3],
+              "text-max-width": 14,
+              "text-allow-overlap": false,
+            },
+            paint: {
+              "text-color": "#ffffff",
+              "text-halo-color": "#0f172a",
+              "text-halo-width": 1.8,
+              "text-opacity": [
+                "interpolate", ["linear"], ["zoom"], 10, 0, 11, 1,
+              ],
             },
           },
         ],
@@ -629,7 +678,7 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="relative flex items-center justify-center">
                     <div className="absolute w-12 h-12 rounded-full border border-white/30 animate-pulse" />
-                    <div className="w-4 h-4 rounded-full bg-violet-500 border-2 border-white shadow-[0_0_15px_rgba(139,92,246,0.8)] z-10" />
+                    <div className="w-4 h-4 rounded-full bg-teal-600 border-2 border-white shadow-[0_0_15px_rgba(15,118,110,0.8)] z-10" />
                   </div>
                 </div>
                 <button
@@ -691,7 +740,7 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
                     setDcPopup(null);
                     onDatacenterClick(dcPopup.lat, dcPopup.lng, dcPopup.dc);
                   }}
-                  className="w-full bg-gradient-to-br from-violet-600 via-violet-700 to-indigo-800 hover:from-violet-500 hover:to-indigo-700 text-white rounded-2xl py-4 text-[11px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all shadow-[0_10px_30px_-10px_rgba(124,58,237,0.5)] hover:shadow-[0_15px_40px_-10px_rgba(124,58,237,0.6)] hover:-translate-y-0.5 active:scale-[0.98] group"
+                  className="w-full bg-gradient-to-r from-teal-700 to-teal-600 hover:from-teal-600 hover:to-teal-500 text-white rounded-2xl py-4 text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-3 transition-all shadow-[0_10px_30px_-10px_rgba(15,118,110,0.5)] hover:shadow-[0_15px_40px_-10px_rgba(15,118,110,0.6)] hover:-translate-y-0.5 active:scale-[0.98] group"
                 >
                   <ExternalLink
                     size={16}
