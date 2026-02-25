@@ -1,5 +1,5 @@
 """
-Solar & Wind Assessment Routes
+RE Potential Assessment Routes
 Provides analyze, live-weather, and static GeoJSON endpoints.
 Optional dependencies (earthengine-api, openmeteo-requests, requests-cache,
 retry-requests) are imported lazily so the backend starts cleanly even when
@@ -147,6 +147,64 @@ class LocationRequest(BaseModel):
 
 
 # ── Endpoints ───────────────────────────────────────────────────────────────
+
+@router.get("/geocode")
+async def geocode_address(
+    address: str,
+    city: str = "",
+    state: str = "",
+    country: str = "India",
+):
+    """
+    Geocode a postal address using Nominatim (OpenStreetMap) — no API key required.
+    Returns lat/lng for datacenters or any other address within India.
+    Rate-limited by Nominatim policy: one request per second maximum.
+    """
+    result = await asyncio.to_thread(
+        _nominatim_geocode, address, city, state, country
+    )
+    if result is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Address could not be geocoded. Try a more specific query.",
+        )
+    return result
+
+
+def _nominatim_geocode(
+    address: str, city: str, state: str, country: str
+) -> dict | None:
+    """Blocking Nominatim call — run inside asyncio.to_thread."""
+    import json
+    import urllib.parse
+    import urllib.request
+
+    query = ", ".join(filter(None, [address, city, state, country]))
+    params = urllib.parse.urlencode(
+        {"q": query, "format": "json", "limit": 1, "addressdetails": 1}
+    )
+    url = f"https://nominatim.openstreetmap.org/search?{params}"
+    # Nominatim requires a descriptive User-Agent; anonymous requests are blocked
+    headers = {"User-Agent": "MarketIntelli/1.0 (renewable-energy-intelligence)"}
+
+    try:
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode())
+        if data:
+            r = data[0]
+            return {
+                "lat": float(r["lat"]),
+                "lng": float(r["lon"]),
+                "display_name": r.get("display_name", ""),
+                "source": "nominatim/openstreetmap",
+                "type": r.get("type", ""),
+                "importance": r.get("importance", 0),
+            }
+    except Exception as exc:
+        logger.error(f"[geocode] Nominatim error: {type(exc).__name__}: {exc}")
+    return None
+
 
 @router.get("/data/wind-solar-data")
 async def serve_wind_solar_geojson():

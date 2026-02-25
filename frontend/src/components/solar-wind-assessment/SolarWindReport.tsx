@@ -90,6 +90,7 @@ const GUIDE_ITEMS = [
 
 // ── Main Component ───────────────────────────────────────────────────────────
 export default function SolarWindReport({ analysis, live, lat, lng, datacenter, onClose, onClearCache }: Props) {
+  // font-sans (Inter) is declared on the container; all children inherit it
   const [activeTab, setActiveTab] = useState<TabId>(datacenter ? "datacenter" : "wind");
   const [showGuide, setShowGuide] = useState(false);
 
@@ -142,55 +143,56 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
   const shearExp = num(get(wd, "physics", "shear_alpha"), 0.143);
 
   const TABS: { id: TabId; icon: React.ReactNode; label: string; activeClass: string }[] = [
-    ...(datacenter ? [{ id: "datacenter" as TabId, icon: <Server size={14} />, label: "Data Center", activeClass: "bg-violet-600 text-white shadow-md shadow-violet-200" }] : []),
-    { id: "wind",  icon: <Wind size={14} />,  label: "Wind",      activeClass: "bg-cyan-500 text-white shadow-md shadow-cyan-200"   },
-    { id: "solar", icon: <Sun size={14} />,   label: "Solar",     activeClass: "bg-amber-400 text-white shadow-md shadow-amber-200" },
-    { id: "water", icon: <Cloud size={14} />, label: "Hydrology", activeClass: "bg-blue-600 text-white shadow-md shadow-blue-200"   },
+    ...(datacenter ? [{ id: "datacenter" as TabId, icon: <Server size={13} />, label: "Data Center", activeClass: "bg-teal-700 text-white shadow-sm" }] : []),
+    { id: "wind",  icon: <Wind size={13} />,  label: "Wind",      activeClass: "bg-sky-600 text-white shadow-sm"    },
+    { id: "solar", icon: <Sun size={13} />,   label: "Solar",     activeClass: "bg-amber-500 text-white shadow-sm"  },
+    { id: "water", icon: <Cloud size={13} />, label: "Hydrology", activeClass: "bg-blue-600 text-white shadow-sm"   },
   ];
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="absolute inset-0 z-50 bg-[#f8fafc] overflow-y-auto font-sans text-slate-900">
+      className="absolute inset-0 z-50 bg-[#f8fafc] overflow-y-auto font-sans text-slate-900"
+      style={{ fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
 
       {/* ── HEADER ── */}
-      <nav className="sticky top-0 bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-200 z-50 px-8 py-4 flex justify-between items-center flex-wrap gap-3">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-br from-violet-600 via-indigo-600 to-cyan-500 rounded-2xl text-white shadow-lg">
-            <Satellite size={24} />
+      <nav className="sticky top-0 bg-white/90 backdrop-blur-md shadow-sm border-b border-slate-200 z-50 px-6 py-3 flex justify-between items-center flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-teal-700 rounded-xl text-white shadow-md">
+            <Satellite size={20} />
           </div>
           <div>
-            <h1 className="font-black text-slate-800 tracking-tight text-xl uppercase leading-none">Geospatial Site Intelligence</h1>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{lat.toFixed(4)}N, {lng.toFixed(4)}E</span>
+            <h1 className="font-bold text-slate-800 text-base leading-tight">RE Potential Assessment</h1>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-xs text-slate-400 font-mono">{lat.toFixed(4)}°N, {lng.toFixed(4)}°E</span>
               <span className="w-1 h-1 bg-slate-200 rounded-full" />
-              <span className="text-[10px] text-indigo-500 font-black uppercase tracking-widest">Site Assessment</span>
+              <span className="text-xs text-teal-600 font-semibold">Site Intelligence</span>
             </div>
           </div>
         </div>
 
-        <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200 flex-wrap gap-1">
+        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 flex-wrap gap-1">
           {TABS.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${activeTab === tab.id ? tab.activeClass : "text-slate-400 hover:text-slate-600"}`}>
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-xs uppercase tracking-wide transition-all ${activeTab === tab.id ? tab.activeClass : "text-slate-400 hover:text-slate-600"}`}>
               {tab.icon}{tab.label}
             </button>
           ))}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button onClick={() => setShowGuide(!showGuide)}
-            className={`p-3 rounded-2xl transition-all border flex items-center gap-2 ${showGuide ? "bg-indigo-600 text-white border-indigo-500 shadow-lg" : "bg-white text-slate-400 border-slate-100 hover:bg-slate-50"}`}>
-            <BookOpen size={16} />
-            <span className="text-[10px] font-black uppercase tracking-widest hidden md:block">Intelligence Guide</span>
+            className={`px-3 py-2 rounded-xl transition-all border flex items-center gap-2 text-xs font-semibold ${showGuide ? "bg-teal-700 text-white border-teal-600 shadow" : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"}`}>
+            <BookOpen size={14} />
+            <span className="hidden md:block">Guide</span>
           </button>
           {onClearCache && (
             <button onClick={onClearCache} title="Clear cached analysis"
-              className="p-3 bg-white text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-2xl transition-all border border-slate-100">
-              <ArrowLeft size={18} />
+              className="p-2 bg-white text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-xl transition-all border border-slate-200">
+              <ArrowLeft size={16} />
             </button>
           )}
-          <button onClick={onClose} className="p-3 bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all border border-slate-100">
-            <X size={20} />
+          <button onClick={onClose} className="p-2 bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all border border-slate-200">
+            <X size={18} />
           </button>
         </div>
       </nav>
@@ -199,34 +201,34 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
       <AnimatePresence>
         {showGuide && (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-            className="fixed top-24 right-8 left-8 md:left-auto md:w-[450px] bg-white rounded-[2.5rem] shadow-[0_32px_80px_-16px_rgba(0,0,0,0.2)] border border-slate-100 z-[60] overflow-hidden">
-            <div className="bg-slate-900 p-8 text-white relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 rounded-full -translate-y-8 translate-x-8 blur-2xl" />
-              <div className="flex items-center gap-4 relative z-10">
-                <div className="p-3 bg-indigo-500 rounded-2xl"><BookOpen size={20} /></div>
+            className="fixed top-20 right-6 left-6 md:left-auto md:w-[420px] bg-white rounded-2xl shadow-2xl border border-slate-100 z-[60] overflow-hidden">
+            <div className="bg-slate-900 p-6 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/20 rounded-full -translate-y-8 translate-x-8 blur-2xl" />
+              <div className="flex items-center gap-3 relative z-10">
+                <div className="p-2.5 bg-teal-700 rounded-xl"><BookOpen size={18} /></div>
                 <div>
-                  <h3 className="text-lg font-black uppercase tracking-tight">Intelligence Logic</h3>
-                  <p className="text-[9px] text-indigo-300 font-bold uppercase tracking-widest">How we assess site suitability</p>
+                  <h3 className="text-base font-bold">Intelligence Logic</h3>
+                  <p className="text-xs text-teal-300 mt-0.5">How we assess site suitability</p>
                 </div>
               </div>
             </div>
-            <div className="p-8 space-y-8 max-h-[60vh] overflow-y-auto">
+            <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
               {GUIDE_ITEMS.map((item, i) => (
-                <div key={i} className="flex gap-5 group">
-                  <div className="shrink-0 w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 group-hover:border-indigo-100 group-hover:bg-indigo-50 transition-colors">
+                <div key={i} className="flex gap-4 group">
+                  <div className="shrink-0 w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100 group-hover:border-teal-100 group-hover:bg-teal-50 transition-colors">
                     {item.icon}
                   </div>
-                  <div className="space-y-1">
-                    <h4 className="text-xs font-black text-slate-800 uppercase tracking-wide">{item.title}</h4>
-                    <p className="text-[11px] text-slate-500 leading-relaxed font-medium">{item.desc}</p>
+                  <div className="space-y-0.5">
+                    <h4 className="text-sm font-semibold text-slate-800">{item.title}</h4>
+                    <p className="text-xs text-slate-500 leading-relaxed">{item.desc}</p>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-center">
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-center">
               <button onClick={() => setShowGuide(false)}
-                className="px-8 py-2.5 bg-slate-800 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-700 transition-colors">
-                Understood
+                className="px-6 py-2 bg-slate-800 text-white text-xs font-semibold uppercase tracking-wide rounded-lg hover:bg-slate-700 transition-colors">
+                Close
               </button>
             </div>
           </motion.div>
@@ -266,50 +268,47 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
               </div>
 
               {/* Hero banner */}
-              <div className="relative rounded-[3rem] overflow-hidden bg-gradient-to-br from-slate-900 via-violet-950 to-purple-950 p-10 shadow-2xl">
+              <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 p-8 shadow-xl">
                 <div className="absolute inset-0 pointer-events-none overflow-hidden">
                   {[0, 1, 2].map(i => (
-                    <motion.div key={i} className="absolute rounded-full border border-violet-500/20"
+                    <motion.div key={i} className="absolute rounded-full border border-teal-500/20"
                       style={{ width: 300 + i * 200, height: 300 + i * 200, top: "50%", left: "65%", x: "-50%", y: "-50%" }}
                       animate={{ scale: [1, 1.12, 1], opacity: [0.25, 0.05, 0.25] }}
                       transition={{ duration: 3.5 + i, repeat: Infinity, delay: i * 0.9 }} />
                   ))}
                 </div>
-                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-10 items-center">
-                  <div className="flex flex-col items-center gap-6">
-                    <motion.div className="w-28 h-28 rounded-[2rem] bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center shadow-2xl"
+                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <motion.div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-teal-600 to-teal-800 flex items-center justify-center shadow-xl"
                       animate={{ y: [0, -6, 0] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
-                      <Server size={52} className="text-white" strokeWidth={1.5} />
+                      <Server size={44} className="text-white" strokeWidth={1.5} />
                     </motion.div>
-                    <div className="text-center">
-                      <div className="inline-block px-4 py-1.5 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-300 text-[10px] font-black uppercase tracking-widest">
-                        {str(datacenter.tier, "Unknown Tier")}
-                      </div>
+                    <div className="inline-block px-3 py-1 rounded-full bg-teal-500/20 border border-teal-500/30 text-teal-300 text-xs font-semibold">
+                      {str(datacenter.tier, "Unknown Tier")}
                     </div>
                   </div>
-                  <div className="col-span-1 space-y-4">
-                    <div className="text-[10px] font-black text-violet-400 uppercase tracking-widest">Data Center Profile</div>
-                    <h2 className="text-3xl font-black text-white leading-tight">{str(datacenter.name)}</h2>
-                    <div className="text-violet-300 font-bold text-sm">{str(datacenter.company)}</div>
+                  <div className="col-span-1 space-y-3">
+                    <div className="text-xs font-semibold text-teal-400 uppercase tracking-wide">Data Center Profile</div>
+                    <h2 className="text-2xl font-bold text-white leading-tight">{str(datacenter.name)}</h2>
+                    <div className="text-teal-300 font-medium text-sm">{str(datacenter.company)}</div>
                     {datacenter.url && (
                       <a href={String(datacenter.url)} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-[10px] font-black text-violet-300 hover:text-white uppercase tracking-widest transition-colors">
+                        className="inline-flex items-center gap-2 text-xs font-semibold text-teal-300 hover:text-white uppercase tracking-wide transition-colors">
                         <Globe size={12} />{String(datacenter.url).replace("https://", "")}
                       </a>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     {[
-                      { label: "Power", val: str(datacenter.power_mw, "—"), unit: "MW", col: "from-violet-600 to-purple-700" },
-                      { label: "Tier Design", val: str(datacenter.tier, "—"), unit: "", col: "from-indigo-600 to-violet-700" },
-                      { label: "Whitespace", val: str(datacenter.whitespace, "—"), unit: "", col: "from-purple-600 to-fuchsia-700" },
-                      { label: "Market", val: str(datacenter.market, "—"), unit: "", col: "from-fuchsia-600 to-pink-700" },
+                      { label: "Power", val: str(datacenter.power_mw, "—"), unit: "MW", col: "from-teal-700 to-teal-800" },
+                      { label: "Tier Design", val: str(datacenter.tier, "—"), unit: "", col: "from-slate-700 to-slate-800" },
+                      { label: "Whitespace", val: str(datacenter.whitespace, "—"), unit: "", col: "from-slate-700 to-slate-800" },
+                      { label: "Market", val: str(datacenter.market, "—"), unit: "", col: "from-teal-800 to-slate-900" },
                     ].map(({ label, val, unit, col }) => (
-                      <div key={label} className={`bg-gradient-to-br ${col} p-5 rounded-[1.5rem] shadow-xl text-white relative overflow-hidden`}>
-                        <div className="absolute inset-0 bg-white/5" />
-                        <div className="text-[8px] font-black uppercase tracking-widest opacity-70 mb-2">{label}</div>
-                        <div className="text-sm font-black leading-tight relative z-10">{val}</div>
-                        {unit && <div className="text-[8px] font-bold opacity-60 mt-1">{unit}</div>}
+                      <div key={label} className={`bg-gradient-to-br ${col} p-4 rounded-xl shadow text-white relative overflow-hidden`}>
+                        <div className="text-xs font-medium opacity-60 mb-1">{label}</div>
+                        <div className="text-sm font-bold leading-tight">{val}</div>
+                        {unit && <div className="text-xs opacity-50 mt-0.5">{unit}</div>}
                       </div>
                     ))}
                   </div>
@@ -318,51 +317,51 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
 
               {/* Location + Infrastructure */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-white border border-slate-100 rounded-[3rem] p-10 shadow-sm space-y-8">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-violet-50 border border-violet-100 rounded-2xl text-violet-500"><MapPin size={20} /></div>
+                <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-sm space-y-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-teal-50 border border-teal-100 rounded-xl text-teal-600"><MapPin size={18} /></div>
                     <div>
-                      <h3 className="text-lg font-black text-slate-800 tracking-tight uppercase">Physical Location</h3>
-                      <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">Address · Postal · Coordinates</p>
-                    </div>
-                  </div>
-                  <div className="space-y-5">
-                    <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                      <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Street Address</div>
-                      <div className="text-sm font-bold text-slate-700">{str(datacenter.address)}</div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      {[["City", datacenter.city], ["State", datacenter.state], ["Postal", datacenter.postal]].map(([l, v]) => (
-                        <div key={String(l)} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 text-center">
-                          <div className="text-[9px] font-black text-slate-400 uppercase mb-1">{String(l)}</div>
-                          <div className="text-sm font-black text-slate-700">{str(v)}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="p-6 bg-slate-900 rounded-2xl">
-                      <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">GPS Coordinates</div>
-                      <div className="font-mono text-sm font-black text-violet-400">{lat.toFixed(6)}°N, {lng.toFixed(6)}°E</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white border border-slate-100 rounded-[3rem] p-10 shadow-sm space-y-8">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-purple-50 border border-purple-100 rounded-2xl text-purple-500"><Cpu size={20} /></div>
-                    <div>
-                      <h3 className="text-lg font-black text-slate-800 tracking-tight uppercase">Infrastructure Specs</h3>
+                      <h3 className="text-base font-semibold text-slate-800">Physical Location</h3>
+                      <p className="text-xs text-slate-400 mt-0.5">Address · Postal · Coordinates</p>
                     </div>
                   </div>
                   <div className="space-y-4">
+                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                      <div className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">Street Address</div>
+                      <div className="text-sm font-semibold text-slate-700">{str(datacenter.address)}</div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      {[["City", datacenter.city], ["State", datacenter.state], ["Postal", datacenter.postal]].map(([l, v]) => (
+                        <div key={String(l)} className="p-4 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                          <div className="text-xs font-medium text-slate-400 uppercase mb-1">{String(l)}</div>
+                          <div className="text-sm font-semibold text-slate-700">{str(v)}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-4 bg-slate-900 rounded-xl">
+                      <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">GPS Coordinates</div>
+                      <div className="font-mono text-sm font-bold text-teal-400">{lat.toFixed(6)}°N, {lng.toFixed(6)}°E</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-sm space-y-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-600"><Cpu size={18} /></div>
+                    <div>
+                      <h3 className="text-base font-semibold text-slate-800">Infrastructure Specs</h3>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
                     {[
-                      { label: "Tier Classification", val: str(datacenter.tier, "Not Specified"), bg: "bg-violet-50", border: "border-violet-100", text: "text-violet-700" },
+                      { label: "Tier Classification", val: str(datacenter.tier, "Not Specified"), bg: "bg-teal-50", border: "border-teal-100", text: "text-teal-700" },
                       { label: "Power Capacity",      val: datacenter.power_mw ? `${String(datacenter.power_mw)} MW` : "Not Specified", bg: "bg-amber-50",  border: "border-amber-100",  text: "text-amber-700" },
                       { label: "Whitespace",          val: str(datacenter.whitespace, "Not Specified"), bg: "bg-emerald-50", border: "border-emerald-100", text: "text-emerald-700" },
-                      { label: "Market",              val: str(datacenter.market,     "Not Specified"), bg: "bg-cyan-50",    border: "border-cyan-100",    text: "text-cyan-700"    },
+                      { label: "Market",              val: str(datacenter.market,     "Not Specified"), bg: "bg-sky-50",     border: "border-sky-100",     text: "text-sky-700"    },
                       { label: "Country",             val: str(datacenter.country,    "India"),          bg: "bg-slate-50",   border: "border-slate-100",   text: "text-slate-700"   },
                     ].map(({ label, val, bg, border, text }) => (
-                      <div key={label} className={`flex justify-between items-center p-5 ${bg} border ${border} rounded-2xl`}>
-                        <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{label}</div>
-                        <div className={`text-sm font-black ${text}`}>{val}</div>
+                      <div key={label} className={`flex justify-between items-center p-4 ${bg} border ${border} rounded-xl`}>
+                        <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">{label}</div>
+                        <div className={`text-sm font-semibold ${text}`}>{val}</div>
                       </div>
                     ))}
                   </div>
@@ -370,16 +369,16 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
               </div>
 
               {/* Switch tabs banner */}
-              <div className="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-[2rem] p-8 flex items-center justify-between shadow-xl flex-wrap gap-4">
+              <div className="bg-gradient-to-r from-teal-700 to-teal-600 rounded-2xl p-6 flex items-center justify-between shadow-md flex-wrap gap-4">
                 <div>
-                  <div className="text-[10px] font-black text-violet-200 uppercase tracking-widest mb-2">Site Intelligence Available</div>
-                  <div className="text-white font-black text-lg">Switch tabs to view Wind, Solar & Hydrology assessments</div>
+                  <div className="text-xs font-medium text-teal-200 mb-1">Site Intelligence Available</div>
+                  <div className="text-white font-semibold text-base">View Wind, Solar &amp; Hydrology assessments</div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                   {(["wind", "solar", "water"] as TabId[]).map(id => (
                     <button key={id} onClick={() => setActiveTab(id)}
-                      className="flex items-center gap-2 px-5 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/20">
-                      {id === "wind" && <Wind size={16} />}{id === "solar" && <Sun size={16} />}{id === "water" && <Cloud size={16} />}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white rounded-lg text-xs font-semibold uppercase tracking-wide transition-all border border-white/20">
+                      {id === "wind" && <Wind size={14} />}{id === "solar" && <Sun size={14} />}{id === "water" && <Cloud size={14} />}
                       {id}
                     </button>
                   ))}
@@ -507,10 +506,10 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
 
               {/* Vertical profile chart */}
               {profileData.length > 0 && (
-                <div className="bg-white border border-slate-100 rounded-[3rem] shadow-sm overflow-hidden">
-                  <div className="px-10 pt-10 pb-4">
-                    <div className="text-xs font-black text-slate-800 uppercase tracking-wider">Vertical Wind Profile</div>
-                    <div className="text-[9px] text-slate-400 font-bold mt-0.5">GWA v3 · 10m–200m AGL</div>
+                <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+                  <div className="px-8 pt-8 pb-3">
+                    <div className="text-sm font-semibold text-slate-800">Vertical Wind Profile</div>
+                    <div className="text-xs text-slate-400 mt-0.5">GWA v3 · 10m–200m AGL</div>
                   </div>
                   <div className="px-4 pb-4 h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
@@ -528,15 +527,15 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                   </div>
                   <div className="grid grid-cols-4 border-t border-slate-100">
                     {[
-                      { label: "Shear α", value: shearExp.toFixed(3), sub: "Hellmann exponent", color: "text-indigo-600" },
-                      { label: "Shear Ratio", value: str(get(wd, "physics", "shear_ratio")), sub: "ws100/ws10", color: "text-violet-600" },
+                      { label: "Shear α", value: shearExp.toFixed(3), sub: "Hellmann exponent", color: "text-sky-600" },
+                      { label: "Shear Ratio", value: str(get(wd, "physics", "shear_ratio")), sub: "ws100/ws10", color: "text-slate-600" },
                       { label: "RIX", value: str(get(wd, "feasibility", "rix")), sub: "Ruggedness τ", color: "text-amber-500" },
                       { label: "Elevation", value: `${str(get(wd, "feasibility", "elevation"))}m`, sub: `Slope ${str(get(wd, "feasibility", "slope"))}°`, color: "text-slate-700" },
                     ].map((p, i) => (
-                      <div key={p.label} className={`px-8 py-6 text-center ${i < 3 ? "border-r border-slate-100" : ""}`}>
-                        <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{p.label}</div>
-                        <div className={`text-2xl font-black ${p.color}`}>{p.value}</div>
-                        <div className="text-[8px] text-slate-300 font-bold mt-1">{p.sub}</div>
+                      <div key={p.label} className={`px-6 py-5 text-center ${i < 3 ? "border-r border-slate-100" : ""}`}>
+                        <div className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">{p.label}</div>
+                        <div className={`text-xl font-bold ${p.color}`}>{p.value}</div>
+                        <div className="text-xs text-slate-300 font-medium mt-1">{p.sub}</div>
                       </div>
                     ))}
                   </div>
@@ -545,12 +544,12 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
 
               {/* IEC Capacity Factors */}
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                <div className="lg:col-span-3 bg-white border border-slate-100 rounded-[3rem] p-10 shadow-sm">
-                  <div className="flex items-center gap-3 mb-8">
-                    <div className="p-2.5 rounded-2xl bg-indigo-50"><Zap size={16} className="text-indigo-500" /></div>
+                <div className="lg:col-span-3 bg-white border border-slate-100 rounded-2xl p-8 shadow-sm">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 rounded-xl bg-sky-50"><Zap size={15} className="text-sky-600" /></div>
                     <div>
-                      <div className="text-xs font-black text-slate-800 uppercase tracking-wider">IEC Turbine Capacity Factors</div>
-                      <div className="text-[9px] text-slate-400 font-bold">GWA v3 · site-specific CF per turbine class</div>
+                      <div className="text-sm font-semibold text-slate-800">IEC Turbine Capacity Factors</div>
+                      <div className="text-xs text-slate-400">GWA v3 · site-specific CF per turbine class</div>
                     </div>
                   </div>
                   <div className="space-y-6">
@@ -575,8 +574,8 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                       </div>
                     ))}
                   </div>
-                  <div className="mt-8 pt-6 border-t border-slate-50 text-[9px] text-slate-400 font-bold">
-                    <span className="text-indigo-500 font-black">Recommended: </span>{str(get(wd, "turbine", "best_fit"))}
+                  <div className="mt-6 pt-5 border-t border-slate-100 text-xs text-slate-400 font-medium">
+                    <span className="text-teal-600 font-semibold">Recommended: </span>{str(get(wd, "turbine", "best_fit"))}
                   </div>
                 </div>
                 <div className="lg:col-span-2 flex flex-col gap-5">
@@ -686,10 +685,10 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
 
               {/* Monthly bar chart */}
               {monthlySolarData.length > 0 && (
-                <div className="bg-white border border-slate-100 rounded-[3rem] shadow-sm overflow-hidden">
-                  <div className="px-10 pt-10 pb-4">
-                    <div className="text-xs font-black text-slate-800 uppercase tracking-wider">Monthly Generation Profile</div>
-                    <div className="text-[9px] text-slate-400 font-bold mt-0.5">GSA Long-Term Climatology · kWh / kWp per month</div>
+                <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+                  <div className="px-8 pt-8 pb-3">
+                    <div className="text-sm font-semibold text-slate-800">Monthly Generation Profile</div>
+                    <div className="text-xs text-slate-400 mt-0.5">GSA Long-Term Climatology · kWh / kWp per month</div>
                   </div>
                   <div className="px-4 pb-4 h-[240px]">
                     <ResponsiveContainer width="100%" height="100%">
@@ -708,13 +707,13 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                     {[
                       { label: "GHI",   value: str(get(sd, "resource", "ghi")),   unit: "kWh/m²/yr",    color: "text-amber-500"  },
                       { label: "PVOUT", value: str(get(sd, "resource", "pvout")),  unit: "kWh/kWp/yr",   color: "text-orange-500" },
-                      { label: "DNI",   value: str(get(sd, "resource", "dni")),    unit: "kWh/m²/yr",    color: "text-yellow-500" },
+                      { label: "DNI",   value: str(get(sd, "resource", "dni")),    unit: "kWh/m²/yr",    color: "text-yellow-600" },
                       { label: "Grade", value: str(get(sd, "resource", "grade")),  unit: str(get(sd, "resource", "label")), color: "text-rose-500" },
                     ].map((p, i) => (
-                      <div key={p.label} className={`px-8 py-6 text-center ${i < 3 ? "border-r border-slate-100" : ""}`}>
-                        <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{p.label}</div>
-                        <div className={`text-2xl font-black ${p.color}`}>{p.value}</div>
-                        <div className="text-[8px] text-slate-300 font-bold mt-1">{p.unit}</div>
+                      <div key={p.label} className={`px-6 py-5 text-center ${i < 3 ? "border-r border-slate-100" : ""}`}>
+                        <div className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">{p.label}</div>
+                        <div className={`text-xl font-bold ${p.color}`}>{p.value}</div>
+                        <div className="text-xs text-slate-300 font-medium mt-1">{p.unit}</div>
                       </div>
                     ))}
                   </div>
@@ -810,25 +809,25 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
               </div>
 
               {/* Summary metadata card */}
-              <div className="bg-white border border-slate-100 rounded-[3rem] p-10 shadow-sm">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="p-3 bg-blue-50 border border-blue-100 rounded-2xl text-blue-500"><Droplets size={20} /></div>
+              <div className="bg-white border border-slate-100 rounded-2xl p-8 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2.5 bg-blue-50 border border-blue-100 rounded-xl text-blue-500"><Droplets size={18} /></div>
                   <div>
-                    <h2 className="text-lg font-black text-slate-800 tracking-tight leading-none uppercase">Water Resource Summary</h2>
-                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1.5">NASA GRACE · GRIDMET PDSI</p>
+                    <h2 className="text-base font-semibold text-slate-800">Water Resource Summary</h2>
+                    <p className="text-xs text-slate-400 mt-0.5">NASA GRACE · GRIDMET PDSI</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    { label: "GRACE Anomaly", value: str(waterData.grace_anomaly), unit: "cm LWE", color: "text-cyan-500", bg: "bg-cyan-50", border: "border-cyan-100" },
-                    { label: "PDSI",          value: str(waterData.pdsi),          unit: "index",  color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-100" },
+                    { label: "GRACE Anomaly", value: str(waterData.grace_anomaly), unit: "cm LWE", color: "text-cyan-600", bg: "bg-cyan-50", border: "border-cyan-100" },
+                    { label: "PDSI",          value: str(waterData.pdsi),          unit: "index",  color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-100" },
                     { label: "Composite",     value: str(waterData.composite_risk_score), unit: "/100", color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100" },
                     { label: "Interpretation", value: str(waterData.interpretation, "No data").split(" ").slice(0, 2).join(" "), unit: "", color: "text-slate-700", bg: "bg-slate-50", border: "border-slate-100" },
                   ].map(({ label, value, unit, color, bg, border }) => (
-                    <div key={label} className={`${bg} border ${border} rounded-[2rem] p-6 flex flex-col gap-2`}>
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
-                      <div className={`text-3xl font-black tracking-tighter ${color}`}>{value}</div>
-                      {unit && <div className="text-[9px] font-bold text-slate-400">{unit}</div>}
+                    <div key={label} className={`${bg} border ${border} rounded-xl p-5 flex flex-col gap-1.5`}>
+                      <span className="text-xs font-medium text-slate-400 uppercase tracking-wide">{label}</span>
+                      <div className={`text-2xl font-bold ${color}`}>{value}</div>
+                      {unit && <div className="text-xs font-medium text-slate-400">{unit}</div>}
                     </div>
                   ))}
                 </div>
