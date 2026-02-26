@@ -17,7 +17,7 @@ function App() {
         <Route path="/" element={<DashboardPage />} />
 
         {/* Geo Analytics */}
-        <Route path="/geo-analytics" element={<Navigate to="/geo-analytics/solar-potential-mapping" replace />} />
+        <Route path="/geo-analytics" element={<Navigate to="/geo-analytics/assessment" replace />} />
         <Route path="/geo-analytics/:section" element={<GeoAnalyticsPage />} />
 
         {/* Projects */}

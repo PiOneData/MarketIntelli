@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useProjects } from "../hooks/useProjects";
+import { useCompanies, useFacilityStats } from "../hooks/useDataCenters";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ErrorMessage from "../components/common/ErrorMessage";
 import apiClient from "../api/client";
+import type { DataCenterCompany } from "../types/dataCenters";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                               */
@@ -63,6 +65,26 @@ async function fetchDcCompanyInfo(): Promise<Record<string, DcCompanyInfo>> {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Stock price link helper                                             */
+/* ------------------------------------------------------------------ */
+
+function getStockLink(ticker: string): string {
+  return `https://finance.yahoo.com/quote/${encodeURIComponent(ticker)}/`;
+}
+
+function getExchangeDisplayName(exchange: string): string {
+  const names: Record<string, string> = {
+    NSE: "National Stock Exchange (NSE)",
+    BSE: "Bombay Stock Exchange (BSE)",
+    NASDAQ: "NASDAQ",
+    NYSE: "New York Stock Exchange (NYSE)",
+    SGX: "Singapore Exchange (SGX)",
+    TSE: "Tokyo Stock Exchange (TSE)",
+  };
+  return names[exchange] ?? exchange;
+}
+
+/* ------------------------------------------------------------------ */
 /*  Helpers                                                             */
 /* ------------------------------------------------------------------ */
 
@@ -78,23 +100,427 @@ function formatPrice(price: number | null, currency: string): string {
   return `${sym}${price.toLocaleString("en-IN", { maximumFractionDigits: decimals })}`;
 }
 
+function formatMillions(val: number | null): string {
+  if (val == null) return "—";
+  if (val >= 1_000_000_000) return `$${(val / 1_000_000_000).toFixed(1)}B`;
+  if (val >= 1_000_000) return `$${(val / 1_000_000).toFixed(0)}M`;
+  return `$${val.toLocaleString()}`;
+}
+
 function ExchangeBadge({ exchange }: { exchange: string }) {
   const colors: Record<string, { bg: string; color: string }> = {
-    NSE:    { bg: "#dbeafe", color: "#1d4ed8" },
-    NASDAQ: { bg: "#dcfce7", color: "#166534" },
-    NYSE:   { bg: "#ede9fe", color: "#5b21b6" },
-    SGX:    { bg: "#fce7f3", color: "#9d174d" },
-    TSE:    { bg: "#fff7ed", color: "#c2410c" },
+    NSE:    { bg: "#f0f0f0", color: "#1a1a1a" },
+    BSE:    { bg: "#f0f0f0", color: "#1a1a1a" },
+    NASDAQ: { bg: "#f0f0f0", color: "#1a1a1a" },
+    NYSE:   { bg: "#f0f0f0", color: "#1a1a1a" },
+    SGX:    { bg: "#f0f0f0", color: "#1a1a1a" },
+    TSE:    { bg: "#f0f0f0", color: "#1a1a1a" },
   };
-  const c = colors[exchange] ?? { bg: "#f3f4f6", color: "#374151" };
+  const c = colors[exchange] ?? { bg: "#f0f0f0", color: "#1a1a1a" };
   return (
     <span style={{
       background: c.bg, color: c.color,
-      padding: "2px 8px", borderRadius: "5px",
-      fontSize: "11px", fontWeight: 600, letterSpacing: "0.04em",
+      padding: "2px 8px", borderRadius: "2px",
+      fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em",
+      border: "1px solid #d1d5db",
     }}>
       {exchange}
     </span>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Company Profile Modal                                               */
+/* ------------------------------------------------------------------ */
+
+type ModalTab = "overview" | "specs" | "ecosystem" | "location" | "stock";
+
+interface CompanyProfileModalProps {
+  company: DataCenterCompany;
+  stock: DcStock | undefined;
+  dcInfo: DcCompanyInfo | undefined;
+  onClose: () => void;
+}
+
+function CompanyProfileModal({ company, stock, dcInfo, onClose }: CompanyProfileModalProps) {
+  const [tab, setTab] = useState<ModalTab>("overview");
+
+  const hasStock = !!(stock && !stock.error && stock.price != null);
+  const isPos = (stock?.change_pct ?? 0) > 0;
+  const isNeg = (stock?.change_pct ?? 0) < 0;
+
+  const TABS: { id: ModalTab; label: string }[] = [
+    { id: "overview",   label: "Overview" },
+    { id: "specs",      label: "Specs" },
+    { id: "ecosystem",  label: "Ecosystem" },
+    { id: "location",   label: "Location" },
+    { id: "stock",      label: "Stock Price" },
+  ];
+
+  const initials = company.name.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase();
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
+          zIndex: 1000,
+        }}
+      />
+
+      {/* Panel */}
+      <div style={{
+        position: "fixed", top: 0, right: 0, bottom: 0, width: "560px",
+        background: "#fff", zIndex: 1001,
+        borderLeft: "1px solid #e5e7eb",
+        display: "flex", flexDirection: "column",
+        fontFamily: "var(--font-family, 'Inter', system-ui, sans-serif)",
+        overflow: "hidden",
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: "24px 24px 0",
+          borderBottom: "1px solid #e5e7eb",
+          background: "#f9fafb",
+        }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginBottom: "20px" }}>
+            <div style={{
+              width: "52px", height: "52px", background: "#1e293b",
+              color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "18px", fontWeight: 700, flexShrink: 0,
+            }}>
+              {initials}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h2 style={{ margin: 0, fontSize: "18px", fontWeight: 700, color: "#111827", lineHeight: 1.3 }}>
+                {company.name}
+              </h2>
+              {company.parent_company && (
+                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#6b7280" }}>
+                  {company.parent_company}
+                </p>
+              )}
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px", flexWrap: "wrap" }}>
+                {stock && <ExchangeBadge exchange={stock.exchange} />}
+                {hasStock && stock && (
+                  <a
+                    href={getStockLink(stock.ticker)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: "12px", color: "#1e293b", textDecoration: "underline" }}
+                  >
+                    {stock.ticker} on Yahoo Finance ↗
+                  </a>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              style={{
+                border: "1px solid #e5e7eb", background: "#fff",
+                width: "32px", height: "32px", display: "flex",
+                alignItems: "center", justifyContent: "center",
+                cursor: "pointer", flexShrink: 0, fontSize: "16px",
+                color: "#6b7280",
+              }}
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Tab bar */}
+          <div style={{ display: "flex", gap: 0, overflowX: "auto" }}>
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                style={{
+                  padding: "10px 16px",
+                  border: "none",
+                  borderBottom: tab === t.id ? "2px solid #1e293b" : "2px solid transparent",
+                  background: "transparent",
+                  cursor: "pointer",
+                  fontSize: "13px",
+                  fontWeight: tab === t.id ? 600 : 400,
+                  color: tab === t.id ? "#1e293b" : "#6b7280",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Body */}
+        <div style={{ flex: 1, overflow: "auto", padding: "24px" }}>
+
+          {/* Overview Tab */}
+          {tab === "overview" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                {[
+                  { lbl: "Facilities", val: company.facility_count.toString() },
+                  { lbl: "Total Capacity", val: company.total_capacity_mw > 0 ? `${company.total_capacity_mw} MW` : "—" },
+                  { lbl: "Headquarters", val: company.headquarters ?? "—" },
+                  { lbl: "Sustainability", val: company.sustainability_rating ?? "—" },
+                ].map((item) => (
+                  <div key={item.lbl} style={{
+                    padding: "14px 16px", border: "1px solid #e5e7eb",
+                    background: "#f9fafb",
+                  }}>
+                    <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      {item.lbl}
+                    </div>
+                    <div style={{ fontSize: "15px", fontWeight: 600, color: "#111827" }}>{item.val}</div>
+                  </div>
+                ))}
+              </div>
+              {company.website && (
+                <div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Website
+                  </div>
+                  <a
+                    href={company.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: "14px", color: "#1e293b", textDecoration: "underline" }}
+                  >
+                    {company.website}
+                  </a>
+                </div>
+              )}
+              {dcInfo && dcInfo.names.length > 0 && (
+                <div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Facilities in Database
+                  </div>
+                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "4px" }}>
+                    {dcInfo.names.map((n) => (
+                      <li key={n} style={{
+                        padding: "8px 12px", border: "1px solid #e5e7eb",
+                        fontSize: "13px", color: "#374151", background: "#fff",
+                        display: "flex", alignItems: "center", gap: "8px",
+                      }}>
+                        <span style={{ color: "#9ca3af" }}>▪</span>
+                        {n}
+                      </li>
+                    ))}
+                    {dcInfo.states.length > 0 && (
+                      <li style={{ padding: "8px 12px", fontSize: "12px", color: "#6b7280", fontStyle: "italic" }}>
+                        States: {dcInfo.states.join(", ")}
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Specs Tab */}
+          {tab === "specs" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {[
+                { lbl: "Total Facilities", val: company.facility_count.toString() },
+                { lbl: "Total Capacity (MW)", val: company.total_capacity_mw > 0 ? `${company.total_capacity_mw} MW` : "—" },
+                { lbl: "Total Investment", val: formatMillions(company.total_investment_usd) },
+                { lbl: "Annual Revenue", val: formatMillions(company.annual_revenue_usd) },
+                { lbl: "Employee Count", val: company.employee_count ? company.employee_count.toLocaleString() : "—" },
+                { lbl: "Sustainability Rating", val: company.sustainability_rating ?? "—" },
+              ].map((row) => (
+                <div key={row.lbl} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: "12px 16px", border: "1px solid #e5e7eb", background: "#f9fafb",
+                }}>
+                  <span style={{ fontSize: "13px", color: "#6b7280" }}>{row.lbl}</span>
+                  <span style={{ fontSize: "14px", fontWeight: 600, color: "#111827" }}>{row.val}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Ecosystem Tab */}
+          {tab === "ecosystem" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <p style={{ fontSize: "13px", color: "#6b7280", margin: 0 }}>
+                Ecosystem information for {company.name} — related subsidiaries, partnerships, and data center facilities.
+              </p>
+              {dcInfo && (
+                <div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Geographic Presence
+                  </div>
+                  {dcInfo.states.length > 0 ? (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                      {dcInfo.states.map((s) => (
+                        <span key={s} style={{
+                          padding: "4px 10px", border: "1px solid #d1d5db",
+                          fontSize: "12px", color: "#374151", background: "#f9fafb",
+                        }}>
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ fontSize: "13px", color: "#9ca3af", margin: 0 }}>No state data available.</p>
+                  )}
+                </div>
+              )}
+              {company.parent_company && (
+                <div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Parent Company
+                  </div>
+                  <div style={{ padding: "12px 16px", border: "1px solid #e5e7eb", background: "#f9fafb", fontSize: "14px", color: "#111827" }}>
+                    {company.parent_company}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Location Tab */}
+          {tab === "location" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ padding: "14px 16px", border: "1px solid #e5e7eb", background: "#f9fafb" }}>
+                <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Headquarters
+                </div>
+                <div style={{ fontSize: "15px", fontWeight: 600, color: "#111827" }}>
+                  {company.headquarters ?? "Not specified"}
+                </div>
+              </div>
+              {dcInfo && dcInfo.states.length > 0 && (
+                <div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    States with Data Centers
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                    {dcInfo.states.map((s) => (
+                      <span key={s} style={{
+                        padding: "6px 12px", border: "1px solid #d1d5db",
+                        fontSize: "13px", color: "#111827", background: "#fff", fontWeight: 500,
+                      }}>
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {dcInfo && dcInfo.names.length > 0 && (
+                <div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Facility Locations
+                  </div>
+                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "4px" }}>
+                    {dcInfo.names.map((n) => (
+                      <li key={n} style={{
+                        padding: "8px 12px", border: "1px solid #e5e7eb",
+                        fontSize: "13px", color: "#374151", background: "#fff",
+                      }}>
+                        {n}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Stock Price Tab */}
+          {tab === "stock" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {hasStock && stock ? (
+                <>
+                  {/* Main price block */}
+                  <div style={{
+                    padding: "20px", border: "1px solid #e5e7eb", background: "#f9fafb",
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div>
+                        <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                          Current Price
+                        </div>
+                        <div style={{ fontSize: "28px", fontWeight: 700, color: "#111827" }}>
+                          {formatPrice(stock.price, stock.currency)}
+                        </div>
+                        <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "4px" }}>
+                          Prev close: {formatPrice(stock.prev_close, stock.currency)}
+                        </div>
+                      </div>
+                      <div style={{
+                        padding: "8px 14px",
+                        background: isPos ? "#f0fdf4" : isNeg ? "#fef2f2" : "#f9fafb",
+                        border: `1px solid ${isPos ? "#bbf7d0" : isNeg ? "#fecaca" : "#e5e7eb"}`,
+                        textAlign: "right",
+                      }}>
+                        <div style={{
+                          fontSize: "18px", fontWeight: 700,
+                          color: isPos ? "#16a34a" : isNeg ? "#dc2626" : "#374151",
+                        }}>
+                          {isPos ? "▲" : isNeg ? "▼" : "—"}{" "}
+                          {stock.change_pct != null ? `${Math.abs(stock.change_pct).toFixed(2)}%` : "0.00%"}
+                        </div>
+                        <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>Day change</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Details */}
+                  {[
+                    { lbl: "Ticker", val: stock.ticker },
+                    { lbl: "Exchange", val: getExchangeDisplayName(stock.exchange) },
+                    { lbl: "Currency", val: stock.currency },
+                    { lbl: "Market State", val: stock.market_state },
+                    { lbl: "Parent Company", val: stock.parent_company },
+                  ].map((row) => (
+                    <div key={row.lbl} style={{
+                      display: "flex", justifyContent: "space-between", alignItems: "center",
+                      padding: "10px 14px", border: "1px solid #e5e7eb", background: "#fff",
+                    }}>
+                      <span style={{ fontSize: "13px", color: "#6b7280" }}>{row.lbl}</span>
+                      <span style={{ fontSize: "13px", fontWeight: 500, color: "#111827" }}>{row.val}</span>
+                    </div>
+                  ))}
+
+                  <a
+                    href={getStockLink(stock.ticker)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                      padding: "12px 20px", background: "#1e293b", color: "#fff",
+                      textDecoration: "none", fontSize: "14px", fontWeight: 600,
+                      border: "none",
+                    }}
+                  >
+                    View {stock.ticker} on Yahoo Finance ↗
+                  </a>
+
+                  <p style={{ fontSize: "11px", color: "#9ca3af", margin: 0 }}>
+                    Prices from Yahoo Finance (end-of-day). Not investment advice.
+                  </p>
+                </>
+              ) : stock?.error ? (
+                <div style={{ padding: "20px", border: "1px solid #e5e7eb", background: "#fefce8", textAlign: "center" }}>
+                  <div style={{ fontSize: "14px", color: "#713f12", fontWeight: 500 }}>Price unavailable</div>
+                  <div style={{ fontSize: "12px", color: "#92400e", marginTop: "4px" }}>Market may be closed or data temporarily unavailable.</div>
+                </div>
+              ) : (
+                <div style={{ padding: "20px", border: "1px solid #e5e7eb", background: "#f9fafb", textAlign: "center" }}>
+                  <div style={{ fontSize: "14px", color: "#6b7280" }}>Not publicly listed</div>
+                  <div style={{ fontSize: "12px", color: "#9ca3af", marginTop: "4px" }}>This company does not have a public stock listing in our database.</div>
+                </div>
+              )}
+            </div>
+          )}
+
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -105,13 +531,18 @@ function ExchangeBadge({ exchange }: { exchange: string }) {
 function DeveloperProfilesSection() {
   const [stocks, setStocks]           = useState<DcStock[]>([]);
   const [dcInfo, setDcInfo]           = useState<Record<string, DcCompanyInfo>>({});
-  const [loading, setLoading]         = useState(true);
+  const [stockLoading, setStockLoading] = useState(true);
   const [fetchError, setFetchError]   = useState<string | null>(null);
   const [fetchedAt, setFetchedAt]     = useState<string | null>(null);
-  const [expanded, setExpanded]       = useState<string | null>(null);
+  const [viewMode, setViewMode]       = useState<"grid" | "list">("grid");
+  const [search, setSearch]           = useState("");
+  const [selectedCompany, setSelectedCompany] = useState<DataCenterCompany | null>(null);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
+  const { data: companiesData, isLoading: companiesLoading } = useCompanies({ page_size: 500 });
+  const { data: facilityStats } = useFacilityStats();
+
+  const loadStockData = useCallback(async () => {
+    setStockLoading(true);
     setFetchError(null);
     try {
       const [stockResp, dcInfoMap] = await Promise.all([
@@ -124,43 +555,57 @@ function DeveloperProfilesSection() {
     } catch (err) {
       setFetchError(err instanceof Error ? err.message : "Failed to load stock data");
     } finally {
-      setLoading(false);
+      setStockLoading(false);
     }
   }, []);
 
-  useEffect(() => { void loadData(); }, [loadData]);
+  useEffect(() => { void loadStockData(); }, [loadStockData]);
 
-  const allCompanies = Object.values(dcInfo).sort((a, b) => b.dcCount - a.dcCount);
+  const companies = companiesData ?? [];
   const stockByCompany = Object.fromEntries(stocks.map((s) => [s.dc_company, s]));
+  const listedCount = stocks.filter((s) => !s.error && s.price != null).length;
+  const totalDcs = facilityStats?.total_facilities ?? 0;
 
   const fetchedTime = fetchedAt
     ? new Date(fetchedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })
     : null;
 
-  if (loading) return <LoadingSpinner message="Fetching stock prices…" />;
-  if (fetchError) return <ErrorMessage message={fetchError} onRetry={loadData} />;
+  const filtered = companies.filter((c) =>
+    !search || c.name.toLowerCase().includes(search.toLowerCase())
+  );
 
-  const listedCount  = stocks.filter((s) => !s.error && s.price != null).length;
-  const totalDcs     = allCompanies.reduce((s, c) => s + c.dcCount, 0);
-  const uniqueStates = new Set(allCompanies.flatMap((c) => c.states)).size;
+  if (companiesLoading || stockLoading) return <LoadingSpinner message="Loading developer profiles…" />;
+  if (fetchError) return <ErrorMessage message={fetchError} onRetry={loadStockData} />;
 
   return (
-    <section className="dev-profiles-section">
+    <section style={{ fontFamily: "var(--font-family, 'Inter', system-ui, sans-serif)" }}>
       {/* Header */}
-      <div className="dev-profiles-header">
+      <div style={{
+        display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+        marginBottom: "20px", flexWrap: "wrap", gap: "12px",
+      }}>
         <div>
-          <h3 className="dev-profiles-title">Data Center Developer Profiles</h3>
-          <p className="dev-profiles-desc">
-            Operators in our database — publicly listed entities show end-of-day stock prices
-            via Yahoo Finance (no API key, free). Prices refresh on page load or on demand.
+          <h3 style={{ margin: 0, fontSize: "20px", fontWeight: 700, color: "#111827" }}>
+            Data Center Developer Profiles
+          </h3>
+          <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#6b7280" }}>
+            {companies.length} operators · publicly listed entities show end-of-day stock prices via Yahoo Finance
           </p>
         </div>
-        <div className="dev-profiles-toolbar">
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
           {fetchedTime && (
-            <span className="dev-profiles-ts">EOD prices as of {fetchedTime}</span>
+            <span style={{ fontSize: "12px", color: "#9ca3af" }}>EOD as of {fetchedTime}</span>
           )}
-          <button className="dev-profiles-refresh" onClick={loadData} title="Refresh stock prices">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <button
+            onClick={loadStockData}
+            style={{
+              display: "flex", alignItems: "center", gap: "6px",
+              padding: "7px 12px", border: "1px solid #d1d5db",
+              background: "#fff", cursor: "pointer", fontSize: "12px",
+              color: "#374151", fontWeight: 500,
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="1 4 1 10 7 10" />
               <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
             </svg>
@@ -169,160 +614,218 @@ function DeveloperProfilesSection() {
         </div>
       </div>
 
-      {/* KPI row */}
-      <div className="dev-profiles-kpis">
+      {/* KPIs */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "20px" }}>
         {[
-          { val: allCompanies.length, lbl: "DC Operators" },
-          { val: listedCount,         lbl: "Listed & Priced" },
-          { val: totalDcs,            lbl: "Total Data Centers" },
-          { val: uniqueStates,        lbl: "States Covered" },
+          { val: companies.length, lbl: "DC Operators" },
+          { val: listedCount,      lbl: "Listed & Priced" },
+          { val: totalDcs,         lbl: "Total Data Centers" },
         ].map((k) => (
-          <div key={k.lbl} className="dev-profiles-kpi">
-            <span className="dev-profiles-kpi-val">{k.val}</span>
-            <span className="dev-profiles-kpi-lbl">{k.lbl}</span>
+          <div key={k.lbl} style={{
+            padding: "16px 20px", border: "1px solid #e5e7eb", background: "#f9fafb",
+            display: "flex", flexDirection: "column", gap: "4px",
+          }}>
+            <span style={{ fontSize: "24px", fontWeight: 700, color: "#111827" }}>{k.val}</span>
+            <span style={{ fontSize: "12px", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>{k.lbl}</span>
           </div>
         ))}
       </div>
 
-      {/* Company cards grid */}
-      <div className="dev-profiles-grid">
-        {allCompanies.map((info) => {
-          const stock    = stockByCompany[info.company];
-          const hasStock = !!(stock && !stock.error && stock.price != null);
-          const isPos    = (stock?.change_pct ?? 0) > 0;
-          const isNeg    = (stock?.change_pct ?? 0) < 0;
-          const isExp    = expanded === info.company;
-
-          return (
-            <div key={info.company} className={`dev-profile-card${hasStock ? " dev-profile-card--listed" : ""}`}>
-              {/* Top */}
-              <div className="dev-profile-card-top">
-                <div className="dev-profile-avatar">
-                  {info.company.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase()}
-                </div>
-                <div className="dev-profile-info">
-                  <h4 className="dev-profile-name">{info.company}</h4>
-                  {stock && <p className="dev-profile-parent">{stock.parent_company}</p>}
-                </div>
-                {stock && <ExchangeBadge exchange={stock.exchange} />}
-              </div>
-
-              {/* DC stats */}
-              <div className="dev-profile-stats">
-                <div className="dev-profile-stat">
-                  <span className="dev-profile-stat-val">{info.dcCount}</span>
-                  <span className="dev-profile-stat-lbl">Data Centers</span>
-                </div>
-                <div className="dev-profile-stat">
-                  <span className="dev-profile-stat-val">{info.states.length}</span>
-                  <span className="dev-profile-stat-lbl">States</span>
-                </div>
-                {hasStock && (
-                  <>
-                    <div className="dev-profile-stat">
-                      <span className="dev-profile-stat-val">{stock!.ticker}</span>
-                      <span className="dev-profile-stat-lbl">Ticker</span>
-                    </div>
-                    <div className="dev-profile-stat">
-                      <span
-                        className="dev-profile-stat-val"
-                        style={{ color: isPos ? "#16a34a" : isNeg ? "#dc2626" : "#374151" }}
-                      >
-                        {stock!.change_pct != null
-                          ? `${stock!.change_pct > 0 ? "+" : ""}${stock!.change_pct.toFixed(2)}%`
-                          : "—"}
-                      </span>
-                      <span className="dev-profile-stat-lbl">Day Change</span>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Stock price */}
-              {hasStock && (
-                <div className="dev-profile-price-row">
-                  <div>
-                    <span className="dev-profile-price-val">
-                      {formatPrice(stock!.price, stock!.currency)}
-                    </span>
-                    <span className="dev-profile-price-prev">
-                      prev close {formatPrice(stock!.prev_close, stock!.currency)}
-                    </span>
-                  </div>
-                  <span
-                    className="dev-profile-change-pill"
-                    style={{
-                      background: isPos ? "#dcfce7" : isNeg ? "#fee2e2" : "#f3f4f6",
-                      color:      isPos ? "#16a34a" : isNeg ? "#dc2626" : "#6b7280",
-                    }}
-                  >
-                    {isPos ? "▲" : isNeg ? "▼" : "—"}{" "}
-                    {stock!.change_pct != null
-                      ? Math.abs(stock!.change_pct).toFixed(2) + "%"
-                      : "unchanged"}
-                  </span>
-                </div>
-              )}
-
-              {!stock && (
-                <div className="dev-profile-unlisted">
-                  <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
-                  </svg>
-                  Privately held
-                </div>
-              )}
-
-              {stock?.error && (
-                <div className="dev-profile-unlisted dev-profile-unlisted--warn">
-                  <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
-                  </svg>
-                  Price unavailable · market may be closed
-                </div>
-              )}
-
-              {/* Expand / collapse DC list */}
-              {info.names.length > 0 && (
-                <button
-                  className="dev-profile-expand-btn"
-                  onClick={() => setExpanded(isExp ? null : info.company)}
-                >
-                  {isExp ? "Hide facilities" : `Show ${info.dcCount} facilit${info.dcCount !== 1 ? "ies" : "y"}`}
-                  <svg
-                    width="12" height="12" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" strokeWidth="2"
-                    style={{ transform: isExp ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
-                  >
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </button>
-              )}
-
-              {isExp && (
-                <ul className="dev-profile-dc-list">
-                  {info.names.map((n) => (
-                    <li key={n} className="dev-profile-dc-item">
-                      <svg width="11" height="11" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd"/>
-                      </svg>
-                      {n}
-                    </li>
-                  ))}
-                  {info.states.length > 0 && (
-                    <li className="dev-profile-states">States: {info.states.join(", ")}</li>
-                  )}
-                </ul>
-              )}
-            </div>
-          );
-        })}
+      {/* Controls */}
+      <div style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}>
+        <input
+          type="text"
+          placeholder="Search companies…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{
+            flex: 1, minWidth: "200px", padding: "8px 12px",
+            border: "1px solid #d1d5db", background: "#fff",
+            fontSize: "13px", color: "#111827", outline: "none",
+          }}
+        />
+        <div style={{ display: "flex", border: "1px solid #d1d5db" }}>
+          {(["grid", "list"] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setViewMode(m)}
+              style={{
+                padding: "8px 14px", border: "none",
+                background: viewMode === m ? "#1e293b" : "#fff",
+                color: viewMode === m ? "#fff" : "#6b7280",
+                cursor: "pointer", fontSize: "12px", fontWeight: 500,
+              }}
+            >
+              {m === "grid" ? "⊞ Grid" : "☰ List"}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <p className="dev-profiles-disclaimer">
+      {/* Company cards */}
+      {viewMode === "grid" ? (
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+          gap: "12px",
+        }}>
+          {filtered.map((co) => {
+            const stock = stockByCompany[co.name];
+            const hasStock = !!(stock && !stock.error && stock.price != null);
+            const isPos = (stock?.change_pct ?? 0) > 0;
+            const isNeg = (stock?.change_pct ?? 0) < 0;
+
+            return (
+              <div
+                key={co.id}
+                onClick={() => setSelectedCompany(co)}
+                style={{
+                  border: "1px solid #e5e7eb", background: "#fff",
+                  cursor: "pointer", padding: "16px",
+                  transition: "border-color 0.15s",
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "#1e293b"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "#e5e7eb"; }}
+              >
+                {/* Top */}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "12px" }}>
+                  <div style={{
+                    width: "40px", height: "40px", background: "#1e293b",
+                    color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "14px", fontWeight: 700, flexShrink: 0,
+                  }}>
+                    {co.name.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "14px", fontWeight: 600, color: "#111827", lineHeight: 1.3 }}>
+                      {co.name}
+                    </div>
+                    {co.headquarters && (
+                      <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>
+                        {co.headquarters}
+                      </div>
+                    )}
+                  </div>
+                  {stock && <ExchangeBadge exchange={stock.exchange} />}
+                </div>
+
+                {/* Facility count from DB */}
+                <div style={{
+                  fontSize: "12px", color: "#6b7280",
+                  borderTop: "1px solid #f3f4f6", paddingTop: "10px",
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                }}>
+                  <span>{co.facility_count} {co.facility_count === 1 ? "facility" : "facilities"}</span>
+                  {hasStock && stock ? (
+                    <span style={{
+                      fontSize: "12px", fontWeight: 600,
+                      color: isPos ? "#16a34a" : isNeg ? "#dc2626" : "#374151",
+                    }}>
+                      {isPos ? "▲" : isNeg ? "▼" : ""}{" "}
+                      {formatPrice(stock.price, stock.currency)}
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: "11px", color: "#d1d5db" }}>Private</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1px", border: "1px solid #e5e7eb" }}>
+          {/* List header */}
+          <div style={{
+            display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr",
+            padding: "10px 16px", background: "#f9fafb",
+            fontSize: "11px", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em",
+            fontWeight: 600,
+          }}>
+            <span>Company</span>
+            <span>Facilities</span>
+            <span>Exchange</span>
+            <span style={{ textAlign: "right" }}>Price</span>
+          </div>
+
+          {filtered.map((co) => {
+            const stock = stockByCompany[co.name];
+            const hasStock = !!(stock && !stock.error && stock.price != null);
+            const isPos = (stock?.change_pct ?? 0) > 0;
+            const isNeg = (stock?.change_pct ?? 0) < 0;
+
+            return (
+              <div
+                key={co.id}
+                onClick={() => setSelectedCompany(co)}
+                style={{
+                  display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr",
+                  padding: "12px 16px", background: "#fff", cursor: "pointer",
+                  borderTop: "1px solid #f3f4f6", alignItems: "center",
+                  transition: "background 0.1s",
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = "#f9fafb"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = "#fff"; }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{
+                    width: "32px", height: "32px", background: "#1e293b",
+                    color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "11px", fontWeight: 700, flexShrink: 0,
+                  }}>
+                    {co.name.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#111827" }}>{co.name}</div>
+                    {co.headquarters && (
+                      <div style={{ fontSize: "11px", color: "#9ca3af" }}>{co.headquarters}</div>
+                    )}
+                  </div>
+                </div>
+                <span style={{ fontSize: "13px", color: "#374151" }}>{co.facility_count}</span>
+                <span>{stock ? <ExchangeBadge exchange={stock.exchange} /> : <span style={{ fontSize: "12px", color: "#d1d5db" }}>—</span>}</span>
+                <div style={{ textAlign: "right" }}>
+                  {hasStock && stock ? (
+                    <>
+                      <div style={{ fontSize: "13px", fontWeight: 600, color: "#111827" }}>
+                        {formatPrice(stock.price, stock.currency)}
+                      </div>
+                      <div style={{
+                        fontSize: "11px",
+                        color: isPos ? "#16a34a" : isNeg ? "#dc2626" : "#9ca3af",
+                      }}>
+                        {isPos ? "▲" : isNeg ? "▼" : ""} {stock.change_pct != null ? `${Math.abs(stock.change_pct).toFixed(2)}%` : "—"}
+                      </div>
+                    </>
+                  ) : (
+                    <span style={{ fontSize: "12px", color: "#d1d5db" }}>—</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {filtered.length === 0 && (
+        <div style={{ textAlign: "center", padding: "40px", color: "#9ca3af", fontSize: "14px" }}>
+          No companies match your search.
+        </div>
+      )}
+
+      <p style={{ fontSize: "11px", color: "#9ca3af", marginTop: "16px" }}>
         Stock prices from Yahoo Finance (end-of-day, free). NSE/BSE in INR · NASDAQ/NYSE in USD · SGX in SGD · TSE in JPY.
-        Not investment advice. Verify on official exchange websites before acting on any price data.
+        Not investment advice.
       </p>
+
+      {/* Company profile modal */}
+      {selectedCompany && (
+        <CompanyProfileModal
+          company={selectedCompany}
+          stock={stockByCompany[selectedCompany.name]}
+          dcInfo={dcInfo[selectedCompany.name]}
+          onClose={() => setSelectedCompany(null)}
+        />
+      )}
     </section>
   );
 }
