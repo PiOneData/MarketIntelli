@@ -482,29 +482,29 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               Jump to Coords
             </span>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+          <div style={{ display: "flex", gap: "6px" }}>
             <input
               type="text"
-              placeholder="Lat (8.25)"
+              placeholder="Lat"
               value={searchCoords.lat}
               onChange={(e) =>
                 setSearchCoords((p) => ({ ...p, lat: e.target.value }))
               }
-              style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: "6px 8px", fontSize: "11px", fontWeight: 600, color: "#334155", outline: "none", fontFamily: "inherit" }}
+              style={{ flex: 1, minWidth: 0, boxSizing: "border-box", background: "#f8fafc", border: "1px solid #e2e8f0", padding: "6px 8px", fontSize: "11px", fontWeight: 600, color: "#334155", outline: "none", fontFamily: "inherit" }}
             />
             <input
               type="text"
-              placeholder="Lng (77.51)"
+              placeholder="Lng"
               value={searchCoords.lng}
               onChange={(e) =>
                 setSearchCoords((p) => ({ ...p, lng: e.target.value }))
               }
-              style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: "6px 8px", fontSize: "11px", fontWeight: 600, color: "#334155", outline: "none", fontFamily: "inherit" }}
+              style={{ flex: 1, minWidth: 0, boxSizing: "border-box", background: "#f8fafc", border: "1px solid #e2e8f0", padding: "6px 8px", fontSize: "11px", fontWeight: 600, color: "#334155", outline: "none", fontFamily: "inherit" }}
             />
           </div>
           <button
             type="submit"
-            style={{ width: "100%", background: "#1e293b", color: "#fff", border: "none", padding: "8px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", cursor: "pointer", marginTop: "8px", fontFamily: "inherit" }}
+            style={{ width: "100%", background: "#0f766e", color: "#fff", border: "none", padding: "8px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", cursor: "pointer", marginTop: "8px", fontFamily: "inherit" }}
           >
             <Search size={13} /> Analyze Location
           </button>
@@ -577,7 +577,7 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
                   type="checkbox"
                   checked={layerVis[key]}
                   onChange={() => toggleGroup(key)}
-                  style={{ width: "14px", height: "14px", cursor: "pointer", accentColor: "#1e293b" }}
+                  style={{ width: "14px", height: "14px", cursor: "pointer", accentColor: "#0f766e" }}
                 />
                 <span style={{ color: "#334155" }}>{icon}</span>
                 <span style={{ fontSize: "11px", fontWeight: 600, color: "#334155" }}>{label}</span>
@@ -708,8 +708,8 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
                     onDatacenterClick(dcPopup.lat, dcPopup.lng, dcPopup.dc);
                   }}
                   style={{ width: "100%", background: "#0f766e", color: "#fff", border: "none", padding: "12px", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", cursor: "pointer", fontFamily: "inherit" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#0d5f59")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "#0f766e")}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "#0d5f59"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "#0f766e"; }}
                 >
                   <ExternalLink size={14} />
                   <span>Access Intelligence Report</span>
