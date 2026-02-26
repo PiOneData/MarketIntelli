@@ -29,11 +29,24 @@ interface DcStockResponse {
   fetched_at: string;
 }
 
+interface DcFacilityInfo {
+  name: string;
+  tier: string;
+  power_mw: string | null;
+  power_mw_numeric: number | null;
+  whitespace: string | null;
+  city: string;
+  state: string;
+}
+
 interface DcCompanyInfo {
   company: string;
   dcCount: number;
   states: string[];
   names: string[];
+  tiers: Record<string, number>;
+  totalPowerMW: number;
+  facilities: DcFacilityInfo[];
 }
 
 /* ------------------------------------------------------------------ */
@@ -53,10 +66,22 @@ async function fetchDcCompanyInfo(): Promise<Record<string, DcCompanyInfo>> {
       if (!company) continue;
       const state = (p["state"] as string) || "";
       const name  = (p["name"]  as string) || "";
-      if (!map[company]) map[company] = { company, dcCount: 0, states: [], names: [] };
-      map[company].dcCount += 1;
-      if (state && !map[company].states.includes(state)) map[company].states.push(state);
-      if (name  && !map[company].names.includes(name))  map[company].names.push(name);
+      const tier  = (p["tier"]  as string) || "Not Specified";
+      const power_mw = (p["power_mw"] as string | null) ?? null;
+      const power_mw_numeric = (p["power_mw_numeric"] as number | null) ?? null;
+      const whitespace = (p["whitespace"] as string | null) ?? null;
+      const city = (p["city"] as string) || "";
+
+      if (!map[company]) {
+        map[company] = { company, dcCount: 0, states: [], names: [], tiers: {}, totalPowerMW: 0, facilities: [] };
+      }
+      const entry = map[company];
+      entry.dcCount += 1;
+      if (state && !entry.states.includes(state)) entry.states.push(state);
+      if (name  && !entry.names.includes(name))   entry.names.push(name);
+      entry.tiers[tier] = (entry.tiers[tier] ?? 0) + 1;
+      if (power_mw_numeric) entry.totalPowerMW += power_mw_numeric;
+      entry.facilities.push({ name, tier, power_mw, power_mw_numeric, whitespace, city, state });
     }
     return map;
   } catch {
@@ -262,8 +287,8 @@ function CompanyProfileModal({ company, stock, dcInfo, onClose }: CompanyProfile
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 {[
-                  { lbl: "Facilities", val: company.facility_count.toString() },
-                  { lbl: "Total Capacity", val: company.total_capacity_mw > 0 ? `${company.total_capacity_mw} MW` : "—" },
+                  { lbl: "Facilities", val: (dcInfo?.dcCount ?? company.facility_count).toString() },
+                  { lbl: "Market Power", val: dcInfo && dcInfo.totalPowerMW > 0 ? `${dcInfo.totalPowerMW.toFixed(1)} MW` : company.total_capacity_mw > 0 ? `${company.total_capacity_mw} MW` : "—" },
                   { lbl: "Headquarters", val: company.headquarters ?? "—" },
                   { lbl: "Sustainability", val: company.sustainability_rating ?? "—" },
                 ].map((item) => (
@@ -278,6 +303,35 @@ function CompanyProfileModal({ company, stock, dcInfo, onClose }: CompanyProfile
                   </div>
                 ))}
               </div>
+
+              {/* Tier summary from geojson */}
+              {dcInfo && Object.keys(dcInfo.tiers).length > 0 && (
+                <div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Tier Design
+                  </div>
+                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                    {Object.entries(dcInfo.tiers)
+                      .sort(([a], [b]) => {
+                        const o: Record<string, number> = { "Tier 4": 0, "Tier 3": 1, "Tier 2": 2, "Not Specified": 3 };
+                        return (o[a] ?? 9) - (o[b] ?? 9);
+                      })
+                      .map(([tier, count]) => {
+                        const color = tier === "Tier 4" ? "#7c3aed" : tier === "Tier 3" ? "#0f766e" : tier === "Tier 2" ? "#d97706" : "#94a3b8";
+                        return (
+                          <div key={tier} style={{
+                            display: "flex", alignItems: "center", gap: "5px",
+                            padding: "5px 10px", border: `1px solid ${color}44`, background: `${color}0e`,
+                          }}>
+                            <span style={{ width: 7, height: 7, borderRadius: "50%", background: color, display: "inline-block" }} />
+                            <span style={{ fontSize: "12px", fontWeight: 600, color }}>{tier === "Not Specified" ? "Unrated" : tier}</span>
+                            <span style={{ fontSize: "13px", fontWeight: 700, color: "#111827" }}>{count}</span>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
               {company.website && (
                 <div>
                   <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
@@ -322,23 +376,106 @@ function CompanyProfileModal({ company, stock, dcInfo, onClose }: CompanyProfile
 
           {/* Specs Tab */}
           {tab === "specs" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {[
-                { lbl: "Total Facilities", val: company.facility_count.toString() },
-                { lbl: "Total Capacity (MW)", val: company.total_capacity_mw > 0 ? `${company.total_capacity_mw} MW` : "—" },
-                { lbl: "Total Investment", val: formatMillions(company.total_investment_usd) },
-                { lbl: "Annual Revenue", val: formatMillions(company.annual_revenue_usd) },
-                { lbl: "Employee Count", val: company.employee_count ? company.employee_count.toLocaleString() : "—" },
-                { lbl: "Sustainability Rating", val: company.sustainability_rating ?? "—" },
-              ].map((row) => (
-                <div key={row.lbl} style={{
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                  padding: "12px 16px", border: "1px solid #e5e7eb", background: "#f9fafb",
-                }}>
-                  <span style={{ fontSize: "13px", color: "#6b7280" }}>{row.lbl}</span>
-                  <span style={{ fontSize: "14px", fontWeight: 600, color: "#111827" }}>{row.val}</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              {/* Core metrics */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "4px" }}>
+                  Capacity &amp; Operations
                 </div>
-              ))}
+                {[
+                  { lbl: "Total Facilities", val: (dcInfo?.dcCount ?? company.facility_count).toString() },
+                  { lbl: "Market Power (MW)", val: dcInfo && dcInfo.totalPowerMW > 0 ? `${dcInfo.totalPowerMW.toFixed(1)} MW` : company.total_capacity_mw > 0 ? `${company.total_capacity_mw} MW` : "—" },
+                  { lbl: "Total Investment", val: formatMillions(company.total_investment_usd) },
+                  { lbl: "Annual Revenue", val: formatMillions(company.annual_revenue_usd) },
+                  { lbl: "Employee Count", val: company.employee_count ? company.employee_count.toLocaleString() : "—" },
+                  { lbl: "Sustainability Rating", val: company.sustainability_rating ?? "—" },
+                ].map((row) => (
+                  <div key={row.lbl} style={{
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    padding: "10px 14px", border: "1px solid #e5e7eb", background: "#f9fafb",
+                  }}>
+                    <span style={{ fontSize: "13px", color: "#6b7280" }}>{row.lbl}</span>
+                    <span style={{ fontSize: "14px", fontWeight: 600, color: "#111827" }}>{row.val}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Tier Design breakdown */}
+              {dcInfo && Object.keys(dcInfo.tiers).length > 0 && (
+                <div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>
+                    Tier Design
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {Object.entries(dcInfo.tiers)
+                      .sort(([a], [b]) => {
+                        const order: Record<string, number> = { "Tier 4": 0, "Tier 3": 1, "Tier 2": 2, "Not Specified": 3 };
+                        return (order[a] ?? 9) - (order[b] ?? 9);
+                      })
+                      .map(([tier, count]) => {
+                        const total = dcInfo.dcCount;
+                        const pct = Math.round((count / total) * 100);
+                        const color = tier === "Tier 4" ? "#7c3aed" : tier === "Tier 3" ? "#0f766e" : tier === "Tier 2" ? "#d97706" : "#94a3b8";
+                        return (
+                          <div key={tier}>
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}>
+                              <span style={{ fontSize: "12px", color: "#374151", fontWeight: 500 }}>
+                                {tier === "Not Specified" ? "Unrated" : tier}
+                              </span>
+                              <span style={{ fontSize: "12px", color: "#6b7280" }}>{count} ({pct}%)</span>
+                            </div>
+                            <div style={{ height: "6px", background: "#f3f4f6", borderRadius: "3px", overflow: "hidden" }}>
+                              <div style={{ height: "100%", width: `${pct}%`, background: color, borderRadius: "3px", transition: "width 0.4s ease" }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
+
+              {/* Per-facility DC details (Market Power + Tier + Whitespace) */}
+              {dcInfo && dcInfo.facilities.length > 0 && (
+                <div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>
+                    Facility Details
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "320px", overflowY: "auto" }}>
+                    {dcInfo.facilities.map((fac, idx) => {
+                      const color = fac.tier === "Tier 4" ? "#7c3aed" : fac.tier === "Tier 3" ? "#0f766e" : fac.tier === "Tier 2" ? "#d97706" : "#94a3b8";
+                      return (
+                        <div key={`${fac.name}-${idx}`} style={{
+                          padding: "10px 12px", border: "1px solid #e5e7eb", background: "#fff",
+                          borderLeft: `3px solid ${color}`,
+                        }}>
+                          <div style={{ fontSize: "13px", fontWeight: 600, color: "#111827", marginBottom: "4px" }}>{fac.name}</div>
+                          <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "6px" }}>
+                            {fac.city}{fac.state ? `, ${fac.state}` : ""}
+                          </div>
+                          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                            <span style={{
+                              fontSize: "10px", fontWeight: 700, padding: "2px 6px",
+                              background: `${color}18`, border: `1px solid ${color}55`, color,
+                            }}>
+                              {fac.tier === "Not Specified" ? "Unrated" : fac.tier}
+                            </span>
+                            {fac.power_mw && (
+                              <span style={{ fontSize: "10px", padding: "2px 6px", background: "#f1f5f9", border: "1px solid #e2e8f0", color: "#374151" }}>
+                                ⚡ {fac.power_mw}
+                              </span>
+                            )}
+                            {fac.whitespace && (
+                              <span style={{ fontSize: "10px", padding: "2px 6px", background: "#f1f5f9", border: "1px solid #e2e8f0", color: "#374151" }}>
+                                📐 {fac.whitespace}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -735,10 +872,32 @@ function DeveloperProfilesSection() {
                   ) : (
                     <span style={{ fontSize: "11px", color: "#d1d5db" }}>No website</span>
                   )}
-                  <span style={{ fontSize: "10px", color: "#6b7280", background: "#f3f4f6", padding: "2px 6px", border: "1px solid #e5e7eb" }}>
-                    {co.sustainability_rating ?? "Tier: N/A"}
-                  </span>
+                  {/* Dominant tier badge from geojson data */}
+                  {(() => {
+                    const info = dcInfo[co.name];
+                    if (!info) return <span style={{ fontSize: "10px", color: "#9ca3af", background: "#f3f4f6", padding: "2px 6px", border: "1px solid #e5e7eb" }}>Tier: —</span>;
+                    const dominantTier = Object.entries(info.tiers).sort(([, a], [, b]) => b - a)[0]?.[0] ?? "—";
+                    const tierColors: Record<string, { bg: string; color: string; border: string }> = {
+                      "Tier 4": { bg: "#f5f3ff", color: "#7c3aed", border: "#ddd6fe" },
+                      "Tier 3": { bg: "#f0fdf4", color: "#0f766e", border: "#bbf7d0" },
+                      "Tier 2": { bg: "#fffbeb", color: "#d97706", border: "#fde68a" },
+                    };
+                    const tc = tierColors[dominantTier] ?? { bg: "#f3f4f6", color: "#6b7280", border: "#e5e7eb" };
+                    return (
+                      <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 6px", background: tc.bg, color: tc.color, border: `1px solid ${tc.border}` }}>
+                        {dominantTier === "Not Specified" ? "Unrated" : dominantTier}
+                      </span>
+                    );
+                  })()}
                 </div>
+
+                {/* Market Power from geojson */}
+                {dcInfo[co.name] && dcInfo[co.name].totalPowerMW > 0 && (
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "6px", display: "flex", alignItems: "center", gap: 4 }}>
+                    <span style={{ color: "#d97706" }}>⚡</span>
+                    <span>{dcInfo[co.name].totalPowerMW.toFixed(0)} MW market power</span>
+                  </div>
+                )}
 
                 {/* Facility count from DB */}
                 <div style={{
@@ -746,7 +905,7 @@ function DeveloperProfilesSection() {
                   borderTop: "1px solid #f3f4f6", paddingTop: "10px",
                   display: "flex", justifyContent: "space-between", alignItems: "center",
                 }}>
-                  <span>{co.facility_count} {co.facility_count === 1 ? "facility" : "facilities"}</span>
+                  <span>{dcInfo[co.name]?.dcCount ?? co.facility_count} {(dcInfo[co.name]?.dcCount ?? co.facility_count) === 1 ? "facility" : "facilities"}</span>
                   {hasStock && stock ? (
                     <span style={{
                       fontSize: "12px", fontWeight: 600,
@@ -767,14 +926,15 @@ function DeveloperProfilesSection() {
         <div style={{ display: "flex", flexDirection: "column", gap: "1px", border: "1px solid #e5e7eb" }}>
           {/* List header */}
           <div style={{
-            display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
+            display: "grid", gridTemplateColumns: "2fr 0.7fr 0.8fr 0.8fr 0.8fr 1fr",
             padding: "10px 16px", background: "#f9fafb",
             fontSize: "11px", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em",
             fontWeight: 600,
           }}>
             <span>Company</span>
-            <span>Facilities</span>
-            <span>Website</span>
+            <span>DCs</span>
+            <span>Tier Design</span>
+            <span>Market Power</span>
             <span>Exchange</span>
             <span style={{ textAlign: "right" }}>Price</span>
           </div>
@@ -784,13 +944,16 @@ function DeveloperProfilesSection() {
             const hasStock = !!(stock && !stock.error && stock.price != null);
             const isPos = (stock?.change_pct ?? 0) > 0;
             const isNeg = (stock?.change_pct ?? 0) < 0;
+            const info = dcInfo[co.name];
+            const dominantTier = info ? Object.entries(info.tiers).sort(([, a], [, b]) => b - a)[0]?.[0] : null;
+            const tierColor = dominantTier === "Tier 4" ? "#7c3aed" : dominantTier === "Tier 3" ? "#0f766e" : dominantTier === "Tier 2" ? "#d97706" : "#94a3b8";
 
             return (
               <div
                 key={co.id}
                 onClick={() => setSelectedCompany(co)}
                 style={{
-                  display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
+                  display: "grid", gridTemplateColumns: "2fr 0.7fr 0.8fr 0.8fr 0.8fr 1fr",
                   padding: "12px 16px", background: "#fff", cursor: "pointer",
                   borderTop: "1px solid #f3f4f6", alignItems: "center",
                   transition: "background 0.1s",
@@ -813,22 +976,16 @@ function DeveloperProfilesSection() {
                     )}
                   </div>
                 </div>
-                <span style={{ fontSize: "13px", color: "#374151" }}>{co.facility_count}</span>
+                <span style={{ fontSize: "13px", color: "#374151" }}>{info?.dcCount ?? co.facility_count}</span>
                 <span>
-                  {co.website ? (
-                    <a
-                      href={co.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      style={{ fontSize: "11px", color: "#0f766e", textDecoration: "none" }}
-                      title={co.website}
-                    >
-                      ↗ {co.website.replace(/^https?:\/\//, "").split("/")[0]}
-                    </a>
-                  ) : (
-                    <span style={{ fontSize: "11px", color: "#d1d5db" }}>—</span>
-                  )}
+                  {dominantTier ? (
+                    <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 6px", background: `${tierColor}18`, border: `1px solid ${tierColor}44`, color: tierColor }}>
+                      {dominantTier === "Not Specified" ? "Unrated" : dominantTier}
+                    </span>
+                  ) : <span style={{ fontSize: "12px", color: "#d1d5db" }}>—</span>}
+                </span>
+                <span style={{ fontSize: "12px", color: "#374151" }}>
+                  {info && info.totalPowerMW > 0 ? `${info.totalPowerMW.toFixed(0)} MW` : "—"}
                 </span>
                 <span>{stock ? <ExchangeBadge exchange={stock.exchange} /> : <span style={{ fontSize: "12px", color: "#d1d5db" }}>—</span>}</span>
                 <div style={{ textAlign: "right" }}>
