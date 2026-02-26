@@ -29,7 +29,6 @@ const navItems: NavItem[] = [
     label: "Projects",
     children: [
       { id: "india-data-center-registry", label: "India Data Center Registry", path: "/projects/india-data-center-registry" },
-      { id: "land-availability", label: "Land Availability", path: "/projects/land-availability" },
       { id: "project-directory", label: "Project Directory", path: "/projects/project-directory" },
       { id: "developer-profiles", label: "Developer Profiles", path: "/projects/developer-profiles" },
       { id: "tender-intelligence", label: "Tender Intelligence", path: "/projects/tender-intelligence" },

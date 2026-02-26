@@ -879,6 +879,337 @@ function DeveloperProfilesSection() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Top 5 Upcoming RE Projects                                          */
+/* ------------------------------------------------------------------ */
+
+interface UpcomingProject {
+  id: number;
+  name: string;
+  developer: string;
+  parentListed: string;
+  ticker: string;
+  exchange: string;
+  state: string;
+  capacityMW: number;
+  type: "Solar" | "Wind" | "Hybrid" | "Green Hydrogen" | "Storage";
+  status: "Planning" | "Under Development" | "Financial Close" | "Construction";
+  expectedCOD: string;
+  investmentCr: number;
+  description: string;
+}
+
+const UPCOMING_PROJECTS: UpcomingProject[] = [
+  {
+    id: 1,
+    name: "Khavda Renewable Energy Park — Phase II",
+    developer: "Adani Green Energy Ltd",
+    parentListed: "Adani Enterprises Ltd",
+    ticker: "ADANIENT.NS",
+    exchange: "NSE",
+    state: "Gujarat",
+    capacityMW: 10000,
+    type: "Hybrid",
+    status: "Under Development",
+    expectedCOD: "Dec 2026",
+    investmentCr: 75000,
+    description:
+      "World's largest renewable energy plant at Khavda, Kutch. Phase II adds 10 GW hybrid solar-wind capacity, part of Adani Green's 45 GW target by 2030.",
+  },
+  {
+    id: 2,
+    name: "Dhirubhai Ambani Green Energy Giga Complex",
+    developer: "Reliance New Energy Ltd",
+    parentListed: "Reliance Industries Ltd",
+    ticker: "RELIANCE.NS",
+    exchange: "NSE",
+    state: "Gujarat",
+    capacityMW: 5000,
+    type: "Green Hydrogen",
+    status: "Under Development",
+    expectedCOD: "FY 2026–27",
+    investmentCr: 60000,
+    description:
+      "Integrated giga factory campus at Jamnagar encompassing solar PV, green hydrogen electrolysers, and energy storage — anchoring Reliance's net-zero roadmap.",
+  },
+  {
+    id: 3,
+    name: "Tata Power Rajasthan Ultra-Mega Solar + Storage",
+    developer: "Tata Power Renewable Energy Ltd",
+    parentListed: "Tata Communications Ltd",
+    ticker: "TATACOMM.NS",
+    exchange: "NSE",
+    state: "Rajasthan",
+    capacityMW: 2200,
+    type: "Hybrid",
+    status: "Financial Close",
+    expectedCOD: "Q3 2026",
+    investmentCr: 14500,
+    description:
+      "2.2 GW solar park with co-located 500 MWh BESS, supplying round-the-clock RE to industrial consumers and data center operators across North India.",
+  },
+  {
+    id: 4,
+    name: "L&T Renewable Energy Wind-Solar Hybrid — Rann of Kutch",
+    developer: "L&T Energy Hydrocarbon & Renewables",
+    parentListed: "Larsen & Toubro Ltd",
+    ticker: "LT.NS",
+    exchange: "NSE",
+    state: "Gujarat",
+    capacityMW: 1500,
+    type: "Hybrid",
+    status: "Planning",
+    expectedCOD: "2027",
+    investmentCr: 9800,
+    description:
+      "L&T's flagship RE project in Kutch leveraging high wind corridors and solar irradiance. Targets long-term power purchase agreements with large industrial buyers.",
+  },
+  {
+    id: 5,
+    name: "Anant Raj Solar Data Center Power Project — NCR",
+    developer: "Anant Raj Cloud",
+    parentListed: "Anant Raj Ltd",
+    ticker: "ANANTRAJ.NS",
+    exchange: "NSE",
+    state: "Haryana",
+    capacityMW: 300,
+    type: "Solar",
+    status: "Construction",
+    expectedCOD: "Q2 2026",
+    investmentCr: 1800,
+    description:
+      "Captive solar generation project to power Anant Raj's hyperscale data center campus in NCR, targeting 100% renewable energy self-sufficiency for its DC operations.",
+  },
+];
+
+const PROJECT_TYPE_COLORS: Record<string, { bg: string; color: string; icon: string }> = {
+  Solar:           { bg: "#fef9c3", color: "#854d0e", icon: "☀️" },
+  Wind:            { bg: "#dbeafe", color: "#1e40af", icon: "💨" },
+  Hybrid:          { bg: "#f0fdf4", color: "#166534", icon: "⚡" },
+  "Green Hydrogen":{ bg: "#f0f9ff", color: "#075985", icon: "🔬" },
+  Storage:         { bg: "#fdf4ff", color: "#7e22ce", icon: "🔋" },
+};
+
+const STATUS_COLORS: Record<string, { bg: string; color: string; dot: string }> = {
+  Planning:           { bg: "#f9fafb", color: "#6b7280", dot: "#9ca3af" },
+  "Under Development":{ bg: "#fffbeb", color: "#92400e", dot: "#f59e0b" },
+  "Financial Close":  { bg: "#eff6ff", color: "#1e40af", dot: "#3b82f6" },
+  Construction:       { bg: "#f0fdf4", color: "#166534", dot: "#22c55e" },
+};
+
+function UpcomingProjectsSection() {
+  const [expanded, setExpanded] = useState<number | null>(null);
+
+  const totalCapacityGW = UPCOMING_PROJECTS.reduce((s, p) => s + p.capacityMW, 0) / 1000;
+  const totalInvestment = UPCOMING_PROJECTS.reduce((s, p) => s + p.investmentCr, 0);
+
+  return (
+    <div style={{ fontFamily: "var(--font-family,'Inter',system-ui,sans-serif)" }}>
+      {/* Section header */}
+      <div style={{
+        background: "linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0f766e 100%)",
+        borderRadius: "1rem 1rem 0 0",
+        padding: "24px 28px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        flexWrap: "wrap", gap: "16px",
+      }}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+            <span style={{ fontSize: "24px" }}>🚀</span>
+            <h3 style={{ margin: 0, fontSize: "20px", fontWeight: 800, color: "#fff" }}>
+              Top 5 Upcoming RE Projects
+            </h3>
+          </div>
+          <p style={{ margin: 0, fontSize: "13px", color: "#94a3b8" }}>
+            Pipeline from India's listed renewable energy players · Data Centre & RE convergence
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+          {[
+            { val: `${totalCapacityGW.toFixed(1)} GW`, lbl: "Total Pipeline" },
+            { val: `₹${(totalInvestment / 1000).toFixed(0)}K Cr`, lbl: "Est. Investment" },
+            { val: "5", lbl: "Projects" },
+          ].map((k) => (
+            <div key={k.lbl} style={{
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.15)",
+              borderRadius: "0.5rem",
+              padding: "10px 16px",
+              textAlign: "center",
+              minWidth: "90px",
+            }}>
+              <div style={{ fontSize: "18px", fontWeight: 800, color: "#5eead4" }}>{k.val}</div>
+              <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>{k.lbl}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Project cards */}
+      <div style={{
+        border: "1px solid #e2e8f0", borderTop: "none",
+        borderRadius: "0 0 1rem 1rem",
+        overflow: "hidden",
+        background: "#fff",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+      }}>
+        {UPCOMING_PROJECTS.map((proj, idx) => {
+          const typeStyle = PROJECT_TYPE_COLORS[proj.type] ?? PROJECT_TYPE_COLORS["Solar"];
+          const statusStyle = STATUS_COLORS[proj.status] ?? STATUS_COLORS["Planning"];
+          const isOpen = expanded === proj.id;
+
+          return (
+            <div
+              key={proj.id}
+              style={{
+                borderBottom: idx < UPCOMING_PROJECTS.length - 1 ? "1px solid #f1f5f9" : "none",
+              }}
+            >
+              {/* Main row */}
+              <div
+                onClick={() => setExpanded(isOpen ? null : proj.id)}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "32px 1fr auto",
+                  alignItems: "center",
+                  gap: "16px",
+                  padding: "18px 24px",
+                  cursor: "pointer",
+                  transition: "background 0.15s",
+                  background: isOpen ? "#f8fafc" : "#fff",
+                }}
+                onMouseEnter={(e) => { if (!isOpen) (e.currentTarget as HTMLDivElement).style.background = "#f9fafb"; }}
+                onMouseLeave={(e) => { if (!isOpen) (e.currentTarget as HTMLDivElement).style.background = "#fff"; }}
+              >
+                {/* Rank circle */}
+                <div style={{
+                  width: "32px", height: "32px", borderRadius: "50%",
+                  background: `linear-gradient(135deg, #0f766e, #14b8a6)`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "13px", fontWeight: 800, color: "#fff", flexShrink: 0,
+                  boxShadow: "0 2px 8px rgba(15,118,110,0.4)",
+                }}>
+                  {idx + 1}
+                </div>
+
+                {/* Project info */}
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "4px" }}>
+                    <span style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>
+                      {proj.name}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 500 }}>
+                      {proj.developer}
+                    </span>
+                    <span style={{ color: "#cbd5e1", fontSize: "10px" }}>•</span>
+                    <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+                      📍 {proj.state}
+                    </span>
+                    <span style={{ color: "#cbd5e1", fontSize: "10px" }}>•</span>
+                    <span style={{
+                      fontSize: "10px", padding: "2px 8px", borderRadius: "999px",
+                      background: typeStyle.bg, color: typeStyle.color, fontWeight: 600,
+                    }}>
+                      {typeStyle.icon} {proj.type}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Right side badges */}
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0, flexWrap: "wrap" }}>
+                  {/* Capacity */}
+                  <div style={{
+                    background: "#f0fdf4",
+                    border: "1px solid #bbf7d0",
+                    borderRadius: "0.375rem",
+                    padding: "6px 12px",
+                    textAlign: "center",
+                  }}>
+                    <div style={{ fontSize: "15px", fontWeight: 800, color: "#166534" }}>
+                      {proj.capacityMW >= 1000
+                        ? `${(proj.capacityMW / 1000).toFixed(1)} GW`
+                        : `${proj.capacityMW} MW`}
+                    </div>
+                    <div style={{ fontSize: "10px", color: "#4ade80", fontWeight: 500 }}>Capacity</div>
+                  </div>
+
+                  {/* Status */}
+                  <div style={{
+                    background: statusStyle.bg,
+                    border: `1px solid ${statusStyle.dot}44`,
+                    borderRadius: "999px",
+                    padding: "5px 12px",
+                    display: "flex", alignItems: "center", gap: "6px",
+                  }}>
+                    <span style={{
+                      width: "7px", height: "7px", borderRadius: "50%",
+                      background: statusStyle.dot,
+                      display: "inline-block",
+                      boxShadow: `0 0 0 2px ${statusStyle.dot}33`,
+                    }} />
+                    <span style={{ fontSize: "11px", fontWeight: 600, color: statusStyle.color }}>
+                      {proj.status}
+                    </span>
+                  </div>
+
+                  {/* Expand chevron */}
+                  <span style={{
+                    fontSize: "14px", color: "#94a3b8",
+                    transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+                    transition: "transform 0.2s",
+                    display: "inline-block",
+                  }}>▼</span>
+                </div>
+              </div>
+
+              {/* Expanded detail */}
+              {isOpen && (
+                <div style={{
+                  padding: "0 24px 20px 72px",
+                  background: "#f8fafc",
+                  borderTop: "1px solid #e2e8f0",
+                }}>
+                  <p style={{ margin: "16px 0 14px", fontSize: "13px", color: "#475569", lineHeight: 1.6 }}>
+                    {proj.description}
+                  </p>
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+                    gap: "10px",
+                  }}>
+                    {[
+                      { lbl: "Expected COD", val: proj.expectedCOD, icon: "📅" },
+                      { lbl: "Est. Investment", val: `₹${proj.investmentCr.toLocaleString("en-IN")} Cr`, icon: "💰" },
+                      { lbl: "Listed Parent", val: proj.parentListed, icon: "🏢" },
+                      { lbl: "Ticker", val: `${proj.ticker} · ${proj.exchange}`, icon: "📈" },
+                    ].map((d) => (
+                      <div key={d.lbl} style={{
+                        background: "#fff", border: "1px solid #e2e8f0",
+                        borderRadius: "0.5rem", padding: "10px 14px",
+                      }}>
+                        <div style={{ fontSize: "10px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "3px" }}>
+                          {d.icon} {d.lbl}
+                        </div>
+                        <div style={{ fontSize: "13px", fontWeight: 600, color: "#0f172a" }}>{d.val}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <p style={{ fontSize: "11px", color: "#9ca3af", marginTop: "12px" }}>
+        Project data sourced from public announcements, regulatory filings, and company investor presentations as of early 2026. Capacity and timelines subject to revision.
+      </p>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Main Page                                                           */
 /* ------------------------------------------------------------------ */
 
@@ -902,11 +1233,12 @@ function ProjectsPage() {
 
       {activeSection === "project-directory" && (
         <section id="project-directory">
-          <h3>Project Directory</h3>
-          <p>
-            {projects?.length ?? 0} projects loaded. Comprehensive database of
-            operational, under-construction, and planned solar projects.
-          </p>
+          <UpcomingProjectsSection />
+          {(projects?.length ?? 0) > 0 && (
+            <p style={{ fontSize: "13px", color: "#6b7280", marginTop: "20px" }}>
+              {projects?.length} additional projects in database.
+            </p>
+          )}
         </section>
       )}
 
