@@ -261,6 +261,18 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
             <BookOpen size={13} />
             <span>Guide</span>
           </button>
+          <button
+            onClick={() => window.print()}
+            title="Download PDF report"
+            style={{ padding: "7px 10px", background: "#0f766e", border: "none", cursor: "pointer", color: "#fff", display: "flex", alignItems: "center", gap: "5px", fontSize: "11px", fontWeight: 600 }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            PDF
+          </button>
           {onClearCache && (
             <button onClick={onClearCache} title="Clear cached analysis"
               style={{ padding: "7px 8px", background: "#fff", border: "1px solid #e2e8f0", cursor: "pointer", color: "#64748b", display: "flex", alignItems: "center" }}>
@@ -319,8 +331,9 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
 
               {/* Satellite image */}
               <div style={{ position: "relative", overflow: "hidden", height: "200px", background: "#0f172a" }}>
-                <img src={`https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox=${lng - 0.005},${lat - 0.0025},${lng + 0.005},${lat + 0.0025}&bboxSR=4326&imageSR=4326&size=1000,400&format=jpg&f=image`}
-                  alt={`Satellite view of ${datacenter.name}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <img src={`https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox=${lng - 0.008},${lat - 0.004},${lng + 0.008},${lat + 0.004}&bboxSR=4326&imageSR=4326&size=1400,560&format=jpg&f=image`}
+                  alt={`Satellite view of ${datacenter.name}`} style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  onError={(e) => { const img = e.currentTarget; img.style.display = "none"; }} />
                 <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
                   <div style={{ width: "12px", height: "12px", background: "#0f766e", border: "2px solid #fff", boxShadow: "0 0 10px rgba(15,118,110,0.8)" }} />
                 </div>

@@ -698,7 +698,7 @@ function DeveloperProfilesSection() {
                 onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "#e5e7eb"; }}
               >
                 {/* Top */}
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "12px" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "10px" }}>
                   <div style={{
                     width: "40px", height: "40px", background: "#0f766e",
                     color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
@@ -717,6 +717,27 @@ function DeveloperProfilesSection() {
                     )}
                   </div>
                   {stock && <ExchangeBadge exchange={stock.exchange} />}
+                </div>
+
+                {/* Website + Tier */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "4px" }}>
+                  {co.website ? (
+                    <a
+                      href={co.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ fontSize: "11px", color: "#0f766e", textDecoration: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "160px" }}
+                      title={co.website}
+                    >
+                      ↗ {co.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                    </a>
+                  ) : (
+                    <span style={{ fontSize: "11px", color: "#d1d5db" }}>No website</span>
+                  )}
+                  <span style={{ fontSize: "10px", color: "#6b7280", background: "#f3f4f6", padding: "2px 6px", border: "1px solid #e5e7eb" }}>
+                    {co.sustainability_rating ?? "Tier: N/A"}
+                  </span>
                 </div>
 
                 {/* Facility count from DB */}
@@ -746,13 +767,14 @@ function DeveloperProfilesSection() {
         <div style={{ display: "flex", flexDirection: "column", gap: "1px", border: "1px solid #e5e7eb" }}>
           {/* List header */}
           <div style={{
-            display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr",
+            display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
             padding: "10px 16px", background: "#f9fafb",
             fontSize: "11px", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em",
             fontWeight: 600,
           }}>
             <span>Company</span>
             <span>Facilities</span>
+            <span>Website</span>
             <span>Exchange</span>
             <span style={{ textAlign: "right" }}>Price</span>
           </div>
@@ -768,7 +790,7 @@ function DeveloperProfilesSection() {
                 key={co.id}
                 onClick={() => setSelectedCompany(co)}
                 style={{
-                  display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr",
+                  display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
                   padding: "12px 16px", background: "#fff", cursor: "pointer",
                   borderTop: "1px solid #f3f4f6", alignItems: "center",
                   transition: "background 0.1s",
@@ -792,6 +814,22 @@ function DeveloperProfilesSection() {
                   </div>
                 </div>
                 <span style={{ fontSize: "13px", color: "#374151" }}>{co.facility_count}</span>
+                <span>
+                  {co.website ? (
+                    <a
+                      href={co.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ fontSize: "11px", color: "#0f766e", textDecoration: "none" }}
+                      title={co.website}
+                    >
+                      ↗ {co.website.replace(/^https?:\/\//, "").split("/")[0]}
+                    </a>
+                  ) : (
+                    <span style={{ fontSize: "11px", color: "#d1d5db" }}>—</span>
+                  )}
+                </span>
                 <span>{stock ? <ExchangeBadge exchange={stock.exchange} /> : <span style={{ fontSize: "12px", color: "#d1d5db" }}>—</span>}</span>
                 <div style={{ textAlign: "right" }}>
                   {hasStock && stock ? (

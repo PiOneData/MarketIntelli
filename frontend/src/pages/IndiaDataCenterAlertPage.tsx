@@ -62,12 +62,25 @@ function toMapFormat(facilities: DataCenterFacility[]) {
   }));
 }
 
+type SortField = "date_added" | "company_name" | "city" | "state" | "power_capacity_mw" | "size_sqft" | "status";
+
+function SortIcon({ active, dir }: { active: boolean; dir: "asc" | "desc" }) {
+  return (
+    <span style={{ marginLeft: "4px", fontSize: "10px", opacity: active ? 1 : 0.35, color: active ? "#0f766e" : "#6b7280" }}>
+      {active ? (dir === "asc" ? "▲" : "▼") : "⇅"}
+    </span>
+  );
+}
+
 function IndiaDataCenterAlertPage() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(EMPTY_FORM);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [filters, setFilters] = useState({ state: "", city: "", company: "" });
   const [activeTab, setActiveTab] = useState<"registry" | "map" | "substations">("registry");
   const [stocksByCompany, setStocksByCompany] = useState<Record<string, DcStock>>({});
+  const [sortField, setSortField] = useState<SortField>("date_added");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   // Fetch facilities from API
   const { data: facilities = [], isLoading, error } = useFacilities({ page_size: 500 });
@@ -81,15 +94,25 @@ function IndiaDataCenterAlertPage() {
     }).catch(() => { /* stock links are best-effort */ });
   }, []);
 
-  // Apply client-side filters
+  // Apply client-side filters + sorting
   const filteredData = useMemo(() => {
-    return facilities.filter((f) => {
+    const data = facilities.filter((f) => {
       if (filters.state && f.state !== filters.state) return false;
       if (filters.city && !f.city.toLowerCase().includes(filters.city.toLowerCase())) return false;
       if (filters.company && !f.company_name.toLowerCase().includes(filters.company.toLowerCase())) return false;
       return true;
     });
-  }, [facilities, filters]);
+    return [...data].sort((a, b) => {
+      const av = a[sortField] ?? "";
+      const bv = b[sortField] ?? "";
+      if (typeof av === "number" && typeof bv === "number") {
+        return sortDir === "asc" ? av - bv : bv - av;
+      }
+      return sortDir === "asc"
+        ? String(av).localeCompare(String(bv))
+        : String(bv).localeCompare(String(av));
+    });
+  }, [facilities, filters, sortField, sortDir]);
 
   const mapData = useMemo(() => toMapFormat(facilities), [facilities]);
 
@@ -136,6 +159,7 @@ function IndiaDataCenterAlertPage() {
       queryClient.invalidateQueries({ queryKey: ["dc-facilities"] });
       queryClient.invalidateQueries({ queryKey: ["dc-facility-stats"] });
       setForm(EMPTY_FORM);
+      setShowAddModal(false);
     } catch (err) {
       console.error("Failed to add data center:", err);
       alert("Failed to add data center. Please try again.");
@@ -249,92 +273,110 @@ function IndiaDataCenterAlertPage() {
         </div>
       </div>
 
-      {/* Add New Data Center Form */}
-      <div className="india-dc-form-section">
-        <h3>Add New Data Center</h3>
-        <form onSubmit={handleAddDataCenter} className="india-dc-form">
-          <div className="india-dc-form-grid">
-            <div className="india-dc-field">
-              <label htmlFor="company">Company / Group</label>
-              <input
-                id="company"
-                name="company"
-                type="text"
-                placeholder="e.g. Adani Group"
-                value={form.company}
-                onChange={handleFormChange}
-              />
-            </div>
-            <div className="india-dc-field">
-              <label htmlFor="city">City</label>
-              <input
-                id="city"
-                name="city"
-                type="text"
-                placeholder="e.g. Mumbai"
-                value={form.city}
-                onChange={handleFormChange}
-              />
-            </div>
-            <div className="india-dc-field">
-              <label htmlFor="location">Location</label>
-              <input
-                id="location"
-                name="location"
-                type="text"
-                placeholder="e.g. Navi Mumbai SEZ"
-                value={form.location}
-                onChange={handleFormChange}
-              />
-            </div>
-            <div className="india-dc-field">
-              <label htmlFor="state">State</label>
-              <select id="state" name="state" value={form.state} onChange={handleFormChange}>
-                <option value="">Select State</option>
-                {INDIAN_STATES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-            <div className="india-dc-field">
-              <label htmlFor="powerMW">Power Needs (MW)</label>
-              <input
-                id="powerMW"
-                name="powerMW"
-                type="number"
-                placeholder="e.g. 50"
-                value={form.powerMW}
-                onChange={handleFormChange}
-              />
-            </div>
-            <div className="india-dc-field">
-              <label htmlFor="sizeSqFt">Size (Sq. Ft.)</label>
-              <input
-                id="sizeSqFt"
-                name="sizeSqFt"
-                type="number"
-                placeholder="e.g. 200000"
-                value={form.sizeSqFt}
-                onChange={handleFormChange}
-              />
-            </div>
-            <div className="india-dc-field">
-              <label htmlFor="status">Status</label>
-              <select id="status" name="status" value={form.status} onChange={handleFormChange}>
-                <option value="">Select Status</option>
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>{STATUS_DISPLAY[s]}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="india-dc-form-actions">
-            <button type="submit" className="india-dc-btn india-dc-btn--primary">Add Data Center</button>
-            <button type="button" className="india-dc-btn india-dc-btn--info" onClick={handleExportCSV}>Export to CSV</button>
-            <button type="button" className="india-dc-btn india-dc-btn--accent">Daily Report</button>
-          </div>
-        </form>
+      {/* Toolbar: Add + Export buttons */}
+      <div style={{ display: "flex", gap: "10px", marginBottom: "16px", flexWrap: "wrap" }}>
+        <button
+          className="india-dc-btn india-dc-btn--primary"
+          onClick={() => setShowAddModal(true)}
+        >
+          + Add Data Center
+        </button>
+        <button type="button" className="india-dc-btn india-dc-btn--info" onClick={handleExportCSV}>
+          Export to CSV
+        </button>
+        <button type="button" className="india-dc-btn india-dc-btn--accent">Daily Report</button>
       </div>
+
+      {/* Add Data Center Modal */}
+      {showAddModal && (
+        <div
+          style={{
+            position: "fixed", inset: 0, zIndex: 1000,
+            background: "rgba(15,23,42,0.55)", backdropFilter: "blur(3px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowAddModal(false); }}
+        >
+          <div style={{
+            background: "#fff", borderRadius: "0.75rem",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+            width: "min(600px, 95vw)", maxHeight: "90vh", overflowY: "auto",
+          }}>
+            {/* Modal header */}
+            <div style={{
+              padding: "18px 24px", borderBottom: "1px solid #e2e8f0",
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              borderTopLeftRadius: "0.75rem", borderTopRightRadius: "0.75rem",
+              background: "#f8fafc",
+            }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#1e293b" }}>Add New Data Center</h3>
+                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#64748b" }}>Enter facility details below</p>
+              </div>
+              <button
+                onClick={() => setShowAddModal(false)}
+                style={{
+                  background: "none", border: "1px solid #e2e8f0", cursor: "pointer",
+                  borderRadius: "6px", padding: "6px 10px", fontSize: "16px", color: "#64748b", lineHeight: 1,
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            {/* Modal body / form */}
+            <div style={{ padding: "24px" }}>
+              <form onSubmit={handleAddDataCenter} className="india-dc-form">
+                <div className="india-dc-form-grid">
+                  <div className="india-dc-field">
+                    <label htmlFor="company">Company / Group</label>
+                    <input id="company" name="company" type="text" placeholder="e.g. Adani Group" value={form.company} onChange={handleFormChange} />
+                  </div>
+                  <div className="india-dc-field">
+                    <label htmlFor="city">City</label>
+                    <input id="city" name="city" type="text" placeholder="e.g. Mumbai" value={form.city} onChange={handleFormChange} />
+                  </div>
+                  <div className="india-dc-field">
+                    <label htmlFor="location">Location</label>
+                    <input id="location" name="location" type="text" placeholder="e.g. Navi Mumbai SEZ" value={form.location} onChange={handleFormChange} />
+                  </div>
+                  <div className="india-dc-field">
+                    <label htmlFor="state">State</label>
+                    <select id="state" name="state" value={form.state} onChange={handleFormChange}>
+                      <option value="">Select State</option>
+                      {INDIAN_STATES.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="india-dc-field">
+                    <label htmlFor="powerMW">Power Needs (MW)</label>
+                    <input id="powerMW" name="powerMW" type="number" placeholder="e.g. 50" value={form.powerMW} onChange={handleFormChange} />
+                  </div>
+                  <div className="india-dc-field">
+                    <label htmlFor="sizeSqFt">Size (Sq. Ft.)</label>
+                    <input id="sizeSqFt" name="sizeSqFt" type="number" placeholder="e.g. 200000" value={form.sizeSqFt} onChange={handleFormChange} />
+                  </div>
+                  <div className="india-dc-field">
+                    <label htmlFor="status">Status</label>
+                    <select id="status" name="status" value={form.status} onChange={handleFormChange}>
+                      <option value="">Select Status</option>
+                      {STATUS_OPTIONS.map((s) => (
+                        <option key={s} value={s}>{STATUS_DISPLAY[s]}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: "10px", marginTop: "20px", justifyContent: "flex-end" }}>
+                  <button type="button" className="india-dc-btn india-dc-btn--outline" onClick={() => setShowAddModal(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="india-dc-btn india-dc-btn--primary">Add Data Center</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="india-dc-filters">
@@ -385,15 +427,35 @@ function IndiaDataCenterAlertPage() {
           <table className="india-dc-table">
             <thead>
               <tr>
-                <th>Date Added</th>
-                <th>Company / Group</th>
-                <th>City</th>
-                <th>Location</th>
-                <th>State</th>
-                <th>Power (MW)</th>
-                <th>Size (Sq. Ft.)</th>
-                <th>Status</th>
-                <th>Stock</th>
+                {(
+                  [
+                    { label: "Date Added", field: "date_added" },
+                    { label: "Company / Group", field: "company_name" },
+                    { label: "City", field: "city" },
+                    { label: "Location", field: null },
+                    { label: "State", field: "state" },
+                    { label: "Power (MW)", field: "power_capacity_mw" },
+                    { label: "Size (Sq. Ft.)", field: "size_sqft" },
+                    { label: "Status", field: "status" },
+                    { label: "Stock", field: null },
+                  ] as { label: string; field: SortField | null }[]
+                ).map(({ label, field }) =>
+                  field ? (
+                    <th
+                      key={label}
+                      style={{ cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}
+                      onClick={() => {
+                        if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                        else { setSortField(field); setSortDir("asc"); }
+                      }}
+                    >
+                      {label}
+                      <SortIcon active={sortField === field} dir={sortDir} />
+                    </th>
+                  ) : (
+                    <th key={label}>{label}</th>
+                  )
+                )}
               </tr>
             </thead>
             <tbody>

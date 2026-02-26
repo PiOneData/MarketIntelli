@@ -1,5 +1,6 @@
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from "react-leaflet";
 import type { LatLngExpression } from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { STATE_COORDINATES } from "../utils/stateCoordinates";
 
 interface StateStats {

@@ -264,12 +264,11 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               "circle-opacity": 1,
             },
           },
-          // Data centers glow — only features with complete addresses
+          // Data centers glow — all DC features
           {
             id: "dc-glow",
             type: "circle",
             source: "datacenters",
-            filter: ["all", ["has", "address"], ["!=", ["get", "address"], ""]],
             paint: {
               "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 10, 10, 22, 14, 32],
               "circle-color": "#0f766e",
@@ -277,12 +276,11 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               "circle-blur": 0.5,
             },
           },
-          // Data centers core — only features with complete addresses
+          // Data centers core — all DC features
           {
             id: "dc-core",
             type: "circle",
             source: "datacenters",
-            filter: ["all", ["has", "address"], ["!=", ["get", "address"], ""]],
             paint: {
               "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 6, 10, 12, 14, 16],
               "circle-color": "#0f766e",
@@ -297,7 +295,6 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
             type: "symbol",
             source: "datacenters",
             minzoom: 10,
-            filter: ["all", ["has", "address"], ["!=", ["get", "address"], ""]],
             layout: {
               "text-field": [
                 "step",
@@ -647,9 +644,21 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               {/* Satellite image */}
               <div style={{ position: "relative", height: "180px", width: "100%", overflow: "hidden", background: "#0f172a" }}>
                 <img
-                  src={`https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox=${dcPopup.lng - 0.005},${dcPopup.lat - 0.002},${dcPopup.lng + 0.005},${dcPopup.lat + 0.002}&bboxSR=4326&imageSR=4326&size=800,320&format=jpg&f=image`}
-                  alt="Building Satellite View"
+                  src={`https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox=${dcPopup.lng - 0.008},${dcPopup.lat - 0.004},${dcPopup.lng + 0.008},${dcPopup.lat + 0.004}&bboxSR=4326&imageSR=4326&size=1200,480&format=jpg&f=image`}
+                  alt="Satellite View"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  onError={(e) => {
+                    const img = e.currentTarget;
+                    img.style.display = "none";
+                    const parent = img.parentElement;
+                    if (parent && !parent.querySelector(".sat-fallback")) {
+                      const fb = document.createElement("div");
+                      fb.className = "sat-fallback";
+                      fb.style.cssText = "width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:#0f172a;";
+                      fb.innerHTML = `<div style="font-family:monospace;font-size:13px;color:#5eead4;font-weight:700">${dcPopup.lat.toFixed(5)}°N · ${dcPopup.lng.toFixed(5)}°E</div><div style="font-size:11px;color:#64748b">Satellite imagery unavailable</div>`;
+                      parent.appendChild(fb);
+                    }
+                  }}
                 />
                 <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
                   <div style={{ width: "14px", height: "14px", background: "#0f766e", border: "2px solid #fff", boxShadow: "0 0 12px rgba(15,118,110,0.8)" }} />
