@@ -1,10 +1,24 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import DataCenterMap from "../components/DataCenterMap";
 import SubstationView from "../components/SubstationView";
 import { useFacilities, useFacilityStats } from "../hooks/useDataCenters";
-import { listFacilities, createFacility, deleteFacility } from "../api/dataCenters";
+import { listFacilities, createFacility } from "../api/dataCenters";
 import { useQueryClient } from "@tanstack/react-query";
 import type { DataCenterFacility } from "../types/dataCenters";
+import apiClient from "../api/client";
+
+interface DcStock {
+  dc_company: string;
+  ticker: string;
+  exchange: string;
+  price: number | null;
+  currency: string;
+  error?: string;
+}
+
+interface DcStockResponse {
+  stocks: DcStock[];
+}
 
 const INDIAN_STATES = [
   "Andhra Pradesh", "Bihar", "Chhattisgarh", "Delhi", "Goa", "Gujarat",
@@ -53,10 +67,19 @@ function IndiaDataCenterAlertPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [filters, setFilters] = useState({ state: "", city: "", company: "" });
   const [activeTab, setActiveTab] = useState<"registry" | "map" | "substations">("registry");
+  const [stocksByCompany, setStocksByCompany] = useState<Record<string, DcStock>>({});
 
   // Fetch facilities from API
   const { data: facilities = [], isLoading, error } = useFacilities({ page_size: 500 });
   const { data: stats } = useFacilityStats();
+
+  useEffect(() => {
+    apiClient.get<DcStockResponse>("/projects/dc-stocks").then((res) => {
+      const map: Record<string, DcStock> = {};
+      for (const s of res.data.stocks) map[s.dc_company] = s;
+      setStocksByCompany(map);
+    }).catch(() => { /* stock links are best-effort */ });
+  }, []);
 
   // Apply client-side filters
   const filteredData = useMemo(() => {
@@ -116,16 +139,6 @@ function IndiaDataCenterAlertPage() {
     } catch (err) {
       console.error("Failed to add data center:", err);
       alert("Failed to add data center. Please try again.");
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteFacility(id);
-      queryClient.invalidateQueries({ queryKey: ["dc-facilities"] });
-      queryClient.invalidateQueries({ queryKey: ["dc-facility-stats"] });
-    } catch (err) {
-      console.error("Failed to delete:", err);
     }
   };
 
@@ -380,7 +393,7 @@ function IndiaDataCenterAlertPage() {
                 <th>Power (MW)</th>
                 <th>Size (Sq. Ft.)</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th>Stock</th>
               </tr>
             </thead>
             <tbody>
@@ -393,29 +406,50 @@ function IndiaDataCenterAlertPage() {
                   <td colSpan={9} className="india-dc-table-empty">No data centers match the current filters.</td>
                 </tr>
               ) : (
-                filteredData.map((f) => (
-                  <tr key={f.id}>
-                    <td>{f.date_added ? f.date_added.split("T")[0] : ""}</td>
-                    <td className="india-dc-table-company">{f.company_name}</td>
-                    <td>{f.city}</td>
-                    <td>{f.location_detail || f.name}</td>
-                    <td>{f.state}</td>
-                    <td>{f.power_capacity_mw}</td>
-                    <td>{f.size_sqft.toLocaleString()}</td>
-                    <td>
-                      <span className={`india-dc-status india-dc-status--${f.status}`}>
-                        {STATUS_DISPLAY[f.status] || f.status}
-                      </span>
-                    </td>
-                    <td>
-                      <button className="india-dc-btn-delete" onClick={() => handleDelete(f.id)} title="Delete">
-                        <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                filteredData.map((f) => {
+                  const stock = stocksByCompany[f.company_name];
+                  const hasStock = !!(stock && !stock.error && stock.price != null);
+                  return (
+                    <tr key={f.id}>
+                      <td>{f.date_added ? f.date_added.split("T")[0] : ""}</td>
+                      <td className="india-dc-table-company">{f.company_name}</td>
+                      <td>{f.city}</td>
+                      <td>{f.location_detail || f.name}</td>
+                      <td>{f.state}</td>
+                      <td>{f.power_capacity_mw}</td>
+                      <td>{f.size_sqft.toLocaleString()}</td>
+                      <td>
+                        <span className={`india-dc-status india-dc-status--${f.status}`}>
+                          {STATUS_DISPLAY[f.status] || f.status}
+                        </span>
+                      </td>
+                      <td>
+                        {hasStock && stock ? (
+                          <a
+                            href={`https://finance.yahoo.com/quote/${encodeURIComponent(stock.ticker)}/`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              display: "inline-flex", alignItems: "center", gap: "4px",
+                              fontSize: "12px", color: "#1e293b", textDecoration: "none",
+                              fontWeight: 600, whiteSpace: "nowrap",
+                            }}
+                            title={`View ${stock.ticker} on Yahoo Finance`}
+                          >
+                            {stock.ticker}
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                              <polyline points="15 3 21 3 21 9" />
+                              <line x1="10" y1="14" x2="21" y2="3" />
+                            </svg>
+                          </a>
+                        ) : (
+                          <span style={{ fontSize: "12px", color: "#d1d5db" }}>—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

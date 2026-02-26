@@ -49,29 +49,21 @@ const TOGGLE_GROUPS: {
   key: LayerGroup;
   label: string;
   icon: React.ReactNode;
-  bgOn: string;
-  borderOn: string;
 }[] = [
   {
     key: "wind",
     label: "Wind",
     icon: <Wind size={12} />,
-    bgOn: "bg-cyan-500",
-    borderOn: "border-cyan-400",
   },
   {
     key: "solar",
     label: "Solar",
     icon: <Sun size={12} />,
-    bgOn: "bg-yellow-400",
-    borderOn: "border-yellow-300",
   },
   {
     key: "dc",
     label: "Data Centers",
     icon: <Server size={12} />,
-    bgOn: "bg-teal-600",
-    borderOn: "border-teal-500",
   },
 ];
 
@@ -475,22 +467,22 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
       : [];
 
   return (
-    <div className="w-full h-full absolute top-0 left-0 bg-slate-950 overflow-hidden font-sans">
+    <div className="w-full h-full absolute top-0 left-0 bg-slate-950 overflow-hidden" style={{ fontFamily: "var(--font-family, 'Inter', 'Segoe UI', system-ui, sans-serif)" }}>
       <div ref={mapContainer} className="w-full h-full" />
 
       {/* Left top: Jump to coords */}
-      <div className="absolute top-6 left-6 z-10 w-64">
+      <div className="absolute top-4 left-4 z-10 w-60">
         <form
           onSubmit={handleSearch}
-          className="bg-white/95 backdrop-blur-md p-4 rounded-3xl shadow-2xl border border-slate-200/50 space-y-3 ring-1 ring-black/[0.03]"
+          style={{ background: "rgba(255,255,255,0.97)", border: "1px solid #e2e8f0", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", padding: "12px" }}
         >
-          <div className="flex items-center gap-2 mb-1 px-1">
-            <Navigation size={12} className="text-blue-500" />
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
+            <Navigation size={12} style={{ color: "#64748b" }} />
+            <span style={{ fontSize: "10px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>
               Jump to Coords
             </span>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
             <input
               type="text"
               placeholder="Lat (8.25)"
@@ -498,7 +490,7 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               onChange={(e) =>
                 setSearchCoords((p) => ({ ...p, lat: e.target.value }))
               }
-              className="bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/15"
+              style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: "6px 8px", fontSize: "11px", fontWeight: 600, color: "#334155", outline: "none", fontFamily: "inherit" }}
             />
             <input
               type="text"
@@ -507,34 +499,34 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               onChange={(e) =>
                 setSearchCoords((p) => ({ ...p, lng: e.target.value }))
               }
-              className="bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/15"
+              style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: "6px 8px", fontSize: "11px", fontWeight: 600, color: "#334155", outline: "none", fontFamily: "inherit" }}
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-2.5 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-200"
+            style={{ width: "100%", background: "#1e293b", color: "#fff", border: "none", padding: "8px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", cursor: "pointer", marginTop: "8px", fontFamily: "inherit" }}
           >
-            <Search size={14} /> Analyze Location
+            <Search size={13} /> Analyze Location
           </button>
         </form>
       </div>
 
       {/* Center top: DC search */}
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10 w-96">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 w-96">
         <div className="relative">
-          <div className="bg-white/95 backdrop-blur-xl px-6 py-4 rounded-full shadow-2xl border border-slate-200/50 flex items-center gap-4 ring-1 ring-violet-500/10 transition-all focus-within:ring-violet-500/30">
-            <Server size={18} className="text-violet-500" />
+          <div style={{ background: "rgba(255,255,255,0.97)", border: "1px solid #e2e8f0", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", padding: "10px 16px", display: "flex", alignItems: "center", gap: "10px" }}>
+            <Server size={15} style={{ color: "#475569", flexShrink: 0 }} />
             <input
               type="text"
-              placeholder="SEARCH DATA CENTERS..."
+              placeholder="Search data centers..."
               value={dcSearch}
               onChange={(e) => setDcSearch(e.target.value)}
-              className="bg-transparent border-none focus:outline-none text-[11px] font-black text-slate-700 w-full placeholder:text-slate-300 tracking-wider"
+              style={{ background: "transparent", border: "none", outline: "none", fontSize: "12px", fontWeight: 600, color: "#334155", width: "100%", fontFamily: "inherit" }}
             />
             {dcSearch && (
               <X
-                size={16}
-                className="text-slate-400 cursor-pointer hover:text-slate-600 transition-colors"
+                size={14}
+                style={{ color: "#94a3b8", cursor: "pointer", flexShrink: 0 }}
                 onClick={() => setDcSearch("")}
               />
             )}
@@ -542,27 +534,23 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
           <AnimatePresence>
             {filteredDcs.length > 0 && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                className="absolute top-full mt-3 left-0 right-0 bg-white/98 backdrop-blur-2xl shadow-2xl rounded-3xl border border-slate-200 overflow-hidden divide-y divide-slate-100 z-50 ring-1 ring-black/[0.05]"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", border: "1px solid #e2e8f0", boxShadow: "0 8px 24px rgba(0,0,0,0.12)", zIndex: 50, marginTop: "2px" }}
               >
                 {filteredDcs.map((dc) => (
                   <button
                     key={String(dc.id ?? dc.name)}
                     onClick={() => flyToDc(dc)}
-                    className="w-full px-6 py-4 flex items-center gap-4 hover:bg-violet-50 transition-colors text-left"
+                    style={{ width: "100%", padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px", background: "none", border: "none", borderBottom: "1px solid #f1f5f9", cursor: "pointer", textAlign: "left", fontFamily: "inherit" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#f8fafc")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
                   >
-                    <div className="p-2 bg-violet-100 rounded-xl">
-                      <MapPin size={14} className="text-violet-600" />
-                    </div>
+                    <MapPin size={13} style={{ color: "#64748b", flexShrink: 0 }} />
                     <div>
-                      <div className="text-[11px] font-black text-slate-800 uppercase tracking-tight">
-                        {dc.name}
-                      </div>
-                      <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                        {dc.company}
-                      </div>
+                      <div style={{ fontSize: "11px", fontWeight: 700, color: "#1e293b" }}>{dc.name}</div>
+                      <div style={{ fontSize: "10px", color: "#94a3b8", fontWeight: 500 }}>{dc.company}</div>
                     </div>
                   </button>
                 ))}
@@ -573,37 +561,27 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
       </div>
 
       {/* Right top: Layer toggles */}
-      <div className="absolute top-6 right-6 z-10 w-56">
-        <div className="bg-white/95 backdrop-blur-md rounded-[2rem] shadow-2xl border border-slate-200/50 overflow-hidden ring-1 ring-black/[0.03]">
-          <div className="px-5 py-3.5 flex items-center justify-between border-b border-slate-100 bg-slate-50/50">
-            <div className="flex items-center gap-2">
-              <Layers size={12} className="text-slate-400" />
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                Overlays
-              </span>
-            </div>
+      <div className="absolute top-4 right-4 z-10 w-48">
+        <div style={{ background: "rgba(255,255,255,0.97)", border: "1px solid #e2e8f0", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+          <div style={{ padding: "8px 12px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: "6px" }}>
+            <Layers size={11} style={{ color: "#64748b" }} />
+            <span style={{ fontSize: "10px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>Overlays</span>
           </div>
-          <div className="p-2 space-y-1.5">
-            {TOGGLE_GROUPS.map(({ key, label, icon, bgOn, borderOn }) => (
-              <button
+          <div style={{ padding: "8px" }}>
+            {TOGGLE_GROUPS.map(({ key, label, icon }) => (
+              <label
                 key={key}
-                onClick={() => toggleGroup(key)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl border text-[10px] font-black uppercase tracking-widest transition-all ${
-                  layerVis[key]
-                    ? `${bgOn} text-white ${borderOn} shadow-md`
-                    : "bg-slate-50/50 text-slate-400 border-slate-50 hover:border-slate-200"
-                }`}
+                style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 8px", cursor: "pointer", userSelect: "none" }}
               >
-                {icon}
-                <span>{label}</span>
-                <div
-                  className={`ml-auto w-1.5 h-1.5 rounded-full ${
-                    layerVis[key]
-                      ? "bg-white shadow-[0_0_8px_rgba(255,255,255,1)]"
-                      : "bg-slate-200"
-                  }`}
+                <input
+                  type="checkbox"
+                  checked={layerVis[key]}
+                  onChange={() => toggleGroup(key)}
+                  style={{ width: "14px", height: "14px", cursor: "pointer", accentColor: "#1e293b" }}
                 />
-              </button>
+                <span style={{ color: "#334155" }}>{icon}</span>
+                <span style={{ fontSize: "11px", fontWeight: 600, color: "#334155" }}>{label}</span>
+              </label>
             ))}
           </div>
         </div>
@@ -614,21 +592,19 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
         {markerPos && !dcPopup && (
           <motion.div
             key="location-panel"
-            initial={{ opacity: 0, y: 60, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 60, scale: 0.95 }}
-            className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 w-[480px] max-w-[95vw]"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 w-[480px] max-w-[95vw]"
           >
-            <div className="bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_20px_48px_-12px_rgba(0,0,0,0.25)] border border-white/50 ring-1 ring-black/[0.05] px-8 py-5 flex items-center gap-6">
-              <div className="p-3 bg-blue-50 rounded-2xl border border-blue-100">
-                <MapPin size={18} className="text-blue-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
+            <div style={{ background: "rgba(255,255,255,0.97)", border: "1px solid #e2e8f0", boxShadow: "0 8px 32px rgba(0,0,0,0.2)", padding: "16px 20px", display: "flex", alignItems: "center", gap: "16px" }}>
+              <MapPin size={16} style={{ color: "#475569", flexShrink: 0 }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: "10px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>
                   Custom Location Selected
                 </div>
-                <div className="font-mono font-bold text-slate-700 text-[11px] tabular-nums">
-                  {markerPos.lat.toFixed(5)}°N &nbsp;·&nbsp; {markerPos.lng.toFixed(5)}°E
+                <div style={{ fontFamily: "monospace", fontWeight: 700, color: "#1e293b", fontSize: "12px" }}>
+                  {markerPos.lat.toFixed(5)}°N · {markerPos.lng.toFixed(5)}°E
                 </div>
               </div>
               <button
@@ -639,17 +615,17 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
                     marker.current = null;
                   }
                 }}
-                className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0"
+                style={{ width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "1px solid #e2e8f0", cursor: "pointer", color: "#64748b", flexShrink: 0 }}
               >
-                <X size={16} />
+                <X size={14} />
               </button>
               <button
                 onClick={() => {
                   onLocationAnalyze?.(markerPos.lat, markerPos.lng);
                 }}
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-5 py-2.5 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg shadow-blue-200 flex-shrink-0"
+                style={{ background: "#1e293b", color: "#fff", border: "none", padding: "8px 16px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", flexShrink: 0, fontFamily: "inherit" }}
               >
-                <Search size={13} />
+                <Search size={12} />
                 Analyze
               </button>
             </div>
@@ -662,75 +638,66 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
         {dcPopup && (
           <motion.div
             key="dc-popup"
-            initial={{ opacity: 0, y: 100, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 100, scale: 0.9 }}
-            className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 w-[600px] max-w-[95vw]"
+            initial={{ opacity: 0, y: 60 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 60 }}
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 w-[580px] max-w-[95vw]"
           >
-            <div className="bg-white/95 backdrop-blur-2xl rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] border border-white/50 overflow-hidden ring-1 ring-black/[0.05]">
+            <div style={{ background: "#fff", border: "1px solid #e2e8f0", boxShadow: "0 16px 48px rgba(0,0,0,0.2)", overflow: "hidden" }}>
               {/* Satellite image */}
-              <div className="relative h-48 w-full overflow-hidden bg-slate-900">
+              <div style={{ position: "relative", height: "180px", width: "100%", overflow: "hidden", background: "#0f172a" }}>
                 <img
                   src={`https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox=${dcPopup.lng - 0.005},${dcPopup.lat - 0.002},${dcPopup.lng + 0.005},${dcPopup.lat + 0.002}&bboxSR=4326&imageSR=4326&size=800,320&format=jpg&f=image`}
                   alt="Building Satellite View"
-                  className="w-full h-full object-cover grayscale-[0.2] contrast-[1.1]"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="relative flex items-center justify-center">
-                    <div className="absolute w-12 h-12 rounded-full border border-white/30 animate-pulse" />
-                    <div className="w-4 h-4 rounded-full bg-teal-600 border-2 border-white shadow-[0_0_15px_rgba(15,118,110,0.8)] z-10" />
-                  </div>
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                  <div style={{ width: "14px", height: "14px", background: "#0f766e", border: "2px solid #fff", boxShadow: "0 0 12px rgba(15,118,110,0.8)" }} />
                 </div>
                 <button
                   onClick={() => setDcPopup(null)}
-                  className="absolute top-5 right-5 w-10 h-10 flex items-center justify-center bg-black/20 hover:bg-black/60 text-white rounded-full transition-all backdrop-blur-md"
+                  style={{ position: "absolute", top: "12px", right: "12px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", cursor: "pointer" }}
                 >
-                  <X size={18} />
+                  <X size={16} />
                 </button>
-                <div className="absolute top-5 left-5 px-4 py-1.5 bg-black/40 backdrop-blur-md text-white/90 text-[10px] font-black uppercase tracking-tighter rounded-full border border-white/10">
-                  SITE ID: {String(dcPopup.dc["id"] ?? "").toUpperCase()}
+                <div style={{ position: "absolute", top: "12px", left: "12px", padding: "4px 10px", background: "rgba(0,0,0,0.5)", color: "rgba(255,255,255,0.9)", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  {String(dcPopup.dc["id"] ?? "").toUpperCase()}
                 </div>
               </div>
 
               {/* Info section */}
-              <div className="p-8 pt-6 space-y-6">
-                <div className="flex justify-between items-start">
+              <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "14px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                   <div>
-                    <div className="text-[10px] font-black text-violet-500 uppercase tracking-[0.2em] mb-1.5">
+                    <div style={{ fontSize: "10px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "4px" }}>
                       {String(dcPopup.dc["company"] ?? "")}
                     </div>
-                    <h3 className="text-2xl font-black text-slate-800 leading-none">
+                    <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b", lineHeight: 1.2 }}>
                       {String(dcPopup.dc["name"] ?? "")}
                     </h3>
                   </div>
-                  <div className="px-4 py-2 bg-slate-100 rounded-2xl text-[10px] font-black text-slate-500 uppercase tracking-widest border border-slate-200">
+                  <div style={{ padding: "4px 10px", border: "1px solid #e2e8f0", fontSize: "10px", fontWeight: 700, color: "#475569", textTransform: "uppercase" }}>
                     {String(dcPopup.dc["tier"] ?? "Tier III")}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-50/80 rounded-[1.5rem] p-5 border border-slate-100 group hover:border-violet-200 transition-colors">
-                    <div className="flex items-center gap-2 mb-2">
-                      <MapPin size={12} className="text-slate-400" />
-                      <span className="font-black text-slate-400 uppercase tracking-widest text-[9px]">
-                        Location Verified
-                      </span>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <div style={{ padding: "12px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "6px" }}>
+                      <MapPin size={11} style={{ color: "#64748b" }} />
+                      <span style={{ fontSize: "9px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Address</span>
                     </div>
-                    <div className="font-bold text-slate-600 text-[11px] leading-relaxed line-clamp-2">
+                    <div style={{ fontSize: "11px", fontWeight: 600, color: "#475569", lineHeight: 1.4 }}>
                       {String(dcPopup.dc["address"] ?? "")}
                     </div>
                   </div>
-                  <div className="bg-violet-50/50 rounded-[1.5rem] p-5 border border-violet-100">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Navigation size={12} className="text-violet-400" />
-                      <span className="font-black text-violet-400 uppercase tracking-widest text-[9px]">
-                        Precision Coords
-                      </span>
+                  <div style={{ padding: "12px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "6px" }}>
+                      <Navigation size={11} style={{ color: "#64748b" }} />
+                      <span style={{ fontSize: "9px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>Coordinates</span>
                     </div>
-                    <div className="font-mono font-bold text-violet-700 text-[11px] tabular-nums">
-                      LAT: {dcPopup.lat.toFixed(6)}
-                      <br />
-                      LNG: {dcPopup.lng.toFixed(6)}
+                    <div style={{ fontFamily: "monospace", fontSize: "11px", fontWeight: 700, color: "#334155" }}>
+                      {dcPopup.lat.toFixed(6)}°N<br />{dcPopup.lng.toFixed(6)}°E
                     </div>
                   </div>
                 </div>
@@ -740,12 +707,11 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
                     setDcPopup(null);
                     onDatacenterClick(dcPopup.lat, dcPopup.lng, dcPopup.dc);
                   }}
-                  className="w-full bg-gradient-to-r from-teal-700 to-teal-600 hover:from-teal-600 hover:to-teal-500 text-white rounded-2xl py-4 text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-3 transition-all shadow-[0_10px_30px_-10px_rgba(15,118,110,0.5)] hover:shadow-[0_15px_40px_-10px_rgba(15,118,110,0.6)] hover:-translate-y-0.5 active:scale-[0.98] group"
+                  style={{ width: "100%", background: "#0f766e", color: "#fff", border: "none", padding: "12px", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", cursor: "pointer", fontFamily: "inherit" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#0d5f59")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#0f766e")}
                 >
-                  <ExternalLink
-                    size={16}
-                    className="group-hover:rotate-12 transition-transform duration-300"
-                  />
+                  <ExternalLink size={14} />
                   <span>Access Intelligence Report</span>
                 </button>
               </div>
