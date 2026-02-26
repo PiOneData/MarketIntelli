@@ -187,7 +187,7 @@ function CompanyProfileModal({ company, stock, dcInfo, onClose }: CompanyProfile
         }}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginBottom: "20px" }}>
             <div style={{
-              width: "52px", height: "52px", background: "#1e293b",
+              width: "52px", height: "52px", background: "#0f766e",
               color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: "18px", fontWeight: 700, flexShrink: 0,
             }}>
@@ -239,12 +239,12 @@ function CompanyProfileModal({ company, stock, dcInfo, onClose }: CompanyProfile
                 style={{
                   padding: "10px 16px",
                   border: "none",
-                  borderBottom: tab === t.id ? "2px solid #1e293b" : "2px solid transparent",
+                  borderBottom: tab === t.id ? "2px solid #0f766e" : "2px solid transparent",
                   background: "transparent",
                   cursor: "pointer",
                   fontSize: "13px",
                   fontWeight: tab === t.id ? 600 : 400,
-                  color: tab === t.id ? "#1e293b" : "#6b7280",
+                  color: tab === t.id ? "#0f766e" : "#6b7280",
                   whiteSpace: "nowrap",
                 }}
               >
@@ -492,9 +492,9 @@ function CompanyProfileModal({ company, stock, dcInfo, onClose }: CompanyProfile
                     rel="noopener noreferrer"
                     style={{
                       display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-                      padding: "12px 20px", background: "#1e293b", color: "#fff",
+                      padding: "12px 20px", background: "#0f766e", color: "#fff",
                       textDecoration: "none", fontSize: "14px", fontWeight: 600,
-                      border: "none",
+                      border: "none", borderRadius: "0.375rem",
                     }}
                   >
                     View {stock.ticker} on Yahoo Finance ↗
@@ -615,18 +615,28 @@ function DeveloperProfilesSection() {
       </div>
 
       {/* KPIs */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "20px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px", marginBottom: "24px" }}>
         {[
-          { val: companies.length, lbl: "DC Operators" },
-          { val: listedCount,      lbl: "Listed & Priced" },
-          { val: totalDcs,         lbl: "Total Data Centers" },
+          { val: companies.length, lbl: "DC Operators",       topColor: "#0f766e" },
+          { val: listedCount,      lbl: "Listed & Priced",    topColor: "#f59e0b" },
+          { val: totalDcs,         lbl: "Total Data Centers", topColor: "#16a34a" },
         ].map((k) => (
-          <div key={k.lbl} style={{
-            padding: "16px 20px", border: "1px solid #e5e7eb", background: "#f9fafb",
-            display: "flex", flexDirection: "column", gap: "4px",
-          }}>
-            <span style={{ fontSize: "24px", fontWeight: 700, color: "#111827" }}>{k.val}</span>
-            <span style={{ fontSize: "12px", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>{k.lbl}</span>
+          <div key={k.lbl}
+            style={{
+              padding: "20px", background: "#fff",
+              border: "1px solid #e2e8f0",
+              borderTop: `3px solid ${k.topColor}`,
+              borderRadius: "0.75rem",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
+              display: "flex", flexDirection: "column", gap: "6px",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              cursor: "default",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.07)"; }}
+          >
+            <span style={{ fontSize: "1.875rem", fontWeight: 700, color: "#0f172a", lineHeight: 1 }}>{k.val}</span>
+            <span style={{ fontSize: "0.875rem", color: "#64748b", fontWeight: 500 }}>{k.lbl}</span>
           </div>
         ))}
       </div>
@@ -651,7 +661,7 @@ function DeveloperProfilesSection() {
               onClick={() => setViewMode(m)}
               style={{
                 padding: "8px 14px", border: "none",
-                background: viewMode === m ? "#1e293b" : "#fff",
+                background: viewMode === m ? "#0f766e" : "#fff",
                 color: viewMode === m ? "#fff" : "#6b7280",
                 cursor: "pointer", fontSize: "12px", fontWeight: 500,
               }}
@@ -690,7 +700,7 @@ function DeveloperProfilesSection() {
                 {/* Top */}
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "12px" }}>
                   <div style={{
-                    width: "40px", height: "40px", background: "#1e293b",
+                    width: "40px", height: "40px", background: "#0f766e",
                     color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: "14px", fontWeight: 700, flexShrink: 0,
                   }}>
@@ -768,7 +778,7 @@ function DeveloperProfilesSection() {
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <div style={{
-                    width: "32px", height: "32px", background: "#1e293b",
+                    width: "32px", height: "32px", background: "#0f766e",
                     color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: "11px", fontWeight: 700, flexShrink: 0,
                   }}>

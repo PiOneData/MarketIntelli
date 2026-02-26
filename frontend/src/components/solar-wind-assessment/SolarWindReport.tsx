@@ -226,7 +226,7 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
       {/* ── HEADER ── */}
       <nav style={{ position: "sticky", top: 0, background: "#fff", borderBottom: "1px solid #e2e8f0", zIndex: 50, padding: "12px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{ padding: "8px", background: "#1e293b", color: "#fff" }}>
+          <div style={{ padding: "8px", background: "#0f766e", color: "#fff" }}>
             <Satellite size={18} />
           </div>
           <div>
@@ -238,15 +238,16 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
           </div>
         </div>
 
-        <div style={{ display: "flex", background: "#f1f5f9", border: "1px solid #e2e8f0", padding: "3px", flexWrap: "wrap", gap: "2px" }}>
+        <div style={{ display: "flex", background: "#fff", border: "1px solid #e2e8f0", flexWrap: "wrap" }}>
           {TABS.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               style={{
-                display: "flex", alignItems: "center", gap: "6px", padding: "7px 14px",
+                display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px",
                 fontWeight: 600, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.04em",
-                border: "none", cursor: "pointer", transition: "all 0.15s",
-                background: activeTab === tab.id ? "#1e293b" : "transparent",
-                color: activeTab === tab.id ? "#fff" : "#64748b",
+                border: "none", borderBottom: activeTab === tab.id ? "2px solid #0f766e" : "2px solid transparent",
+                cursor: "pointer", transition: "all 0.15s",
+                background: "transparent",
+                color: activeTab === tab.id ? "#0f766e" : "#64748b",
                 fontFamily: "inherit",
               }}>
               {tab.icon}{tab.label}
@@ -256,7 +257,7 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
 
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
           <button onClick={() => setShowGuide(!showGuide)}
-            style={{ padding: "7px 12px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: showGuide ? "#1e293b" : "#fff", color: showGuide ? "#fff" : "#64748b" }}>
+            style={{ padding: "7px 12px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: showGuide ? "#0f766e" : "#fff", color: showGuide ? "#fff" : "#64748b" }}>
             <BookOpen size={13} />
             <span>Guide</span>
           </button>
@@ -277,7 +278,7 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
         {showGuide && (
           <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
             style={{ position: "fixed", top: "72px", right: "24px", width: "400px", background: "#fff", border: "1px solid #e2e8f0", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", zIndex: 60, overflow: "hidden" }}>
-            <div style={{ background: "#1e293b", padding: "20px 24px", color: "#fff" }}>
+            <div style={{ background: "#0f766e", padding: "20px 24px", color: "#fff" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <BookOpen size={16} />
                 <div>
@@ -301,7 +302,7 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
             </div>
             <div style={{ padding: "12px 24px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "center" }}>
               <button onClick={() => setShowGuide(false)}
-                style={{ padding: "7px 24px", background: "#1e293b", color: "#fff", border: "none", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", cursor: "pointer", fontFamily: "inherit" }}>
+                style={{ padding: "7px 24px", background: "#0f766e", color: "#fff", border: "none", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", cursor: "pointer", fontFamily: "inherit" }}>
                 Close
               </button>
             </div>
@@ -338,7 +339,7 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
               {/* Profile header */}
               <div style={{ background: "#fff", border: "1px solid #e2e8f0", padding: "24px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "24px", alignItems: "center" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                  <div style={{ width: "64px", height: "64px", background: "#1e293b", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div style={{ width: "64px", height: "64px", background: "#0f766e", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <Server size={32} style={{ color: "#fff" }} strokeWidth={1.5} />
                   </div>
                   <div>
@@ -371,8 +372,8 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                   {(["wind", "solar", "water"] as TabId[]).map(id => (
                     <button key={id} onClick={() => setActiveTab(id)}
                       style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", fontSize: "11px", fontWeight: 600, color: "#334155", textTransform: "uppercase", letterSpacing: "0.04em", cursor: "pointer", fontFamily: "inherit" }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "#1e293b"; e.currentTarget.style.color = "#fff"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "#f8fafc"; e.currentTarget.style.color = "#334155"; }}>
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "#0f766e"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "#0f766e"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "#f8fafc"; e.currentTarget.style.color = "#334155"; e.currentTarget.style.borderColor = "#e2e8f0"; }}>
                       {id === "wind" && <Wind size={13} />}{id === "solar" && <Sun size={13} />}{id === "water" && <Cloud size={13} />}
                       {id === "water" ? "Hydrology" : id}
                     </button>
@@ -400,9 +401,9 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                         </div>
                       ))}
                     </div>
-                    <div style={{ padding: "10px 12px", background: "#1e293b" }}>
-                      <div style={{ fontSize: "9px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>GPS Coordinates</div>
-                      <div style={{ fontFamily: "monospace", fontSize: "12px", fontWeight: 700, color: "#5eead4" }}>{lat.toFixed(6)}°N, {lng.toFixed(6)}°E</div>
+                    <div style={{ padding: "10px 12px", background: "#0f766e" }}>
+                      <div style={{ fontSize: "9px", fontWeight: 700, color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>GPS Coordinates</div>
+                      <div style={{ fontFamily: "monospace", fontSize: "12px", fontWeight: 700, color: "#fff" }}>{lat.toFixed(6)}°N, {lng.toFixed(6)}°E</div>
                     </div>
                   </div>
                 </div>
@@ -443,7 +444,7 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                   <div style={{ position: "relative", width: "160px", height: "160px" }}>
                     <svg viewBox="0 0 200 200" style={{ width: "100%", height: "100%", transform: "rotate(-90deg)" }}>
                       <circle cx="100" cy="100" r="80" fill="none" stroke="#f1f5f9" strokeWidth="14" strokeDasharray="400 502" strokeLinecap="round" />
-                      <motion.circle cx="100" cy="100" r="80" fill="none" stroke="#1e293b" strokeWidth="14" strokeLinecap="round" strokeDasharray="502" strokeDashoffset="502"
+                      <motion.circle cx="100" cy="100" r="80" fill="none" stroke="#0ea5e9" strokeWidth="14" strokeLinecap="round" strokeDasharray="502" strokeDashoffset="502"
                         animate={{ strokeDashoffset: 502 - (num(windData.score) / 100) * 400 }} transition={{ duration: 1.5, ease: "easeOut" }} />
                     </svg>
                     <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
@@ -460,9 +461,9 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                     <polygon points="48,120 52,120 53,60 47,60" fill="#cbd5e1" />
                     <circle cx="50" cy="58" r="5" fill="#94a3b8" />
                     <motion.g style={{ originX: "50px", originY: "58px" }} animate={{ rotate: 360 }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }}>
-                      <ellipse cx="50" cy="30" rx="3.5" ry="28" fill="#334155" opacity="0.9" />
-                      <ellipse cx="50" cy="30" rx="3.5" ry="28" fill="#334155" opacity="0.9" transform="rotate(120 50 58)" />
-                      <ellipse cx="50" cy="30" rx="3.5" ry="28" fill="#334155" opacity="0.9" transform="rotate(240 50 58)" />
+                      <ellipse cx="50" cy="30" rx="3.5" ry="28" fill="#0ea5e9" opacity="0.9" />
+                      <ellipse cx="50" cy="30" rx="3.5" ry="28" fill="#0ea5e9" opacity="0.9" transform="rotate(120 50 58)" />
+                      <ellipse cx="50" cy="30" rx="3.5" ry="28" fill="#0ea5e9" opacity="0.9" transform="rotate(240 50 58)" />
                     </motion.g>
                   </svg>
                   <div style={{ fontSize: "9px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "6px" }}>Resource Grade</div>
@@ -484,7 +485,7 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                         <span style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>{value}</span>
                       </div>
                       <div style={{ height: "4px", background: "#f1f5f9", overflow: "hidden" }}>
-                        <motion.div style={{ height: "100%", background: "#1e293b" }}
+                        <motion.div style={{ height: "100%", background: "#0ea5e9" }}
                           initial={{ width: 0 }} animate={{ width: `${Math.min(bar * 100, 100)}%` }}
                           transition={{ duration: 1.2, delay: 0.2 }} />
                       </div>
@@ -508,7 +509,7 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                     { label: "Primary Hub",  height: "120m", speed: ws120.toFixed(2), dir: wd120, main: true },
                     { label: "Standard Hub", height: "80m",  speed: ws80.toFixed(2),  dir: wd80  },
                   ].map(({ label, height, speed, dir, main }) => (
-                    <div key={height} style={{ background: "#fff", border: main ? "2px solid #1e293b" : "1px solid #e2e8f0", padding: "20px" }}>
+                    <div key={height} style={{ background: "#fff", border: main ? "2px solid #0f766e" : "1px solid #e2e8f0", padding: "20px" }}>
                       {main && <div style={{ fontSize: "9px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>Rated Hub</div>}
                       <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em" }}>{label}</div>
                       <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "12px" }}>{height} AGL</div>
@@ -517,8 +518,8 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                         <div style={{ position: "relative", width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e8f0" }}>
                           <motion.div animate={{ rotate: dir }} transition={{ type: "spring", stiffness: 60 }}
-                            style={{ width: "2px", height: "14px", background: "#1e293b", transformOrigin: "bottom center", position: "absolute", top: "4px", left: "calc(50% - 1px)" }} />
-                          <div style={{ width: "5px", height: "5px", background: "#1e293b" }} />
+                            style={{ width: "2px", height: "14px", background: "#0f766e", transformOrigin: "bottom center", position: "absolute", top: "4px", left: "calc(50% - 1px)" }} />
+                          <div style={{ width: "5px", height: "5px", background: "#0f766e" }} />
                         </div>
                         <div>
                           <div style={{ fontSize: "9px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase" }}>Direction</div>
@@ -546,8 +547,8 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                         <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: "#94a3b8" }} width={40} />
                         <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: "#64748b" }} domain={[1.0, 1.3]} width={45} />
                         <Tooltip contentStyle={{ border: "1px solid #e2e8f0", padding: "12px", fontSize: 11 }} />
-                        <Area yAxisId="left" type="monotone" dataKey="speed" name="Speed (m/s)" fill="#334155" fillOpacity={0.06} stroke="#334155" strokeWidth={2.5} />
-                        <Line yAxisId="left" type="monotone" dataKey="power" name="Power (W/m²)" stroke="#475569" strokeWidth={2} strokeDasharray="4 2" dot={{ r: 4 }} />
+                        <Area yAxisId="left" type="monotone" dataKey="speed" name="Speed (m/s)" fill="#0ea5e9" fillOpacity={0.1} stroke="#0ea5e9" strokeWidth={2.5} />
+                        <Line yAxisId="left" type="monotone" dataKey="power" name="Power (W/m²)" stroke="#0f766e" strokeWidth={2} strokeDasharray="4 2" dot={{ r: 4, fill: "#0f766e" }} />
                         <Line yAxisId="right" type="monotone" dataKey="ad" name="Air Density (kg/m³)" stroke="#94a3b8" strokeWidth={1.5} strokeDasharray="6 3" dot={{ r: 3 }} />
                       </ComposedChart>
                     </ResponsiveContainer>
@@ -594,7 +595,7 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                           <div style={{ fontSize: "24px", fontWeight: 800, color: "#1e293b" }}>{value > 0 ? `${(value * 100).toFixed(1)}%` : "—"}</div>
                         </div>
                         <div style={{ height: "6px", background: "#f1f5f9", overflow: "hidden" }}>
-                          <motion.div style={{ height: "100%", background: "#1e293b" }}
+                          <motion.div style={{ height: "100%", background: "#0f766e" }}
                             initial={{ width: 0 }} animate={{ width: `${Math.min(value * 100, 100)}%` }}
                             transition={{ duration: 1.1, ease: "easeOut", delay: 0.15 }} />
                         </div>
@@ -643,7 +644,7 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                   <div style={{ position: "relative", width: "160px", height: "160px" }}>
                     <svg viewBox="0 0 200 200" style={{ width: "100%", height: "100%", transform: "rotate(-90deg)" }}>
                       <circle cx="100" cy="100" r="80" fill="none" stroke="#f1f5f9" strokeWidth="14" strokeDasharray="400 502" strokeLinecap="round" />
-                      <motion.circle cx="100" cy="100" r="80" fill="none" stroke="#1e293b" strokeWidth="14" strokeLinecap="round" strokeDasharray="502" strokeDashoffset="502"
+                      <motion.circle cx="100" cy="100" r="80" fill="none" stroke="#f59e0b" strokeWidth="14" strokeLinecap="round" strokeDasharray="502" strokeDashoffset="502"
                         animate={{ strokeDashoffset: 502 - (num(solarData.score) / 100) * 400 }}
                         transition={{ duration: 1.5, ease: "easeOut" }} />
                     </svg>
@@ -663,10 +664,10 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                       <line key={angle}
                         x1={50 + 30 * Math.cos(angle * Math.PI / 180)} y1={50 + 30 * Math.sin(angle * Math.PI / 180)}
                         x2={50 + 42 * Math.cos(angle * Math.PI / 180)} y2={50 + 42 * Math.sin(angle * Math.PI / 180)}
-                        stroke="#94a3b8" strokeWidth="3" strokeLinecap="round" opacity="0.8" />
+                        stroke="#fbbf24" strokeWidth="3" strokeLinecap="round" opacity="0.8" />
                     ))}
-                    <circle cx="50" cy="50" r="22" fill="#475569" />
-                    <circle cx="50" cy="50" r="16" fill="#64748b" />
+                    <circle cx="50" cy="50" r="22" fill="#f59e0b" />
+                    <circle cx="50" cy="50" r="16" fill="#fbbf24" />
                   </motion.svg>
                   <div style={{ fontSize: "9px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "6px" }}>GHI</div>
                   <div style={{ fontSize: "56px", fontWeight: 800, color: "#0f172a", lineHeight: 1 }}>
@@ -690,7 +691,7 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                         <span style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>{value}</span>
                       </div>
                       <div style={{ height: "4px", background: "#f1f5f9", overflow: "hidden" }}>
-                        <motion.div style={{ height: "100%", background: "#1e293b" }}
+                        <motion.div style={{ height: "100%", background: "#f59e0b" }}
                           initial={{ width: 0 }} animate={{ width: `${Math.min(bar * 100, 100)}%` }}
                           transition={{ duration: 1.2, delay: 0.2 }} />
                       </div>
@@ -713,8 +714,15 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                         <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: "#94a3b8" }} />
                         <YAxis hide />
                         <Tooltip contentStyle={{ border: "1px solid #e2e8f0", padding: "10px 14px", fontSize: 11 }} />
-                        <Bar dataKey="pvout" name="PV Output">
-                          {monthlySolarData.map((_, i) => <Cell key={i} fill={i % 2 === 0 ? "#334155" : "#64748b"} />)}
+                        <Bar dataKey="pvout" name="PV Output" radius={[2, 2, 0, 0]}>
+                          {monthlySolarData.map((entry, i) => {
+                            const peak = Math.max(...monthlySolarData.map(d => d.pvout));
+                            const ratio = peak > 0 ? entry.pvout / peak : 0;
+                            const r = Math.round(245 - ratio * 30);
+                            const g = Math.round(158 - ratio * 20);
+                            const b = Math.round(11 + ratio * 10);
+                            return <Cell key={i} fill={`rgb(${r},${g},${b})`} />;
+                          })}
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
@@ -781,7 +789,7 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                   <div>
                     <div style={{ fontSize: "9px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>Cloud Cover</div>
                     <div style={{ height: "6px", background: "#f1f5f9", overflow: "hidden" }}>
-                      <motion.div style={{ height: "100%", background: "#64748b" }}
+                      <motion.div style={{ height: "100%", background: "#f59e0b" }}
                         initial={{ width: 0 }} animate={{ width: `${Math.min(cloudPct, 100)}%` }}
                         transition={{ duration: 1.1, ease: "easeOut" }} />
                     </div>
@@ -869,7 +877,7 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                       <div style={{ position: "relative", width: "160px", height: "85px", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
                         <svg viewBox="0 0 120 65" style={{ width: "100%" }}>
                           <path d="M10 60 A52 52 0 0 1 110 60" fill="none" stroke="#f1f5f9" strokeWidth="10" strokeLinecap="round" />
-                          <motion.path d="M10 60 A52 52 0 0 1 110 60" fill="none" stroke="#1e293b" strokeWidth="10" strokeLinecap="round"
+                          <motion.path d="M10 60 A52 52 0 0 1 110 60" fill="none" stroke="#0f766e" strokeWidth="10" strokeLinecap="round"
                             strokeDasharray={`${dash} ${circ}`}
                             initial={{ strokeDasharray: `0 ${circ}` }}
                             animate={{ strokeDasharray: `${dash} ${circ}` }}
@@ -900,7 +908,7 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                         <span style={{ fontSize: "12px", fontWeight: 700, color: "#1e293b" }}>{val.toFixed(2)} <span style={{ fontSize: "10px", color: "#94a3b8" }}>{unit}</span></span>
                       </div>
                       <div style={{ height: "4px", background: "#f1f5f9", overflow: "hidden" }}>
-                        <motion.div style={{ height: "100%", background: "#1e293b" }}
+                        <motion.div style={{ height: "100%", background: "#0f766e" }}
                           initial={{ width: 0 }} animate={{ width: `${Math.min(val / max * 100, 100)}%` }}
                           transition={{ duration: 1, ease: "easeOut" }} />
                       </div>
@@ -985,7 +993,7 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                           <span style={{ fontSize: "12px", fontWeight: 700, color: "#1e293b" }}>{val.toFixed(2)} <span style={{ fontSize: "10px", color: "#94a3b8" }}>{unit}</span>{note !== "—" && <span style={{ fontSize: "10px", color: "#94a3b8" }}> · {note}</span>}</span>
                         </div>
                         <div style={{ height: "6px", background: "#f1f5f9", overflow: "hidden" }}>
-                          <motion.div style={{ height: "100%", background: "#475569" }}
+                          <motion.div style={{ height: "100%", background: "#0f766e" }}
                             initial={{ width: 0 }} animate={{ width: `${Math.min(val / max * 100, 100)}%` }}
                             transition={{ duration: 1, ease: "easeOut" }} />
                         </div>
