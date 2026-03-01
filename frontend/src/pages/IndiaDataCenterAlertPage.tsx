@@ -65,29 +65,8 @@ function toMapFormat(facilities: DataCenterFacility[]) {
 type SortField = "date_added" | "company_name" | "city" | "state" | "power_capacity_mw" | "size_sqft" | "status";
 
 /* ------------------------------------------------------------------ */
-/*  Top 5 States Analytics                                              */
+/*  State Analytics Panel                                               */
 /* ------------------------------------------------------------------ */
-
-const STATE_PALETTE = [
-  { bg: "linear-gradient(135deg,#0f766e 0%,#14b8a6 100%)", accent: "#0f766e", light: "#f0fdfa" },
-  { bg: "linear-gradient(135deg,#1d4ed8 0%,#60a5fa 100%)", accent: "#1d4ed8", light: "#eff6ff" },
-  { bg: "linear-gradient(135deg,#7c3aed 0%,#a78bfa 100%)", accent: "#7c3aed", light: "#f5f3ff" },
-  { bg: "linear-gradient(135deg,#b45309 0%,#f59e0b 100%)", accent: "#b45309", light: "#fffbeb" },
-  { bg: "linear-gradient(135deg,#be123c 0%,#fb7185 100%)", accent: "#be123c", light: "#fff1f2" },
-];
-
-const STATE_ICONS: Record<string, string> = {
-  Karnataka:    "🏙️",
-  "Tamil Nadu": "🌅",
-  Gujarat:      "🏭",
-  Maharashtra:  "🌆",
-  Haryana:      "🌾",
-  Kerala:       "🌴",
-  Rajasthan:    "🏜️",
-  Delhi:        "🏛️",
-  Telangana:    "🔮",
-  "West Bengal":"🎨",
-};
 
 interface StateAnalyticsData {
   state: string;
@@ -95,6 +74,9 @@ interface StateAnalyticsData {
   powerMW: number;
   powerCount: number;
 }
+
+// Top-5 accent colours (rank 1–5); rest are neutral
+const TOP5_ACCENTS = ["#0f766e", "#0369a1", "#7c3aed", "#b45309", "#be123c"];
 
 function TopStatesAnalytics({ facilities }: { facilities: DataCenterFacility[] }) {
   const stateMap: Record<string, StateAnalyticsData> = {};
@@ -106,146 +88,138 @@ function TopStatesAnalytics({ facilities }: { facilities: DataCenterFacility[] }
       stateMap[f.state].powerCount += 1;
     }
   }
-  const top5 = Object.values(stateMap)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
-  const maxCount = top5[0]?.count ?? 1;
 
-  if (top5.length === 0) return null;
+  // Sort by capacity descending (states with 0 MW go to bottom, sorted by count)
+  const sorted = Object.values(stateMap).sort((a, b) =>
+    b.powerMW !== a.powerMW ? b.powerMW - a.powerMW : b.count - a.count
+  );
+  const maxMW = sorted[0]?.powerMW ?? 1;
+
+  if (sorted.length === 0) return null;
 
   return (
     <div style={{
       marginBottom: "24px",
       border: "1px solid #e2e8f0",
-      borderRadius: "1rem",
+      borderRadius: "0.75rem",
       overflow: "hidden",
-      boxShadow: "0 2px 12px rgba(15,118,110,0.07)",
       background: "#fff",
+      boxShadow: "0 1px 8px rgba(0,0,0,0.06)",
     }}>
-      {/* Header strip */}
+      {/* Header */}
       <div style={{
-        background: "linear-gradient(90deg,#0f766e 0%,#0d9488 60%,#134e4a 100%)",
-        padding: "14px 20px",
+        padding: "12px 16px",
+        background: "#f8fafc",
+        borderBottom: "1px solid #e2e8f0",
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span style={{ fontSize: "20px" }}>📊</span>
-          <div>
-            <div style={{ fontSize: "15px", fontWeight: 700, color: "#fff" }}>Top 5 States — Data Center Footprint</div>
-            <div style={{ fontSize: "11px", color: "#99f6e4", marginTop: "1px" }}>
-              Capacity shown where data is available · Ranked by facility count
-            </div>
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>By State</span>
+          <span style={{
+            background: "#0f766e", color: "#fff",
+            fontSize: "11px", fontWeight: 700,
+            padding: "1px 7px", borderRadius: "999px",
+          }}>
+            {sorted.length}
+          </span>
         </div>
-        <div style={{
-          background: "rgba(255,255,255,0.15)", borderRadius: "999px",
-          padding: "4px 12px", fontSize: "12px", color: "#ccfbf1", fontWeight: 600,
-          border: "1px solid rgba(255,255,255,0.25)",
-        }}>
-          {facilities.length} total DCs
-        </div>
+        <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+          Capacity where available · sorted by MW
+        </span>
       </div>
 
-      {/* State rows */}
-      <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: "12px" }}>
-        {top5.map((s, i) => {
-          const palette = STATE_PALETTE[i] ?? STATE_PALETTE[0];
-          const barPct = Math.round((s.count / maxCount) * 100);
-          const icon = STATE_ICONS[s.state] ?? "📍";
-          const hasCapacity = s.powerCount > 0;
+      {/* Rows */}
+      <div style={{ padding: "6px 0" }}>
+        {sorted.map((s, i) => {
+          const isTop5 = i < 5;
+          const accent = isTop5 ? (TOP5_ACCENTS[i] ?? "#0f766e") : "#64748b";
+          const barPct = maxMW > 0 && s.powerMW > 0 ? Math.max(2, Math.round((s.powerMW / maxMW) * 100)) : 0;
 
           return (
-            <div key={s.state} style={{
-              display: "grid",
-              gridTemplateColumns: "28px 1fr 2fr auto",
-              alignItems: "center",
-              gap: "12px",
-            }}>
-              {/* Rank badge */}
-              <div style={{
-                width: "28px", height: "28px",
-                background: palette.bg,
-                borderRadius: "50%",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "12px", fontWeight: 800, color: "#fff",
-                flexShrink: 0,
-                boxShadow: `0 2px 8px ${palette.accent}55`,
+            <div
+              key={s.state}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "20px 1fr auto",
+                alignItems: "center",
+                gap: "10px",
+                padding: "7px 16px",
+                borderBottom: i < sorted.length - 1 ? "1px solid #f1f5f9" : "none",
+                background: isTop5 && i === 0 ? "#f0fdfa" : "#fff",
+              }}
+            >
+              {/* Rank number */}
+              <span style={{
+                fontSize: "11px", fontWeight: 700,
+                color: isTop5 ? accent : "#cbd5e1",
+                textAlign: "right",
+                fontVariantNumeric: "tabular-nums",
               }}>
                 {i + 1}
-              </div>
+              </span>
 
-              {/* State name + icon */}
+              {/* State + bar */}
               <div style={{ minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span style={{ fontSize: "16px" }}>{icon}</span>
-                  <span style={{ fontSize: "13px", fontWeight: 700, color: "#111827", whiteSpace: "nowrap" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "3px" }}>
+                  <span style={{
+                    fontSize: "12px", fontWeight: isTop5 ? 700 : 500,
+                    color: isTop5 ? "#0f172a" : "#475569",
+                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                  }}>
                     {s.state}
                   </span>
-                </div>
-                <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "1px" }}>
-                  {s.powerCount}/{s.count} with capacity data
-                </div>
-              </div>
-
-              {/* Bar + count */}
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <div style={{
-                    flex: 1, height: "10px",
-                    background: "#f1f5f9",
-                    borderRadius: "999px", overflow: "hidden",
-                    position: "relative",
-                  }}>
-                    <div style={{
-                      position: "absolute", left: 0, top: 0, bottom: 0,
-                      width: `${barPct}%`,
-                      background: palette.bg,
-                      borderRadius: "999px",
-                      transition: "width 0.6s cubic-bezier(0.34,1.56,0.64,1)",
-                    }} />
-                  </div>
                   <span style={{
-                    fontSize: "12px", fontWeight: 700, color: palette.accent,
-                    minWidth: "26px", textAlign: "right",
+                    fontSize: "11px", color: "#94a3b8", marginLeft: "8px", whiteSpace: "nowrap",
+                    fontVariantNumeric: "tabular-nums",
                   }}>
-                    {s.count}
+                    {s.count} DC
                   </span>
-                  <span style={{ fontSize: "11px", color: "#9ca3af" }}>DCs</span>
+                </div>
+                {/* Capacity bar */}
+                <div style={{
+                  height: "4px", background: "#f1f5f9", borderRadius: "999px", overflow: "hidden",
+                }}>
+                  {barPct > 0 && (
+                    <div style={{
+                      height: "100%", width: `${barPct}%`,
+                      background: isTop5
+                        ? `linear-gradient(90deg, ${accent}cc, ${accent})`
+                        : "#cbd5e1",
+                      borderRadius: "999px",
+                    }} />
+                  )}
                 </div>
               </div>
 
-              {/* Capacity chip */}
-              <div style={{
-                background: hasCapacity ? palette.light : "#f9fafb",
-                border: `1px solid ${hasCapacity ? palette.accent + "33" : "#e5e7eb"}`,
-                borderRadius: "999px",
-                padding: "4px 12px",
-                fontSize: "12px",
-                fontWeight: 600,
-                color: hasCapacity ? palette.accent : "#9ca3af",
-                whiteSpace: "nowrap",
-                textAlign: "center",
-                minWidth: "90px",
-              }}>
-                {hasCapacity
-                  ? `${s.powerMW >= 1000 ? (s.powerMW / 1000).toFixed(1) + " GW" : s.powerMW.toFixed(0) + " MW"}`
-                  : "N/A"}
+              {/* MW value */}
+              <div style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                <span style={{
+                  fontSize: "12px", fontWeight: 700,
+                  color: s.powerMW > 0 ? (isTop5 ? accent : "#475569") : "#cbd5e1",
+                  fontVariantNumeric: "tabular-nums",
+                }}>
+                  {s.powerMW > 0
+                    ? `${s.powerMW >= 1000
+                        ? (s.powerMW / 1000).toFixed(2) + " GW"
+                        : s.powerMW % 1 === 0
+                          ? s.powerMW.toFixed(0) + " MW"
+                          : s.powerMW.toFixed(2) + " MW"}`
+                    : "—"}
+                </span>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Footer note */}
+      {/* Footer */}
       <div style={{
-        padding: "10px 20px",
+        padding: "8px 16px",
         borderTop: "1px solid #f1f5f9",
         background: "#fafbfc",
-        fontSize: "11px", color: "#9ca3af",
-        display: "flex", alignItems: "center", gap: "6px",
+        fontSize: "10px", color: "#94a3b8",
       }}>
-        <span>ℹ️</span>
-        <span>Capacity figures reflect data available in registry. Facilities without disclosed power figures are excluded from MW totals.</span>
+        MW totals reflect disclosed capacity only · {sorted.filter(s => s.powerCount > 0).length} of {sorted.length} states have capacity data
       </div>
     </div>
   );
