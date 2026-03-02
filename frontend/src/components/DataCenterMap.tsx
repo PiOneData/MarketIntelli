@@ -1,10 +1,25 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 import type { FeatureCollection, Feature, Point } from "geojson";
 import { Search, Server, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+// Token read from Vite env — never hardcoded in source
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN as string;
+
+// Normalize known state name variants (mirrors IndiaDataCenterAlertPage)
+const _STATE_NORM: Record<string, string> = {
+  "New Delhi": "Delhi", "NCR": "Delhi", "Delhi NCR": "Delhi",
+  "NCR Delhi": "Delhi", "NCT of Delhi": "Delhi",
+  "Telengana": "Telangana", "Telanagana": "Telangana",
+  "Tamilnadu": "Tamil Nadu", "TamilNadu": "Tamil Nadu",
+  "Orissa": "Odisha", "Pondicherry": "Puducherry",
+  "Jammu and Kashmir": "Jammu & Kashmir", "J&K": "Jammu & Kashmir",
+  "Uttaranchal": "Uttarakhand", "Uttrakhand": "Uttarakhand",
+};
+function normState(s: string): string { return _STATE_NORM[s] ?? s; }
 
 interface DataCenter {
   id: string;
@@ -41,12 +56,12 @@ interface PopupState {
 function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
   const navigate = useNavigate();
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<maplibregl.Map | null>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [popup, setPopup] = useState<PopupState | null>(null);
   const [search, setSearch] = useState("");
 
-  // Static geojson: 64 fully-geocoded entries loaded immediately
+  // Static geojson: fully-geocoded entries loaded immediately
   const [staticEntries, setStaticEntries] = useState<DcGeoEntry[]>([]);
   useEffect(() => {
     fetch("/datacenters.geojson")
@@ -73,16 +88,12 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
       .catch(console.error);
   }, []);
 
-  // Merge: DB facilities (lat/lng from backend geocoding) take precedence;
-  // static geojson fills in immediately and covers any DB gaps.
+  // Merge: DB entries (lat/lng from geocoding) override static geojson
   const dcGeoList = useMemo<DcGeoEntry[]>(() => {
-    // Index static entries by lower-cased name for dedup
     const merged = new Map<string, DcGeoEntry>();
     for (const e of staticEntries) {
       merged.set(e.name.toLowerCase(), e);
     }
-
-    // DB entries override static ones (richer data, same or better coordinates)
     for (const dc of dataCenters) {
       if (dc.lat == null || dc.lng == null) continue;
       const entry: DcGeoEntry = {
@@ -109,11 +120,10 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
       };
       merged.set((dc.name || dc.company).toLowerCase(), entry);
     }
-
     return Array.from(merged.values());
   }, [staticEntries, dataCenters]);
 
-  // GeoJSON for the map source, rebuilt whenever dcGeoList changes
+  // GeoJSON for the map source
   const facilitiesGeoJSON = useMemo<FeatureCollection>(
     () => ({
       type: "FeatureCollection",
@@ -126,131 +136,125 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
     [dcGeoList]
   );
 
-  // Initialize MapLibre map once
+  // Initialize Mapbox map once
   useEffect(() => {
     if (map.current || !mapContainer.current) return;
 
-    map.current = new maplibregl.Map({
+    map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: {
-        version: 8,
-        glyphs: "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
-        sources: {
-          "satellite-source": {
-            type: "raster",
-            tiles: [
-              "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-            ],
-            tileSize: 256,
-            attribution: "&copy; Esri, Maxar",
-            maxzoom: 18,
-          },
-          "datacenters-geojson": {
-            type: "geojson",
-            data: { type: "FeatureCollection", features: [] } as FeatureCollection,
-          },
-        },
-        layers: [
-          {
-            id: "satellite-layer",
-            type: "raster",
-            source: "satellite-source",
-            minzoom: 0,
-            maxzoom: 24,
-          },
-          {
-            id: "dc-glow",
-            type: "circle",
-            source: "datacenters-geojson",
-            paint: {
-              "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 10, 10, 22, 14, 32],
-              "circle-color": "#0f766e",
-              "circle-opacity": 0.25,
-              "circle-blur": 0.5,
-            },
-          },
-          {
-            id: "dc-core",
-            type: "circle",
-            source: "datacenters-geojson",
-            paint: {
-              "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 6, 10, 12, 14, 16],
-              "circle-color": "#0f766e",
-              "circle-stroke-color": "#ffffff",
-              "circle-stroke-width": 2.5,
-              "circle-opacity": 1,
-            },
-          },
-          {
-            id: "dc-label",
-            type: "symbol",
-            source: "datacenters-geojson",
-            minzoom: 10,
-            layout: {
-              "text-field": ["get", "name"],
-              "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
-              "text-size": 11,
-              "text-anchor": "top",
-              "text-offset": [0, 1.3],
-              "text-max-width": 14,
-              "text-allow-overlap": false,
-            },
-            paint: {
-              "text-color": "#ffffff",
-              "text-halo-color": "#0f172a",
-              "text-halo-width": 1.8,
-              "text-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0, 11, 1],
-            },
-          },
-        ],
-      },
+      style: "mapbox://styles/mapbox/satellite-streets-v12",
       center: [78.96, 20.59],
       zoom: 4.8,
       attributionControl: false,
     });
 
-    map.current.addControl(new maplibregl.NavigationControl(), "bottom-right");
-    map.current.on("load", () => { setLoaded(true); });
+    map.current.addControl(new mapboxgl.NavigationControl(), "bottom-right");
 
-    map.current.on("click", "dc-core", (e) => {
-      e.preventDefault();
-      const feature = e.features?.[0];
-      if (!feature) return;
-      const coords = (feature.geometry as Point).coordinates as [number, number];
-      const props = feature.properties as Record<string, unknown>;
-      map.current?.flyTo({ center: coords, zoom: 14, duration: 1000 });
-      setPopup({
-        dc: {
-          name: String(props["name"] ?? ""),
-          company: String(props["company"] ?? ""),
-          address: props["address"] as string | undefined,
-          tier: props["tier"] as string | undefined,
-          id: props["id"] as string | undefined,
-          lng: coords[0] ?? 0,
-          lat: coords[1] ?? 0,
-          props,
+    map.current.on("load", () => {
+      if (!map.current) return;
+
+      // Add datacenter GeoJSON source (starts empty; filled by the data effect)
+      map.current.addSource("datacenters-geojson", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] } as FeatureCollection,
+      });
+
+      // Outer glow ring
+      map.current.addLayer({
+        id: "dc-glow",
+        type: "circle",
+        source: "datacenters-geojson",
+        paint: {
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 10, 10, 22, 14, 32],
+          "circle-color": "#0f766e",
+          "circle-opacity": 0.25,
+          "circle-blur": 0.5,
         },
       });
-    });
 
-    map.current.on("mouseenter", "dc-core", () => {
-      if (map.current) map.current.getCanvas().style.cursor = "pointer";
-    });
-    map.current.on("mouseleave", "dc-core", () => {
-      if (map.current) map.current.getCanvas().style.cursor = "";
-    });
-    map.current.on("click", (e) => {
-      const hits = map.current?.queryRenderedFeatures(e.point, { layers: ["dc-core"] });
-      if (!hits?.length) setPopup(null);
+      // Core marker
+      map.current.addLayer({
+        id: "dc-core",
+        type: "circle",
+        source: "datacenters-geojson",
+        paint: {
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 6, 10, 12, 14, 16],
+          "circle-color": "#0f766e",
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-width": 2.5,
+          "circle-opacity": 1,
+        },
+      });
+
+      // Name labels (visible from zoom 10+)
+      map.current.addLayer({
+        id: "dc-label",
+        type: "symbol",
+        source: "datacenters-geojson",
+        minzoom: 10,
+        layout: {
+          "text-field": ["get", "name"],
+          "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
+          "text-size": 11,
+          "text-anchor": "top",
+          "text-offset": [0, 1.3],
+          "text-max-width": 14,
+          "text-allow-overlap": false,
+        },
+        paint: {
+          "text-color": "#ffffff",
+          "text-halo-color": "#0f172a",
+          "text-halo-width": 1.8,
+          "text-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0, 11, 1],
+        },
+      });
+
+      // Click on a marker → open popup
+      map.current.on("click", "dc-core", (e) => {
+        e.preventDefault();
+        const feature = e.features?.[0];
+        if (!feature) return;
+        const coords = (feature.geometry as Point).coordinates as [number, number];
+        const props = feature.properties as Record<string, unknown>;
+        map.current?.flyTo({ center: coords, zoom: 14, duration: 1000 });
+        setPopup({
+          dc: {
+            name: String(props["name"] ?? ""),
+            company: String(props["company"] ?? ""),
+            address: props["address"] as string | undefined,
+            tier: props["tier"] as string | undefined,
+            id: props["id"] as string | undefined,
+            lng: coords[0] ?? 0,
+            lat: coords[1] ?? 0,
+            props,
+          },
+        });
+      });
+
+      // Pointer cursor over markers
+      map.current.on("mouseenter", "dc-core", () => {
+        if (map.current) map.current.getCanvas().style.cursor = "pointer";
+      });
+      map.current.on("mouseleave", "dc-core", () => {
+        if (map.current) map.current.getCanvas().style.cursor = "";
+      });
+
+      // Click on blank map area → close popup
+      map.current.on("click", (e) => {
+        const hits = map.current?.queryRenderedFeatures(e.point, { layers: ["dc-core"] });
+        if (!hits?.length) setPopup(null);
+      });
+
+      setLoaded(true);
     });
 
     return () => { /* map lives for component lifetime */ };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Push GeoJSON into the map source whenever it changes (after load)
+  // Push GeoJSON into source whenever data changes (after map load)
   useEffect(() => {
     if (!loaded || !map.current) return;
-    const source = map.current.getSource("datacenters-geojson") as maplibregl.GeoJSONSource | undefined;
+    const source = map.current.getSource("datacenters-geojson") as mapboxgl.GeoJSONSource | undefined;
     source?.setData(facilitiesGeoJSON);
   }, [loaded, facilitiesGeoJSON]);
 
@@ -282,10 +286,11 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
   const stateSummary = useMemo(() => {
     const m = new Map<string, { count: number; power: number }>();
     dataCenters.forEach((dc) => {
-      const s = m.get(dc.state) ?? { count: 0, power: 0 };
+      const state = normState(dc.state);
+      const s = m.get(state) ?? { count: 0, power: 0 };
       s.count += 1;
       s.power += dc.powerMW;
-      m.set(dc.state, s);
+      m.set(state, s);
     });
     return Array.from(m.entries()).sort((a, b) => b[1].power - a[1].power);
   }, [dataCenters]);
