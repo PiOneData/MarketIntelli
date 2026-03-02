@@ -5333,6 +5333,159 @@ a.geo-layer-tab:hover {
   text-decoration: underline;
 }
 
+/* Tabs */
+.egap-tabs {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: 2px solid var(--color-gray-200);
+  padding-bottom: 0;
+  margin-bottom: calc(var(--space-1) * -1);
+}
+
+.egap-tab {
+  padding: var(--space-2) var(--space-5);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-gray-500);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.egap-tab:hover {
+  color: var(--color-gray-700);
+  background: var(--color-gray-50);
+}
+
+.egap-tab--active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* State-wise view */
+.egap-state-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Year selector */
+.egap-year-selector {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.egap-year-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-gray-600);
+  background: var(--color-gray-50);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.egap-year-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.egap-year-btn--active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-white);
+  font-weight: 600;
+}
+
+.egap-year-btn--active .egap-partial-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: var(--color-white);
+}
+
+/* State chart header */
+.egap-state-chart-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+/* Deficit color legend */
+.egap-deficit-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.egap-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-500);
+}
+
+.egap-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* No-deficit message */
+.egap-no-deficit {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  background: #0f766e08;
+  border: 1px solid #0f766e22;
+  border-radius: var(--radius-md);
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.egap-no-deficit p {
+  margin: 0;
+}
+
+/* Region row in state table */
+.egap-region-row td {
+  background: var(--color-gray-100);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+/* Deficit-highlighted row */
+.egap-deficit-row td {
+  background: #fff9ee;
+}
+
+.egap-deficit-row:hover td {
+  background: #fff3d6 !important;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
   .egap-kpi-row {
