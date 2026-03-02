@@ -68,6 +68,18 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as e:
         logger.warning("CSV seed skipped: %s", e)
 
+    # Geocode any facilities that are missing lat/lng (runs in background, non-blocking)
+    async def _geocode_bg() -> None:
+        try:
+            from app.scripts.geocode_facilities import geocode_facilities
+            result = await geocode_facilities()
+            logger.info("Background geocoding finished: %s", result)
+        except Exception as exc:
+            logger.warning("Background geocoding failed: %s", exc)
+
+    asyncio.create_task(_geocode_bg())
+    logger.info("Background geocoding task started (fills lat/lng for data-center facilities).")
+
     # Seed power market data if tables are empty
     try:
         from app.scripts.seed_power_market import seed_power_market
