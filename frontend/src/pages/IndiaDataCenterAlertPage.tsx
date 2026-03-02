@@ -494,7 +494,7 @@ function IndiaDataCenterAlertPage() {
           <span className="india-dc-stat-label">Companies</span>
         </div>
         <div className="india-dc-stat-card india-dc-stat-card--info">
-          <span className="india-dc-stat-value">{stats?.states_covered ?? uniqueStates.length}</span>
+          <span className="india-dc-stat-value">{uniqueStates.length}</span>
           <span className="india-dc-stat-label">States Covered</span>
         </div>
         <div className="india-dc-stat-card india-dc-stat-card--success">
