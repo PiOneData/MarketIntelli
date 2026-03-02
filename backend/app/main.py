@@ -68,17 +68,26 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as e:
         logger.warning("CSV seed skipped: %s", e)
 
-    # Geocode any facilities that are missing lat/lng (runs in background, non-blocking)
-    async def _geocode_bg() -> None:
-        try:
-            from app.scripts.geocode_facilities import geocode_facilities
-            result = await geocode_facilities()
-            logger.info("Background geocoding finished: %s", result)
-        except Exception as exc:
-            logger.warning("Background geocoding failed: %s", exc)
+    # Phase 1 geocoding: city-centroid lookup — fast, no network, runs synchronously
+    # so all facilities have coordinates before the first API request is served.
+    try:
+        from app.scripts.geocode_facilities import fast_pass
+        result = await fast_pass()
+        logger.info("Startup geocoding (fast pass): %s", result)
+    except Exception as e:
+        logger.warning("Startup geocoding (fast pass) failed: %s", e)
 
-    asyncio.create_task(_geocode_bg())
-    logger.info("Background geocoding task started (fills lat/lng for data-center facilities).")
+    # Phase 2 geocoding: Nominatim refinement — rate-limited, runs in background
+    async def _geocode_nominatim_bg() -> None:
+        try:
+            from app.scripts.geocode_facilities import nominatim_pass
+            result = await nominatim_pass()
+            logger.info("Background geocoding (Nominatim pass) finished: %s", result)
+        except Exception as exc:
+            logger.warning("Background geocoding (Nominatim pass) failed: %s", exc)
+
+    asyncio.create_task(_geocode_nominatim_bg())
+    logger.info("Background Nominatim geocoding task started.")
 
     # Seed power market data if tables are empty
     try:

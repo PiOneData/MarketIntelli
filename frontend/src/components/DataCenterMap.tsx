@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { FeatureCollection, Feature, Point } from "geojson";
 import { Search, Server, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { geocodeFacilities } from "../api/dataCenters";
 
 // Normalize known state name variants (mirrors IndiaDataCenterAlertPage)
 const _STATE_NORM: Record<string, string> = {
@@ -52,11 +54,13 @@ interface PopupState {
 
 function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [popup, setPopup] = useState<PopupState | null>(null);
   const [search, setSearch] = useState("");
+  const [geocodingState, setGeocodingState] = useState<"idle" | "running" | "done">("idle");
 
   // Static geojson: fully-geocoded entries loaded immediately
   const [staticEntries, setStaticEntries] = useState<DcGeoEntry[]>([]);
@@ -84,6 +88,24 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
       })
       .catch(console.error);
   }, []);
+
+  // Auto-trigger geocoding when DB facilities have no coordinates yet
+  const dbMappedCount = dataCenters.filter((dc) => dc.lat != null && dc.lng != null).length;
+  useEffect(() => {
+    if (geocodingState !== "idle") return;
+    if (dataCenters.length === 0) return;
+    if (dbMappedCount > 0) return; // already geocoded, nothing to do
+    setGeocodingState("running");
+    geocodeFacilities()
+      .then((result) => {
+        if (result.resolved > 0) {
+          // Refresh facilities data so new coordinates appear on the map
+          void queryClient.invalidateQueries({ queryKey: ["dc-facilities"] });
+        }
+      })
+      .catch(console.error)
+      .finally(() => setGeocodingState("done"));
+  }, [geocodingState, dataCenters.length, dbMappedCount, queryClient]);
 
   // Merge: DB entries (lat/lng from geocoding) override static geojson
   const dcGeoList = useMemo<DcGeoEntry[]>(() => {
@@ -297,7 +319,6 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
     return Array.from(m.entries()).sort((a, b) => b[1].power - a[1].power);
   }, [dataCenters]);
 
-  const dbMapped = dataCenters.filter((dc) => dc.lat != null && dc.lng != null).length;
   const totalMapped = dcGeoList.length;
   const totalFacilities = dataCenters.length;
 
@@ -422,9 +443,9 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
         <div style={{ position: "absolute", bottom: 36, left: 12, zIndex: 10 }}>
           <div style={{ background: "rgba(255,255,255,0.92)", padding: "5px 11px", display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#1e293b", border: "1px solid #e2e8f0", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#0f766e", display: "inline-block" }} />
-            {totalMapped} of {totalFacilities} data centers mapped
-            {dbMapped > 0 && dbMapped < totalFacilities && (
-              <span style={{ color: "#0f766e", marginLeft: 4 }}>({dbMapped} geocoded)</span>
+            {geocodingState === "running" ? "Geocoding…" : `${totalMapped} of ${totalFacilities} data centers mapped`}
+            {geocodingState !== "running" && dbMappedCount > 0 && dbMappedCount < totalFacilities && (
+              <span style={{ color: "#0f766e", marginLeft: 4 }}>({dbMappedCount} from DB)</span>
             )}
           </div>
         </div>
