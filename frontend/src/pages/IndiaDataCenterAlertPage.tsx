@@ -51,14 +51,19 @@ const EMPTY_FORM = {
 function toMapFormat(facilities: DataCenterFacility[]) {
   return facilities.map((f) => ({
     id: f.id,
+    name: f.name,
     dateAdded: f.date_added ? f.date_added.split("T")[0] : "",
     company: f.company_name,
     city: f.city,
     location: f.location_detail || f.name,
+    locationDetail: f.location_detail ?? undefined,
     state: f.state,
     powerMW: f.power_capacity_mw,
     sizeSqFt: f.size_sqft,
     status: STATUS_DISPLAY[f.status] || f.status,
+    tierLevel: f.tier_level ?? undefined,
+    lat: f.latitude ?? undefined,
+    lng: f.longitude ?? undefined,
   }));
 }
 
@@ -79,6 +84,8 @@ interface StateAnalyticsData {
 const TOP5_ACCENTS = ["#0f766e", "#0369a1", "#7c3aed", "#b45309", "#be123c"];
 
 function TopStatesAnalytics({ facilities }: { facilities: DataCenterFacility[] }) {
+  const [expanded, setExpanded] = useState(false);
+
   const stateMap: Record<string, StateAnalyticsData> = {};
   for (const f of facilities) {
     if (!stateMap[f.state]) stateMap[f.state] = { state: f.state, count: 0, powerMW: 0, powerCount: 0 };
@@ -94,8 +101,92 @@ function TopStatesAnalytics({ facilities }: { facilities: DataCenterFacility[] }
     b.powerMW !== a.powerMW ? b.powerMW - a.powerMW : b.count - a.count
   );
   const maxMW = sorted[0]?.powerMW ?? 1;
+  const TOP_N = 5;
+  const visibleRows = expanded ? sorted : sorted.slice(0, TOP_N);
+  const hiddenCount = sorted.length - TOP_N;
 
   if (sorted.length === 0) return null;
+
+  const renderRow = (s: StateAnalyticsData, i: number) => {
+    const isTop5 = i < TOP_N;
+    const accent = isTop5 ? (TOP5_ACCENTS[i] ?? "#0f766e") : "#64748b";
+    const barPct = maxMW > 0 && s.powerMW > 0 ? Math.max(2, Math.round((s.powerMW / maxMW) * 100)) : 0;
+
+    return (
+      <div
+        key={s.state}
+        style={{
+          display: "grid",
+          gridTemplateColumns: "20px 1fr auto",
+          alignItems: "center",
+          gap: "10px",
+          padding: "7px 16px",
+          borderBottom: "1px solid #f1f5f9",
+          background: isTop5 && i === 0 ? "#f0fdfa" : "#fff",
+        }}
+      >
+        {/* Rank number */}
+        <span style={{
+          fontSize: "11px", fontWeight: 700,
+          color: isTop5 ? accent : "#cbd5e1",
+          textAlign: "right",
+          fontVariantNumeric: "tabular-nums",
+        }}>
+          {i + 1}
+        </span>
+
+        {/* State + bar */}
+        <div style={{ minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "3px" }}>
+            <span style={{
+              fontSize: "12px", fontWeight: isTop5 ? 700 : 500,
+              color: isTop5 ? "#0f172a" : "#475569",
+              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+            }}>
+              {s.state}
+            </span>
+            <span style={{
+              fontSize: "11px", color: "#94a3b8", marginLeft: "8px", whiteSpace: "nowrap",
+              fontVariantNumeric: "tabular-nums",
+            }}>
+              {s.count} DC
+            </span>
+          </div>
+          {/* Capacity bar */}
+          <div style={{
+            height: "4px", background: "#f1f5f9", borderRadius: "999px", overflow: "hidden",
+          }}>
+            {barPct > 0 && (
+              <div style={{
+                height: "100%", width: `${barPct}%`,
+                background: isTop5
+                  ? `linear-gradient(90deg, ${accent}cc, ${accent})`
+                  : "#cbd5e1",
+                borderRadius: "999px",
+              }} />
+            )}
+          </div>
+        </div>
+
+        {/* MW value */}
+        <div style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+          <span style={{
+            fontSize: "12px", fontWeight: 700,
+            color: s.powerMW > 0 ? (isTop5 ? accent : "#475569") : "#cbd5e1",
+            fontVariantNumeric: "tabular-nums",
+          }}>
+            {s.powerMW > 0
+              ? `${s.powerMW >= 1000
+                  ? (s.powerMW / 1000).toFixed(2) + " GW"
+                  : s.powerMW % 1 === 0
+                    ? s.powerMW.toFixed(0) + " MW"
+                    : s.powerMW.toFixed(2) + " MW"}`
+              : "—"}
+          </span>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div style={{
@@ -130,87 +221,35 @@ function TopStatesAnalytics({ facilities }: { facilities: DataCenterFacility[] }
 
       {/* Rows */}
       <div style={{ padding: "6px 0" }}>
-        {sorted.map((s, i) => {
-          const isTop5 = i < 5;
-          const accent = isTop5 ? (TOP5_ACCENTS[i] ?? "#0f766e") : "#64748b";
-          const barPct = maxMW > 0 && s.powerMW > 0 ? Math.max(2, Math.round((s.powerMW / maxMW) * 100)) : 0;
-
-          return (
-            <div
-              key={s.state}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "20px 1fr auto",
-                alignItems: "center",
-                gap: "10px",
-                padding: "7px 16px",
-                borderBottom: i < sorted.length - 1 ? "1px solid #f1f5f9" : "none",
-                background: isTop5 && i === 0 ? "#f0fdfa" : "#fff",
-              }}
-            >
-              {/* Rank number */}
-              <span style={{
-                fontSize: "11px", fontWeight: 700,
-                color: isTop5 ? accent : "#cbd5e1",
-                textAlign: "right",
-                fontVariantNumeric: "tabular-nums",
-              }}>
-                {i + 1}
-              </span>
-
-              {/* State + bar */}
-              <div style={{ minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "3px" }}>
-                  <span style={{
-                    fontSize: "12px", fontWeight: isTop5 ? 700 : 500,
-                    color: isTop5 ? "#0f172a" : "#475569",
-                    whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                  }}>
-                    {s.state}
-                  </span>
-                  <span style={{
-                    fontSize: "11px", color: "#94a3b8", marginLeft: "8px", whiteSpace: "nowrap",
-                    fontVariantNumeric: "tabular-nums",
-                  }}>
-                    {s.count} DC
-                  </span>
-                </div>
-                {/* Capacity bar */}
-                <div style={{
-                  height: "4px", background: "#f1f5f9", borderRadius: "999px", overflow: "hidden",
-                }}>
-                  {barPct > 0 && (
-                    <div style={{
-                      height: "100%", width: `${barPct}%`,
-                      background: isTop5
-                        ? `linear-gradient(90deg, ${accent}cc, ${accent})`
-                        : "#cbd5e1",
-                      borderRadius: "999px",
-                    }} />
-                  )}
-                </div>
-              </div>
-
-              {/* MW value */}
-              <div style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-                <span style={{
-                  fontSize: "12px", fontWeight: 700,
-                  color: s.powerMW > 0 ? (isTop5 ? accent : "#475569") : "#cbd5e1",
-                  fontVariantNumeric: "tabular-nums",
-                }}>
-                  {s.powerMW > 0
-                    ? `${s.powerMW >= 1000
-                        ? (s.powerMW / 1000).toFixed(2) + " GW"
-                        : s.powerMW % 1 === 0
-                          ? s.powerMW.toFixed(0) + " MW"
-                          : s.powerMW.toFixed(2) + " MW"}`
-                    : "—"}
-                </span>
-              </div>
-            </div>
-          );
-        })}
+        {visibleRows.map((s, i) => renderRow(s, i))}
       </div>
+
+      {/* Expand / Collapse */}
+      {hiddenCount > 0 && (
+        <div style={{ borderTop: "1px solid #f1f5f9" }}>
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            style={{
+              width: "100%", padding: "9px 16px",
+              background: "none", border: "none", cursor: "pointer",
+              fontSize: "12px", fontWeight: 600,
+              color: "#0f766e", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+            }}
+          >
+            {expanded ? (
+              <>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                Show less
+              </>
+            ) : (
+              <>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                Show {hiddenCount} more {hiddenCount === 1 ? "state" : "states"}
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Footer */}
       <div style={{

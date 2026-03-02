@@ -2,20 +2,25 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import type { FeatureCollection, Feature, Point } from "geojson";
+import type { FeatureCollection, Point } from "geojson";
 import { Search, Server, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface DataCenter {
   id: string;
+  name: string;
   dateAdded: string;
   company: string;
   city: string;
   location: string;
+  locationDetail?: string;
   state: string;
   powerMW: number;
   sizeSqFt: number;
   status: string;
+  tierLevel?: string;
+  lat?: number;
+  lng?: number;
 }
 
 interface DcGeoEntry {
@@ -39,33 +44,47 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
   const map = useRef<maplibregl.Map | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [popup, setPopup] = useState<PopupState | null>(null);
-  const [dcGeoList, setDcGeoList] = useState<DcGeoEntry[]>([]);
   const [search, setSearch] = useState("");
 
-  // Load individual DC entries from datacenters.geojson for search
-  useEffect(() => {
-    fetch("/datacenters.geojson")
-      .then((res) => res.json())
-      .then((data: FeatureCollection) => {
-        const list: DcGeoEntry[] = data.features
-          .filter((f): f is Feature<Point> => f.geometry.type === "Point")
-          .map((f) => ({
-            ...(f.properties as Record<string, unknown>),
-            name: String(f.properties?.["name"] ?? ""),
-            company: String(f.properties?.["company"] ?? ""),
-            address: f.properties?.["address"] as string | undefined,
-            tier: f.properties?.["tier"] as string | undefined,
-            id: f.properties?.["id"] as string | undefined,
-            lng: (f.geometry as Point).coordinates[0] ?? 0,
-            lat: (f.geometry as Point).coordinates[1] ?? 0,
-            props: f.properties as Record<string, unknown>,
-          }));
-        setDcGeoList(list);
-      })
-      .catch(console.error);
-  }, []);
+  // Build geo entries from API facilities that have coordinates
+  const dcGeoList = useMemo<DcGeoEntry[]>(() => {
+    return dataCenters
+      .filter((dc) => dc.lat != null && dc.lng != null)
+      .map((dc) => ({
+        id: dc.id,
+        name: dc.name || dc.company,
+        company: dc.company,
+        address: dc.locationDetail || dc.location,
+        tier: dc.tierLevel,
+        lat: dc.lat!,
+        lng: dc.lng!,
+        props: {
+          id: dc.id,
+          name: dc.name || dc.company,
+          company: dc.company,
+          address: dc.locationDetail || dc.location,
+          tier: dc.tierLevel,
+          state: dc.state,
+          city: dc.city,
+          power_mw: dc.powerMW,
+          status: dc.status,
+          lat: dc.lat,
+          lng: dc.lng,
+        } as Record<string, unknown>,
+      }));
+  }, [dataCenters]);
 
-  // Initialize MapLibre map
+  // Build GeoJSON from facilities with coordinates
+  const facilitiesGeoJSON = useMemo<FeatureCollection>(() => ({
+    type: "FeatureCollection",
+    features: dcGeoList.map((dc) => ({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [dc.lng, dc.lat] },
+      properties: dc.props,
+    })),
+  }), [dcGeoList]);
+
+  // Initialize MapLibre map once
   useEffect(() => {
     if (map.current || !mapContainer.current) return;
 
@@ -86,7 +105,7 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
           },
           "datacenters-geojson": {
             type: "geojson",
-            data: "/datacenters.geojson",
+            data: { type: "FeatureCollection", features: [] } as FeatureCollection,
           },
         },
         layers: [
@@ -192,7 +211,12 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
     return () => { /* map lives for component lifetime */ };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  void loaded; // suppress unused warning
+  // Push facilities GeoJSON into the map source whenever data or load state changes
+  useEffect(() => {
+    if (!loaded || !map.current) return;
+    const source = map.current.getSource("datacenters-geojson") as maplibregl.GeoJSONSource | undefined;
+    source?.setData(facilitiesGeoJSON);
+  }, [loaded, facilitiesGeoJSON]);
 
   const handleAccessReport = (dc: DcGeoEntry) => {
     sessionStorage.setItem(
@@ -313,7 +337,7 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
         <div style={{ position: "absolute", bottom: 24, left: 12, zIndex: 10 }}>
           <div style={{ background: "rgba(0,0,0,0.55)", padding: "4px 10px", display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "white", backdropFilter: "blur(4px)" }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#0f766e", display: "inline-block" }} />
-            Data Centers ({dcGeoList.length})
+            Data Centers ({dcGeoList.length} mapped of {dataCenters.length})
           </div>
         </div>
       </div>
