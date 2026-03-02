@@ -380,9 +380,7 @@ export default function EnergyGapPanel() {
               <strong>1,590 MU</strong> in FY 2024-25 — with peak demand meeting a negligible{" "}
               <strong>2 MW shortfall</strong>. The gap has narrowed from{" "}
               <strong>7,583 MU (0.5%)</strong> in FY 2022-23, largely driven by transmission{" "}
-              and distribution (T&amp;D) constraints at the state level. Renewable capacity additions
-              by companies like <strong>Refex Energy</strong> directly address this gap by
-              decentralising generation and reducing system losses.
+              and distribution (T&amp;D) constraints at the state level.
             </p>
           </div>
 
