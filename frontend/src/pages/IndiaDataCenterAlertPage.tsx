@@ -91,7 +91,6 @@ function toMapFormat(facilities: DataCenterFacility[]) {
     sizeSqFt: f.size_sqft,
     status: STATUS_DISPLAY[f.status] || f.status,
     tierLevel: f.tier_level ?? undefined,
-    geocodeStatus: f.geocode_status ?? undefined,
     lat: f.latitude ?? undefined,
     lng: f.longitude ?? undefined,
   }));
