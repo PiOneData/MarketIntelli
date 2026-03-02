@@ -1,13 +1,10 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import type { FeatureCollection, Feature, Point } from "geojson";
 import { Search, Server, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-
-// Token read from Vite env — never hardcoded in source
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN as string;
 
 // Normalize known state name variants (mirrors IndiaDataCenterAlertPage)
 const _STATE_NORM: Record<string, string> = {
@@ -56,7 +53,7 @@ interface PopupState {
 function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
   const navigate = useNavigate();
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
+  const map = useRef<maplibregl.Map | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [popup, setPopup] = useState<PopupState | null>(null);
   const [search, setSearch] = useState("");
@@ -136,19 +133,24 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
     [dcGeoList]
   );
 
-  // Initialize Mapbox map once
+  // Initialize MapLibre map with OpenStreetMap tiles (no API key required)
   useEffect(() => {
     if (map.current || !mapContainer.current) return;
 
-    map.current = new mapboxgl.Map({
+    map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: "mapbox://styles/mapbox/satellite-streets-v12",
+      // OpenFreeMap liberty style — free OSM vector tiles, no API key
+      style: "https://tiles.openfreemap.org/styles/liberty",
       center: [78.96, 20.59],
       zoom: 4.8,
       attributionControl: false,
     });
 
-    map.current.addControl(new mapboxgl.NavigationControl(), "bottom-right");
+    map.current.addControl(new maplibregl.NavigationControl(), "bottom-right");
+    map.current.addControl(
+      new maplibregl.AttributionControl({ compact: true }),
+      "bottom-right"
+    );
 
     map.current.on("load", () => {
       if (!map.current) return;
@@ -194,7 +196,7 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
         minzoom: 10,
         layout: {
           "text-field": ["get", "name"],
-          "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
+          "text-font": ["Noto Sans Regular"],
           "text-size": 11,
           "text-anchor": "top",
           "text-offset": [0, 1.3],
@@ -202,9 +204,9 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
           "text-allow-overlap": false,
         },
         paint: {
-          "text-color": "#ffffff",
-          "text-halo-color": "#0f172a",
-          "text-halo-width": 1.8,
+          "text-color": "#1e293b",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 1.5,
           "text-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0, 11, 1],
         },
       });
@@ -254,7 +256,7 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
   // Push GeoJSON into source whenever data changes (after map load)
   useEffect(() => {
     if (!loaded || !map.current) return;
-    const source = map.current.getSource("datacenters-geojson") as mapboxgl.GeoJSONSource | undefined;
+    const source = map.current.getSource("datacenters-geojson") as maplibregl.GeoJSONSource | undefined;
     source?.setData(facilitiesGeoJSON);
   }, [loaded, facilitiesGeoJSON]);
 
@@ -417,12 +419,12 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
         </AnimatePresence>
 
         {/* Legend */}
-        <div style={{ position: "absolute", bottom: 24, left: 12, zIndex: 10 }}>
-          <div style={{ background: "rgba(0,0,0,0.6)", padding: "5px 11px", display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "white", backdropFilter: "blur(4px)" }}>
+        <div style={{ position: "absolute", bottom: 36, left: 12, zIndex: 10 }}>
+          <div style={{ background: "rgba(255,255,255,0.92)", padding: "5px 11px", display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#1e293b", border: "1px solid #e2e8f0", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#0f766e", display: "inline-block" }} />
             {totalMapped} of {totalFacilities} data centers mapped
             {dbMapped > 0 && dbMapped < totalFacilities && (
-              <span style={{ color: "#5eead4", marginLeft: 4 }}>({dbMapped} geocoded)</span>
+              <span style={{ color: "#0f766e", marginLeft: 4 }}>({dbMapped} geocoded)</span>
             )}
           </div>
         </div>

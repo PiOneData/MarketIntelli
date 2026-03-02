@@ -23,8 +23,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "9002:3000"
-    environment:
-      - VITE_MAPBOX_TOKEN=${VITE_MAPBOX_TOKEN}
     depends_on:
       - backend
     volumes:
