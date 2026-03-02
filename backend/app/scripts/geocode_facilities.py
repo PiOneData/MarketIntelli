@@ -6,10 +6,13 @@ Two-phase approach:
             Resolves ~100 % of Indian DC facilities in < 1 second.
             Called synchronously at startup so coordinates are ready before
             the first API request is served.
+            geocode_status = 'CITY_FALLBACK', geocode_source = 'city_centroid'
 
   Phase 2 – nominatim_pass():  Nominatim (OSM) geocoding for any row still
             missing coordinates after Phase 1.  Rate-limited to 1 req / 1.2 s.
             Runs as a background asyncio task (non-blocking).
+            Full-address success: geocode_status = 'ROOFTOP',      geocode_source = 'nominatim'
+            City-only fallback:   geocode_status = 'CITY_FALLBACK', geocode_source = 'nominatim_city'
 
 Standalone:
     python -m app.scripts.geocode_facilities          # both passes
@@ -210,12 +213,24 @@ async def _fetch_missing(force: bool) -> list[DataCenterFacility]:
         return list((await db.execute(stmt)).scalars().all())
 
 
-async def _save_coord(facility_id: object, lat: float, lng: float) -> None:
+async def _save_coord(
+    facility_id: object,
+    lat: float,
+    lng: float,
+    geocode_status: str,
+    geocode_source: str,
+) -> None:
+    """Persist coordinates and geocoding metadata to the database."""
     async with async_session_factory() as db:
         await db.execute(
             update(DataCenterFacility)
             .where(DataCenterFacility.id == facility_id)
-            .values(latitude=lat, longitude=lng)
+            .values(
+                latitude=lat,
+                longitude=lng,
+                geocode_status=geocode_status,
+                geocode_source=geocode_source,
+            )
         )
         await db.commit()
 
@@ -228,6 +243,8 @@ async def fast_pass(force: bool = False) -> dict[str, int]:
     """
     Phase 1 — offline city-centroid lookup.  No network calls, completes in < 1 s.
     Safe to await synchronously during application startup.
+
+    Saves geocode_status='CITY_FALLBACK', geocode_source='city_centroid'.
     """
     rows = await _fetch_missing(force)
     if not rows:
@@ -239,7 +256,13 @@ async def fast_pass(force: bool = False) -> dict[str, int]:
     for f in rows:
         coords = _city_lookup(f.city)
         if coords:
-            await _save_coord(f.id, coords[0], coords[1])
+            await _save_coord(
+                f.id,
+                coords[0],
+                coords[1],
+                geocode_status="CITY_FALLBACK",
+                geocode_source="city_centroid",
+            )
             resolved += 1
         else:
             skipped += 1
@@ -252,6 +275,9 @@ async def nominatim_pass(force: bool = False) -> dict[str, int]:
     """
     Phase 2 — Nominatim geocoding for rows still missing coordinates.
     Rate-limited to 1 req / 1.2 s.  Run as a background task.
+
+    Full-address match:  geocode_status='ROOFTOP',      geocode_source='nominatim'
+    City-only fallback:  geocode_status='CITY_FALLBACK', geocode_source='nominatim_city'
     """
     rows = await _fetch_missing(force)
     if not rows:
@@ -264,22 +290,27 @@ async def nominatim_pass(force: bool = False) -> dict[str, int]:
 
     for idx, f in enumerate(rows, 1):
         # Build primary query: full address + city + state
-        loc = (f.location_detail or "").strip()
         import re
+        loc = (f.location_detail or "").strip()
         loc = re.sub(r",?\s*Postal:\s*\d+", "", loc, flags=re.IGNORECASE).strip()
         primary = f"{loc}, {f.city}, {f.state}, India" if loc else f"{f.city}, {f.state}, India"
         fallback = f"{f.city}, {f.state}, India"
 
         coords = await asyncio.to_thread(_nominatim_search, primary)
         await asyncio.sleep(RATE_LIMIT_SECS)
-        if not coords:
+
+        used_fallback = False
+        if not coords and primary != fallback:
             coords = await asyncio.to_thread(_nominatim_search, fallback)
             await asyncio.sleep(RATE_LIMIT_SECS)
+            used_fallback = True
 
         if coords:
-            await _save_coord(f.id, coords[0], coords[1])
+            status = "CITY_FALLBACK" if used_fallback else "ROOFTOP"
+            source = "nominatim_city" if used_fallback else "nominatim"
+            await _save_coord(f.id, coords[0], coords[1], geocode_status=status, geocode_source=source)
             geocoded += 1
-            logger.info("[%d/%d] ✓ %s → %.5f, %.5f", idx, len(rows), f.name, *coords)
+            logger.info("[%d/%d] ✓ %s → %.5f, %.5f [%s]", idx, len(rows), f.name, *coords, source)
         else:
             failed += 1
             logger.warning("[%d/%d] ✗ %s (%s, %s)", idx, len(rows), f.name, f.city, f.state)

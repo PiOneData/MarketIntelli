@@ -39,6 +39,8 @@ class DataCenterFacilityRead(BaseModel):
     location_detail: str | None = None
     latitude: float | None = None
     longitude: float | None = None
+    geocode_status: str | None = None
+    geocode_source: str | None = None
     power_capacity_mw: float
     it_load_mw: float | None = None
     size_sqft: float
