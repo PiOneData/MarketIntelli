@@ -46,8 +46,6 @@ class DataCenterFacility(Base):
     location_detail: Mapped[str | None] = mapped_column(String(500), nullable=True, default=None)
     latitude: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
     longitude: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
-    geocode_status: Mapped[str | None] = mapped_column(String(20), nullable=True, default=None)
-    geocode_source: Mapped[str | None] = mapped_column(String(50), nullable=True, default=None)
     power_capacity_mw: Mapped[float] = mapped_column(Float, default=0.0)
     it_load_mw: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
     status: Mapped[str] = mapped_column(String(50), default="unknown")  # planned, under_construction, operational

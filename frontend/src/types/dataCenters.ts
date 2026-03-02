@@ -22,8 +22,6 @@ export interface DataCenterFacility {
   location_detail: string | null;
   latitude: number | null;
   longitude: number | null;
-  geocode_status: string | null;
-  geocode_source: string | null;
   power_capacity_mw: number;
   it_load_mw: number | null;
   size_sqft: number;

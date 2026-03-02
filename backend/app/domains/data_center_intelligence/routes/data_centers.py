@@ -19,44 +19,6 @@ from app.domains.data_center_intelligence.services.data_center_service import (
 router = APIRouter()
 
 
-# ---------------------------------------------------------------------------
-# Helper: build DataCenterFacilityRead from an ORM facility object
-# ---------------------------------------------------------------------------
-
-def _facility_read(f: object, company_name: str = "") -> DataCenterFacilityRead:
-    """Map ORM DataCenterFacility → Pydantic DataCenterFacilityRead."""
-    from app.domains.data_center_intelligence.models.data_center import DataCenterFacility
-    assert isinstance(f, DataCenterFacility)
-    return DataCenterFacilityRead(
-        id=f.id,
-        company_id=f.company_id,
-        company_name=company_name or (f.company.name if f.company else ""),
-        name=f.name,
-        city=f.city,
-        state=f.state,
-        location_detail=f.location_detail,
-        latitude=f.latitude,
-        longitude=f.longitude,
-        geocode_status=f.geocode_status,
-        geocode_source=f.geocode_source,
-        power_capacity_mw=f.power_capacity_mw,
-        it_load_mw=f.it_load_mw,
-        size_sqft=f.size_sqft,
-        status=f.status,
-        tier_level=f.tier_level,
-        pue_target=f.pue_target,
-        pue_actual=f.pue_actual,
-        current_renewable_pct=f.current_renewable_pct,
-        target_renewable_pct=f.target_renewable_pct,
-        cooling_type=f.cooling_type,
-        water_consumption_kld=f.water_consumption_kld,
-        commissioning_date=f.commissioning_date,
-        expansion_plans=f.expansion_plans,
-        compliance_status=f.compliance_status,
-        date_added=f.date_added,
-    )
-
-
 # --- Company endpoints ---
 
 
@@ -146,25 +108,48 @@ async def list_facilities(
     company_id: UUID | None = None,
     min_power_mw: float | None = None,
     page: int = 1,
-    page_size: int = 500,
+    page_size: int = 50,
     db: AsyncSession = Depends(get_db),
 ) -> list[DataCenterFacilityRead]:
-    """List data center facilities with filtering.
-
-    Default page_size is 500 so callers receive all facilities in one request,
-    avoiding the need for manual pagination for the map and registry views.
-    lat/lon and geocode_status/source are included in every row.
-    """
+    """List data center facilities with filtering."""
     service = DataCenterService(db)
     facilities, _ = await service.list_facilities(
         state=state, city=city, status=status, company=company,
         company_id=company_id, min_power_mw=min_power_mw,
         page=page, page_size=page_size,
     )
+    # Eager-load company names
     result = []
     for f in facilities:
         await db.refresh(f, ["company"])
-        result.append(_facility_read(f, f.company.name if f.company else ""))
+        result.append(
+            DataCenterFacilityRead(
+                id=f.id,
+                company_id=f.company_id,
+                company_name=f.company.name if f.company else "",
+                name=f.name,
+                city=f.city,
+                state=f.state,
+                location_detail=f.location_detail,
+                latitude=f.latitude,
+                longitude=f.longitude,
+                power_capacity_mw=f.power_capacity_mw,
+                it_load_mw=f.it_load_mw,
+                size_sqft=f.size_sqft,
+                status=f.status,
+                tier_level=f.tier_level,
+                pue_target=f.pue_target,
+                pue_actual=f.pue_actual,
+                current_renewable_pct=f.current_renewable_pct,
+                target_renewable_pct=f.target_renewable_pct,
+                cooling_type=f.cooling_type,
+                water_consumption_kld=f.water_consumption_kld,
+                commissioning_date=f.commissioning_date,
+                expansion_plans=f.expansion_plans,
+                compliance_status=f.compliance_status,
+                date_added=f.date_added,
+            )
+        )
     return result
 
 
@@ -201,7 +186,32 @@ async def get_facility(
     if not f:
         raise HTTPException(status_code=404, detail="Facility not found")
     await db.refresh(f, ["company"])
-    return _facility_read(f)
+    return DataCenterFacilityRead(
+        id=f.id,
+        company_id=f.company_id,
+        company_name=f.company.name if f.company else "",
+        name=f.name,
+        city=f.city,
+        state=f.state,
+        location_detail=f.location_detail,
+        latitude=f.latitude,
+        longitude=f.longitude,
+        power_capacity_mw=f.power_capacity_mw,
+        it_load_mw=f.it_load_mw,
+        size_sqft=f.size_sqft,
+        status=f.status,
+        tier_level=f.tier_level,
+        pue_target=f.pue_target,
+        pue_actual=f.pue_actual,
+        current_renewable_pct=f.current_renewable_pct,
+        target_renewable_pct=f.target_renewable_pct,
+        cooling_type=f.cooling_type,
+        water_consumption_kld=f.water_consumption_kld,
+        commissioning_date=f.commissioning_date,
+        expansion_plans=f.expansion_plans,
+        compliance_status=f.compliance_status,
+        date_added=f.date_added,
+    )
 
 
 @router.post("/facilities", response_model=DataCenterFacilityRead, status_code=201)
@@ -211,11 +221,37 @@ async def create_facility(
 ) -> DataCenterFacilityRead:
     """Create a new data center facility."""
     service = DataCenterService(db)
+    # Verify company exists
     company = await service.get_company(data.company_id)
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     f = await service.create_facility(**data.model_dump())
-    return _facility_read(f, company.name)
+    return DataCenterFacilityRead(
+        id=f.id,
+        company_id=f.company_id,
+        company_name=company.name,
+        name=f.name,
+        city=f.city,
+        state=f.state,
+        location_detail=f.location_detail,
+        latitude=f.latitude,
+        longitude=f.longitude,
+        power_capacity_mw=f.power_capacity_mw,
+        it_load_mw=f.it_load_mw,
+        size_sqft=f.size_sqft,
+        status=f.status,
+        tier_level=f.tier_level,
+        pue_target=f.pue_target,
+        pue_actual=f.pue_actual,
+        current_renewable_pct=f.current_renewable_pct,
+        target_renewable_pct=f.target_renewable_pct,
+        cooling_type=f.cooling_type,
+        water_consumption_kld=f.water_consumption_kld,
+        commissioning_date=f.commissioning_date,
+        expansion_plans=f.expansion_plans,
+        compliance_status=f.compliance_status,
+        date_added=f.date_added,
+    )
 
 
 @router.put("/facilities/{facility_id}", response_model=DataCenterFacilityRead)
@@ -231,7 +267,32 @@ async def update_facility(
     if not f:
         raise HTTPException(status_code=404, detail="Facility not found")
     await db.refresh(f, ["company"])
-    return _facility_read(f)
+    return DataCenterFacilityRead(
+        id=f.id,
+        company_id=f.company_id,
+        company_name=f.company.name if f.company else "",
+        name=f.name,
+        city=f.city,
+        state=f.state,
+        location_detail=f.location_detail,
+        latitude=f.latitude,
+        longitude=f.longitude,
+        power_capacity_mw=f.power_capacity_mw,
+        it_load_mw=f.it_load_mw,
+        size_sqft=f.size_sqft,
+        status=f.status,
+        tier_level=f.tier_level,
+        pue_target=f.pue_target,
+        pue_actual=f.pue_actual,
+        current_renewable_pct=f.current_renewable_pct,
+        target_renewable_pct=f.target_renewable_pct,
+        cooling_type=f.cooling_type,
+        water_consumption_kld=f.water_consumption_kld,
+        commissioning_date=f.commissioning_date,
+        expansion_plans=f.expansion_plans,
+        compliance_status=f.compliance_status,
+        date_added=f.date_added,
+    )
 
 
 @router.delete("/facilities/{facility_id}", status_code=204)
