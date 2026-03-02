@@ -35,14 +35,46 @@ _CANDIDATES = [
 ]
 CSV_PATH = next((p for p in _CANDIDATES if os.path.exists(p)), _CANDIDATES[0])
 
-# Normalise common state-name typos / aliases found in the source data
+# Normalise state-name typos / aliases found in source data.
+# Keys are stripped raw values; values are canonical names.
 STATE_ALIASES: dict[str, str] = {
+    # Delhi / NCR variants
+    "New Delhi": "Delhi",
+    "NCR": "Delhi",
+    "Delhi NCR": "Delhi",
+    "NCR Delhi": "Delhi",
+    "NCT of Delhi": "Delhi",
+    "National Capital Region": "Delhi",
+    # Telangana
     "Telengana": "Telangana",
+    "Telanagana": "Telangana",
+    # Tamil Nadu
     "Tamilnadu": "Tamil Nadu",
+    "TamilNadu": "Tamil Nadu",
     "Tamil Nadu": "Tamil Nadu",
-    "Andhra Pradesh": "Andhra Pradesh",
-    "Uttarakhand": "Uttarakhand",
+    # Odisha
+    "Orissa": "Odisha",
+    # Puducherry
+    "Pondicherry": "Puducherry",
+    # Jammu & Kashmir
     "Jammu and Kashmir": "Jammu & Kashmir",
+    "J&K": "Jammu & Kashmir",
+    "Jammu Kashmir": "Jammu & Kashmir",
+    # Uttarakhand
+    "Uttaranchal": "Uttarakhand",
+    "Uttrakhand": "Uttarakhand",
+    "Uttarakhand": "Uttarakhand",
+    # Andaman & Nicobar
+    "Andaman and Nicobar Islands": "Andaman & Nicobar Islands",
+    "Andaman & Nicobar": "Andaman & Nicobar Islands",
+    # Dadra & Nagar Haveli
+    "Dadra and Nagar Haveli": "Dadra & Nagar Haveli",
+    # Daman & Diu
+    "Daman and Diu": "Daman & Diu",
+    # Identity entries (kept for explicit intent)
+    "Andhra Pradesh": "Andhra Pradesh",
+    "Karnataka": "Karnataka",
+    "Maharashtra": "Maharashtra",
 }
 
 # Map known company names to parent companies

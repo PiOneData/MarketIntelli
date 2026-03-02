@@ -9,6 +9,50 @@ from app.domains.data_center_intelligence.models.data_center import (
     DataCenterFacility,
 )
 
+# Map lowercase state variants → canonical name
+_STATE_CANONICAL: dict[str, str] = {
+    # Delhi / NCR
+    "new delhi": "Delhi",
+    "ncr": "Delhi",
+    "delhi ncr": "Delhi",
+    "ncr delhi": "Delhi",
+    "nct of delhi": "Delhi",
+    "national capital region": "Delhi",
+    # Telangana
+    "telengana": "Telangana",
+    "telanagana": "Telangana",
+    # Tamil Nadu
+    "tamilnadu": "Tamil Nadu",
+    "tamil nādu": "Tamil Nadu",
+    # Odisha
+    "orissa": "Odisha",
+    # Puducherry
+    "pondicherry": "Puducherry",
+    # Jammu & Kashmir
+    "jammu and kashmir": "Jammu & Kashmir",
+    "j&k": "Jammu & Kashmir",
+    "jammu kashmir": "Jammu & Kashmir",
+    # Uttarakhand
+    "uttaranchal": "Uttarakhand",
+    "uttrakhand": "Uttarakhand",
+    "uttarakhand": "Uttarakhand",
+    # Andaman & Nicobar
+    "andaman and nicobar islands": "Andaman & Nicobar Islands",
+    "andaman & nicobar": "Andaman & Nicobar Islands",
+    # Dadra & Nagar Haveli
+    "dadra and nagar haveli": "Dadra & Nagar Haveli",
+    # Daman & Diu
+    "daman and diu": "Daman & Diu",
+}
+
+
+def _canonical_state(raw: str | None) -> str:
+    """Return canonical state name, normalizing known variants."""
+    if not raw:
+        return "Unknown"
+    stripped = raw.strip()
+    return _STATE_CANONICAL.get(stripped.lower(), stripped)
+
 
 class DataCenterService:
     def __init__(self, db: AsyncSession) -> None:
@@ -139,11 +183,14 @@ class DataCenterService:
         total_facilities = row[0]
         total_power = float(row[1])
 
-        # States covered
-        states_result = await self.db.execute(
-            select(func.count(func.distinct(DataCenterFacility.state)))
+        # States covered — normalize variants before counting
+        raw_states_result = await self.db.execute(
+            select(func.distinct(DataCenterFacility.state))
         )
-        states_covered = states_result.scalar() or 0
+        raw_states = [row[0] for row in raw_states_result.all() if row[0]]
+        normalized_states = {_canonical_state(s) for s in raw_states}
+        normalized_states.discard("Unknown")
+        states_covered = len(normalized_states)
 
         # By status
         status_result = await self.db.execute(
