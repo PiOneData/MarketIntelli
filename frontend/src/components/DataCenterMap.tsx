@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import type { FeatureCollection, Point } from "geojson";
+import type { FeatureCollection, Feature, Point } from "geojson";
 import { Search, Server, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -38,61 +38,6 @@ interface PopupState {
   dc: DcGeoEntry;
 }
 
-interface CachedCoord {
-  lat: number;
-  lng: number;
-}
-
-const CACHE_KEY = "dc_geocode_cache_v2";
-const RATE_MS = 1150; // Nominatim: max 1 req/sec
-
-function cleanAddress(locationDetail: string, city: string, state: string): string {
-  // Strip "Postal: XXXXXX" and collapse whitespace
-  let addr = locationDetail
-    .replace(/,?\s*Postal:\s*\d+/gi, "")
-    .replace(/\s+/g, " ")
-    .trim();
-  // If city/state not already in the string, append them
-  if (!addr.toLowerCase().includes(city.toLowerCase())) addr += `, ${city}`;
-  if (!addr.toLowerCase().includes(state.toLowerCase())) addr += `, ${state}`;
-  return `${addr}, India`;
-}
-
-async function nominatimGeocode(
-  query: string,
-  signal: AbortSignal
-): Promise<CachedCoord | null> {
-  const url =
-    `https://nominatim.openstreetmap.org/search?` +
-    `q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=in&accept-language=en`;
-  try {
-    const res = await fetch(url, {
-      signal,
-      headers: { "User-Agent": "MarketIntelli-DataCenterMap/1.0" },
-    });
-    if (!res.ok) return null;
-    const data = await res.json() as Array<{ lat: string; lon: string }>;
-    if (data[0]) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-  } catch {
-    // AbortError or network error — skip silently
-  }
-  return null;
-}
-
-function loadCache(): Map<string, CachedCoord> {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (raw) return new Map(JSON.parse(raw) as [string, CachedCoord][]);
-  } catch { /* ignore */ }
-  return new Map();
-}
-
-function saveCache(cache: Map<string, CachedCoord>): void {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify([...cache.entries()]));
-  } catch { /* ignore */ }
-}
-
 function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
   const navigate = useNavigate();
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -100,106 +45,75 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
   const [loaded, setLoaded] = useState(false);
   const [popup, setPopup] = useState<PopupState | null>(null);
   const [search, setSearch] = useState("");
-  const [geocodedCoords, setGeocodedCoords] = useState<Map<string, CachedCoord>>(loadCache);
-  const [geocodeProgress, setGeocodeProgress] = useState<{ done: number; total: number } | null>(null);
 
-  // Facilities that still need geocoding
-  const needsGeocode = useMemo(
-    () =>
-      dataCenters.filter(
-        (dc) =>
-          (dc.lat == null || dc.lng == null) &&
-          !geocodedCoords.has(dc.id) &&
-          !!(dc.locationDetail || dc.city)
-      ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [dataCenters] // intentionally omit geocodedCoords to avoid re-triggering
-  );
-
-  // Progressive Nominatim geocoding
+  // Static geojson: 64 fully-geocoded entries loaded immediately
+  const [staticEntries, setStaticEntries] = useState<DcGeoEntry[]>([]);
   useEffect(() => {
-    if (needsGeocode.length === 0) return;
-    const controller = new AbortController();
-    let done = 0;
-    setGeocodeProgress({ done: 0, total: needsGeocode.length });
+    fetch("/datacenters.geojson")
+      .then((r) => r.json())
+      .then((data: FeatureCollection) => {
+        const entries: DcGeoEntry[] = data.features
+          .filter((f): f is Feature<Point> => f.geometry?.type === "Point")
+          .map((f) => {
+            const p = f.properties as Record<string, unknown>;
+            const [lng, lat] = (f.geometry as Point).coordinates;
+            return {
+              id: p["id"] as string | undefined,
+              name: String(p["name"] ?? ""),
+              company: String(p["company"] ?? ""),
+              address: p["address"] as string | undefined,
+              tier: p["tier"] as string | undefined,
+              lat: lat ?? 0,
+              lng: lng ?? 0,
+              props: p,
+            };
+          });
+        setStaticEntries(entries);
+      })
+      .catch(console.error);
+  }, []);
 
-    (async () => {
-      const cache = loadCache();
-      for (const dc of needsGeocode) {
-        if (controller.signal.aborted) break;
-        if (cache.has(dc.id)) { done++; continue; }
-
-        // Try full address first, then city+state fallback
-        const fullQuery = dc.locationDetail
-          ? cleanAddress(dc.locationDetail, dc.city, dc.state)
-          : `${dc.city}, ${dc.state}, India`;
-        const fallbackQuery = `${dc.city}, ${dc.state}, India`;
-
-        let coord = await nominatimGeocode(fullQuery, controller.signal);
-        if (!coord && fullQuery !== fallbackQuery) {
-          await new Promise((r) => setTimeout(r, RATE_MS));
-          if (controller.signal.aborted) break;
-          coord = await nominatimGeocode(fallbackQuery, controller.signal);
-        }
-
-        if (coord) {
-          cache.set(dc.id, coord);
-          saveCache(cache);
-          setGeocodedCoords(new Map(cache));
-        }
-
-        done++;
-        setGeocodeProgress({ done, total: needsGeocode.length });
-        await new Promise((r) => setTimeout(r, RATE_MS));
-      }
-      setGeocodeProgress(null);
-    })();
-
-    return () => controller.abort();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [needsGeocode.length]);
-
-  // Merge direct lat/lng with geocoded coordinates
+  // Merge: DB facilities (lat/lng from backend geocoding) take precedence;
+  // static geojson fills in immediately and covers any DB gaps.
   const dcGeoList = useMemo<DcGeoEntry[]>(() => {
-    return dataCenters
-      .map((dc): DcGeoEntry | null => {
-        let lat: number, lng: number;
-        if (dc.lat != null && dc.lng != null) {
-          lat = dc.lat;
-          lng = dc.lng;
-        } else {
-          const cached = geocodedCoords.get(dc.id);
-          if (!cached) return null;
-          lat = cached.lat;
-          lng = cached.lng;
-        }
-        return {
+    // Index static entries by lower-cased name for dedup
+    const merged = new Map<string, DcGeoEntry>();
+    for (const e of staticEntries) {
+      merged.set(e.name.toLowerCase(), e);
+    }
+
+    // DB entries override static ones (richer data, same or better coordinates)
+    for (const dc of dataCenters) {
+      if (dc.lat == null || dc.lng == null) continue;
+      const entry: DcGeoEntry = {
+        id: dc.id,
+        name: dc.name || dc.company,
+        company: dc.company,
+        address: dc.locationDetail || dc.location,
+        tier: dc.tierLevel,
+        lat: dc.lat,
+        lng: dc.lng,
+        props: {
           id: dc.id,
           name: dc.name || dc.company,
           company: dc.company,
           address: dc.locationDetail || dc.location,
           tier: dc.tierLevel,
-          lat,
-          lng,
-          props: {
-            id: dc.id,
-            name: dc.name || dc.company,
-            company: dc.company,
-            address: dc.locationDetail || dc.location,
-            tier: dc.tierLevel,
-            state: dc.state,
-            city: dc.city,
-            power_mw: dc.powerMW,
-            status: dc.status,
-            lat,
-            lng,
-          } as Record<string, unknown>,
-        };
-      })
-      .filter((e): e is DcGeoEntry => e !== null);
-  }, [dataCenters, geocodedCoords]);
+          state: dc.state,
+          city: dc.city,
+          power_mw: dc.powerMW,
+          status: dc.status,
+          lat: dc.lat,
+          lng: dc.lng,
+        } as Record<string, unknown>,
+      };
+      merged.set((dc.name || dc.company).toLowerCase(), entry);
+    }
 
-  // GeoJSON derived from dcGeoList
+    return Array.from(merged.values());
+  }, [staticEntries, dataCenters]);
+
+  // GeoJSON for the map source, rebuilt whenever dcGeoList changes
   const facilitiesGeoJSON = useMemo<FeatureCollection>(
     () => ({
       type: "FeatureCollection",
@@ -333,7 +247,7 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
     return () => { /* map lives for component lifetime */ };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Push updated GeoJSON into the map source whenever it changes
+  // Push GeoJSON into the map source whenever it changes (after load)
   useEffect(() => {
     if (!loaded || !map.current) return;
     const source = map.current.getSource("datacenters-geojson") as maplibregl.GeoJSONSource | undefined;
@@ -375,6 +289,10 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
     });
     return Array.from(m.entries()).sort((a, b) => b[1].power - a[1].power);
   }, [dataCenters]);
+
+  const dbMapped = dataCenters.filter((dc) => dc.lat != null && dc.lng != null).length;
+  const totalMapped = dcGeoList.length;
+  const totalFacilities = dataCenters.length;
 
   return (
     <div className="dc-map-container">
@@ -493,17 +411,14 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
           )}
         </AnimatePresence>
 
-        {/* Legend + geocoding progress */}
-        <div style={{ position: "absolute", bottom: 24, left: 12, zIndex: 10, display: "flex", flexDirection: "column", gap: 4 }}>
-          {geocodeProgress && (
-            <div style={{ background: "rgba(15,118,110,0.9)", padding: "4px 10px", fontSize: 11, color: "white", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: "#fff", animation: "pulse 1s infinite" }} />
-              Geocoding {geocodeProgress.done}/{geocodeProgress.total} addresses…
-            </div>
-          )}
-          <div style={{ background: "rgba(0,0,0,0.55)", padding: "4px 10px", display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "white", backdropFilter: "blur(4px)" }}>
+        {/* Legend */}
+        <div style={{ position: "absolute", bottom: 24, left: 12, zIndex: 10 }}>
+          <div style={{ background: "rgba(0,0,0,0.6)", padding: "5px 11px", display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "white", backdropFilter: "blur(4px)" }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#0f766e", display: "inline-block" }} />
-            Data Centers ({dcGeoList.length} of {dataCenters.length} mapped)
+            {totalMapped} of {totalFacilities} data centers mapped
+            {dbMapped > 0 && dbMapped < totalFacilities && (
+              <span style={{ color: "#5eead4", marginLeft: 4 }}>({dbMapped} geocoded)</span>
+            )}
           </div>
         </div>
       </div>
@@ -515,12 +430,6 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
           <p>
             Click a <strong style={{ color: "#0f766e" }}>teal marker</strong> on the map or search above to view a data center&apos;s RE Intelligence Report.
           </p>
-          {geocodeProgress && (
-            <div style={{ margin: "8px 0", padding: "6px 10px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 6, fontSize: 11, color: "#166534" }}>
-              Geocoding addresses via OpenStreetMap ({geocodeProgress.done}/{geocodeProgress.total})…
-              Results are cached after first run.
-            </div>
-          )}
           <div className="dc-map-state-list" style={{ marginTop: 16 }}>
             <h4>By State ({stateSummary.length})</h4>
             {stateSummary.map(([state, info]) => (
