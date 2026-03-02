@@ -1,29 +1,24 @@
 """
 Geocode data-center facilities that are missing lat/lng.
 
-Strategy (fast, no external API dependency):
-  1. Precise match — load the 64 entries from frontend/public/datacenters.geojson
-     and match each DB facility by normalised name.
-  2. City centroid — look up city name in CITY_COORDS (covers all Indian cities
-     in the DC dataset).  Multiple facilities in the same city share the centroid;
-     sufficient for the registry-map marker view.
-  3. Nominatim fallback — any facility not resolved by steps 1 or 2 is queued for
-     a slow Nominatim (OSM) geocode call (1.2 s rate-limit); fires after steps 1+2
-     so startup is never blocked by network calls.
+Two-phase approach:
+  Phase 1 – fast_pass():  offline city-centroid lookup, no network calls.
+            Resolves ~100 % of Indian DC facilities in < 1 second.
+            Called synchronously at startup so coordinates are ready before
+            the first API request is served.
 
-Called from app/main.py lifespan as a background task.  Only rows with
-latitude IS NULL are touched, so re-runs are idempotent.
+  Phase 2 – nominatim_pass():  Nominatim (OSM) geocoding for any row still
+            missing coordinates after Phase 1.  Rate-limited to 1 req / 1.2 s.
+            Runs as a background asyncio task (non-blocking).
 
 Standalone:
-    python -m app.scripts.geocode_facilities          # fill missing only
+    python -m app.scripts.geocode_facilities          # both passes
     python -m app.scripts.geocode_facilities --force  # re-geocode everything
 """
 
 import asyncio
 import json
 import logging
-import os
-import re
 import sys
 import urllib.parse
 import urllib.request
@@ -35,8 +30,11 @@ from app.domains.data_center_intelligence.models.data_center import DataCenterFa
 
 logger = logging.getLogger(__name__)
 
+NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
+RATE_LIMIT_SECS = 1.2
+
 # ---------------------------------------------------------------------------
-# City centroid lookup — covers all cities/areas in the Indian DC dataset
+# City centroid lookup — covers every city/area in the Indian DC dataset
 # ---------------------------------------------------------------------------
 CITY_COORDS: dict[str, tuple[float, float]] = {
     # Maharashtra
@@ -62,9 +60,10 @@ CITY_COORDS: dict[str, tuple[float, float]] = {
     "hinjewadi": (18.5904, 73.7380),
     "kothrud": (18.5073, 73.8162),
     "nashik": (19.9975, 73.7898),
+    "nagpur": (21.1458, 79.0882),
+    # Madhya Pradesh
     "indore": (22.7196, 75.8577),
     "bhopal": (23.2599, 77.4126),
-    "nagpur": (21.1458, 79.0882),
     # Karnataka
     "bengaluru": (12.9716, 77.5946),
     "bangalore": (12.9716, 77.5946),
@@ -166,90 +165,21 @@ CITY_COORDS: dict[str, tuple[float, float]] = {
     "rohtak": (28.8955, 76.6066),
 }
 
-# Candidates for the static geojson (precise coords for 64 named entries)
-_GEOJSON_CANDIDATES = [
-    os.path.normpath(os.path.join(
-        os.path.dirname(__file__), "..", "..", "..", "..", "frontend", "public", "datacenters.geojson"
-    )),
-    os.path.normpath(os.path.join(
-        os.path.dirname(__file__), "..", "..", "..", "frontend", "public", "datacenters.geojson"
-    )),
-    "/app/frontend/public/datacenters.geojson",
-]
 
-NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
-RATE_LIMIT_SECS = 1.2
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-def _norm_name(name: str) -> str:
-    """Normalise for fuzzy name comparison."""
-    name = name.lower()
-    name = re.sub(
-        r"\b(data\s*cent(?:er|re)|pvt|ltd|private|limited|technologies|datacent(?:er|re)|"
-        r"services|solutions|infrastructure|india|idc)\b",
-        "", name,
-    )
-    name = re.sub(r"[^a-z0-9 ]", " ", name)
-    return re.sub(r"\s+", " ", name).strip()
-
-
-def _load_geojson_index() -> dict[str, tuple[float, float]]:
-    """Return {normalised_name: (lat, lng)} from the static GeoJSON file."""
-    for path in _GEOJSON_CANDIDATES:
-        if os.path.exists(path):
-            try:
-                with open(path, encoding="utf-8") as fh:
-                    gj = json.load(fh)
-                index: dict[str, tuple[float, float]] = {}
-                for feat in gj.get("features", []):
-                    props = feat.get("properties") or {}
-                    geom = feat.get("geometry") or {}
-                    if geom.get("type") == "Point":
-                        lng, lat = geom["coordinates"]
-                        raw_name = str(props.get("name") or props.get("id") or "")
-                        if raw_name:
-                            index[_norm_name(raw_name)] = (lat, lng)
-                logger.info("GeoJSON index: %d entries from %s", len(index), path)
-                return index
-            except Exception as exc:  # noqa: BLE001
-                logger.warning("Could not load geojson at %s: %s", path, exc)
-    logger.warning("Static datacenters.geojson not found; skipping precise-match step.")
-    return {}
-
-
-def _resolve_fast(
-    name: str,
-    city: str,
-    geojson_index: dict[str, tuple[float, float]],
-) -> tuple[float, float] | None:
-    """Fast (no-network) coordinate resolution."""
-    # 1. Precise geojson name match
-    norm = _norm_name(name)
-    if norm in geojson_index:
-        return geojson_index[norm]
-    for gj_norm, coords in geojson_index.items():
-        if norm and gj_norm and (norm in gj_norm or gj_norm in norm):
-            return coords
-
-    # 2. Exact city lookup
-    city_key = city.strip().lower()
-    if city_key in CITY_COORDS:
-        return CITY_COORDS[city_key]
-
-    # 3. Partial city match (e.g. "Navi Mumbai" ↔ "Mumbai")
-    for key, coords in CITY_COORDS.items():
-        if city_key in key or key in city_key:
-            return coords
-
+def _city_lookup(city: str) -> tuple[float, float] | None:
+    """Return centroid for a city string, or None if not found."""
+    key = city.strip().lower()
+    if key in CITY_COORDS:
+        return CITY_COORDS[key]
+    # Partial match — handles e.g. "Navi Mumbai" matching "mumbai"
+    for k, v in CITY_COORDS.items():
+        if key and k and (key in k or k in key):
+            return v
     return None
 
 
 def _nominatim_search(query: str) -> tuple[float, float] | None:
-    """Blocking Nominatim call. Run via asyncio.to_thread."""
+    """Blocking Nominatim call — run via asyncio.to_thread."""
     params = urllib.parse.urlencode({
         "q": query,
         "format": "json",
@@ -271,95 +201,98 @@ def _nominatim_search(query: str) -> tuple[float, float] | None:
     return None
 
 
-# ---------------------------------------------------------------------------
-# Main entry point
-# ---------------------------------------------------------------------------
-
-async def geocode_facilities(force: bool = False) -> dict[str, int]:
-    """
-    Geocode facilities missing lat/lng.
-
-    Pass 1: fast, no network (geojson name match + city centroid lookup).
-    Pass 2: Nominatim fallback for any still-unresolved rows (rate-limited).
-
-    Args:
-        force: Re-geocode even facilities that already have coordinates.
-
-    Returns:
-        dict with keys 'precise', 'city', 'nominatim', 'failed', 'total'.
-    """
-    geojson_index = _load_geojson_index()
-
+async def _fetch_missing(force: bool) -> list[DataCenterFacility]:
+    """Return facilities that need geocoding."""
     async with async_session_factory() as db:
         stmt = select(DataCenterFacility)
         if not force:
             stmt = stmt.where(DataCenterFacility.latitude.is_(None))
-        rows: list[DataCenterFacility] = list((await db.execute(stmt)).scalars().all())
+        return list((await db.execute(stmt)).scalars().all())
 
-    total = len(rows)
-    if total == 0:
-        logger.info("Geocoding: all facilities already have coordinates.")
-        return {"precise": 0, "city": 0, "nominatim": 0, "failed": 0, "total": 0}
 
-    logger.info("Geocoding %d facilit%s …", total, "y" if total == 1 else "ies")
+async def _save_coord(facility_id: object, lat: float, lng: float) -> None:
+    async with async_session_factory() as db:
+        await db.execute(
+            update(DataCenterFacility)
+            .where(DataCenterFacility.id == facility_id)
+            .values(latitude=lat, longitude=lng)
+        )
+        await db.commit()
 
-    counts = {"precise": 0, "city": 0, "nominatim": 0, "failed": 0}
-    nominatim_queue: list[DataCenterFacility] = []
 
-    # Pass 1: fast resolution
-    for facility in rows:
-        coords = _resolve_fast(facility.name, facility.city, geojson_index)
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+async def fast_pass(force: bool = False) -> dict[str, int]:
+    """
+    Phase 1 — offline city-centroid lookup.  No network calls, completes in < 1 s.
+    Safe to await synchronously during application startup.
+    """
+    rows = await _fetch_missing(force)
+    if not rows:
+        logger.info("fast_pass: all facilities already have coordinates.")
+        return {"resolved": 0, "skipped": 0, "total": 0}
+
+    resolved = 0
+    skipped = 0
+    for f in rows:
+        coords = _city_lookup(f.city)
         if coords:
-            source = "precise" if _norm_name(facility.name) in geojson_index else "city"
-            async with async_session_factory() as db:
-                await db.execute(
-                    update(DataCenterFacility)
-                    .where(DataCenterFacility.id == facility.id)
-                    .values(latitude=coords[0], longitude=coords[1])
-                )
-                await db.commit()
-            counts[source] += 1
+            await _save_coord(f.id, coords[0], coords[1])
+            resolved += 1
         else:
-            nominatim_queue.append(facility)
+            skipped += 1
 
-    logger.info(
-        "Pass 1 done — precise: %d, city-centroid: %d, queued for Nominatim: %d",
-        counts["precise"], counts["city"], len(nominatim_queue),
-    )
+    logger.info("fast_pass: resolved=%d skipped=%d total=%d", resolved, skipped, len(rows))
+    return {"resolved": resolved, "skipped": skipped, "total": len(rows)}
 
-    # Pass 2: Nominatim fallback for anything still unresolved
-    for idx, facility in enumerate(nominatim_queue, start=1):
-        loc = facility.location_detail or ""
-        loc_clean = re.sub(r",?\s*Postal:\s*\d+", "", loc, flags=re.IGNORECASE).strip()
-        primary_q = f"{loc_clean}, {facility.city}, {facility.state}, India" if loc_clean else f"{facility.city}, {facility.state}, India"
-        fallback_q = f"{facility.city}, {facility.state}, India"
 
-        coords = await asyncio.to_thread(_nominatim_search, primary_q)
+async def nominatim_pass(force: bool = False) -> dict[str, int]:
+    """
+    Phase 2 — Nominatim geocoding for rows still missing coordinates.
+    Rate-limited to 1 req / 1.2 s.  Run as a background task.
+    """
+    rows = await _fetch_missing(force)
+    if not rows:
+        logger.info("nominatim_pass: nothing to geocode.")
+        return {"geocoded": 0, "failed": 0, "total": 0}
+
+    logger.info("nominatim_pass: geocoding %d facilities via Nominatim …", len(rows))
+    geocoded = 0
+    failed = 0
+
+    for idx, f in enumerate(rows, 1):
+        # Build primary query: full address + city + state
+        loc = (f.location_detail or "").strip()
+        import re
+        loc = re.sub(r",?\s*Postal:\s*\d+", "", loc, flags=re.IGNORECASE).strip()
+        primary = f"{loc}, {f.city}, {f.state}, India" if loc else f"{f.city}, {f.state}, India"
+        fallback = f"{f.city}, {f.state}, India"
+
+        coords = await asyncio.to_thread(_nominatim_search, primary)
         await asyncio.sleep(RATE_LIMIT_SECS)
         if not coords:
-            coords = await asyncio.to_thread(_nominatim_search, fallback_q)
+            coords = await asyncio.to_thread(_nominatim_search, fallback)
             await asyncio.sleep(RATE_LIMIT_SECS)
 
         if coords:
-            async with async_session_factory() as db:
-                await db.execute(
-                    update(DataCenterFacility)
-                    .where(DataCenterFacility.id == facility.id)
-                    .values(latitude=coords[0], longitude=coords[1])
-                )
-                await db.commit()
-            counts["nominatim"] += 1
-            logger.info("[Nominatim %d/%d] ✓ %s → %.5f, %.5f", idx, len(nominatim_queue), facility.name, *coords)
+            await _save_coord(f.id, coords[0], coords[1])
+            geocoded += 1
+            logger.info("[%d/%d] ✓ %s → %.5f, %.5f", idx, len(rows), f.name, *coords)
         else:
-            counts["failed"] += 1
-            logger.warning("[Nominatim %d/%d] ✗ %s (%s)", idx, len(nominatim_queue), facility.name, facility.city)
+            failed += 1
+            logger.warning("[%d/%d] ✗ %s (%s, %s)", idx, len(rows), f.name, f.city, f.state)
 
-    counts["total"] = total
-    logger.info(
-        "Geocoding complete — precise: %d, city: %d, nominatim: %d, failed: %d / %d total",
-        counts["precise"], counts["city"], counts["nominatim"], counts["failed"], total,
-    )
-    return counts
+    logger.info("nominatim_pass: geocoded=%d failed=%d", geocoded, failed)
+    return {"geocoded": geocoded, "failed": failed, "total": len(rows)}
+
+
+async def geocode_facilities(force: bool = False) -> dict[str, int]:
+    """Run both phases (fast then Nominatim).  Used by standalone CLI."""
+    r1 = await fast_pass(force)
+    r2 = await nominatim_pass(force)
+    return {**r1, **r2}
 
 
 def main() -> None:

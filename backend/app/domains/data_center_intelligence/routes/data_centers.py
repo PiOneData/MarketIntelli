@@ -163,6 +163,18 @@ async def get_facility_stats(
     return FacilityStats(**stats)
 
 
+@router.post("/facilities/geocode")
+async def geocode_facilities() -> dict[str, int]:
+    """Trigger fast (city-centroid) geocoding for facilities missing coordinates.
+
+    Returns counts of resolved / skipped / total rows processed.
+    Safe to call repeatedly — skips rows that already have coordinates.
+    """
+    from app.scripts.geocode_facilities import fast_pass  # lazy import
+    result = await fast_pass()
+    return result
+
+
 @router.get("/facilities/{facility_id}", response_model=DataCenterFacilityRead)
 async def get_facility(
     facility_id: UUID,

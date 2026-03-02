@@ -54,3 +54,12 @@ export async function createFacility(
 export async function deleteFacility(id: string): Promise<void> {
   await apiClient.delete(`/data-centers/facilities/${id}`);
 }
+
+export async function geocodeFacilities(): Promise<{
+  resolved: number;
+  skipped: number;
+  total: number;
+}> {
+  const { data } = await apiClient.post("/data-centers/facilities/geocode");
+  return data;
+}
