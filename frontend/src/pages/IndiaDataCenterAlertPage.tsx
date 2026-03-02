@@ -27,6 +27,35 @@ const INDIAN_STATES = [
   "Telangana", "Uttar Pradesh", "West Bengal",
 ];
 
+/** Canonical state name map — normalises DB variants to a single name. */
+const STATE_NORMALIZE: Record<string, string> = {
+  "New Delhi": "Delhi",
+  "NCR": "Delhi",
+  "Delhi NCR": "Delhi",
+  "NCR Delhi": "Delhi",
+  "NCT of Delhi": "Delhi",
+  "National Capital Region": "Delhi",
+  "Telengana": "Telangana",
+  "Telanagana": "Telangana",
+  "Tamilnadu": "Tamil Nadu",
+  "TamilNadu": "Tamil Nadu",
+  "Orissa": "Odisha",
+  "Pondicherry": "Puducherry",
+  "Jammu and Kashmir": "Jammu & Kashmir",
+  "Jammu Kashmir": "Jammu & Kashmir",
+  "J&K": "Jammu & Kashmir",
+  "Uttaranchal": "Uttarakhand",
+  "Uttrakhand": "Uttarakhand",
+  "Andaman and Nicobar Islands": "Andaman & Nicobar Islands",
+  "Andaman & Nicobar": "Andaman & Nicobar Islands",
+  "Dadra and Nagar Haveli": "Dadra & Nagar Haveli",
+  "Daman and Diu": "Daman & Diu",
+};
+
+function normalizeState(state: string): string {
+  return STATE_NORMALIZE[state] ?? state;
+}
+
 const STATUS_OPTIONS = ["planned", "under_construction", "operational"];
 
 const STATUS_DISPLAY: Record<string, string> = {
@@ -88,11 +117,12 @@ function TopStatesAnalytics({ facilities }: { facilities: DataCenterFacility[] }
 
   const stateMap: Record<string, StateAnalyticsData> = {};
   for (const f of facilities) {
-    if (!stateMap[f.state]) stateMap[f.state] = { state: f.state, count: 0, powerMW: 0, powerCount: 0 };
-    stateMap[f.state].count += 1;
+    const state = normalizeState(f.state);
+    if (!stateMap[state]) stateMap[state] = { state, count: 0, powerMW: 0, powerCount: 0 };
+    stateMap[state].count += 1;
     if (f.power_capacity_mw && f.power_capacity_mw > 0) {
-      stateMap[f.state].powerMW += f.power_capacity_mw;
-      stateMap[f.state].powerCount += 1;
+      stateMap[state].powerMW += f.power_capacity_mw;
+      stateMap[state].powerCount += 1;
     }
   }
 
@@ -297,7 +327,7 @@ function IndiaDataCenterAlertPage() {
   // Apply client-side filters + sorting
   const filteredData = useMemo(() => {
     const data = facilities.filter((f) => {
-      if (filters.state && f.state !== filters.state) return false;
+      if (filters.state && normalizeState(f.state) !== filters.state) return false;
       if (filters.city && !f.city.toLowerCase().includes(filters.city.toLowerCase())) return false;
       if (filters.company && !f.company_name.toLowerCase().includes(filters.company.toLowerCase())) return false;
       return true;
@@ -317,7 +347,7 @@ function IndiaDataCenterAlertPage() {
   const mapData = useMemo(() => toMapFormat(facilities), [facilities]);
 
   const uniqueStates = useMemo(
-    () => [...new Set(facilities.map((f) => f.state))].sort(),
+    () => [...new Set(facilities.map((f) => normalizeState(f.state)))].sort(),
     [facilities]
   );
   const uniqueCities = useMemo(
