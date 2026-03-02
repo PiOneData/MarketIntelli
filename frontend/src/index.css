@@ -4996,6 +4996,373 @@ a.geo-layer-tab:hover {
 }
 
 /* ==========================================================================
+   ENERGY GAP PANEL
+   ========================================================================== */
+
+.egap-section {
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* Header */
+.egap-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-6);
+  cursor: pointer;
+  user-select: none;
+  background: linear-gradient(135deg, #0f766e08 0%, #14b8a606 100%);
+  border-bottom: 1px solid var(--color-gray-200);
+  transition: background 0.15s;
+}
+
+.egap-header:hover {
+  background: linear-gradient(135deg, #0f766e12 0%, #14b8a60a 100%);
+}
+
+.egap-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.egap-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--color-primary);
+  border-radius: var(--radius-md);
+  color: var(--color-white);
+  flex-shrink: 0;
+}
+
+.egap-title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-gray-900);
+  margin: 0 0 var(--space-1) 0;
+}
+
+.egap-subtitle {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-500);
+  margin: 0;
+}
+
+.egap-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.egap-badge {
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  background: #0f766e14;
+  border: 1px solid #0f766e22;
+  border-radius: var(--radius-full);
+  padding: var(--space-1) var(--space-3);
+  white-space: nowrap;
+}
+
+.egap-collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  cursor: pointer;
+  color: var(--color-gray-500);
+  transition: background 0.15s, color 0.15s;
+}
+
+.egap-collapse-btn:hover {
+  background: var(--color-gray-100);
+  color: var(--color-gray-700);
+}
+
+.egap-chevron {
+  transition: transform 0.2s ease;
+}
+
+.egap-chevron--collapsed {
+  transform: rotate(180deg);
+}
+
+/* Body */
+.egap-body {
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* Callout */
+.egap-callout {
+  display: flex;
+  gap: var(--space-3);
+  background: #0f766e0a;
+  border: 1px solid #0f766e20;
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5);
+  color: var(--color-gray-700);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+}
+
+.egap-callout svg {
+  color: var(--color-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.egap-callout p {
+  margin: 0;
+}
+
+/* KPI Cards */
+.egap-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+}
+
+.egap-kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-gray-50);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+}
+
+.egap-kpi-card--accent {
+  border-left: 3px solid var(--color-warning);
+}
+
+.egap-kpi-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.egap-kpi-value {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-gray-900);
+  font-variant-numeric: tabular-nums;
+}
+
+.egap-kpi-value--green {
+  color: var(--color-primary);
+}
+
+.egap-kpi-value--warning {
+  color: var(--color-warning);
+}
+
+.egap-kpi-period {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-400);
+}
+
+/* Charts Row */
+.egap-charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+}
+
+.egap-chart-card {
+  background: var(--color-gray-50);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5);
+}
+
+.egap-chart-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-gray-800);
+  margin: 0 0 var(--space-1) 0;
+}
+
+.egap-chart-desc {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-400);
+  margin: 0 0 var(--space-4) 0;
+}
+
+/* Tooltip */
+.egap-tooltip {
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  font-size: var(--font-size-xs);
+}
+
+.egap-tooltip-label {
+  font-weight: 600;
+  color: var(--color-gray-800);
+  margin: 0 0 var(--space-2) 0;
+}
+
+.egap-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-gray-600);
+  margin: 0 0 var(--space-1) 0;
+}
+
+.egap-tooltip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Table */
+.egap-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+}
+
+.egap-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+  min-width: 760px;
+}
+
+.egap-table thead {
+  background: var(--color-gray-50);
+}
+
+.egap-table th {
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--color-gray-200);
+  white-space: nowrap;
+}
+
+.egap-table td {
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-gray-700);
+  border-bottom: 1px solid var(--color-gray-100);
+  white-space: nowrap;
+}
+
+.egap-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.egap-table tbody tr:hover td {
+  background: var(--color-gray-50);
+}
+
+.egap-table .egap-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.egap-gap-cell {
+  color: var(--color-warning) !important;
+  font-weight: 600;
+}
+
+.egap-pct-cell {
+  color: var(--color-warning) !important;
+  font-weight: 600;
+}
+
+.egap-row--partial td {
+  opacity: 0.8;
+}
+
+.egap-partial-badge {
+  display: inline-block;
+  margin-left: var(--space-2);
+  font-size: 0.65rem;
+  background: var(--color-gray-200);
+  color: var(--color-gray-500);
+  border-radius: var(--radius-full);
+  padding: 1px 6px;
+  vertical-align: middle;
+  font-weight: 500;
+}
+
+/* Source line */
+.egap-source {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-400);
+  line-height: 1.5;
+}
+
+.egap-source svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.egap-source a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .egap-kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .egap-charts-row {
+    grid-template-columns: 1fr;
+  }
+
+  .egap-badge {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .egap-kpi-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .egap-header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .egap-body {
+    padding: var(--space-4);
+  }
+}
+
+/* ==========================================================================
    FINANCE & INVESTMENT INTELLIGENCE SECTION
    ========================================================================== */
 

@@ -11,6 +11,7 @@ import EnergyMixChart from "../components/dashboard/EnergyMixChart";
 import TopStatesChart from "../components/dashboard/TopStatesChart";
 import FinancialInsightsChart from "../components/dashboard/FinancialInsightsChart";
 import RECapacityIframe from "../components/dashboard/RECapacityIframe";
+import EnergyGapPanel from "../components/dashboard/EnergyGapPanel";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ErrorMessage from "../components/common/ErrorMessage";
 
@@ -170,6 +171,9 @@ function DashboardPage() {
           </p>
         </div>
       )}
+
+      {/* Energy Gap & Supply Position — PIB / Ministry of Power */}
+      <EnergyGapPanel />
 
       {/* RE Installed vs Potential Capacity — NITI ICED */}
       <RECapacityIframe />
