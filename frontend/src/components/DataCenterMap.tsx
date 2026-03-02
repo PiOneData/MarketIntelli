@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -38,6 +38,61 @@ interface PopupState {
   dc: DcGeoEntry;
 }
 
+interface CachedCoord {
+  lat: number;
+  lng: number;
+}
+
+const CACHE_KEY = "dc_geocode_cache_v2";
+const RATE_MS = 1150; // Nominatim: max 1 req/sec
+
+function cleanAddress(locationDetail: string, city: string, state: string): string {
+  // Strip "Postal: XXXXXX" and collapse whitespace
+  let addr = locationDetail
+    .replace(/,?\s*Postal:\s*\d+/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  // If city/state not already in the string, append them
+  if (!addr.toLowerCase().includes(city.toLowerCase())) addr += `, ${city}`;
+  if (!addr.toLowerCase().includes(state.toLowerCase())) addr += `, ${state}`;
+  return `${addr}, India`;
+}
+
+async function nominatimGeocode(
+  query: string,
+  signal: AbortSignal
+): Promise<CachedCoord | null> {
+  const url =
+    `https://nominatim.openstreetmap.org/search?` +
+    `q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=in&accept-language=en`;
+  try {
+    const res = await fetch(url, {
+      signal,
+      headers: { "User-Agent": "MarketIntelli-DataCenterMap/1.0" },
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as Array<{ lat: string; lon: string }>;
+    if (data[0]) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  } catch {
+    // AbortError or network error — skip silently
+  }
+  return null;
+}
+
+function loadCache(): Map<string, CachedCoord> {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (raw) return new Map(JSON.parse(raw) as [string, CachedCoord][]);
+  } catch { /* ignore */ }
+  return new Map();
+}
+
+function saveCache(cache: Map<string, CachedCoord>): void {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify([...cache.entries()]));
+  } catch { /* ignore */ }
+}
+
 function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
   const navigate = useNavigate();
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -45,44 +100,117 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
   const [loaded, setLoaded] = useState(false);
   const [popup, setPopup] = useState<PopupState | null>(null);
   const [search, setSearch] = useState("");
+  const [geocodedCoords, setGeocodedCoords] = useState<Map<string, CachedCoord>>(loadCache);
+  const [geocodeProgress, setGeocodeProgress] = useState<{ done: number; total: number } | null>(null);
 
-  // Build geo entries from API facilities that have coordinates
+  // Facilities that still need geocoding
+  const needsGeocode = useMemo(
+    () =>
+      dataCenters.filter(
+        (dc) =>
+          (dc.lat == null || dc.lng == null) &&
+          !geocodedCoords.has(dc.id) &&
+          !!(dc.locationDetail || dc.city)
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [dataCenters] // intentionally omit geocodedCoords to avoid re-triggering
+  );
+
+  // Progressive Nominatim geocoding
+  useEffect(() => {
+    if (needsGeocode.length === 0) return;
+    const controller = new AbortController();
+    let done = 0;
+    setGeocodeProgress({ done: 0, total: needsGeocode.length });
+
+    (async () => {
+      const cache = loadCache();
+      for (const dc of needsGeocode) {
+        if (controller.signal.aborted) break;
+        if (cache.has(dc.id)) { done++; continue; }
+
+        // Try full address first, then city+state fallback
+        const fullQuery = dc.locationDetail
+          ? cleanAddress(dc.locationDetail, dc.city, dc.state)
+          : `${dc.city}, ${dc.state}, India`;
+        const fallbackQuery = `${dc.city}, ${dc.state}, India`;
+
+        let coord = await nominatimGeocode(fullQuery, controller.signal);
+        if (!coord && fullQuery !== fallbackQuery) {
+          await new Promise((r) => setTimeout(r, RATE_MS));
+          if (controller.signal.aborted) break;
+          coord = await nominatimGeocode(fallbackQuery, controller.signal);
+        }
+
+        if (coord) {
+          cache.set(dc.id, coord);
+          saveCache(cache);
+          setGeocodedCoords(new Map(cache));
+        }
+
+        done++;
+        setGeocodeProgress({ done, total: needsGeocode.length });
+        await new Promise((r) => setTimeout(r, RATE_MS));
+      }
+      setGeocodeProgress(null);
+    })();
+
+    return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needsGeocode.length]);
+
+  // Merge direct lat/lng with geocoded coordinates
   const dcGeoList = useMemo<DcGeoEntry[]>(() => {
     return dataCenters
-      .filter((dc) => dc.lat != null && dc.lng != null)
-      .map((dc) => ({
-        id: dc.id,
-        name: dc.name || dc.company,
-        company: dc.company,
-        address: dc.locationDetail || dc.location,
-        tier: dc.tierLevel,
-        lat: dc.lat!,
-        lng: dc.lng!,
-        props: {
+      .map((dc): DcGeoEntry | null => {
+        let lat: number, lng: number;
+        if (dc.lat != null && dc.lng != null) {
+          lat = dc.lat;
+          lng = dc.lng;
+        } else {
+          const cached = geocodedCoords.get(dc.id);
+          if (!cached) return null;
+          lat = cached.lat;
+          lng = cached.lng;
+        }
+        return {
           id: dc.id,
           name: dc.name || dc.company,
           company: dc.company,
           address: dc.locationDetail || dc.location,
           tier: dc.tierLevel,
-          state: dc.state,
-          city: dc.city,
-          power_mw: dc.powerMW,
-          status: dc.status,
-          lat: dc.lat,
-          lng: dc.lng,
-        } as Record<string, unknown>,
-      }));
-  }, [dataCenters]);
+          lat,
+          lng,
+          props: {
+            id: dc.id,
+            name: dc.name || dc.company,
+            company: dc.company,
+            address: dc.locationDetail || dc.location,
+            tier: dc.tierLevel,
+            state: dc.state,
+            city: dc.city,
+            power_mw: dc.powerMW,
+            status: dc.status,
+            lat,
+            lng,
+          } as Record<string, unknown>,
+        };
+      })
+      .filter((e): e is DcGeoEntry => e !== null);
+  }, [dataCenters, geocodedCoords]);
 
-  // Build GeoJSON from facilities with coordinates
-  const facilitiesGeoJSON = useMemo<FeatureCollection>(() => ({
-    type: "FeatureCollection",
-    features: dcGeoList.map((dc) => ({
-      type: "Feature",
-      geometry: { type: "Point", coordinates: [dc.lng, dc.lat] },
-      properties: dc.props,
-    })),
-  }), [dcGeoList]);
+  // GeoJSON derived from dcGeoList
+  const facilitiesGeoJSON = useMemo<FeatureCollection>(
+    () => ({
+      type: "FeatureCollection",
+      features: dcGeoList.map((dc) => ({
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [dc.lng, dc.lat] },
+        properties: dc.props,
+      })),
+    }),
+    [dcGeoList]
+  );
 
   // Initialize MapLibre map once
   useEffect(() => {
@@ -116,7 +244,6 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
             minzoom: 0,
             maxzoom: 24,
           },
-          // Data center glow
           {
             id: "dc-glow",
             type: "circle",
@@ -128,7 +255,6 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
               "circle-blur": 0.5,
             },
           },
-          // Data center core marker
           {
             id: "dc-core",
             type: "circle",
@@ -141,7 +267,6 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
               "circle-opacity": 1,
             },
           },
-          // Data center label (visible at zoom 10+)
           {
             id: "dc-label",
             type: "symbol",
@@ -171,10 +296,8 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
     });
 
     map.current.addControl(new maplibregl.NavigationControl(), "bottom-right");
-
     map.current.on("load", () => { setLoaded(true); });
 
-    // DC click — show popup
     map.current.on("click", "dc-core", (e) => {
       e.preventDefault();
       const feature = e.features?.[0];
@@ -202,7 +325,6 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
     map.current.on("mouseleave", "dc-core", () => {
       if (map.current) map.current.getCanvas().style.cursor = "";
     });
-
     map.current.on("click", (e) => {
       const hits = map.current?.queryRenderedFeatures(e.point, { layers: ["dc-core"] });
       if (!hits?.length) setPopup(null);
@@ -211,20 +333,23 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
     return () => { /* map lives for component lifetime */ };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Push facilities GeoJSON into the map source whenever data or load state changes
+  // Push updated GeoJSON into the map source whenever it changes
   useEffect(() => {
     if (!loaded || !map.current) return;
     const source = map.current.getSource("datacenters-geojson") as maplibregl.GeoJSONSource | undefined;
     source?.setData(facilitiesGeoJSON);
   }, [loaded, facilitiesGeoJSON]);
 
-  const handleAccessReport = (dc: DcGeoEntry) => {
-    sessionStorage.setItem(
-      "pending_dc_assessment",
-      JSON.stringify({ props: dc.props, lat: dc.lat, lng: dc.lng }),
-    );
-    navigate("/geo-analytics/assessment");
-  };
+  const handleAccessReport = useCallback(
+    (dc: DcGeoEntry) => {
+      sessionStorage.setItem(
+        "pending_dc_assessment",
+        JSON.stringify({ props: dc.props, lat: dc.lat, lng: dc.lng })
+      );
+      navigate("/geo-analytics/assessment");
+    },
+    [navigate]
+  );
 
   const filteredDcs = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -234,13 +359,12 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
       .slice(0, 6);
   }, [search, dcGeoList]);
 
-  const flyToDc = (dc: DcGeoEntry) => {
+  const flyToDc = useCallback((dc: DcGeoEntry) => {
     map.current?.flyTo({ center: [dc.lng, dc.lat], zoom: 14, duration: 1200, essential: true });
     setPopup({ dc });
     setSearch("");
-  };
+  }, []);
 
-  // State summary from API data
   const stateSummary = useMemo(() => {
     const m = new Map<string, { count: number; power: number }>();
     dataCenters.forEach((dc) => {
@@ -254,30 +378,56 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
 
   return (
     <div className="dc-map-container">
-      {/* Map area */}
       <div className="dc-map-wrapper" style={{ position: "relative" }}>
         <div ref={mapContainer} style={{ width: "100%", height: "600px" }} />
 
         {/* Search bar */}
         <div style={{ position: "absolute", top: 12, left: 12, zIndex: 10, width: 280 }}>
           <div style={{ position: "relative" }}>
-            <Search size={14} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#64748b", pointerEvents: "none" }} />
+            <Search
+              size={14}
+              style={{
+                position: "absolute", left: 10, top: "50%",
+                transform: "translateY(-50%)", color: "#64748b", pointerEvents: "none",
+              }}
+            />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search data centers…"
-              style={{ width: "100%", paddingLeft: 32, paddingRight: 8, paddingTop: 8, paddingBottom: 8, border: "1px solid #cbd5e1", background: "white", fontSize: 13, boxShadow: "0 2px 8px rgba(0,0,0,0.15)", outline: "none", boxSizing: "border-box" }}
+              style={{
+                width: "100%", paddingLeft: 32, paddingRight: 8,
+                paddingTop: 8, paddingBottom: 8,
+                border: "1px solid #cbd5e1", background: "white",
+                fontSize: 13, boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                outline: "none", boxSizing: "border-box",
+              }}
             />
           </div>
           <AnimatePresence>
             {filteredDcs.length > 0 && (
-              <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                style={{ background: "white", boxShadow: "0 4px 16px rgba(0,0,0,0.15)", border: "1px solid #e2e8f0", marginTop: 4, overflow: "hidden" }}>
+              <motion.div
+                initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                style={{
+                  background: "white", boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+                  border: "1px solid #e2e8f0", marginTop: 4, overflow: "hidden",
+                }}
+              >
                 {filteredDcs.map((dc) => (
-                  <button key={`${dc.id ?? dc.name}-${dc.lng}`} onClick={() => flyToDc(dc)}
-                    style={{ width: "100%", textAlign: "left", padding: "8px 12px", border: "none", background: "none", cursor: "pointer", borderBottom: "1px solid #f1f5f9", display: "flex", flexDirection: "column", gap: 2 }}>
+                  <button
+                    key={`${dc.id ?? dc.name}-${dc.lng}`}
+                    onClick={() => flyToDc(dc)}
+                    style={{
+                      width: "100%", textAlign: "left", padding: "8px 12px",
+                      border: "none", background: "none", cursor: "pointer",
+                      borderBottom: "1px solid #f1f5f9",
+                      display: "flex", flexDirection: "column", gap: 2,
+                    }}
+                  >
                     <span style={{ fontSize: 13, fontWeight: 600, color: "#1e293b" }}>{dc.name}</span>
-                    <span style={{ fontSize: 11, color: "#64748b" }}>{dc.company}{dc.address ? ` · ${dc.address}` : ""}</span>
+                    <span style={{ fontSize: 11, color: "#64748b" }}>
+                      {dc.company}{dc.address ? ` · ${dc.address}` : ""}
+                    </span>
                   </button>
                 ))}
               </motion.div>
@@ -288,10 +438,15 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
         {/* DC popup */}
         <AnimatePresence>
           {popup && (
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-              style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -65%)", zIndex: 20, background: "white", boxShadow: "0 8px 32px rgba(0,0,0,0.22)", border: "1px solid #e2e8f0", minWidth: 280, maxWidth: 340, overflow: "hidden" }}>
-
-              {/* Satellite image */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+              style={{
+                position: "absolute", top: "50%", left: "50%",
+                transform: "translate(-50%, -65%)", zIndex: 20,
+                background: "white", boxShadow: "0 8px 32px rgba(0,0,0,0.22)",
+                border: "1px solid #e2e8f0", minWidth: 280, maxWidth: 340, overflow: "hidden",
+              }}
+            >
               <div style={{ position: "relative", height: "140px", background: "#0f172a", overflow: "hidden" }}>
                 <img
                   src={`https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/export?bbox=${popup.dc.lng - 0.008},${popup.dc.lat - 0.004},${popup.dc.lng + 0.008},${popup.dc.lat + 0.004}&bboxSR=4326&imageSR=4326&size=680,280&format=jpg&f=image`}
@@ -302,30 +457,35 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
                 <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
                   <div style={{ width: "10px", height: "10px", background: "#0f766e", border: "2px solid #fff", boxShadow: "0 0 8px rgba(15,118,110,0.8)" }} />
                 </div>
-                <button onClick={() => setPopup(null)}
-                  style={{ position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,0.5)", border: "none", cursor: "pointer", color: "#fff", padding: "4px", display: "flex" }}>
+                <button
+                  onClick={() => setPopup(null)}
+                  style={{ position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,0.5)", border: "none", cursor: "pointer", color: "#fff", padding: "4px", display: "flex" }}
+                >
                   <X size={13} />
                 </button>
               </div>
 
-              {/* Info */}
               <div style={{ padding: "14px 16px" }}>
                 <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#0f766e", marginBottom: 4, display: "flex", alignItems: "center", gap: 5 }}>
                   <Server size={11} /> Data Center
                 </div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: "#1e293b", marginBottom: 2, paddingRight: 20 }}>{popup.dc.name}</div>
                 <div style={{ fontSize: 12, color: "#64748b", marginBottom: 4 }}>{popup.dc.company}</div>
-                {popup.dc.address && <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 4 }}>{popup.dc.address}</div>}
+                {popup.dc.address && (
+                  <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 4 }}>{popup.dc.address}</div>
+                )}
                 {popup.dc.tier && (
                   <div style={{ display: "inline-block", fontSize: 10, fontWeight: 700, color: "#0f766e", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 7px", marginBottom: 4 }}>
-                    Tier {popup.dc.tier}
+                    {popup.dc.tier}
                   </div>
                 )}
                 <div style={{ fontSize: 10, color: "#94a3b8", marginBottom: 12, fontFamily: "monospace" }}>
                   {popup.dc.lat.toFixed(5)}°N · {popup.dc.lng.toFixed(5)}°E
                 </div>
-                <button onClick={() => handleAccessReport(popup.dc)}
-                  style={{ width: "100%", background: "linear-gradient(135deg, #0f766e, #0d9488)", color: "white", border: "none", padding: "9px 12px", cursor: "pointer", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                <button
+                  onClick={() => handleAccessReport(popup.dc)}
+                  style={{ width: "100%", background: "linear-gradient(135deg, #0f766e, #0d9488)", color: "white", border: "none", padding: "9px 12px", cursor: "pointer", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                >
                   <Server size={13} /> Access Intelligence Report
                 </button>
               </div>
@@ -333,11 +493,17 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
           )}
         </AnimatePresence>
 
-        {/* Legend */}
-        <div style={{ position: "absolute", bottom: 24, left: 12, zIndex: 10 }}>
+        {/* Legend + geocoding progress */}
+        <div style={{ position: "absolute", bottom: 24, left: 12, zIndex: 10, display: "flex", flexDirection: "column", gap: 4 }}>
+          {geocodeProgress && (
+            <div style={{ background: "rgba(15,118,110,0.9)", padding: "4px 10px", fontSize: 11, color: "white", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: "#fff", animation: "pulse 1s infinite" }} />
+              Geocoding {geocodeProgress.done}/{geocodeProgress.total} addresses…
+            </div>
+          )}
           <div style={{ background: "rgba(0,0,0,0.55)", padding: "4px 10px", display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "white", backdropFilter: "blur(4px)" }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#0f766e", display: "inline-block" }} />
-            Data Centers ({dcGeoList.length} mapped of {dataCenters.length})
+            Data Centers ({dcGeoList.length} of {dataCenters.length} mapped)
           </div>
         </div>
       </div>
@@ -349,6 +515,12 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
           <p>
             Click a <strong style={{ color: "#0f766e" }}>teal marker</strong> on the map or search above to view a data center&apos;s RE Intelligence Report.
           </p>
+          {geocodeProgress && (
+            <div style={{ margin: "8px 0", padding: "6px 10px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 6, fontSize: 11, color: "#166534" }}>
+              Geocoding addresses via OpenStreetMap ({geocodeProgress.done}/{geocodeProgress.total})…
+              Results are cached after first run.
+            </div>
+          )}
           <div className="dc-map-state-list" style={{ marginTop: 16 }}>
             <h4>By State ({stateSummary.length})</h4>
             {stateSummary.map(([state, info]) => (
