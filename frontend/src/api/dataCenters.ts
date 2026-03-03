@@ -63,3 +63,15 @@ export async function geocodeFacilities(): Promise<{
   const { data } = await apiClient.post("/data-centers/facilities/geocode");
   return data;
 }
+
+export async function geocodeAddresses(force = true): Promise<{
+  status: string;
+  message: string;
+}> {
+  const { data } = await apiClient.post(
+    "/data-centers/facilities/geocode-address",
+    null,
+    { params: { force } }
+  );
+  return data;
+}
