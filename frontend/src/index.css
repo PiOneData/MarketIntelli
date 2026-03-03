@@ -969,6 +969,581 @@ p {
 }
 
 /* ==========================================================================
+   11b. COMPONENT — DataCenterHeatMap
+   ========================================================================== */
+
+/* ── Root ──────────────────────────────────────────────────────────────────── */
+.dc-heatmap-root {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 0 16px;
+}
+
+/* ── Geocoding banner ──────────────────────────────────────────────────────── */
+.dc-heatmap-geocode-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid;
+}
+.dc-heatmap-geocode-banner--running {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1e40af;
+}
+.dc-heatmap-geocode-banner--done {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+.dc-heatmap-geocode-banner--error {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+.dc-heatmap-geocode-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.dc-heatmap-geocode-text {
+  flex: 1;
+}
+.dc-heatmap-spin {
+  animation: dc-spin 1.5s linear infinite;
+}
+@keyframes dc-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Layout ────────────────────────────────────────────────────────────────── */
+.dc-heatmap-layout {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+/* ── Sidebar ───────────────────────────────────────────────────────────────── */
+.dc-heatmap-sidebar {
+  width: 210px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+  display: flex;
+  flex-direction: column;
+  max-height: 680px;
+}
+.dc-heatmap-sidebar-header {
+  padding: 11px 13px 9px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.dc-heatmap-sidebar-title-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.dc-heatmap-sidebar-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.dc-heatmap-sidebar-badge {
+  font-size: 10px;
+  background: #e2e8f0;
+  color: #475569;
+  padding: 1px 6px;
+  border-radius: 99px;
+  font-weight: 700;
+}
+.dc-heatmap-reset-small {
+  font-size: 10px;
+  color: #0f766e;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0;
+}
+.dc-heatmap-reset-small:hover {
+  text-decoration: underline;
+}
+.dc-heatmap-sidebar-sublabel {
+  padding: 4px 13px;
+  font-size: 10px;
+  color: #94a3b8;
+  border-bottom: 1px solid #f1f5f9;
+  flex-shrink: 0;
+}
+
+/* ── State list ────────────────────────────────────────────────────────────── */
+.dc-heatmap-state-list {
+  overflow-y: auto;
+  flex: 1;
+}
+.dc-heatmap-state-list::-webkit-scrollbar {
+  width: 4px;
+}
+.dc-heatmap-state-list::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+.dc-heatmap-state-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 99px;
+}
+.dc-heatmap-state-btn {
+  width: 100%;
+  text-align: left;
+  padding: 8px 13px 6px;
+  border: none;
+  border-bottom: 1px solid #f8fafc;
+  background: white;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.dc-heatmap-state-btn:hover {
+  background: #f8fafc;
+}
+.dc-heatmap-state-btn--active {
+  background: #f0fdfa !important;
+  border-left: 3px solid #0f766e;
+  padding-left: 10px;
+}
+.dc-heatmap-state-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.dc-heatmap-state-name {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #1e293b;
+}
+.dc-heatmap-state-btn--active .dc-heatmap-state-name {
+  color: #0f766e;
+}
+.dc-heatmap-state-count {
+  font-size: 11px;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.dc-heatmap-state-bar-bg {
+  height: 3px;
+  background: #f1f5f9;
+  border-radius: 99px;
+  margin-bottom: 3px;
+  overflow: hidden;
+}
+.dc-heatmap-state-bar-fill {
+  height: 100%;
+  background: #0ea5e9;
+  border-radius: 99px;
+  transition: width 0.3s;
+}
+.dc-heatmap-state-btn--active .dc-heatmap-state-bar-fill {
+  background: #0f766e;
+}
+.dc-heatmap-state-mw {
+  font-size: 10px;
+  color: #94a3b8;
+}
+.dc-heatmap-state-empty {
+  padding: 24px 13px;
+  font-size: 12px;
+  color: #94a3b8;
+  text-align: center;
+}
+
+/* ── Sidebar footer ────────────────────────────────────────────────────────── */
+.dc-heatmap-sidebar-footer {
+  padding: 10px 13px;
+  border-top: 1px solid #f1f5f9;
+  background: #f8fafc;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.dc-heatmap-addr-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 10px;
+  background: #0f766e;
+  color: white;
+  border: none;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.dc-heatmap-addr-btn:hover {
+  background: #0d9488;
+}
+.dc-heatmap-addr-running {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #0369a1;
+  font-weight: 600;
+}
+.dc-heatmap-sidebar-coverage {
+  font-size: 10px;
+  color: #94a3b8;
+  text-align: center;
+}
+
+/* ── Map wrapper ───────────────────────────────────────────────────────────── */
+.dc-heatmap-map-wrap {
+  flex: 1;
+  position: relative;
+}
+.dc-heatmap-map-inner {
+  width: 100%;
+  height: 645px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.13);
+}
+
+/* ── Mode toggle (floating, top-right) ─────────────────────────────────────── */
+.dc-heatmap-mode-toggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  display: flex;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  padding: 3px;
+  gap: 2px;
+}
+.dc-heatmap-mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  background: transparent;
+  transition: all 0.15s;
+}
+.dc-heatmap-mode-btn:hover {
+  background: #f1f5f9;
+}
+.dc-heatmap-mode-btn--active {
+  background: #0f766e !important;
+  color: white;
+}
+
+/* ── Top-left controls ─────────────────────────────────────────────────────── */
+.dc-heatmap-top-left-controls {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dc-heatmap-india-btn {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 7px 13px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f766e;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: background 0.15s;
+}
+.dc-heatmap-india-btn:hover {
+  background: #f0fdfa;
+}
+.dc-heatmap-geocoding-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #bfdbfe;
+  border-radius: 99px;
+  padding: 5px 11px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #0369a1;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Legend (bottom-left) ──────────────────────────────────────────────────── */
+.dc-heatmap-legend {
+  position: absolute;
+  bottom: 38px;
+  left: 12px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.93);
+  padding: 7px 11px;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+  min-width: 130px;
+}
+.dc-heatmap-legend-title {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 5px;
+}
+.dc-heatmap-legend-bar {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  gap: 0;
+}
+.dc-heatmap-legend-swatch {
+  flex: 1;
+}
+.dc-heatmap-legend-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #94a3b8;
+  margin-top: 3px;
+}
+.dc-heatmap-legend-hint {
+  font-size: 9px;
+  color: #94a3b8;
+  margin-top: 5px;
+  line-height: 1.4;
+}
+
+/* ── Status key (bottom-right above nav) ───────────────────────────────────── */
+.dc-heatmap-status-key {
+  position: absolute;
+  bottom: 38px;
+  right: 54px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.93);
+  padding: 7px 11px;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+}
+.dc-heatmap-status-key-title {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 5px;
+}
+.dc-heatmap-status-key-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #475569;
+  margin-bottom: 3px;
+}
+.dc-heatmap-status-key-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ── Popup ─────────────────────────────────────────────────────────────────── */
+.dc-heatmap-popup {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -68%);
+  z-index: 20;
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.22), 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  width: 310px;
+  max-width: calc(100% - 32px);
+}
+.dc-heatmap-popup-thumb {
+  position: relative;
+  height: 128px;
+  background: #0f172a;
+  overflow: hidden;
+}
+.dc-heatmap-popup-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.82;
+}
+.dc-heatmap-popup-pin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.3);
+}
+.dc-heatmap-popup-status {
+  position: absolute;
+  bottom: 8px;
+  left: 10px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: capitalize;
+  color: white;
+  padding: 2px 9px;
+  border-radius: 99px;
+  letter-spacing: 0.04em;
+}
+.dc-heatmap-popup-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  cursor: pointer;
+  color: white;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.dc-heatmap-popup-close:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+.dc-heatmap-popup-body {
+  padding: 13px 15px 14px;
+}
+.dc-heatmap-popup-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #0f766e;
+  margin-bottom: 4px;
+}
+.dc-heatmap-popup-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 2px;
+  line-height: 1.3;
+}
+.dc-heatmap-popup-company {
+  font-size: 11.5px;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+.dc-heatmap-popup-address {
+  font-size: 10.5px;
+  color: #94a3b8;
+  line-height: 1.45;
+  margin-bottom: 8px;
+  font-style: italic;
+}
+.dc-heatmap-popup-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.dc-heatmap-chip {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 99px;
+  border: 1px solid;
+}
+.dc-heatmap-chip--power {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #0f766e;
+}
+.dc-heatmap-chip--tier {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #0369a1;
+}
+.dc-heatmap-popup-coords {
+  font-size: 9.5px;
+  color: #94a3b8;
+  font-family: monospace;
+  margin-bottom: 11px;
+}
+.dc-heatmap-popup-cta {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 12px;
+  background: linear-gradient(135deg, #0f766e, #0d9488);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  letter-spacing: 0.02em;
+}
+.dc-heatmap-popup-cta:hover {
+  opacity: 0.92;
+}
+
+/* ── Footer hint ───────────────────────────────────────────────────────────── */
+.dc-heatmap-footer-hint {
+  font-size: 11px;
+  color: #94a3b8;
+  text-align: center;
+  padding: 2px 0 4px;
+}
+
+/* ==========================================================================
    12. PAGE — India Data Center Registry
    ========================================================================== */
 

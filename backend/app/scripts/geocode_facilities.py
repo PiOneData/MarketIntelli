@@ -288,6 +288,82 @@ async def nominatim_pass(force: bool = False) -> dict[str, int]:
     return {"geocoded": geocoded, "failed": failed, "total": len(rows)}
 
 
+async def address_precise_pass(force: bool = True) -> dict[str, int]:
+    """
+    Phase 3 — Geocode using the full location_detail address via Nominatim.
+
+    Unlike fast_pass (city centroids) this gives building-level precision.
+    Unlike nominatim_pass (which skips rows that already have coordinates from
+    fast_pass), this function targets facilities that have a location_detail
+    address and upgrades their coordinates to precise building-level lat/lng.
+
+    Args:
+        force: If True (default), re-geocode even if coordinates already exist
+               (overrides city-centroid coords). Set False to skip rows that
+               already have any coordinate.
+
+    Returns:
+        Dict with geocoded / failed / skipped / total counts.
+    """
+    import re as _re
+
+    async with async_session_factory() as db:
+        stmt = select(DataCenterFacility).where(
+            DataCenterFacility.location_detail.isnot(None),
+            DataCenterFacility.location_detail != "",
+        )
+        if not force:
+            stmt = stmt.where(DataCenterFacility.latitude.is_(None))
+        rows = list((await db.execute(stmt)).scalars().all())
+
+    if not rows:
+        logger.info("address_precise_pass: nothing to geocode.")
+        return {"geocoded": 0, "failed": 0, "skipped": 0, "total": 0}
+
+    logger.info("address_precise_pass: geocoding %d facilities by address …", len(rows))
+    geocoded = 0
+    failed = 0
+    skipped = 0
+
+    for idx, f in enumerate(rows, 1):
+        loc = (f.location_detail or "").strip()
+        # Clean common noise that confuses Nominatim
+        loc = _re.sub(r",?\s*Postal:\s*\d+", "", loc, flags=_re.IGNORECASE).strip()
+        loc = _re.sub(r",\s*\d{6}\b", "", loc).strip()   # remove trailing 6-digit pincode
+
+        if not loc:
+            skipped += 1
+            continue
+
+        # Try progressively simpler queries until Nominatim returns a result
+        queries = [
+            f"{loc}, India",
+            f"{loc}, {f.city}, {f.state}, India",
+            f"{f.city}, {f.state}, India",
+        ]
+
+        coords = None
+        for query in queries:
+            coords = await asyncio.to_thread(_nominatim_search, query)
+            await asyncio.sleep(RATE_LIMIT_SECS)
+            if coords:
+                break
+
+        if coords:
+            await _save_coord(f.id, coords[0], coords[1])
+            geocoded += 1
+            logger.info("[%d/%d] ✓ %s → %.5f, %.5f", idx, len(rows), f.name, *coords)
+        else:
+            failed += 1
+            logger.warning("[%d/%d] ✗ %s (%s, %s)", idx, len(rows), f.name, f.city, f.state)
+
+    logger.info(
+        "address_precise_pass: geocoded=%d failed=%d skipped=%d total=%d",
+        geocoded, failed, skipped, len(rows),
+    )
+    return {"geocoded": geocoded, "failed": failed, "skipped": skipped, "total": len(rows)}
+
+
 async def geocode_facilities(force: bool = False) -> dict[str, int]:
     """Run both phases (fast then Nominatim).  Used by standalone CLI."""
     r1 = await fast_pass(force)

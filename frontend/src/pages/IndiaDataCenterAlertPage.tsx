@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import DataCenterMap from "../components/DataCenterMap";
+import DataCenterHeatMap from "../components/DataCenterHeatMap";
 import SubstationView from "../components/SubstationView";
 import { useFacilities, useFacilityStats } from "../hooks/useDataCenters";
 import { listFacilities, createFacility } from "../api/dataCenters";
@@ -474,7 +474,7 @@ function IndiaDataCenterAlertPage() {
 
       {/* Map View */}
       {activeTab === "map" && (
-        <DataCenterMap dataCenters={mapData} />
+        <DataCenterHeatMap dataCenters={mapData} />
       )}
 
       {/* Substation Map View */}

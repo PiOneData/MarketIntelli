@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
@@ -173,6 +173,33 @@ async def geocode_facilities() -> dict[str, int]:
     from app.scripts.geocode_facilities import fast_pass  # lazy import
     result = await fast_pass()
     return result
+
+
+@router.post("/facilities/geocode-address")
+async def geocode_facilities_by_address(
+    background_tasks: BackgroundTasks,
+    force: bool = True,
+) -> dict[str, str]:
+    """Trigger precise address-level geocoding using each facility's location_detail field.
+
+    Calls the Nominatim (OpenStreetMap) API with the full street address to obtain
+    building-level coordinates, replacing any existing city-centroid values when
+    force=True (default).
+
+    Rate-limited to 1 req / 1.2 s to comply with Nominatim's Terms of Service.
+    Runs as a background task so it returns immediately — large datasets may take
+    several minutes. Poll /facilities to observe coordinates being updated.
+    """
+    from app.scripts.geocode_facilities import address_precise_pass  # lazy import
+
+    background_tasks.add_task(address_precise_pass, force=force)
+    return {
+        "status": "started",
+        "message": (
+            "Address-level geocoding is running in the background via Nominatim. "
+            "Refresh facilities in a few minutes to see updated coordinates."
+        ),
+    }
 
 
 @router.get("/facilities/{facility_id}", response_model=DataCenterFacilityRead)
