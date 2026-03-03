@@ -94,6 +94,9 @@ function DataCenterHeatMap({ dataCenters }: { dataCenters: DCHeatMapEntry[] }) {
   const queryClient = useQueryClient();
   const mapRef      = useRef<HTMLDivElement>(null);
   const map         = useRef<maplibregl.Map | null>(null);
+  // Keep a ref to the latest GeoJSON so the map `load` handler can seed the
+  // source with real data even when the async load fires AFTER data arrives.
+  const geoJSONRef  = useRef<FeatureCollection>({ type: "FeatureCollection", features: [] });
   const [loaded, setLoaded]   = useState(false);
   const [mode, setMode]       = useState<HeatmapMode>("count");
   const [popup, setPopup]     = useState<DCPopup | null>(null);
@@ -144,6 +147,9 @@ function DataCenterHeatMap({ dataCenters }: { dataCenters: DCHeatMapEntry[] }) {
     }),
     [mappedDCs, maxMW]
   );
+
+  // Keep ref in sync so the map `load` handler always sees the latest data
+  geoJSONRef.current = facilitiesGeoJSON;
 
   // Per-state stats + bounding boxes (derived from mapped DCs only)
   const stateStats = useMemo(() => {
@@ -201,10 +207,10 @@ function DataCenterHeatMap({ dataCenters }: { dataCenters: DCHeatMapEntry[] }) {
     map.current.on("load", () => {
       if (!map.current) return;
 
-      // ── source ──────────────────────────────────────────────────────────────
+      // ── source — seed with latest data immediately (avoids empty flash) ──────
       map.current.addSource("dcs", {
         type: "geojson",
-        data: { type: "FeatureCollection", features: [] },
+        data: geoJSONRef.current,
       });
 
       // ── heatmap layer (visible at zoom ≤ 9) ─────────────────────────────────
@@ -214,53 +220,52 @@ function DataCenterHeatMap({ dataCenters }: { dataCenters: DCHeatMapEntry[] }) {
         source:  "dcs",
         maxzoom: 10,
         paint: {
-          "heatmap-weight":    ["get", "count_weight"],
+          // weight = 1 for count mode; updated via setPaintProperty for MW mode
+          "heatmap-weight":    1,
           "heatmap-intensity": [
-            "interpolate", ["linear"], ["zoom"], 3, 0.6, 9, 2.5,
+            "interpolate", ["linear"], ["zoom"], 3, 1, 9, 3,
           ],
           "heatmap-radius": [
-            "interpolate", ["linear"], ["zoom"], 3, 20, 7, 40, 9, 60,
+            "interpolate", ["linear"], ["zoom"], 3, 30, 6, 50, 9, 80,
           ],
           "heatmap-opacity": [
-            "interpolate", ["linear"], ["zoom"], 8, 0.92, 10, 0,
+            "interpolate", ["linear"], ["zoom"], 8, 0.85, 10, 0,
           ],
           "heatmap-color": COUNT_COLOR,
         },
       });
 
-      // ── glow ring (individual DC; visible at zoom ≥ 8) ──────────────────────
+      // ── glow ring — visible at ALL zooms, fades in from zoom 4 ──────────────
       map.current.addLayer({
         id:      "dc-glow",
         type:    "circle",
         source:  "dcs",
-        minzoom: 8,
         paint: {
           "circle-radius": [
-            "interpolate", ["linear"], ["zoom"], 8, 14, 14, 28,
+            "interpolate", ["linear"], ["zoom"], 4, 8, 8, 16, 14, 30,
           ],
           "circle-color":   STATUS_COLOR("#64748b"),
           "circle-opacity": [
-            "interpolate", ["linear"], ["zoom"], 8, 0, 9, 0.2,
+            "interpolate", ["linear"], ["zoom"], 4, 0, 5, 0.12, 9, 0.22,
           ],
           "circle-blur": 1.2,
         },
       });
 
-      // ── core circle (individual DC; visible at zoom ≥ 8) ────────────────────
+      // ── core circle — visible at ALL zooms, fully opaque from zoom 4 ─────────
       map.current.addLayer({
         id:      "dc-core",
         type:    "circle",
         source:  "dcs",
-        minzoom: 8,
         paint: {
           "circle-radius": [
-            "interpolate", ["linear"], ["zoom"], 8, 5, 14, 14,
+            "interpolate", ["linear"], ["zoom"], 4, 4, 8, 6, 14, 14,
           ],
           "circle-color":        STATUS_COLOR("#64748b"),
           "circle-stroke-color": "#ffffff",
-          "circle-stroke-width": 2,
+          "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 4, 1, 8, 2],
           "circle-opacity":      [
-            "interpolate", ["linear"], ["zoom"], 8, 0, 9, 1,
+            "interpolate", ["linear"], ["zoom"], 4, 0.85, 8, 0.9, 9, 1,
           ],
         },
       });
@@ -344,11 +349,12 @@ function DataCenterHeatMap({ dataCenters }: { dataCenters: DCHeatMapEntry[] }) {
   // ── update heatmap weight + color ramp when mode changes ────────────────────
   useEffect(() => {
     if (!loaded || !map.current) return;
-    const weightField = mode === "count" ? "count_weight" : "mw_weight";
-    map.current.setPaintProperty(
-      "dc-heat", "heatmap-weight",
-      ["get", weightField] as unknown as maplibregl.ExpressionSpecification
-    );
+    // For MW mode, weight by mw_weight (normalised 0-1); for count mode, equal weight of 1
+    const weight: maplibregl.ExpressionSpecification | number =
+      mode === "mw"
+        ? (["interpolate", ["linear"], ["get", "mw_weight"], 0, 0.05, 1, 1] as unknown as maplibregl.ExpressionSpecification)
+        : 1;
+    map.current.setPaintProperty("dc-heat", "heatmap-weight", weight);
     map.current.setPaintProperty("dc-heat", "heatmap-color",
       mode === "count" ? COUNT_COLOR : MW_COLOR
     );
