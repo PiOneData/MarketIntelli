@@ -11338,3 +11338,13 @@ a.geo-layer-tab:hover {
   padding-top: 12px;
   margin-top: 4px;
 }
+
+/* ── Energy Projection 2030 Panel ──────────────────────────────────── */
+.ep30-projected-row td {
+  background: #f0f9ff;
+  font-style: italic;
+}
+
+.ep30-projected-row:hover td {
+  background: #e0f2fe !important;
+}
