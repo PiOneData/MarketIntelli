@@ -101,9 +101,9 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
     setLayerVis((prev) => ({ ...prev, [group]: !prev[group] }));
   };
 
-  // Load DC list for search autocomplete
+  // Load DC list for search autocomplete (uses dc_final_merged.geojson via API)
   useEffect(() => {
-    fetch("/datacenters.geojson")
+    fetch("/api/v1/solar-assessment/data/datacenter-assessment")
       .then((res) => res.json())
       .then((data: GeoJSON.FeatureCollection) => {
         const list: DcEntry[] = data.features
@@ -113,13 +113,19 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
           )
           .map((f) => ({
             ...(f.properties as Record<string, unknown>),
-            name: String(f.properties?.["name"] ?? ""),
+            // dc_final_merged uses dc_name; legacy used name
+            name: String(f.properties?.["dc_name"] ?? f.properties?.["name"] ?? ""),
             company: String(f.properties?.["company"] ?? ""),
             address: f.properties?.["address"] as string | undefined,
-            tier: f.properties?.["tier"] as string | undefined,
-            id: f.properties?.["id"] as string | undefined,
-            lng: (f.geometry as GeoJSON.Point).coordinates[0] ?? 0,
-            lat: (f.geometry as GeoJSON.Point).coordinates[1] ?? 0,
+            // dc_final_merged uses tier_design; legacy used tier
+            tier: (f.properties?.["tier_design"] ?? f.properties?.["tier"]) as string | undefined,
+            // dc_final_merged uses slno as id; legacy used id string
+            id: f.properties?.["slno"] != null
+              ? String(f.properties?.["slno"])
+              : (f.properties?.["id"] as string | undefined),
+            // dc_final_merged uses lon; legacy used lng (also in geometry)
+            lng: (f.properties?.["lon"] ?? (f.geometry as GeoJSON.Point).coordinates[0] ?? 0) as number,
+            lat: (f.properties?.["lat"] ?? (f.geometry as GeoJSON.Point).coordinates[1] ?? 0) as number,
             props: f.properties as Record<string, unknown>,
           }));
         setDcList(list);
@@ -153,7 +159,7 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
           },
           datacenters: {
             type: "geojson",
-            data: "/datacenters.geojson",
+            data: "/api/v1/solar-assessment/data/datacenter-assessment",
           },
         },
         layers: [
@@ -299,17 +305,17 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               "text-field": [
                 "step",
                 ["zoom"],
-                ["get", "name"],
+                ["coalesce", ["get", "dc_name"], ["get", "name"], ""],
                 13,
                 [
                   "format",
-                  ["get", "name"], { "font-scale": 1.0 },
+                  ["coalesce", ["get", "dc_name"], ["get", "name"], ""], { "font-scale": 1.0 },
                   "\n", {},
                   [
                     "concat",
                     ["number-format", ["to-number", ["get", "lat"]], { "max-fraction-digits": 4 }],
                     "°N  ",
-                    ["number-format", ["to-number", ["get", "lng"]], { "max-fraction-digits": 4 }],
+                    ["number-format", ["to-number", ["coalesce", ["get", "lon"], ["get", "lng"]]], { "max-fraction-digits": 4 }],
                     "°E",
                   ],
                   { "font-scale": 0.78 },
@@ -682,11 +688,11 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
                       {String(dcPopup.dc["company"] ?? "")}
                     </div>
                     <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b", lineHeight: 1.2 }}>
-                      {String(dcPopup.dc["name"] ?? "")}
+                      {String(dcPopup.dc["dc_name"] ?? dcPopup.dc["name"] ?? "")}
                     </h3>
                   </div>
                   <div style={{ padding: "4px 10px", border: "1px solid #e2e8f0", fontSize: "10px", fontWeight: 700, color: "#475569", textTransform: "uppercase" }}>
-                    {String(dcPopup.dc["tier"] ?? "Tier III")}
+                    {String(dcPopup.dc["tier_design"] ?? dcPopup.dc["tier"] ?? "")}
                   </div>
                 </div>
 

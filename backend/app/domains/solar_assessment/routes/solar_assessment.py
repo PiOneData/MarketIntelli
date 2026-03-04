@@ -33,6 +33,7 @@ BASE_DIR = Path(__file__).resolve().parents[4]
 DATA_DIR = BASE_DIR / "data"
 EE_KEY_PATH = DATA_DIR / "ee-dharanv2006-02c1bec957ad.json"
 WIND_SOLAR_GEOJSON = DATA_DIR / "wind_solar_data.geojson"
+DC_MERGED_GEOJSON  = BASE_DIR / "dc_final_merged.geojson"
 
 # ── Lazy singletons ─────────────────────────────────────────────────────────
 _assessment_service = None
@@ -215,6 +216,18 @@ async def serve_wind_solar_geojson():
         path=str(WIND_SOLAR_GEOJSON),
         media_type="application/geo+json",
         headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
+@router.get("/data/datacenter-assessment")
+async def serve_datacenter_assessment_geojson():
+    """Serve dc_final_merged.geojson — 50 India DCs with GEE-sourced RE potential scores."""
+    if not DC_MERGED_GEOJSON.exists():
+        raise HTTPException(status_code=404, detail="dc_final_merged.geojson not found")
+    return FileResponse(
+        path=str(DC_MERGED_GEOJSON),
+        media_type="application/geo+json",
+        headers={"Cache-Control": "public, max-age=3600"},
     )
 
 
