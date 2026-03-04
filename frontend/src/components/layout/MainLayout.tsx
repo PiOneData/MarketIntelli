@@ -54,6 +54,10 @@ const navItems: NavItem[] = [
       { id: "finance-intelligence", label: "Finance & Investment Intelligence", path: "/finance/finance-intelligence" },
       { id: "investment-finance", label: "Investment Guidelines", path: "/finance/investment-finance" },
       { id: "power-trading", label: "Power Trading", path: "/finance/power-trading" },
+      { id: "energy-demand", label: "Energy Demand Sizing", path: "/finance/energy-demand" },
+      { id: "infra-pipeline", label: "Infrastructure Pipeline", path: "/finance/infra-pipeline" },
+      { id: "credit-environment", label: "Credit & Financing", path: "/finance/credit-environment" },
+      { id: "fdi-trends", label: "FDI & Foreign Capital", path: "/finance/fdi-trends" },
     ],
   },
   {

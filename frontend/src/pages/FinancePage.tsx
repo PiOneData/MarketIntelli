@@ -3,6 +3,10 @@ import { useParams } from "react-router-dom";
 import { useInvestmentGuidelines } from "../hooks/usePowerMarket";
 import { useAlerts, useNews } from "../hooks/useAlerts";
 import PowerTradingPage from "./PowerTradingPage";
+import RBIEnergyDemandPage from "./RBIEnergyDemandPage";
+import RBIInfraPipelinePage from "./RBIInfraPipelinePage";
+import RBICreditEnvironmentPage from "./RBICreditEnvironmentPage";
+import RBIFDITrendsPage from "./RBIFDITrendsPage";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ErrorMessage from "../components/common/ErrorMessage";
 import apiClient from "../api/client";
@@ -836,9 +840,11 @@ function FinancePage() {
   const { section } = useParams<{ section: string }>();
   const activeSection = section || "finance-intelligence";
 
-  if (activeSection === "power-trading") {
-    return <PowerTradingPage />;
-  }
+  if (activeSection === "power-trading") return <PowerTradingPage />;
+  if (activeSection === "energy-demand") return <RBIEnergyDemandPage />;
+  if (activeSection === "infra-pipeline") return <RBIInfraPipelinePage />;
+  if (activeSection === "credit-environment") return <RBICreditEnvironmentPage />;
+  if (activeSection === "fdi-trends") return <RBIFDITrendsPage />;
 
   return (
     <div className="pm-page">
