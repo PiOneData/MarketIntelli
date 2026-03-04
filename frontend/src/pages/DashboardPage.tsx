@@ -12,6 +12,7 @@ import TopStatesChart from "../components/dashboard/TopStatesChart";
 import FinancialInsightsChart from "../components/dashboard/FinancialInsightsChart";
 import RECapacityIframe from "../components/dashboard/RECapacityIframe";
 import EnergyGapPanel from "../components/dashboard/EnergyGapPanel";
+import EnergyProjection2030Panel from "../components/dashboard/EnergyProjection2030Panel";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ErrorMessage from "../components/common/ErrorMessage";
 
@@ -174,6 +175,9 @@ function DashboardPage() {
 
       {/* Energy Gap & Supply Position — PIB / Ministry of Power */}
       <EnergyGapPanel />
+
+      {/* Energy Projection to 2030 — NITI Aayog / CEA NEP */}
+      <EnergyProjection2030Panel />
 
       {/* RE Installed vs Potential Capacity — NITI ICED */}
       <RECapacityIframe />

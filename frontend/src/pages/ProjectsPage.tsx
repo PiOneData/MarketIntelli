@@ -5,7 +5,8 @@ import { useCompanies, useFacilityStats } from "../hooks/useDataCenters";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ErrorMessage from "../components/common/ErrorMessage";
 import apiClient from "../api/client";
-import type { DataCenterCompany } from "../types/dataCenters";
+import { listFacilities } from "../api/dataCenters";
+import type { DataCenterCompany, DataCenterFacility } from "../types/dataCenters";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                               */
@@ -27,41 +28,6 @@ interface DcStock {
 interface DcStockResponse {
   stocks: DcStock[];
   fetched_at: string;
-}
-
-interface DcCompanyInfo {
-  company: string;
-  dcCount: number;
-  states: string[];
-  names: string[];
-}
-
-/* ------------------------------------------------------------------ */
-/*  DC Company Aggregator (from public GeoJSON)                        */
-/* ------------------------------------------------------------------ */
-
-async function fetchDcCompanyInfo(): Promise<Record<string, DcCompanyInfo>> {
-  try {
-    const res = await fetch("/datacenters.geojson");
-    const json = (await res.json()) as {
-      features: Array<{ properties: Record<string, unknown> }>;
-    };
-    const map: Record<string, DcCompanyInfo> = {};
-    for (const feat of json.features) {
-      const p = feat.properties;
-      const company = (p["company"] as string) || "";
-      if (!company) continue;
-      const state = (p["state"] as string) || "";
-      const name  = (p["name"]  as string) || "";
-      if (!map[company]) map[company] = { company, dcCount: 0, states: [], names: [] };
-      map[company].dcCount += 1;
-      if (state && !map[company].states.includes(state)) map[company].states.push(state);
-      if (name  && !map[company].names.includes(name))  map[company].names.push(name);
-    }
-    return map;
-  } catch {
-    return {};
-  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -138,12 +104,25 @@ type ModalTab = "overview" | "specs" | "ecosystem" | "location" | "stock";
 interface CompanyProfileModalProps {
   company: DataCenterCompany;
   stock: DcStock | undefined;
-  dcInfo: DcCompanyInfo | undefined;
   onClose: () => void;
 }
 
-function CompanyProfileModal({ company, stock, dcInfo, onClose }: CompanyProfileModalProps) {
+function CompanyProfileModal({ company, stock, onClose }: CompanyProfileModalProps) {
   const [tab, setTab] = useState<ModalTab>("overview");
+  const [facilities, setFacilities] = useState<DataCenterFacility[]>([]);
+  const [facilitiesLoading, setFacilitiesLoading] = useState(true);
+
+  useEffect(() => {
+    setFacilitiesLoading(true);
+    setFacilities([]);
+    listFacilities({ company_id: company.id, page_size: 100 })
+      .then((data) => { setFacilities(data); })
+      .catch(() => { setFacilities([]); })
+      .finally(() => { setFacilitiesLoading(false); });
+  }, [company.id]);
+
+  // Unique states derived from DB facilities, sorted alphabetically
+  const facilityStates = [...new Set(facilities.map((f) => f.state))].sort();
 
   const hasStock = !!(stock && !stock.error && stock.price != null);
   const isPos = (stock?.change_pct ?? 0) > 0;
@@ -293,30 +272,56 @@ function CompanyProfileModal({ company, stock, dcInfo, onClose }: CompanyProfile
                   </a>
                 </div>
               )}
-              {dcInfo && dcInfo.names.length > 0 && (
+              {facilitiesLoading ? (
+                <div style={{ padding: "12px 0", fontSize: "13px", color: "#9ca3af" }}>
+                  Loading facilities…
+                </div>
+              ) : facilities.length > 0 ? (
                 <div>
                   <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    Facilities in Database
+                    Facilities in Database ({facilities.length})
                   </div>
-                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "4px" }}>
-                    {dcInfo.names.map((n) => (
-                      <li key={n} style={{
-                        padding: "8px 12px", border: "1px solid #e5e7eb",
+                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {facilities.map((f) => (
+                      <li key={f.id} style={{
+                        padding: "10px 12px", border: "1px solid #e5e7eb",
                         fontSize: "13px", color: "#374151", background: "#fff",
-                        display: "flex", alignItems: "center", gap: "8px",
+                        display: "flex", alignItems: "flex-start", gap: "10px",
                       }}>
-                        <span style={{ color: "#9ca3af" }}>▪</span>
-                        {n}
+                        <span style={{ color: "#9ca3af", paddingTop: "1px" }}>▪</span>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, color: "#111827" }}>{f.name}</div>
+                          <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "2px", display: "flex", flexWrap: "wrap", gap: "4px", alignItems: "center" }}>
+                            <span>{f.city}, {f.state}</span>
+                            {f.tier_level && (
+                              <span style={{ padding: "1px 6px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "3px", fontSize: "10px", color: "#15803d", fontWeight: 600 }}>
+                                {f.tier_level}
+                              </span>
+                            )}
+                            {f.power_capacity_mw > 0 && (
+                              <span style={{ fontSize: "11px", color: "#64748b" }}>· {f.power_capacity_mw} MW</span>
+                            )}
+                          </div>
+                          <span style={{
+                            display: "inline-block", marginTop: "4px",
+                            padding: "1px 6px", borderRadius: "3px", fontSize: "10px", fontWeight: 600,
+                            background: f.status === "operational" ? "#f0fdf4" : f.status === "planned" ? "#fefce8" : "#f0f9ff",
+                            color: f.status === "operational" ? "#15803d" : f.status === "planned" ? "#854d0e" : "#1e40af",
+                            border: `1px solid ${f.status === "operational" ? "#bbf7d0" : f.status === "planned" ? "#fde68a" : "#bfdbfe"}`,
+                          }}>
+                            {f.status.replace(/_/g, " ")}
+                          </span>
+                        </div>
                       </li>
                     ))}
-                    {dcInfo.states.length > 0 && (
+                    {facilityStates.length > 0 && (
                       <li style={{ padding: "8px 12px", fontSize: "12px", color: "#6b7280", fontStyle: "italic" }}>
-                        States: {dcInfo.states.join(", ")}
+                        States: {facilityStates.join(", ")}
                       </li>
                     )}
                   </ul>
                 </div>
-              )}
+              ) : null}
             </div>
           )}
 
@@ -348,27 +353,71 @@ function CompanyProfileModal({ company, stock, dcInfo, onClose }: CompanyProfile
               <p style={{ fontSize: "13px", color: "#6b7280", margin: 0 }}>
                 Ecosystem information for {company.name} — related subsidiaries, partnerships, and data center facilities.
               </p>
-              {dcInfo && (
-                <div>
-                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    Geographic Presence
-                  </div>
-                  {dcInfo.states.length > 0 ? (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                      {dcInfo.states.map((s) => (
+
+              {/* Geographic Presence — from DB */}
+              <div>
+                <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Geographic Presence
+                  {facilityStates.length > 0 && (
+                    <span style={{ marginLeft: "6px", fontWeight: 400, textTransform: "none", color: "#9ca3af", fontSize: "10px" }}>
+                      ({facilityStates.length} {facilityStates.length === 1 ? "state" : "states"})
+                    </span>
+                  )}
+                </div>
+                {facilitiesLoading ? (
+                  <div style={{ fontSize: "13px", color: "#9ca3af" }}>Loading…</div>
+                ) : facilityStates.length > 0 ? (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                    {facilityStates.map((s) => {
+                      const count = facilities.filter((f) => f.state === s).length;
+                      return (
                         <span key={s} style={{
                           padding: "4px 10px", border: "1px solid #d1d5db",
                           fontSize: "12px", color: "#374151", background: "#f9fafb",
+                          display: "flex", alignItems: "center", gap: "5px",
                         }}>
                           {s}
+                          <span style={{ background: "#0f766e", color: "#fff", borderRadius: "9999px", fontSize: "9px", padding: "0px 5px", fontWeight: 700 }}>
+                            {count}
+                          </span>
                         </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <p style={{ fontSize: "13px", color: "#9ca3af", margin: 0 }}>No state data available.</p>
-                  )}
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p style={{ fontSize: "13px", color: "#9ca3af", margin: 0 }}>No state data available.</p>
+                )}
+              </div>
+
+              {/* Facility overview by state */}
+              {!facilitiesLoading && facilities.length > 0 && (
+                <div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Facility Breakdown by State
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    {facilityStates.map((state) => {
+                      const stateFacilities = facilities.filter((f) => f.state === state);
+                      return (
+                        <div key={state} style={{ padding: "10px 14px", border: "1px solid #e5e7eb", background: "#f9fafb" }}>
+                          <div style={{ fontWeight: 600, fontSize: "13px", color: "#111827", marginBottom: "4px" }}>
+                            {state} <span style={{ fontWeight: 400, color: "#9ca3af", fontSize: "12px" }}>({stateFacilities.length} {stateFacilities.length === 1 ? "facility" : "facilities"})</span>
+                          </div>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                            {stateFacilities.map((f) => (
+                              <span key={f.id} style={{ fontSize: "11px", color: "#374151", padding: "2px 8px", border: "1px solid #e5e7eb", background: "#fff" }}>
+                                {f.name}
+                                {f.tier_level && <span style={{ color: "#0f766e", marginLeft: "4px" }}>({f.tier_level})</span>}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
+
               {company.parent_company && (
                 <div>
                   <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
@@ -393,13 +442,13 @@ function CompanyProfileModal({ company, stock, dcInfo, onClose }: CompanyProfile
                   {company.headquarters ?? "Not specified"}
                 </div>
               </div>
-              {dcInfo && dcInfo.states.length > 0 && (
+              {facilityStates.length > 0 && (
                 <div>
                   <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     States with Data Centers
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                    {dcInfo.states.map((s) => (
+                    {facilityStates.map((s) => (
                       <span key={s} style={{
                         padding: "6px 12px", border: "1px solid #d1d5db",
                         fontSize: "13px", color: "#111827", background: "#fff", fontWeight: 500,
@@ -410,23 +459,33 @@ function CompanyProfileModal({ company, stock, dcInfo, onClose }: CompanyProfile
                   </div>
                 </div>
               )}
-              {dcInfo && dcInfo.names.length > 0 && (
+              {facilitiesLoading ? (
+                <div style={{ fontSize: "13px", color: "#9ca3af", padding: "8px 0" }}>
+                  Loading facility locations…
+                </div>
+              ) : facilities.length > 0 ? (
                 <div>
                   <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    Facility Locations
+                    Facility Locations ({facilities.length})
                   </div>
-                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "4px" }}>
-                    {dcInfo.names.map((n) => (
-                      <li key={n} style={{
-                        padding: "8px 12px", border: "1px solid #e5e7eb",
-                        fontSize: "13px", color: "#374151", background: "#fff",
+                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {facilities.map((f) => (
+                      <li key={f.id} style={{
+                        padding: "10px 14px", border: "1px solid #e5e7eb",
+                        background: "#fff", display: "flex", flexDirection: "column", gap: "4px",
                       }}>
-                        {n}
+                        <div style={{ fontWeight: 600, fontSize: "13px", color: "#111827" }}>{f.name}</div>
+                        <div style={{ fontSize: "12px", color: "#6b7280", display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                          <span>📍 {f.city}, {f.state}</span>
+                          {f.tier_level && <span style={{ color: "#0f766e", fontWeight: 500 }}>{f.tier_level}</span>}
+                          {f.power_capacity_mw > 0 && <span>⚡ {f.power_capacity_mw} MW</span>}
+                          {f.size_sqft > 0 && <span>📐 {f.size_sqft.toLocaleString("en-IN")} sq.ft</span>}
+                        </div>
                       </li>
                     ))}
                   </ul>
                 </div>
-              )}
+              ) : null}
             </div>
           )}
 
@@ -529,13 +588,12 @@ function CompanyProfileModal({ company, stock, dcInfo, onClose }: CompanyProfile
 /* ------------------------------------------------------------------ */
 
 function DeveloperProfilesSection() {
-  const [stocks, setStocks]           = useState<DcStock[]>([]);
-  const [dcInfo, setDcInfo]           = useState<Record<string, DcCompanyInfo>>({});
+  const [stocks, setStocks]             = useState<DcStock[]>([]);
   const [stockLoading, setStockLoading] = useState(true);
-  const [fetchError, setFetchError]   = useState<string | null>(null);
-  const [fetchedAt, setFetchedAt]     = useState<string | null>(null);
-  const [viewMode, setViewMode]       = useState<"grid" | "list">("grid");
-  const [search, setSearch]           = useState("");
+  const [fetchError, setFetchError]     = useState<string | null>(null);
+  const [fetchedAt, setFetchedAt]       = useState<string | null>(null);
+  const [viewMode, setViewMode]         = useState<"grid" | "list">("grid");
+  const [search, setSearch]             = useState("");
   const [selectedCompany, setSelectedCompany] = useState<DataCenterCompany | null>(null);
 
   const { data: companiesData, isLoading: companiesLoading } = useCompanies({ page_size: 500 });
@@ -545,13 +603,9 @@ function DeveloperProfilesSection() {
     setStockLoading(true);
     setFetchError(null);
     try {
-      const [stockResp, dcInfoMap] = await Promise.all([
-        apiClient.get<DcStockResponse>("/projects/dc-stocks"),
-        fetchDcCompanyInfo(),
-      ]);
+      const stockResp = await apiClient.get<DcStockResponse>("/projects/dc-stocks");
       setStocks(stockResp.data.stocks);
       setFetchedAt(stockResp.data.fetched_at);
-      setDcInfo(dcInfoMap);
     } catch (err) {
       setFetchError(err instanceof Error ? err.message : "Failed to load stock data");
     } finally {
@@ -870,7 +924,6 @@ function DeveloperProfilesSection() {
         <CompanyProfileModal
           company={selectedCompany}
           stock={stockByCompany[selectedCompany.name]}
-          dcInfo={dcInfo[selectedCompany.name]}
           onClose={() => setSelectedCompany(null)}
         />
       )}
