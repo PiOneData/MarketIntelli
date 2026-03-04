@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import { useProjects } from "../hooks/useProjects";
 import { useCompanies, useFacilityStats } from "../hooks/useDataCenters";
@@ -96,6 +96,185 @@ function ExchangeBadge({ exchange }: { exchange: string }) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  RX² Assessment Panel                                               */
+/* ------------------------------------------------------------------ */
+
+// Local types for dc_final_merged.geojson features (avoids GeoJSON namespace conflicts)
+interface DcGeoFeature {
+  type: "Feature";
+  geometry: { type: "Point"; coordinates: number[] };
+  properties: Record<string, unknown>;
+}
+interface DcGeoCollection {
+  type: "FeatureCollection";
+  features: DcGeoFeature[];
+}
+
+function ratingColor(rating: string): { bg: string; color: string; border: string } {
+  const r = (rating ?? "").toUpperCase();
+  if (r.includes("PREMIUM")) return { bg: "#f0fdf4", color: "#15803d", border: "#bbf7d0" };
+  if (r.includes("OPTIMAL"))  return { bg: "#f0fdfa", color: "#0f766e", border: "#99f6e4" };
+  if (r.includes("VIABLE"))   return { bg: "#eff6ff", color: "#1d4ed8", border: "#bfdbfe" };
+  return { bg: "#fefce8", color: "#854d0e", border: "#fde68a" };
+}
+
+function scoreBadge(score: number, rating: string) {
+  const c = ratingColor(rating);
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: "5px",
+      padding: "3px 10px", border: `1px solid ${c.border}`,
+      background: c.bg, borderRadius: "3px",
+      fontSize: "12px", fontWeight: 700, color: c.color,
+    }}>
+      {score.toFixed(1)} — {rating}
+    </span>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string | number | null | undefined }) {
+  if (value == null || value === "" || value === 0) return null;
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "5px 0", borderBottom: "1px solid #f3f4f6", gap: "12px" }}>
+      <span style={{ fontSize: "11px", color: "#6b7280", flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: "12px", fontWeight: 600, color: "#111827", textAlign: "right" }}>{String(value)}</span>
+    </div>
+  );
+}
+
+function SectionHeader({ children }: { children: ReactNode }) {
+  return (
+    <div style={{ fontSize: "10px", fontWeight: 700, color: "#0f766e", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: "14px", marginBottom: "6px", paddingBottom: "4px", borderBottom: "1px solid #e5e7eb" }}>
+      {children}
+    </div>
+  );
+}
+
+function RxAssessmentPanel({ feature }: { feature: DcGeoFeature }) {
+  const p = feature.properties;
+  type R = Record<string, unknown>;
+  const sol = (p.solar        ?? {}) as R;
+  const wnd = (p.wind         ?? {}) as R;
+  const wat = (p.water        ?? {}) as R;
+  const loc = (p.local_analysis ?? {}) as R;
+  const ph  = (loc.powerhouse  ?? {}) as R;
+  const gw  = (loc.groundwater ?? {}) as R;
+
+  const overallScore  = (p.overall_score  as number ?? 0);
+  const overallRating = (p.overall_rating as string ?? "");
+  const solarScore    = (p.solar_score    as number ?? 0);
+  const solarRating   = (p.solar_rating   as string ?? "");
+  const windScore     = (p.wind_score     as number ?? 0);
+  const windRating    = (p.wind_rating    as string ?? "");
+  const waterScore    = (p.water_score    as number ?? 0);
+  const waterRating   = (p.water_rating   as string ?? "");
+
+  // Monthly solar — pick best/worst labels
+  const monthlyVals = (sol.monthly as number[] ?? []);
+  const monthNames  = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const bestIdx     = monthlyVals.length ? monthlyVals.reduce((bi, v, i, a) => v > (a[bi]??0) ? i : bi, 0) : -1;
+  const worstIdx    = monthlyVals.length ? monthlyVals.reduce((bi, v, i, a) => v < (a[bi]??Infinity) ? i : bi, 0) : -1;
+
+  // Wind profile at 100m
+  const rawProfile = (wnd.profile ?? {}) as R;
+  const ws100 = ((rawProfile["100"] as R)?.ws as number ?? 0);
+
+  return (
+    <div style={{
+      marginTop: "8px", padding: "14px 16px",
+      background: "#f8fafc", border: "1px solid #bae6fd",
+      borderLeft: "3px solid #0f766e",
+      fontSize: "12px",
+    }}>
+      {/* Header: DC name + overall score */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px", gap: "8px", flexWrap: "wrap" }}>
+        <div>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: "#111827" }}>
+            {String(p.dc_name ?? p.name ?? "")}
+          </div>
+          <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>
+            {String(p.city ?? "")}{p.state ? `, ${String(p.state)}` : ""}
+          </div>
+        </div>
+        <div>{scoreBadge(overallScore, overallRating)}</div>
+      </div>
+
+      {/* Score strip */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px", marginBottom: "10px" }}>
+        {[
+          { label: "Solar", score: solarScore, rating: solarRating, icon: "☀" },
+          { label: "Wind",  score: windScore,  rating: windRating,  icon: "💨" },
+          { label: "Water", score: waterScore, rating: waterRating, icon: "💧" },
+        ].map(({ label, score, rating, icon }) => {
+          const c = ratingColor(rating);
+          return (
+            <div key={label} style={{ padding: "8px 10px", background: c.bg, border: `1px solid ${c.border}`, textAlign: "center" }}>
+              <div style={{ fontSize: "14px" }}>{icon}</div>
+              <div style={{ fontSize: "16px", fontWeight: 700, color: c.color }}>{score.toFixed(0)}</div>
+              <div style={{ fontSize: "9px", fontWeight: 600, color: c.color, textTransform: "uppercase" }}>{label}</div>
+              <div style={{ fontSize: "9px", color: c.color, marginTop: "1px" }}>{rating}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Solar */}
+      <SectionHeader>☀ Solar Resource</SectionHeader>
+      <InfoRow label="GHI Annual"       value={sol.ghi_annual  != null ? `${(sol.ghi_annual as number).toFixed(0)} kWh/m²/yr` : null} />
+      <InfoRow label="PV Output Annual" value={sol.pvout_annual != null ? `${(sol.pvout_annual as number).toFixed(0)} kWh/kWp/yr` : null} />
+      <InfoRow label="Optimal Tilt"     value={sol.optimal_tilt != null ? `${(sol.optimal_tilt as number).toFixed(1)}°` : null} />
+      <InfoRow label="Cloud Cover"      value={sol.cloud_pct    != null ? `${(sol.cloud_pct as number).toFixed(1)}%  ${String(sol.cloud_label ?? "")}` : null} />
+      <InfoRow label="Aerosol (AOD)"    value={sol.aod          != null ? `${(sol.aod as number).toFixed(3)}  ${String(sol.aod_label ?? "")}` : null} />
+      <InfoRow label="ERA5 Agreement"   value={sol.era5_agreement != null ? `${(sol.era5_agreement as number).toFixed(1)}%` : null} />
+      {bestIdx >= 0  && <InfoRow label="Best Month"  value={`${monthNames[bestIdx] ?? ""}  (${(monthlyVals[bestIdx] ?? 0).toFixed(2)} kWh/m²/d)`} />}
+      {worstIdx >= 0 && <InfoRow label="Worst Month" value={`${monthNames[worstIdx] ?? ""}  (${(monthlyVals[worstIdx] ?? 0).toFixed(2)} kWh/m²/d)`} />}
+      {sol.seasonal_label && <InfoRow label="Seasonality" value={String(sol.seasonal_label)} />}
+
+      {/* Wind */}
+      <SectionHeader>💨 Wind Resource</SectionHeader>
+      <InfoRow label="Grade"              value={wnd.grade_label != null ? `${String(wnd.grade ?? "")} — ${String(wnd.grade_label ?? "")}` : null} />
+      <InfoRow label="Speed @ 100m"       value={ws100 ? `${ws100.toFixed(2)} m/s` : null} />
+      <InfoRow label="Power Density @100m" value={wnd.pd100 != null ? `${(wnd.pd100 as number).toFixed(1)} W/m²` : null} />
+      <InfoRow label="Capacity Factor"    value={wnd.cf3 != null ? `${((wnd.cf3 as number) * 100).toFixed(1)}% (IEC Class 3)` : null} />
+      <InfoRow label="Annual Yield (2MW)" value={wnd.annual_mwh_2mw != null ? `${(wnd.annual_mwh_2mw as number).toFixed(0)} MWh/yr` : null} />
+      <InfoRow label="Shear Exponent"     value={wnd.shear_alpha != null ? `${(wnd.shear_alpha as number).toFixed(3)}` : null} />
+      <InfoRow label="Elevation"          value={wnd.elevation   != null ? `${(wnd.elevation as number).toFixed(0)} m` : null} />
+      <InfoRow label="Ruggedness (RIX)"   value={wnd.rix         != null ? `${(wnd.rix as number).toFixed(4)}` : null} />
+
+      {/* Water */}
+      <SectionHeader>💧 Water &amp; Hydrology</SectionHeader>
+      <InfoRow label="Annual Precipitation" value={wat.precip_annual != null ? `${(wat.precip_annual as number).toFixed(0)} mm/yr` : null} />
+      <InfoRow label="Flood Risk"           value={String(wat.flood_risk ?? "")} />
+      <InfoRow label="PDSI"                 value={wat.pdsi != null ? `${(wat.pdsi as number).toFixed(3)}  ${String(wat.pdsi_label ?? "")}` : null} />
+      <InfoRow label="GRACE Groundwater"    value={wat.lwe  != null ? `${(wat.lwe as number).toFixed(2)} cm  ${String(wat.grace_label ?? "")}` : null} />
+      <InfoRow label="NDWI"                 value={wat.ndwi != null ? `${(wat.ndwi as number).toFixed(3)}` : null} />
+      <InfoRow label="Root Zone Moisture"   value={wat.root_zone != null ? `${(wat.root_zone as number).toFixed(1)} mm` : null} />
+      <InfoRow label="Water Deficit"        value={wat.deficit != null ? `${(wat.deficit as number).toFixed(1)} mm/mo  ${String(wat.deficit_label ?? "")}` : null} />
+
+      {/* Local Analysis */}
+      {(ph.name || gw.block) && <SectionHeader>⚡ Local Infrastructure</SectionHeader>}
+      {ph.name && <>
+        <InfoRow label="Nearest Powerhouse"  value={String(ph.name)} />
+        <InfoRow label="Distance"            value={ph.dist_km != null ? `${(ph.dist_km as number).toFixed(1)} km` : null} />
+        <InfoRow label="Capacity"            value={ph.cap_mw  != null ? `${(ph.cap_mw as number).toFixed(1)} MW` : null} />
+        <InfoRow label="Type"                value={String(ph.type ?? "")} />
+        <InfoRow label="River"               value={ph.river ? String(ph.river) : null} />
+      </>}
+      {gw.block && <>
+        <InfoRow label="Groundwater Block"   value={String(gw.block)} />
+        <InfoRow label="District"            value={String(gw.district ?? "")} />
+        <InfoRow label="Category"            value={String(gw.category ?? "")} />
+        <InfoRow label="Extraction %"        value={gw.ext_pct != null ? `${(gw.ext_pct as number).toFixed(1)}%` : null} />
+      </>}
+
+      <div style={{ marginTop: "10px", fontSize: "10px", color: "#9ca3af" }}>
+        Source: dc_final_merged.geojson · GEE Assessment
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Company Profile Modal                                               */
 /* ------------------------------------------------------------------ */
 
@@ -111,6 +290,8 @@ function CompanyProfileModal({ company, stock, onClose }: CompanyProfileModalPro
   const [tab, setTab] = useState<ModalTab>("overview");
   const [facilities, setFacilities] = useState<DataCenterFacility[]>([]);
   const [facilitiesLoading, setFacilitiesLoading] = useState(true);
+  const [geoFeatures, setGeoFeatures] = useState<DcGeoFeature[]>([]);
+  const [rxSelected, setRxSelected] = useState<string | null>(null);
 
   useEffect(() => {
     setFacilitiesLoading(true);
@@ -120,6 +301,29 @@ function CompanyProfileModal({ company, stock, onClose }: CompanyProfileModalPro
       .catch(() => { setFacilities([]); })
       .finally(() => { setFacilitiesLoading(false); });
   }, [company.id]);
+
+  // Load dc_final_merged.geojson for RX² assessment lookups
+  useEffect(() => {
+    fetch("/api/v1/solar-assessment/data/datacenter-assessment")
+      .then((r) => r.json())
+      .then((d: DcGeoCollection) => {
+        setGeoFeatures(d.features);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Match a DB facility to a GeoJSON feature by dc_name (case-insensitive, then fuzzy)
+  function findGeoMatch(facilityName: string): DcGeoFeature | null {
+    const fn = facilityName.toLowerCase().trim();
+    const exact = geoFeatures.find(
+      (f) => (String(f.properties.dc_name ?? "")).toLowerCase() === fn,
+    );
+    if (exact) return exact;
+    return geoFeatures.find((f) => {
+      const dn = String(f.properties.dc_name ?? "").toLowerCase();
+      return dn.includes(fn) || fn.includes(dn);
+    }) ?? null;
+  }
 
   // Unique states derived from DB facilities, sorted alphabetically
   const facilityStates = [...new Set(facilities.map((f) => f.state))].sort();
@@ -282,38 +486,63 @@ function CompanyProfileModal({ company, stock, onClose }: CompanyProfileModalPro
                     Facilities in Database ({facilities.length})
                   </div>
                   <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
-                    {facilities.map((f) => (
+                    {facilities.map((f) => {
+                      const geoMatch = findGeoMatch(f.name);
+                      const isRxOpen = rxSelected === f.id;
+                      return (
                       <li key={f.id} style={{
-                        padding: "10px 12px", border: "1px solid #e5e7eb",
+                        border: "1px solid #e5e7eb",
                         fontSize: "13px", color: "#374151", background: "#fff",
-                        display: "flex", alignItems: "flex-start", gap: "10px",
                       }}>
-                        <span style={{ color: "#9ca3af", paddingTop: "1px" }}>▪</span>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: 600, color: "#111827" }}>{f.name}</div>
-                          <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "2px", display: "flex", flexWrap: "wrap", gap: "4px", alignItems: "center" }}>
-                            <span>{f.city}, {f.state}</span>
-                            {f.tier_level && (
-                              <span style={{ padding: "1px 6px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "3px", fontSize: "10px", color: "#15803d", fontWeight: 600 }}>
-                                {f.tier_level}
-                              </span>
-                            )}
-                            {f.power_capacity_mw > 0 && (
-                              <span style={{ fontSize: "11px", color: "#64748b" }}>· {f.power_capacity_mw} MW</span>
-                            )}
+                        <div style={{ padding: "10px 12px", display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                          <span style={{ color: "#9ca3af", paddingTop: "1px" }}>▪</span>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", flexWrap: "wrap" }}>
+                              <div style={{ fontWeight: 600, color: "#111827" }}>{f.name}</div>
+                              {geoMatch && (
+                                <button
+                                  onClick={() => setRxSelected(isRxOpen ? null : f.id)}
+                                  title="RE Potential Assessment (RX²)"
+                                  style={{
+                                    padding: "3px 10px",
+                                    background: isRxOpen ? "#0f766e" : "#f0fdf4",
+                                    color: isRxOpen ? "#fff" : "#0f766e",
+                                    border: "1px solid #0f766e",
+                                    fontSize: "11px", fontWeight: 700, cursor: "pointer",
+                                    letterSpacing: "0.04em", flexShrink: 0,
+                                    fontFamily: "inherit",
+                                  }}
+                                >
+                                  RX²
+                                </button>
+                              )}
+                            </div>
+                            <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "2px", display: "flex", flexWrap: "wrap", gap: "4px", alignItems: "center" }}>
+                              <span>{f.city}, {f.state}</span>
+                              {f.tier_level && (
+                                <span style={{ padding: "1px 6px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "3px", fontSize: "10px", color: "#15803d", fontWeight: 600 }}>
+                                  {f.tier_level}
+                                </span>
+                              )}
+                              {f.power_capacity_mw > 0 && (
+                                <span style={{ fontSize: "11px", color: "#64748b" }}>· {f.power_capacity_mw} MW</span>
+                              )}
+                            </div>
+                            <span style={{
+                              display: "inline-block", marginTop: "4px",
+                              padding: "1px 6px", borderRadius: "3px", fontSize: "10px", fontWeight: 600,
+                              background: f.status === "operational" ? "#f0fdf4" : f.status === "planned" ? "#fefce8" : "#f0f9ff",
+                              color: f.status === "operational" ? "#15803d" : f.status === "planned" ? "#854d0e" : "#1e40af",
+                              border: `1px solid ${f.status === "operational" ? "#bbf7d0" : f.status === "planned" ? "#fde68a" : "#bfdbfe"}`,
+                            }}>
+                              {f.status.replace(/_/g, " ")}
+                            </span>
                           </div>
-                          <span style={{
-                            display: "inline-block", marginTop: "4px",
-                            padding: "1px 6px", borderRadius: "3px", fontSize: "10px", fontWeight: 600,
-                            background: f.status === "operational" ? "#f0fdf4" : f.status === "planned" ? "#fefce8" : "#f0f9ff",
-                            color: f.status === "operational" ? "#15803d" : f.status === "planned" ? "#854d0e" : "#1e40af",
-                            border: `1px solid ${f.status === "operational" ? "#bbf7d0" : f.status === "planned" ? "#fde68a" : "#bfdbfe"}`,
-                          }}>
-                            {f.status.replace(/_/g, " ")}
-                          </span>
                         </div>
+                        {isRxOpen && geoMatch && <RxAssessmentPanel feature={geoMatch} />}
                       </li>
-                    ))}
+                      );
+                    })}
                     {facilityStates.length > 0 && (
                       <li style={{ padding: "8px 12px", fontSize: "12px", color: "#6b7280", fontStyle: "italic" }}>
                         States: {facilityStates.join(", ")}
@@ -469,20 +698,46 @@ function CompanyProfileModal({ company, stock, onClose }: CompanyProfileModalPro
                     Facility Locations ({facilities.length})
                   </div>
                   <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
-                    {facilities.map((f) => (
+                    {facilities.map((f) => {
+                      const geoMatch = findGeoMatch(f.name);
+                      const isRxOpen = rxSelected === f.id;
+                      return (
                       <li key={f.id} style={{
-                        padding: "10px 14px", border: "1px solid #e5e7eb",
-                        background: "#fff", display: "flex", flexDirection: "column", gap: "4px",
+                        border: "1px solid #e5e7eb",
+                        background: "#fff",
                       }}>
-                        <div style={{ fontWeight: 600, fontSize: "13px", color: "#111827" }}>{f.name}</div>
-                        <div style={{ fontSize: "12px", color: "#6b7280", display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                          <span>📍 {f.city}, {f.state}</span>
-                          {f.tier_level && <span style={{ color: "#0f766e", fontWeight: 500 }}>{f.tier_level}</span>}
-                          {f.power_capacity_mw > 0 && <span>⚡ {f.power_capacity_mw} MW</span>}
-                          {f.size_sqft > 0 && <span>📐 {f.size_sqft.toLocaleString("en-IN")} sq.ft</span>}
+                        <div style={{ padding: "10px 14px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", flexWrap: "wrap" }}>
+                            <div style={{ fontWeight: 600, fontSize: "13px", color: "#111827" }}>{f.name}</div>
+                            {geoMatch && (
+                              <button
+                                onClick={() => setRxSelected(isRxOpen ? null : f.id)}
+                                title="RE Potential Assessment (RX²)"
+                                style={{
+                                  padding: "3px 10px",
+                                  background: isRxOpen ? "#0f766e" : "#f0fdf4",
+                                  color: isRxOpen ? "#fff" : "#0f766e",
+                                  border: "1px solid #0f766e",
+                                  fontSize: "11px", fontWeight: 700, cursor: "pointer",
+                                  letterSpacing: "0.04em", flexShrink: 0,
+                                  fontFamily: "inherit",
+                                }}
+                              >
+                                RX²
+                              </button>
+                            )}
+                          </div>
+                          <div style={{ fontSize: "12px", color: "#6b7280", display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                            <span>📍 {f.city}, {f.state}</span>
+                            {f.tier_level && <span style={{ color: "#0f766e", fontWeight: 500 }}>{f.tier_level}</span>}
+                            {f.power_capacity_mw > 0 && <span>⚡ {f.power_capacity_mw} MW</span>}
+                            {f.size_sqft > 0 && <span>📐 {f.size_sqft.toLocaleString("en-IN")} sq.ft</span>}
+                          </div>
                         </div>
+                        {isRxOpen && geoMatch && <RxAssessmentPanel feature={geoMatch} />}
                       </li>
-                    ))}
+                      );
+                    })}
                   </ul>
                 </div>
               ) : null}

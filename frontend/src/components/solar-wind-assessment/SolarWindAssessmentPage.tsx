@@ -159,6 +159,209 @@ function normalizeGeoJsonAnalysis(raw: R): AnalysisResult {
   } as unknown as AnalysisResult;
 }
 
+// ── dc_final_merged.geojson → API schema normalizer ──────────────────────────
+// This dataset stores RE assessment directly on feature properties (no nested
+// `analysis` field).  Field names and structure differ from the old schema.
+function normalizeMergedDcProps(p: R): AnalysisResult {
+  const sol  = (p.solar        ?? {}) as R;
+  const wnd  = (p.wind         ?? {}) as R;
+  const wat  = (p.water        ?? {}) as R;
+  const loc  = (p.local_analysis ?? {}) as R;
+
+  // ── WIND ──────────────────────────────────────────────────────────────────
+  // profile stored as { "10": {ws,pd,ad}, "50":…, "100":…, "150":…, "200":… }
+  const rawProfile = (wnd.profile ?? {}) as R;
+  const profileHeights: number[] = [];
+  const profileSpeeds: number[]  = [];
+  const profileDens: number[]    = [];
+  const profileAd: number[]      = [];
+  for (const h of ["10", "50", "100", "150", "200"]) {
+    const row = (rawProfile[h] ?? {}) as R;
+    if (Object.keys(row).length) {
+      profileHeights.push(Number(h));
+      profileSpeeds.push((row.ws ?? 0) as number);
+      profileDens.push((row.pd ?? 0) as number);
+      profileAd.push((row.ad ?? 1.225) as number);
+    }
+  }
+
+  const windGrade = (wnd.grade ?? "D") as string;
+  const windLabel = (wnd.grade_label ?? "") as string;
+  const ws100     = (wnd.profile && (rawProfile["100"] as R)?.ws ? (rawProfile["100"] as R).ws : 0) as number;
+  const pd100     = (wnd.pd100 ?? 0) as number;
+  const rix       = (wnd.rix   ?? 0) as number;
+  const slope     = (wnd.slope ?? 0) as number;
+  const elev      = (wnd.elevation ?? 0) as number;
+  const cf3       = (wnd.cf3  ?? 0) as number;
+
+  const windNorm: R = {
+    score: (p.wind_score ?? wnd.score ?? 0) as number,
+    resource: {
+      grade: windGrade,
+      label: windLabel,
+      wind_speed:    ws100,
+      power_density: pd100,
+      air_density:   (profileAd[2] ?? 1.225),
+    },
+    feasibility: {
+      rix,
+      slope,
+      elevation: elev,
+      status: rix < 0.5 && slope < 20 ? "Feasible" : "Challenging",
+    },
+    turbine: {
+      best_fit: "IEC Class 3",
+      cf_iec1:  cf3 * 0.6,
+      cf_iec2:  cf3 * 0.8,
+      cf_iec3:  cf3,
+    },
+    profile: { heights: profileHeights, speeds: profileSpeeds, densities: profileDens, air_density: profileAd },
+    yield_est: { annual_mwh_2mw: (wnd.annual_mwh_2mw ?? 0) as number },
+    physics: { shear_alpha: (wnd.shear_alpha ?? 0) as number },
+  };
+
+  // ── SOLAR ─────────────────────────────────────────────────────────────────
+  const ghiAnnual  = (sol.ghi_annual  ?? (sol.ghi as number ?? 0) * 365) as number;
+  const pvoutAnnual = (sol.pvout_annual ?? 0) as number;
+  const solarScore  = (p.solar_score  ?? sol.score ?? 0) as number;
+  const sGrade = ghiAnnual >= 2000 ? "A+" : ghiAnnual >= 1800 ? "A" : ghiAnnual >= 1600 ? "B" : ghiAnnual >= 1400 ? "C" : "D";
+  const sLabel = ghiAnnual >= 2000 ? "World-class irradiance" :
+    ghiAnnual >= 1800 ? "Excellent solar resource" :
+    ghiAnnual >= 1600 ? "Good commercial viability" :
+    ghiAnnual >= 1400 ? "Moderate resource" : "Marginal resource";
+
+  // monthly: array of 12 values — wrap in the shape SolarWindReport expects
+  const monthlyVals = (sol.monthly ?? []) as number[];
+  const monthNames  = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const bestIdx     = monthlyVals.reduce((bi, v, i, a) => v > a[bi]! ? i : bi, 0);
+  const worstIdx    = monthlyVals.reduce((bi, v, i, a) => v < a[bi]! ? i : bi, 0);
+
+  const solarNorm: R = {
+    score: solarScore,
+    resource: {
+      grade: sGrade,
+      label: sLabel,
+      ghi:   ghiAnnual,
+      pvout: pvoutAnnual,
+      dni:   0,
+      dif:   0,
+      ltdi:  0,
+    },
+    core: {
+      ghi_kwh_m2_year:    ghiAnnual,
+      pvout_kwh_kwp_year: pvoutAnnual,
+      ghi_kwh_m2_day:     (sol.ghi ?? 0) as number,
+      pvout_kwh_kwp_day:  (sol.pvout ?? 0) as number,
+      optimal_tilt:       (sol.optimal_tilt ?? 0) as number,
+      avg_temp:           (sol.avg_temp ?? 0) as number,
+      dif_fraction:       0,
+      temp_derate_pct:    0,
+    },
+    monthly: {
+      values:     monthlyVals,
+      best_month: monthNames[bestIdx] ?? "",
+      best_val:   monthlyVals[bestIdx] ?? 0,
+      worst_month: monthNames[worstIdx] ?? "",
+      worst_val:  monthlyVals[worstIdx] ?? 0,
+      range:      (monthlyVals[bestIdx] ?? 0) - (monthlyVals[worstIdx] ?? 0),
+      stability:  (sol.seasonal_label ?? "") as string,
+    },
+    terrain: {
+      elevation_m: (sol.elevation ?? 0) as number,
+      slope_deg:   (sol.slope ?? 0) as number,
+      aspect_deg:  (sol.aspect ?? 0) as number,
+    },
+    atmospheric: {
+      aod:          (sol.aod ?? 0) as number,
+      aod_label:    (sol.aod_label ?? "") as string,
+      cloud_pct:    (sol.cloud_pct ?? 0) as number,
+      cloud_label:  (sol.cloud_label ?? "") as string,
+      clear_days_yr: Math.round(365 * (1 - (sol.cloud_pct as number ?? 0) / 100)),
+      transmittance: 0,
+    },
+    validation: {
+      era5_ghi_day:       (sol.era5_ghi ?? 0) as number,
+      gsa_ghi_day:        (sol.ghi ?? 0) as number,
+      agreement_pct:      (sol.era5_agreement ?? 0) as number,
+      era5_ghi_diff_pct:  0,
+    },
+  };
+
+  // ── WATER ─────────────────────────────────────────────────────────────────
+  const waterScore = (p.water_score ?? 0) as number;
+  const pdsi       = (wat.pdsi  ?? 0) as number;
+  const lwe        = (wat.lwe   ?? 0) as number;
+
+  const waterNorm: R = {
+    composite_risk_score: waterScore,
+    grace_anomaly:        lwe,
+    pdsi,
+    interpretation: (p.water_rating ?? "") as string,
+    precipitation: {
+      daily_mm:  (wat.precip_daily  ?? 0) as number,
+      annual_mm: (wat.precip_annual ?? 0) as number,
+    },
+    surface_water: {
+      occurrence_pct: (wat.occurrence ?? 0) as number,
+      flood_risk:     (wat.flood_risk ?? "") as string,
+    },
+    soil_moisture: {
+      layer_0_10cm: (wat.soil_0_10  ?? 0) as number,
+      root_zone:    (wat.root_zone  ?? 0) as number,
+    },
+    terraclimate: {
+      pdsi,
+      pdsi_label:           (wat.pdsi_label ?? "") as string,
+      water_deficit_mm_month: (wat.deficit ?? 0) as number,
+      deficit_label:         (wat.deficit_label ?? "") as string,
+      runoff_mm_month:       (wat.runoff ?? 0) as number,
+      actual_et_mm_month:    (wat.aet ?? 0) as number,
+    },
+    groundwater_grace: {
+      lwe_thickness_cm: lwe,
+      status_label:     (wat.grace_label ?? "") as string,
+    },
+    ndwi_landsat9: {
+      ndwi_value: (wat.ndwi ?? 0) as number,
+      ndwi_label: (wat.ndwi as number ?? 0) > 0.2 ? "Water-rich" : (wat.ndwi as number ?? 0) > 0 ? "Moist" : "Dry / Bare",
+    },
+    infrastructure: {
+      name:      ((loc.powerhouse as R)?.name ?? "") as string,
+      dist_km:   ((loc.powerhouse as R)?.dist_km ?? 0) as number,
+      cap_mw:    ((loc.powerhouse as R)?.cap_mw ?? 0) as number,
+      river:     ((loc.powerhouse as R)?.river ?? null) as string | null,
+      energy_mu: ((loc.powerhouse as R)?.energy_mu ?? 0) as number,
+    },
+    local_analysis: loc,   // pass through for RX² panel consumption
+  };
+
+  // ── SUITABILITY ───────────────────────────────────────────────────────────
+  const overallScore = (p.overall_score ?? 0) as number;
+  const rating       = (p.overall_rating ?? (
+    overallScore >= 75 ? "PREMIUM SITE" :
+    overallScore >= 60 ? "OPTIMAL" :
+    overallScore >= 45 ? "VIABLE" : "CHALLENGING"
+  )) as string;
+
+  return {
+    wind:  windNorm,
+    solar: solarNorm,
+    water: waterNorm,
+    suitability: {
+      overall_score: overallScore,
+      rating,
+      insights: [],
+      components: {
+        solar: (p.solar_score ?? 0) as number,
+        wind:  (p.wind_score  ?? 0) as number,
+        water: waterScore,
+      },
+    },
+    location:  { lat: (p.lat ?? 0) as number, lon: (p.lon ?? p.lng ?? 0) as number },
+    timestamp: new Date().toISOString(),
+  } as unknown as AnalysisResult;
+}
+
 export default function SolarWindAssessmentPage() {
   const [view, setView] = useState<ViewMode>("map");
   const [data, setData] = useState<AppData>({
@@ -175,15 +378,24 @@ export default function SolarWindAssessmentPage() {
     lng: number,
     datacenter: DatacenterProps | null = null,
   ) => {
-    // ── Stage 1: embedded analysis in GeoJSON ──────────────────────────────
-    if (datacenter?.analysis) {
+    // ── Stage 1: embedded analysis ─────────────────────────────────────────
+    // Sub-case A: dc_final_merged.geojson — assessment fields are flat on props
+    //   (solar/wind/water at top level, no nested `analysis` object).
+    // Sub-case B: legacy datacenters.geojson — analysis nested in `analysis` field.
+    const dcR = datacenter as unknown as R;
+    const hasMergedSchema = !!(dcR?.solar && dcR?.wind && !datacenter?.analysis);
+    if (hasMergedSchema || datacenter?.analysis) {
       try {
-        const rawAnalysis: R =
-          typeof datacenter.analysis === "string"
-            ? (JSON.parse(datacenter.analysis) as R)
-            : (datacenter.analysis as unknown as R);
-
-        const analysis = normalizeGeoJsonAnalysis(rawAnalysis);
+        let analysis: AnalysisResult;
+        if (hasMergedSchema) {
+          analysis = normalizeMergedDcProps(dcR);
+        } else {
+          const rawAnalysis: R =
+            typeof datacenter!.analysis === "string"
+              ? (JSON.parse(datacenter!.analysis as string) as R)
+              : (datacenter!.analysis as unknown as R);
+          analysis = normalizeGeoJsonAnalysis(rawAnalysis);
+        }
 
         setLoadingFromCache(true);
         setView("loading");
@@ -192,7 +404,15 @@ export default function SolarWindAssessmentPage() {
           () => DEFAULT_LIVE_WEATHER,
         );
 
-        setData({ analysis, live: liveData, lat, lng, datacenter });
+        // Normalise name/id fields so the loading overlay and report header work
+        // regardless of which GeoJSON schema (legacy `name` or merged `dc_name`).
+        const enrichedDc: DatacenterProps = {
+          ...datacenter,
+          name: (String(dcR?.dc_name ?? datacenter?.name ?? "")),
+          id:   datacenter?.id ?? (dcR?.slno != null ? String(dcR.slno) : undefined),
+        };
+
+        setData({ analysis, live: liveData, lat, lng, datacenter: enrichedDc });
         setView("report");
         setLoadingFromCache(false);
         return;
