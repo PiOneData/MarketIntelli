@@ -294,6 +294,74 @@ function TopStatesAnalytics({ facilities }: { facilities: DataCenterFacility[] }
   );
 }
 
+const TOP5_KPI_ACCENTS = ["#0f766e", "#0369a1", "#7c3aed", "#b45309", "#be123c"];
+
+function CompactTopStates({ facilities }: { facilities: DataCenterFacility[] }) {
+  const stateMap: Record<string, { count: number; powerMW: number }> = {};
+  for (const f of facilities) {
+    const state = normalizeState(f.state);
+    if (!stateMap[state]) stateMap[state] = { count: 0, powerMW: 0 };
+    stateMap[state].count += 1;
+    if (f.power_capacity_mw > 0) stateMap[state].powerMW += f.power_capacity_mw;
+  }
+  const top5 = Object.entries(stateMap)
+    .sort(([, a], [, b]) => b.powerMW !== a.powerMW ? b.powerMW - a.powerMW : b.count - a.count)
+    .slice(0, 5);
+  const maxMW = top5[0]?.[1].powerMW ?? 1;
+
+  if (top5.length === 0) {
+    return (
+      <div className="india-dc-stat-card india-dc-stat-card--info">
+        <span className="india-dc-stat-label">Top States</span>
+        <span style={{ fontSize: "11px", color: "#94a3b8" }}>No data</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="india-dc-stat-card india-dc-stat-card--info" style={{ gap: 0, padding: "12px 14px" }}>
+      <div style={{ marginBottom: "8px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ fontSize: "10px", fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: "0.07em" }}>
+          Top States
+        </span>
+        <span style={{ fontSize: "9px", color: "#94a3b8" }}>by Power</span>
+      </div>
+      {top5.map(([state, info], i) => {
+        const barPct = maxMW > 0 && info.powerMW > 0 ? Math.max(5, Math.round((info.powerMW / maxMW) * 100)) : 5;
+        const accent = TOP5_KPI_ACCENTS[i] ?? "#64748b";
+        const mwLabel = info.powerMW >= 1000
+          ? `${(info.powerMW / 1000).toFixed(1)}GW`
+          : info.powerMW > 0
+            ? `${Math.round(info.powerMW)}MW`
+            : `${info.count}DC`;
+        return (
+          <div key={state} style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "5px" }}>
+            <span style={{ fontSize: "9px", fontWeight: 700, color: accent, width: "10px", textAlign: "right", flexShrink: 0 }}>
+              {i + 1}
+            </span>
+            <span style={{
+              fontSize: "11px", fontWeight: i < 2 ? 700 : 500,
+              color: i === 0 ? "#0f172a" : "#334155",
+              flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            }}>
+              {state}
+            </span>
+            <div style={{ width: "36px", height: "3px", background: "#f1f5f9", borderRadius: "99px", overflow: "hidden", flexShrink: 0 }}>
+              <div style={{ height: "100%", width: `${barPct}%`, background: accent, borderRadius: "99px" }} />
+            </div>
+            <span style={{
+              fontSize: "9px", color: "#64748b", width: "36px",
+              textAlign: "right", flexShrink: 0, fontVariantNumeric: "tabular-nums",
+            }}>
+              {mwLabel}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function SortIcon({ active, dir }: { active: boolean; dir: "asc" | "desc" }) {
   return (
     <span style={{ marginLeft: "4px", fontSize: "10px", opacity: active ? 1 : 0.35, color: active ? "#0f766e" : "#6b7280" }}>
@@ -493,10 +561,7 @@ function IndiaDataCenterAlertPage() {
           <span className="india-dc-stat-value">{Object.keys(stats?.by_company ?? {}).length}</span>
           <span className="india-dc-stat-label">Companies</span>
         </div>
-        <div className="india-dc-stat-card india-dc-stat-card--info">
-          <span className="india-dc-stat-value">{uniqueStates.length}</span>
-          <span className="india-dc-stat-label">States Covered</span>
-        </div>
+        <CompactTopStates facilities={facilities} />
         <div className="india-dc-stat-card india-dc-stat-card--success">
           <span className="india-dc-stat-value">{Math.round(stats?.total_power_mw ?? 0)} MW</span>
           <span className="india-dc-stat-label">Total Power Capacity</span>
@@ -506,19 +571,6 @@ function IndiaDataCenterAlertPage() {
       {/* Top 5 States Analytics */}
       <TopStatesAnalytics facilities={facilities} />
 
-      {/* Toolbar: Add + Export buttons */}
-      <div style={{ display: "flex", gap: "10px", marginBottom: "16px", flexWrap: "wrap" }}>
-        <button
-          className="india-dc-btn india-dc-btn--primary"
-          onClick={() => setShowAddModal(true)}
-        >
-          + Add Data Center
-        </button>
-        <button type="button" className="india-dc-btn india-dc-btn--info" onClick={handleExportCSV}>
-          Export to CSV
-        </button>
-        <button type="button" className="india-dc-btn india-dc-btn--accent">Daily Report</button>
-      </div>
 
       {/* Add Data Center Modal */}
       {showAddModal && (
@@ -652,7 +704,21 @@ function IndiaDataCenterAlertPage() {
 
       {/* Data Center Registry Table */}
       <div className="india-dc-table-section">
-        <h3>Data Center Registry</h3>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "4px" }}>
+          <h3 style={{ margin: 0, color: "var(--color-primary-dark)" }}>Data Center Registry</h3>
+          <div style={{ display: "flex", gap: "8px", flexShrink: 0, marginLeft: "12px" }}>
+            <button
+              className="india-dc-btn india-dc-btn--primary"
+              onClick={() => setShowAddModal(true)}
+            >
+              + Add Data Center
+            </button>
+            <button type="button" className="india-dc-btn india-dc-btn--info" onClick={handleExportCSV}>
+              Export to CSV
+            </button>
+            <button type="button" className="india-dc-btn india-dc-btn--accent">Daily Report</button>
+          </div>
+        </div>
         <p className="india-dc-table-count">
           {isLoading ? "Loading..." : `${filteredData.length} of ${facilities.length} data centers shown`}
         </p>

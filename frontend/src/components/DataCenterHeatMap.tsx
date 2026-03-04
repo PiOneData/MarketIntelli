@@ -22,6 +22,65 @@ function normState(s: string): string {
   return _STATE_NORM[s] ?? s;
 }
 
+// ── fallback city coordinates [lng, lat] ───────────────────────────────────
+const CITY_COORDS: Record<string, [number, number]> = {
+  "mumbai": [72.8777, 19.0760], "navi mumbai": [73.0169, 19.0368],
+  "thane": [72.9781, 19.2183], "pune": [73.8567, 18.5204],
+  "nashik": [73.7898, 19.9975], "nagpur": [79.0882, 21.1458],
+  "aurangabad": [75.3433, 19.8762], "delhi": [77.2090, 28.6139],
+  "new delhi": [77.2090, 28.6139], "noida": [77.3910, 28.5355],
+  "gurugram": [77.0266, 28.4595], "gurgaon": [77.0266, 28.4595],
+  "faridabad": [77.3178, 28.4089], "ghaziabad": [77.4538, 28.6692],
+  "greater noida": [77.5040, 28.4744], "bangalore": [77.5946, 12.9716],
+  "bengaluru": [77.5946, 12.9716], "mysore": [76.6394, 12.2958],
+  "mysuru": [76.6394, 12.2958], "hyderabad": [78.4867, 17.3850],
+  "secunderabad": [78.5012, 17.4399], "chennai": [80.2707, 13.0827],
+  "coimbatore": [76.9558, 11.0168], "madurai": [78.1198, 9.9252],
+  "kolkata": [88.3639, 22.5726], "calcutta": [88.3639, 22.5726],
+  "ahmedabad": [72.5714, 23.0225], "surat": [72.8311, 21.1702],
+  "vadodara": [73.1812, 22.3072], "rajkot": [70.8022, 22.3039],
+  "jaipur": [75.7873, 26.9124], "jodhpur": [73.0243, 26.2389],
+  "udaipur": [73.6816, 24.5854], "lucknow": [80.9462, 26.8467],
+  "agra": [77.9082, 27.1767], "kanpur": [80.3319, 26.4499],
+  "varanasi": [82.9739, 25.3176], "kochi": [76.2673, 9.9312],
+  "cochin": [76.2673, 9.9312], "thiruvananthapuram": [76.9366, 8.5241],
+  "trivandrum": [76.9366, 8.5241], "kozhikode": [75.7804, 11.2588],
+  "chandigarh": [76.7794, 30.7333], "amritsar": [74.8723, 31.6340],
+  "ludhiana": [75.8573, 30.9010], "bhubaneswar": [85.8245, 20.2961],
+  "patna": [85.1376, 25.5941], "indore": [75.8577, 22.7196],
+  "bhopal": [77.4126, 23.2599], "gwalior": [78.1828, 26.2183],
+  "visakhapatnam": [83.2185, 17.6868], "vizag": [83.2185, 17.6868],
+  "vijayawada": [80.6480, 16.5062], "raipur": [81.6296, 21.2514],
+  "ranchi": [85.3294, 23.3441], "jamshedpur": [86.1844, 22.8046],
+  "guwahati": [91.7362, 26.1445], "dehradun": [78.0322, 30.3165],
+  "shimla": [77.1734, 31.1048], "srinagar": [74.7973, 34.0837],
+  "jammu": [74.8579, 32.7266], "panaji": [73.8278, 15.4909],
+  "mangalore": [74.8560, 12.9141], "mangaluru": [74.8560, 12.9141],
+  "hubli": [75.1240, 15.3647], "salem": [78.1559, 11.6643],
+  "tiruchirappalli": [78.7047, 10.7905], "trichy": [78.7047, 10.7905],
+  "tiruppur": [77.3411, 11.1085],
+};
+
+// ── fallback state-centre coordinates [lng, lat] ────────────────────────────
+const STATE_COORDS: Record<string, [number, number]> = {
+  "Maharashtra": [75.7139, 19.7515], "Delhi": [77.1025, 28.7041],
+  "Karnataka": [75.7139, 15.3173], "Tamil Nadu": [78.6569, 11.1271],
+  "Telangana": [79.0193, 17.8495], "Gujarat": [71.1924, 22.2587],
+  "West Bengal": [87.8550, 22.9868], "Uttar Pradesh": [80.9462, 26.8467],
+  "Rajasthan": [74.2179, 27.0238], "Kerala": [76.2711, 10.8505],
+  "Punjab": [75.3412, 31.1471], "Haryana": [76.0856, 29.0588],
+  "Andhra Pradesh": [79.7400, 15.9129], "Odisha": [85.0985, 20.9517],
+  "Bihar": [85.3131, 25.0961], "Madhya Pradesh": [78.6569, 23.4733],
+  "Jharkhand": [85.2799, 23.6102], "Goa": [74.1240, 15.2993],
+  "Chhattisgarh": [81.8661, 21.2787], "Himachal Pradesh": [77.1734, 31.1048],
+  "Uttarakhand": [79.0193, 30.0668], "Assam": [92.9376, 26.2006],
+  "Jammu & Kashmir": [74.7973, 34.0837], "Puducherry": [79.8083, 11.9416],
+  "Chandigarh": [76.7794, 30.7333], "Sikkim": [88.5122, 27.5330],
+  "Tripura": [91.9882, 23.9408], "Meghalaya": [91.3662, 25.4670],
+  "Manipur": [93.9063, 24.6637], "Nagaland": [94.5624, 26.1584],
+  "Arunachal Pradesh": [94.7278, 28.2180], "Mizoram": [92.9376, 23.1645],
+};
+
 // ── types ─────────────────────────────────────────────────────────────────────
 export interface DCHeatMapEntry {
   id: string;
@@ -57,22 +116,22 @@ interface DCPopup {
 // ── heatmap paint configs ─────────────────────────────────────────────────────
 const COUNT_COLOR = [
   "interpolate", ["linear"], ["heatmap-density"],
-  0, "rgba(0,0,0,0)",
-  0.15, "#4338ca",
-  0.35, "#0ea5e9",
-  0.55, "#34d399",
-  0.75, "#fbbf24",
-  0.9,  "#f97316",
+  0,    "rgba(0,0,0,0)",
+  0.01, "#4338ca",
+  0.15, "#0ea5e9",
+  0.35, "#34d399",
+  0.6,  "#fbbf24",
+  0.8,  "#f97316",
   1,    "#dc2626",
 ] as unknown as maplibregl.ExpressionSpecification;
 
 const MW_COLOR = [
   "interpolate", ["linear"], ["heatmap-density"],
-  0, "rgba(0,0,0,0)",
-  0.15, "#d9f99d",
-  0.35, "#86efac",
-  0.55, "#fde68a",
-  0.75, "#f97316",
+  0,    "rgba(0,0,0,0)",
+  0.01, "#d9f99d",
+  0.15, "#86efac",
+  0.4,  "#fde68a",
+  0.7,  "#f97316",
   0.9,  "#dc2626",
   1,    "#7f1d1d",
 ] as unknown as maplibregl.ExpressionSpecification;
@@ -112,11 +171,30 @@ function DataCenterHeatMap({ dataCenters }: { dataCenters: DCHeatMapEntry[] }) {
   const [addrGeocodeMsg, setAddrGeocodeMsg] = useState("");
 
   // ── derived data ────────────────────────────────────────────────────────────
-  const mappedDCs = useMemo(
+  // DCs with real geocoded coordinates (used for coverage counter + geocode trigger)
+  const geocodedDCs = useMemo(
     () => dataCenters.filter((d) => d.lat != null && d.lng != null),
     [dataCenters]
   );
-  const unmappedCount = dataCenters.length - mappedDCs.length;
+
+  // DCs for heatmap display: real coords first, then city fallback, then state centre
+  const mappedDCs = useMemo(
+    () =>
+      dataCenters
+        .map((d): DCHeatMapEntry | null => {
+          if (d.lat != null && d.lng != null) return d;
+          const ck = d.city.toLowerCase().trim();
+          const cc = CITY_COORDS[ck];
+          if (cc) return { ...d, lat: cc[1], lng: cc[0] };
+          const sc = STATE_COORDS[normState(d.state)];
+          if (sc) return { ...d, lat: sc[1], lng: sc[0] };
+          return null;
+        })
+        .filter((d): d is DCHeatMapEntry => d !== null),
+    [dataCenters]
+  );
+
+  const unmappedCount = dataCenters.length - geocodedDCs.length;
 
   // Max MW for normalization (used in GeoJSON weight field)
   const maxMW = useMemo(
@@ -213,23 +291,22 @@ function DataCenterHeatMap({ dataCenters }: { dataCenters: DCHeatMapEntry[] }) {
         data: geoJSONRef.current,
       });
 
-      // ── heatmap layer (visible at zoom ≤ 9) ─────────────────────────────────
+      // ── heatmap layer (fades out past zoom 10) ──────────────────────────────
       map.current.addLayer({
-        id:      "dc-heat",
-        type:    "heatmap",
-        source:  "dcs",
-        maxzoom: 10,
+        id:     "dc-heat",
+        type:   "heatmap",
+        source: "dcs",
         paint: {
           // weight = 1 for count mode; updated via setPaintProperty for MW mode
           "heatmap-weight":    1,
           "heatmap-intensity": [
-            "interpolate", ["linear"], ["zoom"], 3, 1, 9, 3,
+            "interpolate", ["linear"], ["zoom"], 0, 2, 9, 8,
           ],
           "heatmap-radius": [
-            "interpolate", ["linear"], ["zoom"], 3, 30, 6, 50, 9, 80,
+            "interpolate", ["linear"], ["zoom"], 2, 30, 4, 55, 7, 85, 9, 120,
           ],
           "heatmap-opacity": [
-            "interpolate", ["linear"], ["zoom"], 8, 0.85, 10, 0,
+            "interpolate", ["linear"], ["zoom"], 0, 1, 9, 0.9, 11, 0,
           ],
           "heatmap-color": COUNT_COLOR,
         },
@@ -360,11 +437,11 @@ function DataCenterHeatMap({ dataCenters }: { dataCenters: DCHeatMapEntry[] }) {
     );
   }, [loaded, mode]);
 
-  // ── auto-trigger fast (city-centroid) geocoding if no DCs are mapped ────────
+  // ── auto-trigger fast (city-centroid) geocoding if no DCs have real coords ──
   useEffect(() => {
     if (cityGeocodeState !== "idle") return;
     if (dataCenters.length === 0) return;
-    if (mappedDCs.length > 0) return; // already have coordinates
+    if (geocodedDCs.length > 0) return; // already have real coordinates
     setCityGeocodeState("running");
     geocodeFacilities()
       .then((r) => {
@@ -374,7 +451,7 @@ function DataCenterHeatMap({ dataCenters }: { dataCenters: DCHeatMapEntry[] }) {
       })
       .catch(console.error)
       .finally(() => setCityGeocodeState("done"));
-  }, [cityGeocodeState, dataCenters.length, mappedDCs.length, queryClient]);
+  }, [cityGeocodeState, dataCenters.length, geocodedDCs.length, queryClient]);
 
   // ── actions ─────────────────────────────────────────────────────────────────
   const flyToState = useCallback(
@@ -547,7 +624,7 @@ function DataCenterHeatMap({ dataCenters }: { dataCenters: DCHeatMapEntry[] }) {
               </div>
             )}
             <div className="dc-heatmap-sidebar-coverage">
-              {mappedDCs.length}/{dataCenters.length} DCs mapped
+              {geocodedDCs.length}/{dataCenters.length} DCs geocoded
             </div>
           </div>
         </aside>
