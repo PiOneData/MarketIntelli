@@ -58,6 +58,7 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
   const [popup, setPopup] = useState<PopupState | null>(null);
   const [search, setSearch] = useState("");
   const [geocodingState, setGeocodingState] = useState<"idle" | "running" | "done">("idle");
@@ -161,8 +162,31 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
-      // OpenFreeMap liberty style — free OSM vector tiles, no API key
-      style: "https://tiles.openfreemap.org/styles/liberty",
+      // ESRI World Imagery — satellite view
+      style: {
+        version: 8 as const,
+        sources: {
+          esri: {
+            type: "raster" as const,
+            tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+            tileSize: 256,
+            attribution: "Tiles © Esri",
+            maxzoom: 19,
+          },
+          esri_ref: {
+            type: "raster" as const,
+            tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"],
+            tileSize: 256,
+            maxzoom: 19,
+          },
+        },
+        layers: [
+          { id: "esri-sat", type: "raster" as const, source: "esri" },
+          { id: "esri-ref", type: "raster" as const, source: "esri_ref", paint: { "raster-opacity": 0.85 } },
+        ],
+        glyphs: "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
+        sprite: "",
+      },
       center: [78.96, 20.59],
       zoom: 4.8,
       attributionControl: false,
@@ -323,9 +347,17 @@ function DataCenterMap({ dataCenters }: { dataCenters: DataCenter[] }) {
   const totalFacilities = dataCenters.length;
 
   return (
-    <div className="dc-map-container">
+    <div className={fullscreen ? "map-fullscreen-overlay" : "dc-map-container"}>
       <div className="dc-map-wrapper" style={{ position: "relative" }}>
-        <div ref={mapContainer} style={{ width: "100%", height: "600px" }} />
+        <div ref={mapContainer} style={{ width: "100%", height: fullscreen ? "100vh" : "600px" }} />
+        <button
+          className="map-fullscreen-btn"
+          onClick={() => setFullscreen((f) => !f)}
+          style={{ position: "absolute", top: 12, right: 12, zIndex: 20 }}
+          title={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+        >
+          {fullscreen ? "✕ Exit" : "⛶ Fullscreen"}
+        </button>
 
         {/* Search bar */}
         <div style={{ position: "absolute", top: 12, left: 12, zIndex: 10, width: 280 }}>

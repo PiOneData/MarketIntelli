@@ -1,11 +1,44 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { FeatureCollection, Point } from "geojson";
 import { motion, AnimatePresence } from "framer-motion";
 import { geocodeFacilities, geocodeAddresses } from "../api/dataCenters";
+import { fetchAirports } from "../api/airports";
+
+// ── Satellite map style (ESRI World Imagery) ─────────────────────────────────
+const SATELLITE_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    esri: {
+      type: "raster",
+      tiles: [
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      ],
+      tileSize: 256,
+      attribution: "Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+      maxzoom: 19,
+    },
+    esri_labels: {
+      type: "raster",
+      tiles: [
+        "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+      ],
+      tileSize: 256,
+      maxzoom: 19,
+    },
+  },
+  layers: [
+    { id: "esri-satellite", type: "raster", source: "esri" },
+    { id: "esri-labels", type: "raster", source: "esri_labels", paint: { "raster-opacity": 0.85 } },
+  ],
+  glyphs: "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
+  sprite: "",
+};
+
+type LayerMode = "dc" | "airports";
 
 // ── state name normalizer ─────────────────────────────────────────────────────
 const _STATE_NORM: Record<string, string> = {
@@ -156,10 +189,20 @@ function DataCenterHeatMap({ dataCenters }: { dataCenters: DCHeatMapEntry[] }) {
   // Keep a ref to the latest GeoJSON so the map `load` handler can seed the
   // source with real data even when the async load fires AFTER data arrives.
   const geoJSONRef  = useRef<FeatureCollection>({ type: "FeatureCollection", features: [] });
+  const airportGeoJSONRef = useRef<FeatureCollection>({ type: "FeatureCollection", features: [] });
   const [loaded, setLoaded]   = useState(false);
   const [mode, setMode]       = useState<HeatmapMode>("count");
   const [popup, setPopup]     = useState<DCPopup | null>(null);
   const [selState, setSelState] = useState<string | null>(null);
+  const [layerMode, setLayerMode] = useState<LayerMode>("dc");
+  const [fullscreen, setFullscreen] = useState(false);
+
+  // Fetch airports for toggle
+  const airportsQuery = useQuery({
+    queryKey: ["airports-heatmap"],
+    queryFn: () => fetchAirports({ status: "Operational" }),
+    staleTime: 5 * 60 * 1000,
+  });
 
   // geocoding UX
   const [cityGeocodeState, setCityGeocodeState] = useState<
@@ -261,13 +304,37 @@ function DataCenterHeatMap({ dataCenters }: { dataCenters: DCHeatMapEntry[] }) {
     [stateStats]
   );
 
+  // ── airport GeoJSON ─────────────────────────────────────────────────────────
+  const airportGeoJSON = useMemo<FeatureCollection>(() => ({
+    type: "FeatureCollection",
+    features: (airportsQuery.data?.airports ?? [])
+      .filter((a) => a.latitude != null && a.longitude != null)
+      .map((a) => ({
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [a.longitude!, a.latitude!] },
+        properties: {
+          name:    a["Airport Name"],
+          city:    a.City,
+          state:   a["State / UT"],
+          status:  a.Status,
+          is_green: a.is_green,
+          power_mw: Number(a["Power Consumption (MW)"] ?? 0),
+          solar_mw: Number(a["Solar Capacity Installed (MW)"] ?? 0),
+          count_weight: 1,
+          mw_weight: Math.min(1, Number(a["Power Consumption (MW)"] ?? 0) / 200),
+        },
+      })),
+  }), [airportsQuery.data]);
+
+  airportGeoJSONRef.current = airportGeoJSON;
+
   // ── map init ────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (map.current || !mapRef.current) return;
 
     map.current = new maplibregl.Map({
       container: mapRef.current,
-      style:     "https://tiles.openfreemap.org/styles/liberty",
+      style:     SATELLITE_STYLE,
       center:    [78.96, 20.59],
       zoom:      4.4,
       attributionControl: false,
@@ -410,6 +477,40 @@ function DataCenterHeatMap({ dataCenters }: { dataCenters: DCHeatMapEntry[] }) {
         if (!hits?.length) setPopup(null);
       });
 
+      // ── airport source + layers ─────────────────────────────────────────────
+      map.current.addSource("airports", {
+        type: "geojson",
+        data: airportGeoJSONRef.current,
+      });
+
+      map.current.addLayer({
+        id:      "airport-heat",
+        type:    "heatmap",
+        source:  "airports",
+        layout:  { visibility: "none" },
+        paint: {
+          "heatmap-weight": 1,
+          "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 2, 9, 8],
+          "heatmap-radius":   ["interpolate", ["linear"], ["zoom"], 2, 30, 4, 55, 7, 85, 9, 120],
+          "heatmap-opacity":  ["interpolate", ["linear"], ["zoom"], 0, 1, 9, 0.9, 11, 0],
+          "heatmap-color": COUNT_COLOR,
+        },
+      });
+
+      map.current.addLayer({
+        id:      "airport-core",
+        type:    "circle",
+        source:  "airports",
+        layout:  { visibility: "none" },
+        paint: {
+          "circle-radius":       ["interpolate", ["linear"], ["zoom"], 4, 5, 8, 8, 14, 16],
+          "circle-color":        "#0ea5e9",
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-width": 2,
+          "circle-opacity":      ["interpolate", ["linear"], ["zoom"], 4, 0.85, 9, 1],
+        },
+      });
+
       setLoaded(true);
     });
 
@@ -422,6 +523,24 @@ function DataCenterHeatMap({ dataCenters }: { dataCenters: DCHeatMapEntry[] }) {
     const src = map.current.getSource("dcs") as maplibregl.GeoJSONSource | undefined;
     src?.setData(facilitiesGeoJSON);
   }, [loaded, facilitiesGeoJSON]);
+
+  // ── push airport GeoJSON ─────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!loaded || !map.current) return;
+    const src = map.current.getSource("airports") as maplibregl.GeoJSONSource | undefined;
+    src?.setData(airportGeoJSON);
+  }, [loaded, airportGeoJSON]);
+
+  // ── switch visible layer when layerMode changes ──────────────────────────────
+  useEffect(() => {
+    if (!loaded || !map.current) return;
+    const dcLayers    = ["dc-heat", "dc-glow", "dc-core", "dc-label"];
+    const airpLayers  = ["airport-heat", "airport-core"];
+    const dcVis    = layerMode === "dc"       ? "visible" : "none";
+    const airpVis  = layerMode === "airports" ? "visible" : "none";
+    dcLayers.forEach((id) => map.current?.setLayoutProperty(id, "visibility", dcVis));
+    airpLayers.forEach((id) => map.current?.setLayoutProperty(id, "visibility", airpVis));
+  }, [loaded, layerMode]);
 
   // ── update heatmap weight + color ramp when mode changes ────────────────────
   useEffect(() => {
@@ -498,8 +617,38 @@ function DataCenterHeatMap({ dataCenters }: { dataCenters: DCHeatMapEntry[] }) {
   }, [addrGeocodeState, queryClient]);
 
   // ── render ──────────────────────────────────────────────────────────────────
+  const mapControls = (
+    <>
+      {/* DC / Airport toggle */}
+      <div className="heatmap-toggle" style={{ position: "absolute", top: 12, left: 12, zIndex: 10 }}>
+        <button
+          className={`heatmap-tab-btn${layerMode === "dc" ? " active" : ""}`}
+          onClick={() => setLayerMode("dc")}
+        >
+          🏢 Data Centers
+        </button>
+        <button
+          className={`heatmap-tab-btn${layerMode === "airports" ? " active" : ""}`}
+          onClick={() => setLayerMode("airports")}
+        >
+          ✈ Airports
+        </button>
+      </div>
+      {/* Fullscreen toggle */}
+      <button
+        className="map-fullscreen-btn"
+        onClick={() => setFullscreen((f) => !f)}
+        style={{ position: "absolute", top: 12, right: 12, zIndex: 10 }}
+        title="Toggle fullscreen"
+      >
+        ⛶ Fullscreen
+      </button>
+    </>
+  );
+
   return (
-    <div className="dc-heatmap-root">
+    <>
+    <div className={`dc-heatmap-root${fullscreen ? " dc-heatmap-root--fullscreen" : ""}`}>
       {/* ─── Address Geocoding Banner ────────────────────────────────────────── */}
       <AnimatePresence>
         {addrGeocodeState !== "idle" && (
@@ -630,8 +779,9 @@ function DataCenterHeatMap({ dataCenters }: { dataCenters: DCHeatMapEntry[] }) {
         </aside>
 
         {/* ─ Main Map ───────────────────────────────────────────────────────── */}
-        <div className="dc-heatmap-map-wrap">
+        <div className="dc-heatmap-map-wrap" style={{ position: "relative" }}>
           <div className="dc-heatmap-map-inner" ref={mapRef} />
+          {mapControls}
 
           {/* ── Mode Toggle (top-right) ──────────────────────────────────────── */}
           <div className="dc-heatmap-mode-toggle">
@@ -837,11 +987,14 @@ function DataCenterHeatMap({ dataCenters }: { dataCenters: DCHeatMapEntry[] }) {
 
       {/* ─── Mode description strip ──────────────────────────────────────────── */}
       <div className="dc-heatmap-footer-hint">
-        {mode === "count"
-          ? "Heatmap shows geographic density of data centers. Switch to MW mode to visualise power concentration."
-          : "Heatmap intensity is weighted by power capacity (MW). Zoom in past level 9 to reveal individual facilities."}
+        {layerMode === "airports"
+          ? "Airport heatmap shows India's commercial and civil aviation infrastructure. Toggle to Data Centers to switch view."
+          : mode === "count"
+            ? "Heatmap shows geographic density of data centers. Switch to MW mode to visualise power concentration."
+            : "Heatmap intensity is weighted by power capacity (MW). Zoom in past level 9 to reveal individual facilities."}
       </div>
     </div>
+    </>
   );
 }
 
