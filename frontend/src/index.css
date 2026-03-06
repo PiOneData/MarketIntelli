@@ -12790,6 +12790,7 @@ h2.serif-heading .t { color: var(--teal); }
 .app-header {
   position: sticky !important; top: 0; z-index: 200;
   display: flex !important; flex-direction: column;
+  align-items: stretch !important; justify-content: flex-start !important;
   background: rgba(250,249,247,.97) !important; backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border) !important;
   box-shadow: none !important; height: auto !important;
@@ -12832,8 +12833,8 @@ h2.serif-heading .t { color: var(--teal); }
   display: flex; align-items: center; justify-content: center;
 }
 
-/* App main — full width, no sidebar */
-.app-main { flex: 1; width: 100%; }
+/* App main — full width, no sidebar, no padding (sections handle their own) */
+.app-main { flex: 1; width: 100%; padding: 0 !important; }
 
 /* ═══════════════════════════════════════════════════════
    NAV DRAWER (collapsible sidebar)
@@ -12902,8 +12903,24 @@ h2.serif-heading .t { color: var(--teal); }
    DASHBOARD HERO overrides
 ═══════════════════════════════════════════════════════ */
 .dashboard-redesign { width: 100%; }
+
+/* Override global h1 { color: white } — hero heading must be visible */
+.dashboard-redesign h1 {
+  font-family: var(--serif);
+  font-size: clamp(48px, 7vw, 96px); line-height: 1.0; letter-spacing: -.02em;
+  color: var(--ink) !important; font-weight: 400; margin-bottom: 24px;
+}
 /* h1 em in teal */
-.dashboard-redesign h1 em { color: var(--teal); font-style: normal; }
+.dashboard-redesign h1 em { color: var(--teal) !important; font-style: normal; }
+
+/* Override global h2 styles for dashboard sections */
+.dashboard-redesign h2,
+.dashboard-redesign .modules-section h2,
+.dashboard-redesign .rx2-section h2 {
+  font-family: var(--serif);
+  font-size: clamp(36px, 4.5vw, 58px); font-weight: 400; line-height: 1.1;
+  color: var(--ink) !important; margin-bottom: 14px; letter-spacing: -.01em;
+}
 /* h2 span.t in teal */
 .dashboard-redesign h2 span.t, .dashboard-redesign .pgen-title span.t { color: var(--teal); }
 /* h2 em in teal */
