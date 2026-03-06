@@ -9,6 +9,7 @@ from app.domains.data_center_intelligence.routes.data_centers import router as d
 from app.domains.power_market.routes.power_market import router as power_market_router
 from app.domains.finance.routes.power_trading import router as power_trading_router
 from app.domains.solar_assessment.routes.solar_assessment import router as solar_assessment_router
+from app.domains.airport_registry.routes.airports import router as airport_registry_router
 
 api_router = APIRouter()
 
@@ -21,3 +22,4 @@ api_router.include_router(data_centers_router, prefix="/data-centers", tags=["Da
 api_router.include_router(power_market_router, prefix="/power-market", tags=["Power Market Intelligence"])
 api_router.include_router(power_trading_router, prefix="/finance", tags=["Finance – Power Trading"])
 api_router.include_router(solar_assessment_router, prefix="/solar-assessment", tags=["Solar & Wind Assessment"])
+api_router.include_router(airport_registry_router, prefix="/airport-registry", tags=["Airport Registry"])
