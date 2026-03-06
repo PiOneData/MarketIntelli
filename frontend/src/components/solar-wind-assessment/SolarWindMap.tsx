@@ -86,6 +86,7 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
   const map = useRef<maplibregl.Map | null>(null);
   const marker = useRef<maplibregl.Marker | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
   const [searchCoords, setSearchCoords] = useState({ lat: "", lng: "" });
   const [layerVis, setLayerVis] = useState<Record<LayerGroup, boolean>>({
     wind: true,
@@ -470,8 +471,17 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
       : [];
 
   return (
-    <div className="w-full h-full absolute top-0 left-0 bg-slate-950 overflow-hidden" style={{ fontFamily: "var(--font-family, 'Inter', 'Segoe UI', system-ui, sans-serif)" }}>
+    <div className={fullscreen ? "map-fullscreen-overlay" : "w-full h-full absolute top-0 left-0 overflow-hidden"} style={{ fontFamily: "var(--font-family, 'Inter', 'Segoe UI', system-ui, sans-serif)" }}>
       <div ref={mapContainer} className="w-full h-full" />
+      {/* Fullscreen toggle */}
+      <button
+        onClick={() => setFullscreen((f) => !f)}
+        className="map-fullscreen-btn"
+        style={{ position: "absolute", bottom: 48, right: 12, zIndex: 20 }}
+        title={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+      >
+        {fullscreen ? "✕ Exit" : "⛶ Fullscreen"}
+      </button>
 
       {/* Left top: Jump to coords */}
       <div className="absolute top-4 left-4 z-10 w-60">

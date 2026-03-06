@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Outlet, NavLink, useLocation, useNavigate, Link } from "react-router-dom";
 import refexLogo from "../../assets/refex-logo.png";
+import PowerTicker from "./PowerTicker";
+import AppFooter from "./AppFooter";
 
 interface SubItem {
   id: string;
@@ -148,16 +150,26 @@ function Sidenav({
 
 function MainLayout() {
   const location = useLocation();
+  const [scrolled, setScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sidenavOpen, setSidenavOpen] = useState(true);
+
+  const isHomepage = location.pathname === "/";
+
   const currentNav = navItems.find((item) =>
     location.pathname === item.path || location.pathname.startsWith(item.path + "/")
   );
-  const subItems = currentNav?.children;
-  const [sidenavOpen, setSidenavOpen] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+  const subItems = !isHomepage ? currentNav?.children : undefined;
 
   useEffect(() => {
     setSidenavOpen(true);
   }, [location.pathname]);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,55 +180,76 @@ function MainLayout() {
 
   return (
     <div className="app-layout">
-      <header className="app-header">
-        <div className="header-brand">
-          <img src={refexLogo} alt="Refex" className="header-logo" />
-          <span className="subtitle">Renewable Energy Market Intelligence</span>
+      <header className={`app-header${scrolled ? " scrolled" : ""}`}>
+        <div className="nav-top">
+          <div className="nav-brand">
+            <img src={refexLogo} alt="Refex MI" className="nav-logo-img" />
+            <span className="nav-logo-sep" />
+            <span className="nav-logo-sub">Market Intelligence</span>
+          </div>
+          <nav className="nav-links">
+            <ul>
+              {navItems.map((item) => (
+                <li key={item.path}>
+                  <NavLink
+                    to={item.path}
+                    end={item.path === "/"}
+                    className={({ isActive }: { isActive: boolean }) => (isActive ? "active" : "")}
+                  >
+                    {item.label}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <div className="nav-btns">
+            <Link
+              to="/alerts/active-alerts"
+              className="nav-alert-link"
+              title="Iran Conflict — Active Geopolitical Alert"
+            >
+              <span className="nav-alert-dot" />
+              <span className="nav-alert-text">IRAN Alert</span>
+              <span className="nav-brent">Brent ↑</span>
+              <span className="nav-brent nav-inr">₹/$ Watch</span>
+            </Link>
+            <form onSubmit={handleSearchSubmit} className="header-search-form">
+              <svg className="header-search-icon" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+              <input
+                type="text"
+                className="header-search-input"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search"
+              />
+            </form>
+            <Link to="/profile" className="header-profile-btn" title="My Profile" aria-label="Profile">
+              <span className="header-profile-avatar">AS</span>
+            </Link>
+          </div>
         </div>
-        <nav className="app-nav">
-          <ul>
-            {navItems.map((item) => (
-              <li key={item.path}>
-                <NavLink
-                  to={item.path}
-                  end={item.path === "/"}
-                  className={({ isActive }) => (isActive ? "active" : "")}
-                >
-                  {item.label}
-                </NavLink>
-              </li>
-            ))}
-            <li className="header-search">
-              <form onSubmit={handleSearchSubmit} className="header-search-form">
-                <svg className="header-search-icon" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                </svg>
-                <input
-                  type="text"
-                  className="header-search-input"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  aria-label="Search"
-                />
-              </form>
-            </li>
-            <li>
-              <Link to="/profile" className="header-profile-btn" title="My Profile" aria-label="Profile">
-                <span className="header-profile-avatar">AS</span>
-              </Link>
-            </li>
-          </ul>
-        </nav>
+        <PowerTicker />
       </header>
-      <div className={`app-body ${subItems ? "has-sidenav" : ""}`}>
-        {subItems && <Sidenav items={subItems} collapsed={!sidenavOpen} onToggle={() => setSidenavOpen((prev) => !prev)} />}
+
+      <div className={`app-body${subItems ? " has-sidenav" : ""}`}>
+        {subItems && (
+          <Sidenav
+            items={subItems}
+            collapsed={!sidenavOpen}
+            onToggle={() => setSidenavOpen((prev) => !prev)}
+          />
+        )}
         <div className="app-content">
           <main className="app-main">
             <Outlet />
           </main>
         </div>
       </div>
+
+      <AppFooter />
     </div>
   );
 }
