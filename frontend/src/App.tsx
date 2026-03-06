@@ -6,6 +6,7 @@ import ProjectsPage from "./pages/ProjectsPage";
 import PolicyPage from "./pages/PolicyPage";
 import AlertsPage from "./pages/AlertsPage";
 import IndiaDataCenterAlertPage from "./pages/IndiaDataCenterAlertPage";
+import AirportRegistryPage from "./pages/AirportRegistryPage";
 import PowerDataPage from "./pages/PowerDataPage";
 import FinancePage from "./pages/FinancePage";
 import ProfilePage from "./pages/ProfilePage";
@@ -24,6 +25,7 @@ function App() {
         <Route path="/projects" element={<Navigate to="/projects/india-data-center-registry" replace />} />
         <Route path="/projects/india-data-center-alerts" element={<IndiaDataCenterAlertPage />} />
         <Route path="/projects/india-data-center-registry" element={<IndiaDataCenterAlertPage />} />
+        <Route path="/projects/airport-registry" element={<AirportRegistryPage />} />
         <Route path="/projects/:section" element={<ProjectsPage />} />
 
         {/* Power Data */}
