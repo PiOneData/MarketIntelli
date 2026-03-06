@@ -9,14 +9,14 @@ import apiClient from "../api/client";
 
 // ── IEX market data ──────────────────────────────────────────────────────────
 interface IEXData {
-  iex_market_prices: {
+  iex_market_prices?: {
     dam_mcp_inr_per_mwh: number;
     rtm_mcp_inr_per_mwh: number;
     gtam_mcp_inr_per_mwh: number;
   };
-  market_summary: {
-    rec: { price: number };
-    rtm: { volume_mu: number; re_share_pct: number };
+  market_summary?: {
+    rec?: { solar_cleared_price_inr?: number; non_solar_cleared_price_inr?: number };
+    rtm?: { re_volume_mu?: number; re_share_percent?: number };
   };
   source?: string;
 }
@@ -80,13 +80,13 @@ const NEWS_ITEMS = [
   { cls: "pol", text: "CERC proposes fixed 1.5 paise/unit exchange fee as market coupling replaces price discovery" },
 ];
 
-// ── Top-5 states (CEA Dec 2025 — used as fallback if API returns no data) ──
+// ── Top-5 states (CEA Dec 2025) ──────────────────────────────────────────────
 const TOP5_STATIC = [
-  { rank: "01", name: "Maharashtra", totalGW: "73.4", solar: "22.1", wind: "12.3", re: "47%", reClass: "re-high", barStyle: "width:100%;background:linear-gradient(90deg,#43a047 30%,#1e88e5 30% 46%,#9e9e9e 46%)" },
-  { rank: "02", name: "Rajasthan",   totalGW: "64.8", solar: "32.4", wind: "3.1",  re: "55%", reClass: "re-high", barStyle: "width:88%;background:linear-gradient(90deg,#43a047 55%,#1e88e5 55% 60%,#9e9e9e 60%)" },
-  { rank: "03", name: "Gujarat",     totalGW: "57.2", solar: "18.2", wind: "10.8", re: "51%", reClass: "re-high", barStyle: "width:78%;background:linear-gradient(90deg,#43a047 38%,#1e88e5 38% 55%,#9e9e9e 55%)" },
-  { rank: "04", name: "Tamil Nadu",  totalGW: "47.1", solar: "8.4",  wind: "12.1", re: "54%", reClass: "re-high", barStyle: "width:64%;background:linear-gradient(90deg,#43a047 20%,#1e88e5 20% 55%,#9e9e9e 55%)" },
-  { rank: "05", name: "Karnataka",   totalGW: "42.2", solar: "17.8", wind: "4.8",  re: "53%", reClass: "re-high", barStyle: "width:57%;background:linear-gradient(90deg,#43a047 48%,#1e88e5 48% 60%,#9e9e9e 60%)" },
+  { rank: "01", name: "Maharashtra", totalGW: "73.4", solar: "22.1", wind: "12.3", re: "47%", reClass: "re-high", barW: "100%", barBg: "linear-gradient(90deg,#43a047 30%,#1e88e5 30% 46%,#9e9e9e 46%)" },
+  { rank: "02", name: "Rajasthan",   totalGW: "64.8", solar: "32.4", wind: "3.1",  re: "55%", reClass: "re-high", barW: "88%",  barBg: "linear-gradient(90deg,#43a047 55%,#1e88e5 55% 60%,#9e9e9e 60%)" },
+  { rank: "03", name: "Gujarat",     totalGW: "57.2", solar: "18.2", wind: "10.8", re: "51%", reClass: "re-high", barW: "78%",  barBg: "linear-gradient(90deg,#43a047 38%,#1e88e5 38% 55%,#9e9e9e 55%)" },
+  { rank: "04", name: "Tamil Nadu",  totalGW: "47.1", solar: "8.4",  wind: "12.1", re: "54%", reClass: "re-high", barW: "64%",  barBg: "linear-gradient(90deg,#43a047 20%,#1e88e5 20% 55%,#9e9e9e 55%)" },
+  { rank: "05", name: "Karnataka",   totalGW: "42.2", solar: "17.8", wind: "4.8",  re: "53%", reClass: "re-high", barW: "57%",  barBg: "linear-gradient(90deg,#43a047 48%,#1e88e5 48% 60%,#9e9e9e 60%)" },
 ];
 
 // ── News cycler hook ─────────────────────────────────────────────────────────
@@ -106,9 +106,10 @@ export default function DashboardPage() {
   const capQ   = useCapacitySummary();
   const newsIdx = useNewsCycle(NEWS_ITEMS.length);
 
-  const dam  = iexQ.data?.iex_market_prices.dam_mcp_inr_per_mwh;
-  const rtm  = iexQ.data?.iex_market_prices.rtm_mcp_inr_per_mwh;
-  const gtam = iexQ.data?.iex_market_prices.gtam_mcp_inr_per_mwh;
+  const dam  = iexQ.data?.iex_market_prices?.dam_mcp_inr_per_mwh;
+  const rtm  = iexQ.data?.iex_market_prices?.rtm_mcp_inr_per_mwh;
+  const gtam = iexQ.data?.iex_market_prices?.gtam_mcp_inr_per_mwh;
+  const recPrice = iexQ.data?.market_summary?.rec?.solar_cleared_price_inr;
 
   return (
     <div className="dashboard-redesign">
@@ -168,21 +169,21 @@ export default function DashboardPage() {
                   {iexQ.isLoading && (
                     <div className="data-loading-state">Loading IEX prices…</div>
                   )}
-                  {iexQ.data && (
+                  {iexQ.data && dam != null && (
                     <div className="stat-row">
                       <div className="stat-tile">
                         <div className="st-label">DAM MCP</div>
-                        <div className="st-val">{(dam! / 1000).toFixed(2)}<span className="st-unit"> ₹/kWh</span></div>
+                        <div className="st-val">{(dam / 1000).toFixed(2)}<span className="st-unit"> ₹/kWh</span></div>
                         <div className="st-chg dn">↓13% YoY</div>
                       </div>
                       <div className="stat-tile">
                         <div className="st-label">RTM MCP</div>
-                        <div className="st-val">{(rtm! / 1000).toFixed(2)}<span className="st-unit"> ₹/kWh</span></div>
+                        <div className="st-val">{((rtm ?? 0) / 1000).toFixed(2)}<span className="st-unit"> ₹/kWh</span></div>
                         <div className="st-chg dn">↓16% YoY</div>
                       </div>
                       <div className="stat-tile">
                         <div className="st-label">G-DAM</div>
-                        <div className="st-val">{(gtam! / 1000).toFixed(2)}<span className="st-unit"> ₹/kWh</span></div>
+                        <div className="st-val">{((gtam ?? 0) / 1000).toFixed(2)}<span className="st-unit"> ₹/kWh</span></div>
                         <div className="st-chg dn">↓13% YoY</div>
                       </div>
                     </div>
@@ -204,7 +205,7 @@ export default function DashboardPage() {
                         <div className="p5-name-block">
                           <span className="p5-name">{row.name}</span>
                           <div className="p5-bar-wrap">
-                            <div className="p5-bar" style={{ ...(Object.fromEntries(row.barStyle.split(";").filter(Boolean).map(s => { const [k,v] = s.split(":"); return [k.trim().replace(/-([a-z])/g, (_,c: string) => c.toUpperCase()), v.trim()]; }))) }} />
+                            <div className="p5-bar" style={{ width: row.barW, background: row.barBg }} />
                           </div>
                         </div>
                         <span className="p5-total">{row.totalGW}</span>
@@ -339,30 +340,30 @@ export default function DashboardPage() {
             {iexQ.isLoading && (
               <div className="data-loading-state">Loading IEX market prices…</div>
             )}
-            {iexQ.data && (
+            {iexQ.data && dam != null && (
               <>
                 <div className="pm-rate-row">
                   <div className="pm-rate-card">
                     <div className="pm-rate-label">DAM · Day-Ahead</div>
-                    <div className="pm-rate-val">₹{(dam! / 1000).toFixed(2)}<span className="pm-rate-unit">/kWh</span></div>
+                    <div className="pm-rate-val">₹{(dam / 1000).toFixed(2)}<span className="pm-rate-unit">/kWh</span></div>
                     <div className="pm-rate-chg dn">↓12.9% YoY</div>
                     <div className="pm-rate-note">IEX · Jan 2026 avg</div>
                   </div>
                   <div className="pm-rate-card">
                     <div className="pm-rate-label">RTM · Real-Time</div>
-                    <div className="pm-rate-val">₹{(rtm! / 1000).toFixed(2)}<span className="pm-rate-unit">/kWh</span></div>
+                    <div className="pm-rate-val">₹{((rtm ?? 0) / 1000).toFixed(2)}<span className="pm-rate-unit">/kWh</span></div>
                     <div className="pm-rate-chg dn">↓15.9% YoY</div>
                     <div className="pm-rate-note">IEX · Jan 2026 avg</div>
                   </div>
                   <div className="pm-rate-card">
                     <div className="pm-rate-label">G-DAM · Green</div>
-                    <div className="pm-rate-val">₹{(gtam! / 1000).toFixed(2)}<span className="pm-rate-unit">/kWh</span></div>
+                    <div className="pm-rate-val">₹{((gtam ?? 0) / 1000).toFixed(2)}<span className="pm-rate-unit">/kWh</span></div>
                     <div className="pm-rate-chg dn">↓12.5% YoY</div>
                     <div className="pm-rate-note">Green Day-Ahead · Jan 2026</div>
                   </div>
                   <div className="pm-rate-card">
                     <div className="pm-rate-label">REC · Renewable Cert.</div>
-                    <div className="pm-rate-val">₹{iexQ.data.market_summary.rec.price.toFixed(0)}<span className="pm-rate-unit">/REC</span></div>
+                    <div className="pm-rate-val">₹{(recPrice ?? 1850).toFixed(0)}<span className="pm-rate-unit">/REC</span></div>
                     <div className="pm-rate-chg up">↑Floor Apr 2026</div>
                     <div className="pm-rate-note">NLDC · Q2 FY26</div>
                   </div>
