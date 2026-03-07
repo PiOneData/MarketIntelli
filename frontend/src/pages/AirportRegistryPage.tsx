@@ -4,6 +4,28 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { fetchAirports, fetchAirportsMeta, fetchAirportsPowerStats, type Airport } from "../api/airports";
 
+// ── Satellite map style (ESRI World Imagery — free, no API key) ───────────────
+const SATELLITE_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    "esri-satellite": {
+      type: "raster",
+      tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+      tileSize: 256,
+      attribution: "Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+    },
+    "esri-labels": {
+      type: "raster",
+      tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"],
+      tileSize: 256,
+    },
+  },
+  layers: [
+    { id: "esri-satellite-layer", type: "raster", source: "esri-satellite" },
+    { id: "esri-labels-layer",    type: "raster", source: "esri-labels" },
+  ],
+};
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 const TYPE_COLORS: Record<string, string> = {
   International: "#2563eb",
@@ -72,7 +94,7 @@ function AirportMiniMap({ lat, lng, name }: { lat: number; lng: number; name: st
 
     const map = new maplibregl.Map({
       container: mapRef.current,
-      style: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+      style: SATELLITE_STYLE,
       center: [lng, lat],
       zoom: 11,
       attributionControl: false,
@@ -129,7 +151,7 @@ function AllAirportsMap({
 
     const map = new maplibregl.Map({
       container: mapRef.current,
-      style: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+      style: SATELLITE_STYLE,
       center: [80.0, 22.5],
       zoom: 4.2,
       attributionControl: false,
