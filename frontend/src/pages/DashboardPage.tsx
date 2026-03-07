@@ -25,22 +25,26 @@ async function fetchIEXData(): Promise<IEXData> {
   return data;
 }
 
-// ── Static curated data (CEA / MNRE official Mar 2026) ───────────────────────
+// ── Static curated data (CEA / MNRE official Jan 2026) ───────────────────────
+// Sources: MNRE Physical Progress Jan 2026, CEA Installed Capacity Report Sep 2025,
+//          Wikipedia Wind/Solar power in India (Jan 2026), IESA 2025
 const RE_ITEMS = [
-  { cls: "solar",   icon: "☀️", num: "86.4", unit: "GW", name: "Solar",         note: "Utility + Rooftop · Rajasthan 32.4 GW" },
-  { cls: "wind",    icon: "💨", num: "47.6", unit: "GW", name: "Wind",          note: "Onshore · TN · GJ · AP zones" },
-  { cls: "hydro",   icon: "💧", num: "50.3", unit: "GW", name: "Hydro",         note: "Large + Small · NHPC + State" },
-  { cls: "storage", icon: "🔋", num: "4.2",  unit: "GWh",name: "Storage",       note: "BESS · Pumped Hydro pipeline" },
-  { cls: "total",   icon: "⚡", num: "513",  unit: "GW", name: "Total Installed",note: "All sources · Mar 2026 · CEA" },
+  { cls: "solar",   icon: "☀️", num: "140.6", unit: "GW", name: "Solar",         note: "Utility + Rooftop · Rajasthan 36 GW · MNRE Jan 2026" },
+  { cls: "wind",    icon: "💨", num: "55",     unit: "GW", name: "Wind",          note: "Onshore · TN · GJ · RJ zones · MNRE Nov 2025" },
+  { cls: "hydro",   icon: "💧", num: "55.7",   unit: "GW", name: "Hydro",         note: "Large 50.5 GW + Small 5.2 GW · CEA Sep 2025" },
+  { cls: "storage", icon: "🔋", num: "4.75",   unit: "GW", name: "Storage",       note: "Pumped Hydro installed · 0.8 GWh BESS op. · IESA 2025" },
+  { cls: "total",   icon: "⚡", num: "520",    unit: "GW", name: "Total Installed",note: "All sources · Jan 2026 · CEA / MoP" },
 ];
 
+// Source: CEA / CREA India Power Sector Overview FY2024-25 · Vasudha Foundation FY25 report
+// Total generation FY2024-25: 1,824 BU (CEA; +5% YoY vs 1,739 BU in FY2023-24)
 const PGEN_CARDS = [
-  { cls: "thermal", icon: "🏭", label: "Thermal", num: "1,038", unit: "BU", bar: 59.8, barCol: "#9e9e9e", share: "59.8%", note: "Coal · Gas · Lignite\nNTPC + State Gencos" },
-  { cls: "solar",   icon: "☀️", label: "Solar",   num: "287",   unit: "BU", bar: 65,   barCol: "#f59e0b", share: "16.5%", note: "Utility + Rooftop\n86.4 GW installed" },
-  { cls: "hydro",   icon: "💧", label: "Hydro",   num: "156",   unit: "BU", bar: 35,   barCol: "#0ea5e9", share: "9.0%",  note: "Large + Small Hydro\nNHPC · State Gencos" },
-  { cls: "wind",    icon: "💨", label: "Wind",    num: "113",   unit: "BU", bar: 26,   barCol: "#3b82f6", share: "6.5%",  note: "Onshore Installed\n47.6 GW capacity" },
-  { cls: "nuclear", icon: "⚛️", label: "Nuclear", num: "48",    unit: "BU", bar: 11,   barCol: "#8b5cf6", share: "2.8%",  note: "NPCIL · 8.2 GW\nBaseload 24×7" },
-  { cls: "other",   icon: "🔋", label: "Other RE",num: "94",    unit: "BU", bar: 22,   barCol: "#10b981", share: "5.4%",  note: "Biomass · SHP · Waste\nDistributed sources" },
+  { cls: "thermal", icon: "🏭", label: "Thermal", num: "1,363", unit: "BU", bar: 74.7, barCol: "#9e9e9e", share: "74.7%", note: "Coal · Gas · Lignite\nNTPC + State Gencos · CEA FY25" },
+  { cls: "hydro",   icon: "💧", label: "Hydro",   num: "149",   unit: "BU", bar: 8.2,  barCol: "#0ea5e9", share: "8.2%",  note: "Large + Small Hydro\nNHPC · State Gencos · CEA FY25" },
+  { cls: "solar",   icon: "☀️", label: "Solar",   num: "148",   unit: "BU", bar: 8.1,  barCol: "#f59e0b", share: "8.1%",  note: "Utility + Rooftop\n106 GW installed FY25 · CEA" },
+  { cls: "wind",    icon: "💨", label: "Wind",    num: "80",    unit: "BU", bar: 4.4,  barCol: "#3b82f6", share: "4.4%",  note: "Onshore Installed\n50 GW capacity FY25 · CEA" },
+  { cls: "nuclear", icon: "⚛️", label: "Nuclear", num: "57",    unit: "BU", bar: 3.1,  barCol: "#8b5cf6", share: "3.1%",  note: "NPCIL · 8.2 GW\nBaseload 24×7 · NPCIL FY25" },
+  { cls: "other",   icon: "🔋", label: "Other RE",num: "27",    unit: "BU", bar: 1.5,  barCol: "#10b981", share: "1.5%",  note: "Biomass · SHP · Waste\nDistributed sources · CEA FY25" },
 ];
 
 const MODULES = [
@@ -71,22 +75,27 @@ const TRUST_BADGES = [
   { ico: "📊", strong: "IEA / Bloomberg",  span: "Global Intelligence" },
 ];
 
-// ── News ticker items (static — from IEX public reports) ───────────────────
+// ── News ticker items (static — from IEX public reports, PIB, CERC orders) ─
+// Sources verified Jan–Feb 2026 from IEX Monthly Highlights, PIB, APTEL orders
 const NEWS_ITEMS = [
-  { cls: "sol", text: "IEX records all-time high 13,050 MU in Jan 2026 — up 20% YoY; DAM at ₹3.82/kWh ↓13%" },
-  { cls: "pol", text: "Market coupling launched Jan 2026 — IEX, PXIL & HPX unified clearing price under CERC" },
-  { cls: "rec", text: "44.22 lakh RECs traded on IEX in Q2 FY26; REC floor price ₹2,100 from Apr 2026 · NLDC" },
-  { cls: "win", text: "IEX RTM hits 3,913 MU record in Sep 2025 — 39% YoY surge; G-DAM up 259% in Aug 2024" },
-  { cls: "pol", text: "CERC proposes fixed 1.5 paise/unit exchange fee as market coupling replaces price discovery" },
+  { cls: "sol", text: "IEX all-time high 13,050 MU in Jan 2026 — ↑19.6% YoY; RTM record 4,638 MU ↑52.8% YoY · IEX Jan 2026" },
+  { cls: "pol", text: "APTEL upholds CERC market coupling order Feb 2026 — IEX appeal dismissed; unified clearing price to proceed" },
+  { cls: "rec", text: "18.86 lakh RECs traded on IEX in Jan 2026 (↑15.2% YoY); REC floor price ₹2,100 from Apr 2026 · NLDC" },
+  { cls: "win", text: "India adds record 37.9 GW solar + 6.3 GW wind in CY2025 — total RE installed 263 GW · MNRE Jan 2026" },
+  { cls: "pol", text: "CERC proposes fixed 1.5 paise/unit exchange fee as market coupling replaces bilateral price discovery" },
 ];
 
-// ── Top-5 states (CEA Dec 2025) ──────────────────────────────────────────────
+// ── Top-5 states by total installed capacity (CEA Sep–Dec 2025 + MNRE Jan 2026) ──
+// Total GW = all sources (thermal + RE + nuclear); solar/wind = RE-only breakdown
+// Sources: CEA Installed Capacity Report Sep 2025 (GJ 63.8 GW, MH 54.5 GW, RJ 52.6 GW);
+//          MNRE Physical Progress Jan 2026 (RJ 34.14 GW RE, GJ 33.39 GW RE, TN 25.24 GW RE);
+//          JMK Research CY2025; India Data Map Aug 2025; IndiaDataMap solar/wind state maps Jul 2025
 const TOP5_STATIC = [
-  { rank: "01", name: "Maharashtra", totalGW: "73.4", solar: "22.1", wind: "12.3", re: "47%", reClass: "re-high", barW: "100%", barBg: "linear-gradient(90deg,#43a047 30%,#1e88e5 30% 46%,#9e9e9e 46%)" },
-  { rank: "02", name: "Rajasthan",   totalGW: "64.8", solar: "32.4", wind: "3.1",  re: "55%", reClass: "re-high", barW: "88%",  barBg: "linear-gradient(90deg,#43a047 55%,#1e88e5 55% 60%,#9e9e9e 60%)" },
-  { rank: "03", name: "Gujarat",     totalGW: "57.2", solar: "18.2", wind: "10.8", re: "51%", reClass: "re-high", barW: "78%",  barBg: "linear-gradient(90deg,#43a047 38%,#1e88e5 38% 55%,#9e9e9e 55%)" },
-  { rank: "04", name: "Tamil Nadu",  totalGW: "47.1", solar: "8.4",  wind: "12.1", re: "54%", reClass: "re-high", barW: "64%",  barBg: "linear-gradient(90deg,#43a047 20%,#1e88e5 20% 55%,#9e9e9e 55%)" },
-  { rank: "05", name: "Karnataka",   totalGW: "42.2", solar: "17.8", wind: "4.8",  re: "53%", reClass: "re-high", barW: "57%",  barBg: "linear-gradient(90deg,#43a047 48%,#1e88e5 48% 60%,#9e9e9e 60%)" },
+  { rank: "01", name: "Gujarat",     totalGW: "66.0", solar: "24.8", wind: "10.8", re: "52%", reClass: "re-high", barW: "100%", barBg: "linear-gradient(90deg,#43a047 37%,#1e88e5 37% 54%,#9e9e9e 54%)" },
+  { rank: "02", name: "Maharashtra", totalGW: "58.0", solar: "17.2", wind: "7.4",  re: "43%", reClass: "re-high", barW: "88%",  barBg: "linear-gradient(90deg,#43a047 30%,#1e88e5 30% 43%,#9e9e9e 43%)" },
+  { rank: "03", name: "Rajasthan",   totalGW: "56.0", solar: "36.2", wind: "5.2",  re: "73%", reClass: "re-high", barW: "85%",  barBg: "linear-gradient(90deg,#43a047 65%,#1e88e5 65% 74%,#9e9e9e 74%)" },
+  { rank: "04", name: "Tamil Nadu",  totalGW: "36.3", solar: "9.2",  wind: "14.1", re: "70%", reClass: "re-high", barW: "55%",  barBg: "linear-gradient(90deg,#43a047 25%,#1e88e5 25% 64%,#9e9e9e 64%)" },
+  { rank: "05", name: "Karnataka",   totalGW: "35.0", solar: "21.5", wind: "5.8",  re: "78%", reClass: "re-high", barW: "53%",  barBg: "linear-gradient(90deg,#43a047 61%,#1e88e5 61% 78%,#9e9e9e 78%)" },
 ];
 
 // ── News cycler hook ─────────────────────────────────────────────────────────
@@ -216,7 +225,7 @@ export default function DashboardPage() {
                     ))}
                   </div>
                   <div style={{ fontFamily: "var(--mono)", fontSize: 9, color: "var(--faint)", marginTop: 6, letterSpacing: ".06em" }}>
-                    GW · CEA Dec 2025 · {capQ.isError ? "⚠ API error" : "MNRE"}
+                    GW · CEA Sep 2025 + MNRE Jan 2026 · {capQ.isError ? "⚠ API error" : "MNRE"}
                   </div>
                 </div>
 
@@ -305,7 +314,7 @@ export default function DashboardPage() {
       {/* ═══ RE CAPACITY BAND ═══════════════════════════════════════════════ */}
       <div className="re-band">
         <div className="re-band-inner">
-          <div className="re-band-label">🌿 RE Capacity Monitored &nbsp;·&nbsp; &gt;189 GW India Total</div>
+          <div className="re-band-label">🌿 RE Capacity Monitored &nbsp;·&nbsp; 263 GW India Total · MNRE Jan 2026</div>
           <div className="re-band-items">
             {RE_ITEMS.map((item, i) => (
               <>
@@ -400,15 +409,15 @@ export default function DashboardPage() {
             <div className="pm-exch-bar-wrap">
               <div className="pm-exch-label-row">Exchange Market Share</div>
               <div className="pm-exch-bar">
-                <div className="pm-exch-seg" style={{ width: "90%", background: "#0d7a6e" }} title="IEX 90%" />
-                <div className="pm-exch-seg" style={{ width: "6%", background: "#1565c0" }} title="PXIL 6%" />
-                <div className="pm-exch-seg" style={{ width: "4%", background: "#f59e0b" }} title="HPX 4%" />
+                <div className="pm-exch-seg" style={{ width: "85%", background: "#0d7a6e" }} title="IEX 85%" />
+                <div className="pm-exch-seg" style={{ width: "10%", background: "#1565c0" }} title="PXIL 10%" />
+                <div className="pm-exch-seg" style={{ width: "5%", background: "#f59e0b" }} title="HPX 5%" />
               </div>
               <div className="pm-exch-legend-row">
-                <span style={{ color: "#0d7a6e", fontWeight: 700 }}>IEX 90%</span>
-                <span style={{ color: "#1565c0" }}>PXIL 6%</span>
-                <span style={{ color: "#f59e0b" }}>HPX 4%</span>
-                <span className="pm-exch-src-note">Source: IEX Jan 2026 · CEA FY26</span>
+                <span style={{ color: "#0d7a6e", fontWeight: 700 }}>IEX 85%</span>
+                <span style={{ color: "#1565c0" }}>PXIL 10%</span>
+                <span style={{ color: "#f59e0b" }}>HPX 5%</span>
+                <span className="pm-exch-src-note">Source: equentis.com / SharesCart FY26 · CERC market coupling Feb 2026</span>
               </div>
             </div>
           </div>
@@ -420,13 +429,13 @@ export default function DashboardPage() {
         <div className="pgen-inner">
           <div className="pgen-header">
             <div>
-              <div className="pgen-eyebrow">India Power Mix · FY 2025 Actuals</div>
+              <div className="pgen-eyebrow">India Power Mix · FY 2024–25 Actuals · CEA / CREA</div>
               <div className="pgen-title">CONSOLIDATED GENERATION <span className="t">BY SOURCE</span></div>
             </div>
             <div className="pgen-total-block">
               <span className="pgen-total-label">Total Generation</span>
-              <span className="pgen-total-num">1,736 <span>BU</span></span>
-              <span className="pgen-total-note">FY2024–25 · CEA</span>
+              <span className="pgen-total-num">1,824 <span>BU</span></span>
+              <span className="pgen-total-note">FY2024–25 · CEA / CREA</span>
             </div>
           </div>
 
@@ -453,14 +462,14 @@ export default function DashboardPage() {
               <span className="pgen-sl grey">🏭 Non-Renewable</span>
             </div>
             <div className="pgen-stacked-bar">
-              <div className="psb-seg green" style={{ width: "40.2%" }} title="RE incl. Hydro 40.2%">
-                <span className="psb-label">RE 40.2%</span>
+              <div className="psb-seg green" style={{ width: "22.2%" }} title="RE incl. Hydro 22.2%">
+                <span className="psb-label">RE 22.2%</span>
               </div>
-              <div className="psb-seg grey" style={{ width: "59.8%" }} title="Non-RE 59.8%">
-                <span className="psb-label">Non-RE 59.8%</span>
+              <div className="psb-seg grey" style={{ width: "77.8%" }} title="Non-RE 77.8%">
+                <span className="psb-label">Non-RE 77.8%</span>
               </div>
             </div>
-            <div className="pgen-summary-note">Source: CEA Annual Report FY2024–25 · IEX Market Data · MNRE</div>
+            <div className="pgen-summary-note">Source: CEA FY2024–25 · CREA India Power Sector Overview FY25 · Vasudha Foundation FY25</div>
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, type ReactNode } from "react"
 import { useQuery } from "@tanstack/react-query";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { fetchAirports, fetchAirportsMeta, type Airport } from "../api/airports";
+import { fetchAirports, fetchAirportsMeta, fetchAirportsPowerStats, type Airport } from "../api/airports";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const TYPE_COLORS: Record<string, string> = {
@@ -208,7 +208,15 @@ function AllAirportsMap({
 }
 
 // ── Airport Detail ──────────────────────────────────────────────────────────────
-function AirportDetail({ airport, onClose }: { airport: Airport; onClose: () => void }) {
+function AirportDetail({
+  airport,
+  onClose,
+  powerDataMissing,
+}: {
+  airport: Airport;
+  onClose: () => void;
+  powerDataMissing: number;
+}) {
   const hasCoords = airport.latitude !== null && airport.longitude !== null;
 
   return (
@@ -310,6 +318,11 @@ function AirportDetail({ airport, onClose }: { airport: Airport; onClose: () => 
 
           {/* Power & Sustainability */}
           <SectionCard title="Power & Sustainability" icon="⚡">
+            {powerDataMissing > 0 && (
+              <div className="ar-power-disclaimer">
+                ⚠️ Power consumption data is incomplete — unavailable for {powerDataMissing} airport{powerDataMissing !== 1 ? "s" : ""} in this dataset.
+              </div>
+            )}
             <InfoRow label="Power Consumption" value={airport["Power Consumption (MW)"] !== null && airport["Power Consumption (MW)"] !== "N/A" ? `${airport["Power Consumption (MW)"]} MW` : airport["Power Consumption (MW)"]} />
             <InfoRow label="Power Mode / Renewables" value={airport["Power Mode / Renewables"]} />
             <InfoRow label="Solar Capacity Installed" value={airport["Solar Capacity Installed (MW)"] !== null && airport["Solar Capacity Installed (MW)"] !== "N/A" ? `${airport["Solar Capacity Installed (MW)"]} MW` : airport["Solar Capacity Installed (MW)"]} />
@@ -383,6 +396,17 @@ export default function AirportRegistryPage() {
     queryFn: fetchAirportsMeta,
     staleTime: Infinity,
   });
+
+  const { data: powerStats } = useQuery({
+    queryKey: ["airports-power-stats"],
+    queryFn: fetchAirportsPowerStats,
+    staleTime: Infinity,
+  });
+
+  const powerDataMissing =
+    powerStats != null
+      ? powerStats.total_airports - powerStats.airports_with_power_data
+      : 0;
 
   const { data, isLoading } = useQuery({
     queryKey: ["airports", search, filterState, filterType, filterStatus, greenOnly],
@@ -555,6 +579,7 @@ export default function AirportRegistryPage() {
             <AirportDetail
               airport={selectedAirport}
               onClose={() => setSelectedId(null)}
+              powerDataMissing={powerDataMissing}
             />
           </div>
         ) : view === "list" ? (
