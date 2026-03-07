@@ -234,13 +234,13 @@ export default function DashboardPage() {
                   {pmQ.data && (
                     <>
                       <div className="drow">
-                        <span className="dr-name">Total Installed Capacity</span>
-                        <span className="dr-val">{(pmQ.data.total_capacity_mw / 1000).toFixed(0)} GW</span>
+                        <span className="dr-name">RE Installed Capacity</span>
+                        <span className="dr-val">{(pmQ.data.total_installed_re_mw / 1000).toFixed(0)} GW</span>
                         <span className="dr-chg chg-up">Live</span>
                       </div>
                       <div className="drow">
-                        <span className="dr-name">RE Share</span>
-                        <span className="dr-val">{pmQ.data.renewable_percent?.toFixed(1) ?? "—"}%</span>
+                        <span className="dr-name">RE Share (of 520 GW)</span>
+                        <span className="dr-val">{((pmQ.data.total_installed_re_mw / 520000) * 100).toFixed(1)}%</span>
                         <span className="dr-chg chg-up">CEA</span>
                       </div>
                     </>
