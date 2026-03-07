@@ -68,6 +68,45 @@ def get_airports_meta() -> dict:
     return {"states": states, "types": types, "statuses": statuses}
 
 
+def _parse_mw(value: object) -> float:
+    """Parse a MW value that may be prefixed with '~' or be N/A."""
+    if value is None:
+        return 0.0
+    if isinstance(value, (int, float)):
+        return float(value)
+    s = str(value).replace(",", "").strip().lstrip("~").strip()
+    if s in ("N/A", "NA", "n/a", ""):
+        return 0.0
+    try:
+        return float(s)
+    except ValueError:
+        return 0.0
+
+
+@router.get("/airports/power-stats")
+def get_airports_power_stats() -> dict:
+    """Aggregate power consumption and solar generation stats across all airports."""
+    airports = _load_airports()
+    total_power_mw = sum(_parse_mw(a.get("Power Consumption (MW)")) for a in airports)
+    total_solar_mw = sum(_parse_mw(a.get("Solar Capacity Installed (MW)")) for a in airports)
+    grid_power_mw = max(total_power_mw - total_solar_mw, 0.0)
+    green_share_pct = (total_solar_mw / total_power_mw * 100) if total_power_mw > 0 else 0.0
+    grid_share_pct = 100.0 - green_share_pct if total_power_mw > 0 else 0.0
+    airports_with_power = sum(1 for a in airports if _parse_mw(a.get("Power Consumption (MW)")) > 0)
+    airports_with_solar = sum(1 for a in airports if _parse_mw(a.get("Solar Capacity Installed (MW)")) > 0)
+    return {
+        "total_airports": len(airports),
+        "airports_with_power_data": airports_with_power,
+        "airports_with_solar_data": airports_with_solar,
+        "total_power_mw": round(total_power_mw, 1),
+        "total_solar_mw": round(total_solar_mw, 1),
+        "grid_power_mw": round(grid_power_mw, 1),
+        "green_share_pct": round(green_share_pct, 1),
+        "grid_share_pct": round(grid_share_pct, 1),
+        "source": "AAI / MoCA · airports.json",
+    }
+
+
 @router.get("/airports/{airport_id}")
 def get_airport(airport_id: int) -> dict:
     airports = _load_airports()

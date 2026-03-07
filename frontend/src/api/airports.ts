@@ -68,3 +68,20 @@ export async function fetchAirport(id: number): Promise<Airport> {
   const res = await apiClient.get(`/airport-registry/airports/${id}`);
   return res.data;
 }
+
+export interface AirportsPowerStats {
+  total_airports: number;
+  airports_with_power_data: number;
+  airports_with_solar_data: number;
+  total_power_mw: number;
+  total_solar_mw: number;
+  grid_power_mw: number;
+  green_share_pct: number;
+  grid_share_pct: number;
+  source: string;
+}
+
+export async function fetchAirportsPowerStats(): Promise<AirportsPowerStats> {
+  const res = await apiClient.get("/airport-registry/airports/power-stats");
+  return res.data;
+}
