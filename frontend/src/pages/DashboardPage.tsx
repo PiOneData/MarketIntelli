@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useCapacitySummary, usePowerMarketOverview } from "../hooks/usePowerMarket";
@@ -316,19 +316,21 @@ export default function DashboardPage() {
         <div className="re-band-inner">
           <div className="re-band-label">🌿 RE Capacity Monitored &nbsp;·&nbsp; 263 GW India Total · MNRE Jan 2026</div>
           <div className="re-band-items">
-            {RE_ITEMS.map((item, i) => (
-              <>
-                {i > 0 && <div key={`div-${i}`} className="re-divider" />}
-                <div key={item.name} className={`re-item ${item.cls}`}>
-                  <div className="re-item-icon">{item.icon}</div>
-                  <div className="re-item-data">
-                    <div className="re-item-num">{item.num} <span>{item.unit}</span></div>
-                    <div className="re-item-name">{item.name}</div>
-                    <div className="re-item-note">{item.note}</div>
+            <div className="re-band-track">
+              {[...RE_ITEMS, ...RE_ITEMS].map((item, i) => (
+                <React.Fragment key={`${i}-${item.name}`}>
+                  {i > 0 && <div className="re-divider" />}
+                  <div className={`re-item ${item.cls}`}>
+                    <div className="re-item-icon">{item.icon}</div>
+                    <div className="re-item-data">
+                      <div className="re-item-num">{item.num} <span>{item.unit}</span></div>
+                      <div className="re-item-name">{item.name}</div>
+                      <div className="re-item-note">{item.note}</div>
+                    </div>
                   </div>
-                </div>
-              </>
-            ))}
+                </React.Fragment>
+              ))}
+            </div>
           </div>
         </div>
       </div>
