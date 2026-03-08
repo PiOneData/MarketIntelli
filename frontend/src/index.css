@@ -701,6 +701,7 @@ p {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
   gap: var(--space-4);
+  align-items: stretch;
 }
 
 .pol-card {
@@ -712,6 +713,7 @@ p {
   transition: box-shadow 0.2s ease;
   display: flex;
   flex-direction: column;
+  min-height: 240px;
 }
 
 .pol-card:hover {
@@ -788,6 +790,26 @@ p {
 .pol-link:hover {
   color: var(--color-primary-dark);
   text-decoration: underline;
+}
+
+.pol-read-more {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.pol-read-more:hover {
+  background: var(--color-primary-dark);
+  color: #fff;
 }
 
 /* Category Badges */

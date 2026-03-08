@@ -62,7 +62,7 @@ function PolicyRepositorySection() {
         <span>India sources:</span>
         <a href="https://mnre.gov.in/notifications/" target="_blank" rel="noopener noreferrer" className="pol-link">MNRE</a>
         <span>·</span>
-        <a href="https://powermin.gov.in/en/content/acts-rules-regulations" target="_blank" rel="noopener noreferrer" className="pol-link">MoP</a>
+        <a href="https://powermin.gov.in/" target="_blank" rel="noopener noreferrer" className="pol-link">MoP</a>
         <span>·</span>
         <a href="https://cercind.gov.in/orders.html" target="_blank" rel="noopener noreferrer" className="pol-link">CERC</a>
         <span>·</span>
@@ -109,9 +109,9 @@ function PolicyRepositorySection() {
                     href={p.document_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="pol-link"
+                    className="pol-read-more"
                   >
-                    View Document
+                    READ MORE
                   </a>
                 )}
               </div>

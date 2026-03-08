@@ -398,6 +398,16 @@ function AirportListItem({
         />
         <span className="ar-list-type">{airport.Type}</span>
         <span className={statusBadgeClass(airport.Status)}>{airport.Status}</span>
+        {airport["Power Consumption (MW)"] && airport["Power Consumption (MW)"] !== "N/A" && airport["Power Consumption (MW)"] !== null && (
+          <span style={{ fontSize: "10px", color: "#f59e0b", fontWeight: 600, marginLeft: "2px" }}>
+            ⚡ {airport["Power Consumption (MW)"]} MW
+          </span>
+        )}
+        {airport.is_green && airport["Solar Capacity Installed (MW)"] && airport["Solar Capacity Installed (MW)"] !== "N/A" && airport["Solar Capacity Installed (MW)"] !== null && (
+          <span style={{ fontSize: "10px", color: "#16a34a", fontWeight: 600 }}>
+            ☀ {airport["Solar Capacity Installed (MW)"]} MW solar
+          </span>
+        )}
       </div>
     </button>
   );
