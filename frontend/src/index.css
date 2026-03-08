@@ -599,6 +599,13 @@ p {
    7. PAGE — Geo Analytics
    ========================================================================== */
 
+.geo-analytics-page {
+  padding: 40px 56px;
+  max-width: 1360px;
+  margin: 0 auto;
+}
+@media(max-width:768px) { .geo-analytics-page { padding: 24px 20px; } }
+
 .geo-analytics-page section {
   background-color: var(--color-white);
   border: 1px solid var(--color-gray-200);
@@ -1604,8 +1611,11 @@ p {
    ========================================================================== */
 
 .india-dc-page {
+  padding: 40px 56px;
   max-width: 1200px;
+  margin: 0 auto;
 }
+@media(max-width:768px) { .india-dc-page { padding: 24px 20px; } }
 
 .india-dc-header {
   margin-bottom: var(--space-6);
