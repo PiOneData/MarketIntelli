@@ -476,11 +476,11 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
       {/* Fullscreen toggle */}
       <button
         onClick={() => setFullscreen((f) => !f)}
-        className="map-fullscreen-btn"
+        className="map-fullscreen-btn map-fullscreen-btn--icon"
         style={{ position: "absolute", bottom: 48, right: 12, zIndex: 20 }}
         title={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
       >
-        {fullscreen ? "✕ Exit" : "⛶ Fullscreen"}
+        {fullscreen ? "✕" : "⛶"}
       </button>
 
       {/* Left top: Jump to coords */}

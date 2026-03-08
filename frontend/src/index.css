@@ -621,6 +621,15 @@ p {
    8. PAGE — Projects
    ========================================================================== */
 
+.projects-page {
+  padding: 40px 56px;
+  max-width: 1360px;
+  margin: 0 auto;
+}
+@media(max-width:768px) { .projects-page { padding: 24px 20px; } }
+
+.projects-page h2 { margin-bottom: 24px; }
+
 .projects-page section {
   background-color: var(--color-white);
   border: 1px solid var(--color-gray-200);
@@ -642,6 +651,15 @@ p {
 /* ==========================================================================
    9. PAGE — Policy
    ========================================================================== */
+
+.policy-page {
+  padding: 40px 56px;
+  max-width: 1360px;
+  margin: 0 auto;
+}
+@media(max-width:768px) { .policy-page { padding: 24px 20px; } }
+
+.policy-page h2 { margin-bottom: 24px; }
 
 .policy-page .pol-section {
   animation: pmFadeIn 0.25s ease;
@@ -905,6 +923,15 @@ p {
 /* ==========================================================================
    10. PAGE — Alerts
    ========================================================================== */
+
+.alerts-page {
+  padding: 40px 56px;
+  max-width: 1360px;
+  margin: 0 auto;
+}
+@media(max-width:768px) { .alerts-page { padding: 24px 20px; } }
+
+.alerts-page h2 { margin-bottom: 24px; }
 
 .alerts-page section {
   background-color: var(--color-white);
@@ -2778,8 +2805,11 @@ a.geo-layer-tab:hover {
    ========================================================================== */
 
 .pm-page {
-  padding: var(--space-2) 0;
+  padding: 40px 56px;
+  max-width: 1360px;
+  margin: 0 auto;
 }
+@media(max-width:768px) { .pm-page { padding: 24px 20px; } }
 
 .pm-header {
   margin-bottom: var(--space-6);
@@ -6681,7 +6711,11 @@ a.geo-layer-tab:hover {
 .profile-page {
   min-height: 100vh;
   background: var(--color-bg-secondary, #f8fafc);
+  padding: 40px 56px;
+  max-width: 1360px;
+  margin: 0 auto;
 }
+@media(max-width:768px) { .profile-page { padding: 24px 20px; } }
 .profile-hero {
   position: relative;
   background: var(--color-surface, #fff);
@@ -12615,6 +12649,10 @@ h2.serif-heading .t { color: var(--teal); }
   display: flex; align-items: center; gap: 5px; font-family: var(--mono);
   font-weight: 700; color: var(--ink); transition: background .15s; box-shadow: var(--shadow);
 }
+.map-fullscreen-btn--icon {
+  padding: 5px 8px !important; font-size: 16px !important; line-height: 1; width: 32px; height: 32px;
+  justify-content: center; border-radius: 4px;
+}
 .map-fullscreen-btn:hover { background: var(--cream); }
 .map-fullscreen-overlay {
   position: fixed; inset: 0; z-index: 9999; background: var(--white);
@@ -12817,6 +12855,19 @@ h2.serif-heading .t { color: var(--teal); }
   padding: 0 56px; width: 100%;
 }
 @media(max-width:768px) { .nav-top { padding: 0 16px; height: 56px; } }
+
+/* Center alert section */
+.nav-center { flex: 1; display: flex; justify-content: center; align-items: center; }
+
+/* RX² Assessment button */
+.nav-rx2-btn {
+  font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--white);
+  background: var(--teal); border: none; border-radius: 6px; padding: 7px 14px;
+  cursor: pointer; text-decoration: none; letter-spacing: .01em; white-space: nowrap;
+  transition: background .18s, transform .15s;
+}
+.nav-rx2-btn:hover { background: var(--teal2); transform: translateY(-1px); }
+@media(max-width:900px) { .nav-rx2-btn { display: none; } }
 
 /* Hamburger */
 .nav-hamburger {
@@ -13148,6 +13199,16 @@ h2.serif-heading .t { color: var(--teal); }
 .rx2-btn { font-family: var(--sans); font-size: 15px; font-weight: 500; color: var(--white); background: var(--teal); padding: 16px 40px; border: none; cursor: pointer; transition: all .25s; display: inline-block; border-radius: 8px; letter-spacing: .01em; text-decoration: none; }
 .rx2-btn:hover { background: var(--teal2); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(13,122,110,.28); }
 .rx2-cta-row { text-align: center; position: relative; z-index: 1; }
+
+/* Quick Assessment — clickable tier link */
+.rx2-tier--link { display: block; text-decoration: none; color: inherit; cursor: pointer; }
+.rx2-tier--link:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); border-color: var(--teal); }
+.rx2-tier-cta { display: inline-block; margin-top: 16px; font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--teal); letter-spacing: .06em; text-transform: uppercase; }
+
+/* Detailed Assessment — download buttons */
+.rx2-dl-btns { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.rx2-dl-btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; background: var(--white); border: 1.5px solid var(--teal); border-radius: 6px; font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--teal); text-decoration: none; transition: all .18s; cursor: pointer; }
+.rx2-dl-btn:hover { background: var(--teal); color: var(--white); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(13,122,110,.22); }
 
 /* ═══════════════════════════════════════════════════════
    TRUST SECTION (match HTML)

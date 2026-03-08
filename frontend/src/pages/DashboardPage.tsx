@@ -511,7 +511,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="rx2-tiers">
-            <div className="rx2-tier">
+            <Link to="/geo-analytics/assessment" className="rx2-tier rx2-tier--link">
               <div className="rx2-tier-label">Tier 1 · 24-Hour Turnaround</div>
               <span className="rx2-tier-icon">🔍</span>
               <div className="rx2-tier-name">QUICK ASSESSMENT</div>
@@ -523,7 +523,8 @@ export default function DashboardPage() {
                 <li>Ballpark economics &amp; payback</li>
               </ul>
               <span className="rx2-tier-tag tag-quick">Geo-Spatial · Market Intelligence · Online</span>
-            </div>
+              <span className="rx2-tier-cta">Open Assessment →</span>
+            </Link>
             <div className="rx2-tier featured">
               <div className="rx2-tier-label">Tier 2 · Full 8-Phase Study</div>
               <span className="rx2-tier-icon">⚡</span>
@@ -536,6 +537,10 @@ export default function DashboardPage() {
                 <li>ISO 50001 · BRSR · TCFD reporting</li>
               </ul>
               <span className="rx2-tier-tag tag-detail">HOMER Pro · Solargis · ISO 50001 · BRSR</span>
+              <div className="rx2-dl-btns">
+                <a href="/reward2_data_workbook.docx" download className="rx2-dl-btn">📊 Data</a>
+                <a href="/Nxtra_Data_Capability_Presentation.pdf" download className="rx2-dl-btn">📄 Capability</a>
+              </div>
             </div>
           </div>
 
