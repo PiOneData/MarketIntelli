@@ -76,6 +76,7 @@ function MainLayout() {
 
   useEffect(() => {
     setDrawerOpen(false);
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [location.pathname]);
 
   useEffect(() => {
@@ -125,8 +126,8 @@ function MainLayout() {
             </Link>
           </div>
 
-          {/* Right: Iran alert + profile */}
-          <div className="nav-btns">
+          {/* Center: Iran alert */}
+          <div className="nav-center">
             <Link
               to="/alerts/active-alerts"
               className="nav-alert-link"
@@ -136,6 +137,13 @@ function MainLayout() {
               <span className="nav-alert-text">IRAN Alert</span>
               <span className="nav-brent">Brent ↑</span>
               <span className="nav-brent nav-inr">₹/$ Watch</span>
+            </Link>
+          </div>
+
+          {/* Right: RX² button + profile */}
+          <div className="nav-btns">
+            <Link to="/geo-analytics/assessment" className="nav-rx2-btn">
+              RX² Energy Assessment
             </Link>
             <Link to="/profile" className="header-profile-btn" title="My Profile">
               <span className="header-profile-avatar">AS</span>

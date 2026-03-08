@@ -621,6 +621,15 @@ p {
    8. PAGE — Projects
    ========================================================================== */
 
+.projects-page {
+  padding: 40px 56px;
+  max-width: 1360px;
+  margin: 0 auto;
+}
+@media(max-width:768px) { .projects-page { padding: 24px 20px; } }
+
+.projects-page h2 { margin-bottom: 24px; }
+
 .projects-page section {
   background-color: var(--color-white);
   border: 1px solid var(--color-gray-200);
@@ -642,6 +651,15 @@ p {
 /* ==========================================================================
    9. PAGE — Policy
    ========================================================================== */
+
+.policy-page {
+  padding: 40px 56px;
+  max-width: 1360px;
+  margin: 0 auto;
+}
+@media(max-width:768px) { .policy-page { padding: 24px 20px; } }
+
+.policy-page h2 { margin-bottom: 24px; }
 
 .policy-page .pol-section {
   animation: pmFadeIn 0.25s ease;
@@ -905,6 +923,15 @@ p {
 /* ==========================================================================
    10. PAGE — Alerts
    ========================================================================== */
+
+.alerts-page {
+  padding: 40px 56px;
+  max-width: 1360px;
+  margin: 0 auto;
+}
+@media(max-width:768px) { .alerts-page { padding: 24px 20px; } }
+
+.alerts-page h2 { margin-bottom: 24px; }
 
 .alerts-page section {
   background-color: var(--color-white);
@@ -2778,8 +2805,11 @@ a.geo-layer-tab:hover {
    ========================================================================== */
 
 .pm-page {
-  padding: var(--space-2) 0;
+  padding: 40px 56px;
+  max-width: 1360px;
+  margin: 0 auto;
 }
+@media(max-width:768px) { .pm-page { padding: 24px 20px; } }
 
 .pm-header {
   margin-bottom: var(--space-6);
@@ -6681,7 +6711,11 @@ a.geo-layer-tab:hover {
 .profile-page {
   min-height: 100vh;
   background: var(--color-bg-secondary, #f8fafc);
+  padding: 40px 56px;
+  max-width: 1360px;
+  margin: 0 auto;
 }
+@media(max-width:768px) { .profile-page { padding: 24px 20px; } }
 .profile-hero {
   position: relative;
   background: var(--color-surface, #fff);
@@ -11387,8 +11421,8 @@ a.geo-layer-tab:hover {
   display: flex;
   height: calc(100vh - var(--header-height));
   overflow: hidden;
-  background: var(--color-gray-900);
-  color: var(--color-gray-100);
+  background: #f8fafc;
+  color: #0f172a;
 }
 
 /* Left panel */
@@ -11398,27 +11432,27 @@ a.geo-layer-tab:hover {
   max-width: 360px;
   display: flex;
   flex-direction: column;
-  background: var(--color-gray-800);
-  border-right: 1px solid var(--color-gray-700);
+  background: #fff;
+  border-right: 1px solid #e2e8f0;
   overflow: hidden;
 }
 
 .ar-panel-header {
   padding: var(--space-4) var(--space-4) var(--space-2);
-  border-bottom: 1px solid var(--color-gray-700);
+  border-bottom: 1px solid #e2e8f0;
   flex-shrink: 0;
 }
 
 .ar-panel-title {
   font-size: var(--font-size-lg);
   font-weight: 700;
-  color: var(--color-gray-50);
+  color: #0f172a;
   margin: 0;
 }
 
 .ar-panel-subtitle {
   font-size: var(--font-size-xs);
-  color: var(--color-gray-400);
+  color: #64748b;
   margin-top: 2px;
 }
 
@@ -11427,7 +11461,7 @@ a.geo-layer-tab:hover {
   position: relative;
   padding: var(--space-3) var(--space-4);
   flex-shrink: 0;
-  border-bottom: 1px solid var(--color-gray-700);
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .ar-search-icon {
@@ -11442,16 +11476,16 @@ a.geo-layer-tab:hover {
 .ar-search-input {
   width: 100%;
   padding: var(--space-2) var(--space-3) var(--space-2) 2.2rem;
-  background: var(--color-gray-700);
-  border: 1px solid var(--color-gray-600);
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
   border-radius: var(--radius-md);
-  color: var(--color-gray-100);
+  color: #0f172a;
   font-size: var(--font-size-sm);
   outline: none;
   transition: border-color 0.15s;
 }
 
-.ar-search-input::placeholder { color: var(--color-gray-500); }
+.ar-search-input::placeholder { color: #94a3b8; }
 .ar-search-input:focus { border-color: var(--color-primary-light); }
 
 .ar-search-clear {
@@ -11474,17 +11508,17 @@ a.geo-layer-tab:hover {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  border-bottom: 1px solid var(--color-gray-700);
+  border-bottom: 1px solid #e2e8f0;
   flex-shrink: 0;
 }
 
 .ar-filter-select {
   width: 100%;
   padding: var(--space-1) var(--space-2);
-  background: var(--color-gray-700);
-  border: 1px solid var(--color-gray-600);
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
   border-radius: var(--radius-sm);
-  color: var(--color-gray-200);
+  color: #1e293b;
   font-size: var(--font-size-xs);
   outline: none;
   cursor: pointer;
@@ -11503,14 +11537,14 @@ a.geo-layer-tab:hover {
 
 .ar-green-toggle-label {
   font-size: var(--font-size-xs);
-  color: var(--color-gray-300);
+  color: #475569;
   user-select: none;
 }
 
 .ar-clear-filters-btn {
   background: none;
-  border: 1px solid var(--color-gray-600);
-  color: var(--color-gray-400);
+  border: 1px solid #cbd5e1;
+  color: #64748b;
   border-radius: var(--radius-sm);
   font-size: var(--font-size-xs);
   padding: 4px 10px;
@@ -11520,8 +11554,8 @@ a.geo-layer-tab:hover {
 }
 
 .ar-clear-filters-btn:hover {
-  border-color: var(--color-gray-400);
-  color: var(--color-gray-200);
+  border-color: #94a3b8;
+  color: #334155;
 }
 
 /* View toggle */
@@ -11529,16 +11563,16 @@ a.geo-layer-tab:hover {
   display: flex;
   gap: 0;
   padding: var(--space-2) var(--space-4);
-  border-bottom: 1px solid var(--color-gray-700);
+  border-bottom: 1px solid #e2e8f0;
   flex-shrink: 0;
 }
 
 .ar-view-btn {
   flex: 1;
   padding: 6px;
-  background: var(--color-gray-700);
-  border: 1px solid var(--color-gray-600);
-  color: var(--color-gray-400);
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
   font-size: var(--font-size-xs);
   cursor: pointer;
   transition: all 0.15s;
@@ -11565,7 +11599,7 @@ a.geo-layer-tab:hover {
 
 .ar-list::-webkit-scrollbar { width: 4px; }
 .ar-list::-webkit-scrollbar-track { background: transparent; }
-.ar-list::-webkit-scrollbar-thumb { background: var(--color-gray-600); border-radius: 2px; }
+.ar-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
 
 .ar-list-loading, .ar-list-empty {
   padding: var(--space-8) var(--space-4);
@@ -11576,23 +11610,23 @@ a.geo-layer-tab:hover {
 
 .ar-list-item {
   width: 100%;
-  background: var(--color-gray-700);
-  border: 1px solid transparent;
+  background: #fff;
+  border: 1px solid #e2e8f0;
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);
   text-align: left;
   cursor: pointer;
   transition: all 0.15s;
-  color: var(--color-gray-200);
+  color: #1e293b;
 }
 
 .ar-list-item:hover {
-  background: var(--color-gray-600);
-  border-color: var(--color-gray-500);
+  background: #f1f5f9;
+  border-color: #cbd5e1;
 }
 
 .ar-list-item--selected {
-  background: rgba(15, 118, 110, 0.25);
+  background: rgba(15, 118, 110, 0.08);
   border-color: var(--color-primary-light);
 }
 
@@ -11609,7 +11643,7 @@ a.geo-layer-tab:hover {
 .ar-list-item-name {
   font-size: var(--font-size-xs);
   font-weight: 600;
-  color: var(--color-gray-100);
+  color: #0f172a;
   line-height: 1.3;
   flex: 1;
 }
@@ -11625,7 +11659,7 @@ a.geo-layer-tab:hover {
 
 .ar-list-item-city {
   font-size: 11px;
-  color: var(--color-gray-400);
+  color: #64748b;
 }
 
 .ar-list-item-iata {
@@ -11651,7 +11685,7 @@ a.geo-layer-tab:hover {
 
 .ar-list-type {
   font-size: 10px;
-  color: var(--color-gray-400);
+  color: #64748b;
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
@@ -11668,11 +11702,11 @@ a.geo-layer-tab:hover {
   white-space: nowrap;
 }
 
-.ar-badge--green { background: rgba(22,163,74,0.2); color: #4ade80; }
-.ar-badge--yellow { background: rgba(217,119,6,0.2); color: #fbbf24; }
-.ar-badge--blue { background: rgba(37,99,235,0.2); color: #60a5fa; }
-.ar-badge--red { background: rgba(220,38,38,0.2); color: #f87171; }
-.ar-badge--gray { background: rgba(100,116,139,0.2); color: #94a3b8; }
+.ar-badge--green { background: rgba(22,163,74,0.12); color: #16a34a; }
+.ar-badge--yellow { background: rgba(217,119,6,0.12); color: #d97706; }
+.ar-badge--blue { background: rgba(37,99,235,0.12); color: #2563eb; }
+.ar-badge--red { background: rgba(220,38,38,0.12); color: #dc2626; }
+.ar-badge--gray { background: rgba(100,116,139,0.12); color: #475569; }
 
 .ar-green-badge {
   display: inline-flex;
@@ -12309,8 +12343,11 @@ h2.serif-heading .t { color: var(--teal); }
   color: var(--muted); flex-shrink: 0; padding: 14px 24px 14px 0;
   border-right: 1px solid var(--border); white-space: nowrap;
 }
-.re-band-items { display: flex; align-items: center; flex: 1; overflow: visible; }
-.re-item { display: flex; align-items: center; gap: 10px; padding: 14px 0; flex: 1; justify-content: center; transition: background .15s; }
+.re-band-items { display: flex; align-items: center; flex: 1; overflow: hidden; }
+.re-band-track { display: flex; align-items: center; animation: re-scroll 40s linear infinite; will-change: transform; }
+.re-band-track:hover { animation-play-state: paused; }
+@keyframes re-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.re-item { display: flex; align-items: center; gap: 10px; padding: 14px 24px; flex-shrink: 0; transition: background .15s; }
 .re-item:hover { background: var(--cream); }
 .re-item-icon { font-size: 17px; flex-shrink: 0; }
 .re-item-data { display: flex; flex-direction: column; gap: 1px; }
@@ -12612,6 +12649,10 @@ h2.serif-heading .t { color: var(--teal); }
   display: flex; align-items: center; gap: 5px; font-family: var(--mono);
   font-weight: 700; color: var(--ink); transition: background .15s; box-shadow: var(--shadow);
 }
+.map-fullscreen-btn--icon {
+  padding: 5px 8px !important; font-size: 16px !important; line-height: 1; width: 32px; height: 32px;
+  justify-content: center; border-radius: 4px;
+}
 .map-fullscreen-btn:hover { background: var(--cream); }
 .map-fullscreen-overlay {
   position: fixed; inset: 0; z-index: 9999; background: var(--white);
@@ -12814,6 +12855,19 @@ h2.serif-heading .t { color: var(--teal); }
   padding: 0 56px; width: 100%;
 }
 @media(max-width:768px) { .nav-top { padding: 0 16px; height: 56px; } }
+
+/* Center alert section */
+.nav-center { flex: 1; display: flex; justify-content: center; align-items: center; }
+
+/* RX² Assessment button */
+.nav-rx2-btn {
+  font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--white);
+  background: var(--teal); border: none; border-radius: 6px; padding: 7px 14px;
+  cursor: pointer; text-decoration: none; letter-spacing: .01em; white-space: nowrap;
+  transition: background .18s, transform .15s;
+}
+.nav-rx2-btn:hover { background: var(--teal2); transform: translateY(-1px); }
+@media(max-width:900px) { .nav-rx2-btn { display: none; } }
 
 /* Hamburger */
 .nav-hamburger {
@@ -13145,6 +13199,16 @@ h2.serif-heading .t { color: var(--teal); }
 .rx2-btn { font-family: var(--sans); font-size: 15px; font-weight: 500; color: var(--white); background: var(--teal); padding: 16px 40px; border: none; cursor: pointer; transition: all .25s; display: inline-block; border-radius: 8px; letter-spacing: .01em; text-decoration: none; }
 .rx2-btn:hover { background: var(--teal2); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(13,122,110,.28); }
 .rx2-cta-row { text-align: center; position: relative; z-index: 1; }
+
+/* Quick Assessment — clickable tier link */
+.rx2-tier--link { display: block; text-decoration: none; color: inherit; cursor: pointer; }
+.rx2-tier--link:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); border-color: var(--teal); }
+.rx2-tier-cta { display: inline-block; margin-top: 16px; font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--teal); letter-spacing: .06em; text-transform: uppercase; }
+
+/* Detailed Assessment — download buttons */
+.rx2-dl-btns { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.rx2-dl-btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; background: var(--white); border: 1.5px solid var(--teal); border-radius: 6px; font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--teal); text-decoration: none; transition: all .18s; cursor: pointer; }
+.rx2-dl-btn:hover { background: var(--teal); color: var(--white); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(13,122,110,.22); }
 
 /* ═══════════════════════════════════════════════════════
    TRUST SECTION (match HTML)

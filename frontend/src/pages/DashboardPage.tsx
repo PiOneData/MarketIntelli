@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useCapacitySummary, usePowerMarketOverview } from "../hooks/usePowerMarket";
@@ -316,19 +316,21 @@ export default function DashboardPage() {
         <div className="re-band-inner">
           <div className="re-band-label">🌿 RE Capacity Monitored &nbsp;·&nbsp; 263 GW India Total · MNRE Jan 2026</div>
           <div className="re-band-items">
-            {RE_ITEMS.map((item, i) => (
-              <>
-                {i > 0 && <div key={`div-${i}`} className="re-divider" />}
-                <div key={item.name} className={`re-item ${item.cls}`}>
-                  <div className="re-item-icon">{item.icon}</div>
-                  <div className="re-item-data">
-                    <div className="re-item-num">{item.num} <span>{item.unit}</span></div>
-                    <div className="re-item-name">{item.name}</div>
-                    <div className="re-item-note">{item.note}</div>
+            <div className="re-band-track">
+              {[...RE_ITEMS, ...RE_ITEMS].map((item, i) => (
+                <React.Fragment key={`${i}-${item.name}`}>
+                  {i > 0 && <div className="re-divider" />}
+                  <div className={`re-item ${item.cls}`}>
+                    <div className="re-item-icon">{item.icon}</div>
+                    <div className="re-item-data">
+                      <div className="re-item-num">{item.num} <span>{item.unit}</span></div>
+                      <div className="re-item-name">{item.name}</div>
+                      <div className="re-item-note">{item.note}</div>
+                    </div>
                   </div>
-                </div>
-              </>
-            ))}
+                </React.Fragment>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -509,7 +511,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="rx2-tiers">
-            <div className="rx2-tier">
+            <Link to="/geo-analytics/assessment" className="rx2-tier rx2-tier--link">
               <div className="rx2-tier-label">Tier 1 · 24-Hour Turnaround</div>
               <span className="rx2-tier-icon">🔍</span>
               <div className="rx2-tier-name">QUICK ASSESSMENT</div>
@@ -521,7 +523,8 @@ export default function DashboardPage() {
                 <li>Ballpark economics &amp; payback</li>
               </ul>
               <span className="rx2-tier-tag tag-quick">Geo-Spatial · Market Intelligence · Online</span>
-            </div>
+              <span className="rx2-tier-cta">Open Assessment →</span>
+            </Link>
             <div className="rx2-tier featured">
               <div className="rx2-tier-label">Tier 2 · Full 8-Phase Study</div>
               <span className="rx2-tier-icon">⚡</span>
@@ -534,6 +537,10 @@ export default function DashboardPage() {
                 <li>ISO 50001 · BRSR · TCFD reporting</li>
               </ul>
               <span className="rx2-tier-tag tag-detail">HOMER Pro · Solargis · ISO 50001 · BRSR</span>
+              <div className="rx2-dl-btns">
+                <a href="/reward2_data_workbook.docx" download className="rx2-dl-btn">📊 Data</a>
+                <a href="/Nxtra_Data_Capability_Presentation.pdf" download className="rx2-dl-btn">📄 Capability</a>
+              </div>
             </div>
           </div>
 
