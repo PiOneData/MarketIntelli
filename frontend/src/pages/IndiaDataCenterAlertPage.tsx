@@ -370,15 +370,18 @@ function SortIcon({ active, dir }: { active: boolean; dir: "asc" | "desc" }) {
   );
 }
 
+const PAGE_SIZE = 10;
+
 function IndiaDataCenterAlertPage() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(EMPTY_FORM);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [filters, setFilters] = useState({ state: "", city: "", company: "" });
+  const [filters, setFilters] = useState({ state: "", city: "", company: "", power: "" });
   const [activeTab, setActiveTab] = useState<"registry" | "map" | "substations">("registry");
   const [stocksByCompany, setStocksByCompany] = useState<Record<string, DcStock>>({});
   const [sortField, setSortField] = useState<SortField>("date_added");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch facilities from API
   const { data: facilities = [], isLoading, error } = useFacilities({ page_size: 500 });
@@ -398,6 +401,13 @@ function IndiaDataCenterAlertPage() {
       if (filters.state && normalizeState(f.state) !== filters.state) return false;
       if (filters.city && !f.city.toLowerCase().includes(filters.city.toLowerCase())) return false;
       if (filters.company && !f.company_name.toLowerCase().includes(filters.company.toLowerCase())) return false;
+      if (filters.power) {
+        const mw = f.power_capacity_mw ?? 0;
+        if (filters.power === "<10" && mw >= 10) return false;
+        if (filters.power === "10-50" && (mw < 10 || mw > 50)) return false;
+        if (filters.power === "50-100" && (mw < 50 || mw > 100)) return false;
+        if (filters.power === ">100" && mw <= 100) return false;
+      }
       return true;
     });
     return [...data].sort((a, b) => {
@@ -411,6 +421,9 @@ function IndiaDataCenterAlertPage() {
         : String(bv).localeCompare(String(av));
     });
   }, [facilities, filters, sortField, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / PAGE_SIZE));
+  const paginatedData = filteredData.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const mapData = useMemo(() => toMapFormat(facilities), [facilities]);
 
@@ -429,6 +442,7 @@ function IndiaDataCenterAlertPage() {
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
+    setCurrentPage(1);
   };
 
   const handleAddDataCenter = async (e: React.FormEvent) => {
@@ -488,7 +502,8 @@ function IndiaDataCenterAlertPage() {
   };
 
   const clearFilters = () => {
-    setFilters({ state: "", city: "", company: "" });
+    setFilters({ state: "", city: "", company: "", power: "" });
+    setCurrentPage(1);
   };
 
   if (error) {
@@ -696,6 +711,16 @@ function IndiaDataCenterAlertPage() {
               onChange={handleFilterChange}
             />
           </div>
+          <div className="india-dc-field">
+            <label htmlFor="filter-power">Power Capacity</label>
+            <select id="filter-power" name="power" value={filters.power} onChange={handleFilterChange}>
+              <option value="">All Power Ranges</option>
+              <option value="<10">&lt; 10 MW</option>
+              <option value="10-50">10 – 50 MW</option>
+              <option value="50-100">50 – 100 MW</option>
+              <option value=">100">&gt; 100 MW</option>
+            </select>
+          </div>
           <div className="india-dc-field india-dc-field--action">
             <button type="button" className="india-dc-btn india-dc-btn--outline" onClick={clearFilters}>Clear Filters</button>
           </div>
@@ -716,11 +741,10 @@ function IndiaDataCenterAlertPage() {
             <button type="button" className="india-dc-btn india-dc-btn--info" onClick={handleExportCSV}>
               Export to CSV
             </button>
-            <button type="button" className="india-dc-btn india-dc-btn--accent">Daily Report</button>
           </div>
         </div>
         <p className="india-dc-table-count">
-          {isLoading ? "Loading..." : `${filteredData.length} of ${facilities.length} data centers shown`}
+          {isLoading ? "Loading..." : `${filteredData.length} of ${facilities.length} data centers — page ${currentPage} of ${totalPages}`}
         </p>
         <div className="india-dc-table-wrapper">
           <table className="india-dc-table">
@@ -767,7 +791,7 @@ function IndiaDataCenterAlertPage() {
                   <td colSpan={9} className="india-dc-table-empty">No data centers match the current filters.</td>
                 </tr>
               ) : (
-                filteredData.map((f) => {
+                paginatedData.map((f) => {
                   const stock = stocksByCompany[f.company_name];
                   const hasStock = !!(stock && !stock.error && stock.price != null);
                   return (
@@ -815,6 +839,49 @@ function IndiaDataCenterAlertPage() {
             </tbody>
           </table>
         </div>
+        {totalPages > 1 && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "16px", flexWrap: "wrap" }}>
+            <button
+              className="india-dc-btn india-dc-btn--outline"
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+            >«</button>
+            <button
+              className="india-dc-btn india-dc-btn--outline"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >‹ Prev</button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
+              .reduce<(number | "…")[]>((acc, p, idx, arr) => {
+                if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("…");
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((p, idx) =>
+                p === "…" ? (
+                  <span key={`ellipsis-${idx}`} style={{ padding: "0 4px", color: "#94a3b8" }}>…</span>
+                ) : (
+                  <button
+                    key={p}
+                    className={`india-dc-btn ${currentPage === p ? "india-dc-btn--primary" : "india-dc-btn--outline"}`}
+                    onClick={() => setCurrentPage(p as number)}
+                    style={{ minWidth: "36px" }}
+                  >{p}</button>
+                )
+              )}
+            <button
+              className="india-dc-btn india-dc-btn--outline"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >Next ›</button>
+            <button
+              className="india-dc-btn india-dc-btn--outline"
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+            >»</button>
+          </div>
+        )}
       </div>
 
       </>}

@@ -97,21 +97,30 @@ export default function PowerTradingPage() {
   return (
     <div className="pm-page">
       <header className="pm-header">
+        <div style={{ marginBottom: "0.5rem" }}>
+          <a
+            href={data.iex_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="pm-source-badge"
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontWeight: 700, fontSize: "0.82rem", textDecoration: "none" }}
+          >
+            🔗 IEX India — RE Market (iexindia.com)
+            <svg viewBox="0 0 20 20" fill="currentColor" width="11" height="11">
+              <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+              <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+            </svg>
+          </a>
+        </div>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem" }}>
           <div>
             <h2>Power Trading – Renewable Energy Market</h2>
-            <p>
-              Live renewable energy trading data from{" "}
-              <a href={data.iex_url} target="_blank" rel="noopener noreferrer" className="pol-link">
-                IEX India (iexindia.com)
-              </a>
-              . Exclusively renewable energy data — GTAM, REC, DAM RE injection, RTM.
-            </p>
+            <p>Exclusively renewable energy data — GTAM, REC, DAM RE injection, RTM.</p>
           </div>
           <div style={{ textAlign: "right", fontSize: "0.78rem", color: "var(--color-gray-400)" }}>
             <div>Date: <strong>{data.date}</strong></div>
             {dataUpdatedAt > 0 && (
-              <div>Fetched: {formatDate(new Date(dataUpdatedAt).toISOString())}</div>
+              <div>Last updated: {formatDate(new Date(dataUpdatedAt).toISOString())}</div>
             )}
             <button
               onClick={() => refetch()}
