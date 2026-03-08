@@ -488,15 +488,12 @@ function FinanceIntelligenceSection() {
   return (
     <section className="finint-section">
       <div className="finint-header">
-        <div>
-          <h3>Finance &amp; Investment Intelligence</h3>
-          <p className="finint-desc">
-            Curated policy circulars, regulatory guidelines, green bond frameworks, and
-            international finance documents — each linked to its authoritative source with
-            publication date. Live alerts from the notification engine are surfaced alongside
-            relevant documents.
-          </p>
-        </div>
+        <p className="finint-desc">
+          Curated policy circulars, regulatory guidelines, green bond frameworks, and
+          international finance documents — each linked to its authoritative source with
+          publication date. Live alerts from the notification engine are surfaced alongside
+          relevant documents.
+        </p>
       </div>
 
       {/* Live Alerts Banner */}
