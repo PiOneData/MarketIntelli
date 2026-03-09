@@ -119,16 +119,6 @@ const getHeatmapColor = (val: number, max: number, mode: 'count' | 'mw' | 'off')
     }
 };
 
-// Unused but kept for future use
-const _ratingColor = (r?: string) => {
-    if (!r) return { bg: '#f1f5f9', text: '#64748b' };
-    const v = r.toUpperCase();
-    if (v.includes('EXCEL') || v === 'VERY GOOD' || v === 'GOOD') return { bg: '#d1fae5', text: '#065f46' };
-    if (v.includes('MODERAT')) return { bg: '#fef3c7', text: '#92400e' };
-    if (v.includes('POOR') || v.includes('CRITICAL') || v.includes('OVER')) return { bg: '#fee2e2', text: '#991b1b' };
-    return { bg: '#f1f5f9', text: '#64748b' };
-};
-
 export default function MapView({ features, selectedId, onSelectDC, filterState, filterCity, filterCompany, setFilterState, setFilterCity, setFilterCompany, activeAssetType, heatmapMode, onViewDetail }: MapViewProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [flyTarget, setFlyTarget] = useState<[number, number] | null>(null);
@@ -191,10 +181,11 @@ export default function MapView({ features, selectedId, onSelectDC, filterState,
             let minLon = 180, maxLon = -180, minLat = 90, maxLat = -90;
             const processRing = (ring: number[][]) => {
                 ring.forEach(c => {
-                    if (c[0] < minLon) minLon = c[0];
-                    if (c[0] > maxLon) maxLon = c[0];
-                    if (c[1] < minLat) minLat = c[1];
-                    if (c[1] > maxLat) maxLat = c[1];
+                    const lon = c[0] ?? 0, lat = c[1] ?? 0;
+                    if (lon < minLon) minLon = lon;
+                    if (lon > maxLon) maxLon = lon;
+                    if (lat < minLat) minLat = lat;
+                    if (lat > maxLat) maxLat = lat;
                 });
             };
             if (f.geometry.type === 'MultiPolygon') (f.geometry.coordinates as number[][][][]).forEach((poly) => poly.forEach(processRing));
@@ -354,7 +345,7 @@ export default function MapView({ features, selectedId, onSelectDC, filterState,
                         key={`state-overlay-${heatmapMode}-${activeAssetType}-${features.length}-${filterState}-${filterCompany}`}
                         data={statesGeoJson as Parameters<typeof GeoJSON>[0]['data']}
                         interactive={false} // Force false to prevent UI lag from DOM event tracking
-                        style={(feature) => {
+                        style={(feature: unknown) => {
                             const sn = (feature as { properties: { NAME_1: string } }).properties.NAME_1;
                             const dataName = geoNameToData(sn, dataStates);
                             const valObj = stateHeatmapData.data[dataName];
@@ -465,7 +456,7 @@ export default function MapView({ features, selectedId, onSelectDC, filterState,
                                         interactive: true
                                     }}
                                     eventHandlers={{
-                                        click: (e) => {
+                                        click: (e: L.LeafletMouseEvent) => {
                                             L.DomEvent.stopPropagation(e);
                                             handleMarkerClick(feature);
                                         },
