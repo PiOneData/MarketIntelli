@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, type CSSProperties } from 'react';
 import { AssetFeature, AssetType } from '../../types/dc';
 import { getDCId } from '../../lib/dcUtils';
 import { Search, X, ChevronDown, MapPin, Building, PlaneTakeoff, ShieldCheck } from 'lucide-react';
@@ -437,7 +437,7 @@ export default function Sidebar({ features, selectedId, onSelectDC, filterState,
                         >
                             {/* Name row */}
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '6px', marginBottom: '3px' }}>
-                                <p style={{ fontSize: '12.5px', fontWeight: 700, color: '#0f172a', lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' } as React.CSSProperties}>
+                                <p style={{ fontSize: '12.5px', fontWeight: 700, color: '#0f172a', lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' } as CSSProperties}>
                                     <Highlight text={p.dc_name || p.airport_name || ''} query={search} />
                                 </p>
                             </div>
