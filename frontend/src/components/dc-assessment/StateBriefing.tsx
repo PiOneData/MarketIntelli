@@ -36,18 +36,18 @@ export default function StateBriefing({ features, state, onClear, activeAssetTyp
         <div className="anim-fade-slide-in" style={{
             margin: '0 12px 10px',
             background: '#fff',
-            border: '1px solid #dbeafe',
-            borderLeft: '3px solid #2563eb',
+            border: '1px solid #d6eeeb',
+            borderLeft: '3px solid #0d7a6e',
             borderRadius: '10px',
             padding: '14px',
-            boxShadow: '0 2px 8px rgba(37,99,235,0.07)',
+            boxShadow: '0 2px 8px rgba(13,122,110,0.07)',
         }}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
                 <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                         <MapPin size={11} color="#2563eb" />
-                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{state}</span>
+                        <span style={{ fontSize: '11px', fontWeight: 700, color: '#0d7a6e', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{state}</span>
                     </div>
                     <p style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>{stats.total} <span style={{ fontSize: '12px', fontWeight: 500, color: '#64748b' }}>{activeAssetType === 'airport' ? 'Airports' : 'Datacenters'}</span></p>
                 </div>
@@ -64,7 +64,7 @@ export default function StateBriefing({ features, state, onClear, activeAssetTyp
                         <div key={city} style={{ display: 'grid', gridTemplateColumns: '76px 1fr 20px', alignItems: 'center', gap: '6px' }}>
                             <span style={{ fontSize: '10px', fontWeight: 600, color: '#334155', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>{city}</span>
                             <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '99px', overflow: 'hidden' }}>
-                                <div style={{ height: '100%', width: `${(count / stats.maxCount) * 100}%`, background: 'linear-gradient(90deg, #2563eb, #60a5fa)', borderRadius: '99px', transition: 'width 0.5s ease' }} />
+                                <div style={{ height: '100%', width: `${(count / stats.maxCount) * 100}%`, background: 'linear-gradient(90deg, #0d7a6e, #0f9b8c)', borderRadius: '99px', transition: 'width 0.5s ease' }} />
                             </div>
                             <span style={{ fontSize: '10px', fontWeight: 700, color: '#64748b' }}>{count}</span>
                         </div>

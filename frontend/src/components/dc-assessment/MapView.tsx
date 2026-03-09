@@ -338,9 +338,9 @@ export default function MapView({ features, selectedId, onSelectDC, filterState,
                         interactive={false}
                         style={{
                             fill: true,
-                            fillColor: '#3b82f6',
-                            fillOpacity: heatmapMode === 'off' ? 0.1 : 0,
-                            color: '#2563eb',
+                            fillColor: '#0f9b8c',
+                            fillOpacity: heatmapMode === 'off' ? 0.08 : 0,
+                            color: '#0d7a6e',
                             weight: 2,
                             opacity: 0.7,
                             dashArray: '6 4',
@@ -422,7 +422,7 @@ export default function MapView({ features, selectedId, onSelectDC, filterState,
                         const [lon, lat] = feature.geometry.coordinates;
                         const isSelected = selectedId === id;
 
-                        let fillColor = activeAssetType === 'airport' ? '#0ea5e9' : '#6366f1';
+                        let fillColor = activeAssetType === 'airport' ? '#0ea5e9' : '#0d7a6e';
                         let opacity = 0.9;
                         let radius = isSelected ? 8 : 4;
                         const borderColor = isSelected ? '#fff' : 'transparent';
@@ -446,7 +446,7 @@ export default function MapView({ features, selectedId, onSelectDC, filterState,
                             opacity = 1;
                             fillColor = activeAssetType === 'airport' ? '#ea580c' : '#f59e0b'; // Vivid amber/orange
                         } else if (activeState && activeAssetType === 'datacenter') {
-                            fillColor = '#2563eb';
+                            fillColor = '#0f9b8c';
                         }
 
                         return (
@@ -498,14 +498,14 @@ export default function MapView({ features, selectedId, onSelectDC, filterState,
                     zIndex: 1000,
                     background: '#fff',
                     borderRadius: '14px',
-                    boxShadow: '0 16px 48px rgba(0,0,0,0.14), 0 4px 12px rgba(0,0,0,0.07)',
+                    boxShadow: '0 16px 48px rgba(28,26,24,0.12), 0 4px 12px rgba(28,26,24,0.06)',
                     width: '400px',
                     overflow: 'hidden',
                     border: '1px solid #e2e8f0',
-                    fontFamily: 'DM Sans, Inter, sans-serif',
+                    fontFamily: "var(--sans, 'DM Sans', system-ui, sans-serif)",
                 }}>
                     {/* Header band */}
-                    <div style={{ background: activeAssetType === 'airport' ? (selectedFeature.properties.is_notable_green ? 'linear-gradient(130deg, #059669 0%, #10b981 60%, #34d399 100%)' : 'linear-gradient(130deg, #0284c7 0%, #0ea5e9 60%, #38bdf8 100%)') : 'linear-gradient(130deg, #1d4ed8 0%, #2563eb 60%, #3b82f6 100%)', padding: '14px 48px 12px 16px', position: 'relative' }}>
+                    <div style={{ background: activeAssetType === 'airport' ? (selectedFeature.properties.is_notable_green ? 'linear-gradient(130deg, #059669 0%, #10b981 60%, #34d399 100%)' : 'linear-gradient(130deg, #0284c7 0%, #0ea5e9 60%, #38bdf8 100%)') : 'linear-gradient(130deg, #0d5f59 0%, #0d7a6e 60%, #0f9b8c 100%)', padding: '14px 48px 12px 16px', position: 'relative' }}>
                         <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.65)', fontWeight: 600, marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                             Selected {activeAssetType === 'airport' ? 'Airport' : 'Datacenter'}
                         </p>
@@ -562,10 +562,10 @@ export default function MapView({ features, selectedId, onSelectDC, filterState,
                             style={{
                                 width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
                                 padding: '11px 16px',
-                                background: isLoading ? '#93c5fd' : (activeAssetType === 'airport' ? (selectedFeature.properties.is_notable_green ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #0284c7, #0ea5e9)') : 'linear-gradient(135deg, #1d4ed8, #2563eb)'),
+                                background: isLoading ? '#99d6d0' : (activeAssetType === 'airport' ? (selectedFeature.properties.is_notable_green ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #0284c7, #0ea5e9)') : 'linear-gradient(135deg, #0d5f59, #0d7a6e)'),
                                 color: '#fff', borderRadius: '9px', fontSize: '13px', fontWeight: 700,
                                 border: 'none', cursor: isLoading ? 'not-allowed' : 'pointer',
-                                boxShadow: isLoading ? 'none' : (activeAssetType === 'airport' ? (selectedFeature.properties.is_notable_green ? '0 4px 14px rgba(16,185,129,0.35)' : '0 4px 14px rgba(14,165,233,0.35)') : '0 4px 14px rgba(37,99,235,0.35)'),
+                                boxShadow: isLoading ? 'none' : (activeAssetType === 'airport' ? (selectedFeature.properties.is_notable_green ? '0 4px 14px rgba(16,185,129,0.35)' : '0 4px 14px rgba(14,165,233,0.35)') : '0 4px 14px rgba(13,122,110,0.35)'),
                                 transition: 'all 0.15s', fontFamily: 'inherit',
                             }}
                         >

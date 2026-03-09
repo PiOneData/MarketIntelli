@@ -98,10 +98,10 @@ export default function Sidebar({ features, selectedId, onSelectDC, filterState,
                 onClick={() => setCollapsed(false)}
                 style={{
                     display: 'flex', alignItems: 'center', gap: '8px', pointerEvents: 'auto',
-                    background: '#0f172a', color: '#fff', border: 'none',
+                    background: '#0d5f59', color: '#fff', border: 'none',
                     borderRadius: '12px', padding: '10px 14px',
                     cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600,
-                    fontSize: '13px', boxShadow: '0 8px 32px rgba(15,23,42,0.25)',
+                    fontSize: '13px', boxShadow: '0 8px 32px rgba(13,122,110,0.25)',
                 }}
             >
                 {activeAssetType === 'datacenter' ? <Building size={14} color="#60a5fa" /> : <PlaneTakeoff size={14} color="#34d399" />}
@@ -119,7 +119,7 @@ export default function Sidebar({ features, selectedId, onSelectDC, filterState,
             flexDirection: 'column',
             background: '#fff',
             borderRadius: '18px',
-            boxShadow: '0 8px 40px rgba(15,23,42,0.14), 0 2px 8px rgba(15,23,42,0.07)',
+            boxShadow: '0 8px 40px rgba(28,26,24,0.10), 0 2px 8px rgba(28,26,24,0.05)',
             border: '1px solid rgba(226,232,240,0.8)',
             overflow: 'hidden',
             fontFamily: "'DM Sans', system-ui, sans-serif",
@@ -144,7 +144,7 @@ export default function Sidebar({ features, selectedId, onSelectDC, filterState,
                             boxShadow: activeAssetType === 'datacenter' ? '0 2px 6px rgba(0,0,0,0.06)' : 'none', transition: 'all 0.2s', fontFamily: 'inherit'
                         }}
                     >
-                        <Building size={12} color={activeAssetType === 'datacenter' ? '#3b82f6' : '#94a3b8'} /> Datacenters
+                        <Building size={12} color={activeAssetType === 'datacenter' ? '#0d7a6e' : '#94a3b8'} /> Datacenters
                     </button>
                     <button
                         onClick={() => { onToggleAsset('airport'); onSelectDC(null); }}
@@ -197,7 +197,7 @@ export default function Sidebar({ features, selectedId, onSelectDC, filterState,
                             background: '#f8fafc', color: '#0f172a', outline: 'none',
                             transition: 'border-color 0.15s, box-shadow 0.15s',
                         }}
-                        onMouseEnter={e => { (e.target as HTMLInputElement).style.borderColor = '#bfdbfe'; }}
+                        onMouseEnter={e => { (e.target as HTMLInputElement).style.borderColor = '#a7d8d4'; }}
                         onMouseLeave={e => { if (document.activeElement !== e.target) (e.target as HTMLInputElement).style.borderColor = '#e2e8f0'; }}
                     />
                     {search && (
@@ -251,28 +251,28 @@ export default function Sidebar({ features, selectedId, onSelectDC, filterState,
                             style={{
                                 width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                 padding: '7px 10px', borderRadius: '9px', fontFamily: 'inherit',
-                                border: `1.5px solid ${filterState ? '#bfdbfe' : '#e2e8f0'}`,
-                                background: filterState ? '#eff6ff' : '#f8fafc',
-                                color: filterState ? '#1d4ed8' : '#64748b',
+                                border: `1.5px solid ${filterState ? '#a7d8d4' : '#e2e8f0'}`,
+                                background: filterState ? '#f0fdfa' : '#f8fafc',
+                                color: filterState ? '#0d7a6e' : '#64748b',
                                 fontSize: '12px', fontWeight: filterState ? 700 : 500, cursor: 'pointer', outline: 'none',
                             }}
                         >
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '95px' }}>
                                 {filterState || 'All States'}
                             </span>
-                            <ChevronDown size={11} color={filterState ? '#1d4ed8' : '#94a3b8'} style={{ flexShrink: 0, transition: 'transform 0.15s', transform: stateOpen ? 'rotate(180deg)' : 'none' }} />
+                            <ChevronDown size={11} color={filterState ? '#0d7a6e' : '#94a3b8'} style={{ flexShrink: 0, transition: 'transform 0.15s', transform: stateOpen ? 'rotate(180deg)' : 'none' }} />
                         </button>
                         {stateOpen && (
                             <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 12px 32px rgba(0,0,0,0.11)', zIndex: 999, maxHeight: '220px', overflowY: 'auto' }}>
                                 <div onClick={() => { setFilterState(''); setFilterCity(''); setStateOpen(false); onSelectDC(null); }}
-                                    style={{ padding: '8px 12px', fontSize: '12px', fontWeight: 500, color: !filterState ? '#1d4ed8' : '#64748b', background: !filterState ? '#eff6ff' : '#fff', cursor: 'pointer' }}
+                                    style={{ padding: '8px 12px', fontSize: '12px', fontWeight: 500, color: !filterState ? '#0d7a6e' : '#64748b', background: !filterState ? '#f0fdfa' : '#fff', cursor: 'pointer' }}
                                     onMouseEnter={e => { if (filterState) e.currentTarget.style.background = '#f8fafc'; }}
                                     onMouseLeave={e => { if (filterState) e.currentTarget.style.background = '#fff'; }}>
                                     All States
                                 </div>
                                 {states.map(s => (
                                     <div key={s} onClick={() => { setFilterState(s); setFilterCity(''); setStateOpen(false); onSelectDC(null); }}
-                                        style={{ padding: '8px 12px', fontSize: '12px', fontWeight: filterState === s ? 700 : 400, color: filterState === s ? '#1d4ed8' : '#334155', background: filterState === s ? '#eff6ff' : '#fff', cursor: 'pointer', borderTop: '1px solid #f8fafc' }}
+                                        style={{ padding: '8px 12px', fontSize: '12px', fontWeight: filterState === s ? 700 : 400, color: filterState === s ? '#0d7a6e' : '#334155', background: filterState === s ? '#f0fdfa' : '#fff', cursor: 'pointer', borderTop: '1px solid #f8fafc' }}
                                         onMouseEnter={e => { if (filterState !== s) e.currentTarget.style.background = '#f8fafc'; }}
                                         onMouseLeave={e => { if (filterState !== s) e.currentTarget.style.background = '#fff'; }}>
                                         {s}
@@ -289,9 +289,9 @@ export default function Sidebar({ features, selectedId, onSelectDC, filterState,
                             style={{
                                 width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                 padding: '7px 10px', borderRadius: '9px', fontFamily: 'inherit',
-                                border: `1.5px solid ${filterCity ? '#bfdbfe' : '#e2e8f0'}`,
-                                background: filterCity ? '#eff6ff' : '#f8fafc',
-                                color: filterCity ? '#1d4ed8' : '#64748b',
+                                border: `1.5px solid ${filterCity ? '#a7d8d4' : '#e2e8f0'}`,
+                                background: filterCity ? '#f0fdfa' : '#f8fafc',
+                                color: filterCity ? '#0d7a6e' : '#64748b',
                                 fontSize: '12px', fontWeight: filterCity ? 700 : 500,
                                 cursor: (!filterState && cities.length > 60) ? 'not-allowed' : 'pointer',
                                 outline: 'none', opacity: (!filterState && cities.length > 60) ? 0.45 : 1,
@@ -300,19 +300,19 @@ export default function Sidebar({ features, selectedId, onSelectDC, filterState,
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '95px' }}>
                                 {filterCity || 'All Cities'}
                             </span>
-                            <ChevronDown size={11} color={filterCity ? '#1d4ed8' : '#94a3b8'} style={{ flexShrink: 0, transition: 'transform 0.15s', transform: cityOpen ? 'rotate(180deg)' : 'none' }} />
+                            <ChevronDown size={11} color={filterCity ? '#0d7a6e' : '#94a3b8'} style={{ flexShrink: 0, transition: 'transform 0.15s', transform: cityOpen ? 'rotate(180deg)' : 'none' }} />
                         </button>
                         {cityOpen && (
                             <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 12px 32px rgba(0,0,0,0.11)', zIndex: 999, maxHeight: '220px', overflowY: 'auto' }}>
                                 <div onClick={() => { setFilterCity(''); setCityOpen(false); onSelectDC(null); }}
-                                    style={{ padding: '8px 12px', fontSize: '12px', fontWeight: 500, color: !filterCity ? '#1d4ed8' : '#64748b', background: !filterCity ? '#eff6ff' : '#fff', cursor: 'pointer' }}
+                                    style={{ padding: '8px 12px', fontSize: '12px', fontWeight: 500, color: !filterCity ? '#0d7a6e' : '#64748b', background: !filterCity ? '#f0fdfa' : '#fff', cursor: 'pointer' }}
                                     onMouseEnter={e => { if (filterCity) e.currentTarget.style.background = '#f8fafc'; }}
                                     onMouseLeave={e => { if (filterCity) e.currentTarget.style.background = '#fff'; }}>
                                     All Cities
                                 </div>
                                 {cities.map(c => (
                                     <div key={c} onClick={() => { setFilterCity(c); setCityOpen(false); onSelectDC(null); }}
-                                        style={{ padding: '8px 12px', fontSize: '12px', fontWeight: filterCity === c ? 700 : 400, color: filterCity === c ? '#1d4ed8' : '#334155', background: filterCity === c ? '#eff6ff' : '#fff', cursor: 'pointer', borderTop: '1px solid #f8fafc' }}
+                                        style={{ padding: '8px 12px', fontSize: '12px', fontWeight: filterCity === c ? 700 : 400, color: filterCity === c ? '#0d7a6e' : '#334155', background: filterCity === c ? '#f0fdfa' : '#fff', cursor: 'pointer', borderTop: '1px solid #f8fafc' }}
                                         onMouseEnter={e => { if (filterCity !== c) e.currentTarget.style.background = '#f8fafc'; }}
                                         onMouseLeave={e => { if (filterCity !== c) e.currentTarget.style.background = '#fff'; }}>
                                         {c}
@@ -329,9 +329,9 @@ export default function Sidebar({ features, selectedId, onSelectDC, filterState,
                             style={{
                                 width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                 padding: '7px 10px', borderRadius: '9px', fontFamily: 'inherit',
-                                border: `1.5px solid ${filterCompany ? '#bfdbfe' : '#e2e8f0'}`,
-                                background: filterCompany ? '#eff6ff' : '#f8fafc',
-                                color: filterCompany ? '#1d4ed8' : '#64748b',
+                                border: `1.5px solid ${filterCompany ? '#a7d8d4' : '#e2e8f0'}`,
+                                background: filterCompany ? '#f0fdfa' : '#f8fafc',
+                                color: filterCompany ? '#0d7a6e' : '#64748b',
                                 fontSize: '12px', fontWeight: filterCompany ? 700 : 500,
                                 cursor: companies.length > 0 ? 'pointer' : 'not-allowed',
                                 outline: 'none', opacity: companies.length > 0 ? 1 : 0.45,
@@ -340,19 +340,19 @@ export default function Sidebar({ features, selectedId, onSelectDC, filterState,
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '65px' }}>
                                 {filterCompany || 'All Orgs'}
                             </span>
-                            <ChevronDown size={11} color={filterCompany ? '#1d4ed8' : '#94a3b8'} style={{ flexShrink: 0, transition: 'transform 0.15s', transform: companyOpen ? 'rotate(180deg)' : 'none' }} />
+                            <ChevronDown size={11} color={filterCompany ? '#0d7a6e' : '#94a3b8'} style={{ flexShrink: 0, transition: 'transform 0.15s', transform: companyOpen ? 'rotate(180deg)' : 'none' }} />
                         </button>
                         {companyOpen && (
                             <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', boxShadow: '0 12px 32px rgba(0,0,0,0.11)', zIndex: 999, maxHeight: '220px', overflowY: 'auto' }}>
                                 <div onClick={() => { setFilterCompany(''); setCompanyOpen(false); onSelectDC(null); }}
-                                    style={{ padding: '8px 12px', fontSize: '12px', fontWeight: 500, color: !filterCompany ? '#1d4ed8' : '#64748b', background: !filterCompany ? '#eff6ff' : '#fff', cursor: 'pointer' }}
+                                    style={{ padding: '8px 12px', fontSize: '12px', fontWeight: 500, color: !filterCompany ? '#0d7a6e' : '#64748b', background: !filterCompany ? '#f0fdfa' : '#fff', cursor: 'pointer' }}
                                     onMouseEnter={e => { if (filterCompany) e.currentTarget.style.background = '#f8fafc'; }}
                                     onMouseLeave={e => { if (filterCompany) e.currentTarget.style.background = '#fff'; }}>
                                     All Orgs
                                 </div>
                                 {companies.map(c => (
                                     <div key={c} onClick={() => { setFilterCompany(c); setCompanyOpen(false); onSelectDC(null); }}
-                                        style={{ padding: '8px 12px', fontSize: '12px', fontWeight: filterCompany === c ? 700 : 400, color: filterCompany === c ? '#1d4ed8' : '#334155', background: filterCompany === c ? '#eff6ff' : '#fff', cursor: 'pointer', borderTop: '1px solid #f8fafc', wordBreak: 'break-word' }}
+                                        style={{ padding: '8px 12px', fontSize: '12px', fontWeight: filterCompany === c ? 700 : 400, color: filterCompany === c ? '#0d7a6e' : '#334155', background: filterCompany === c ? '#f0fdfa' : '#fff', cursor: 'pointer', borderTop: '1px solid #f8fafc', wordBreak: 'break-word' }}
                                         onMouseEnter={e => { if (filterCompany !== c) e.currentTarget.style.background = '#f8fafc'; }}
                                         onMouseLeave={e => { if (filterCompany !== c) e.currentTarget.style.background = '#fff'; }}>
                                         {c}
@@ -385,8 +385,8 @@ export default function Sidebar({ features, selectedId, onSelectDC, filterState,
             <div style={{ padding: '8px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fafbfc', flexShrink: 0, borderBottom: '1px solid #f1f5f9', marginTop: hasFilters ? '0' : '10px' }}>
                 <p style={{ fontSize: '11px', color: '#94a3b8' }}>
                     {hasFilters
-                        ? <><span style={{ color: '#2563eb', fontWeight: 700 }}>{filtered.length}</span> {activeAssetType === 'datacenter' ? 'datacenters' : 'airports'} matched</>
-                        : <><span style={{ color: '#2563eb', fontWeight: 700 }}>{features.length}</span> total across India</>
+                        ? <><span style={{ color: '#0d7a6e', fontWeight: 700 }}>{filtered.length}</span> {activeAssetType === 'datacenter' ? 'datacenters' : 'airports'} matched</>
+                        : <><span style={{ color: '#0d7a6e', fontWeight: 700 }}>{features.length}</span> total across India</>
                     }
                 </p>
                 {hasFilters && (
@@ -411,12 +411,12 @@ export default function Sidebar({ features, selectedId, onSelectDC, filterState,
                                 padding: '11px 12px',
                                 borderRadius: '11px',
                                 marginBottom: '3px',
-                                background: isSelected ? 'linear-gradient(135deg, #eff6ff, #f0f9ff)' : '#fff',
-                                border: `1px solid ${isSelected ? '#bfdbfe' : 'transparent'}`,
-                                borderLeft: `3px solid ${isSelected ? '#2563eb' : 'transparent'}`,
+                                background: isSelected ? 'linear-gradient(135deg, #f0fdfa, #e6f7f5)' : '#fff',
+                                border: `1px solid ${isSelected ? '#a7d8d4' : 'transparent'}`,
+                                borderLeft: `3px solid ${isSelected ? '#0d7a6e' : 'transparent'}`,
                                 cursor: 'pointer',
                                 transition: 'all 0.12s ease',
-                                boxShadow: isSelected ? '0 2px 12px rgba(37,99,235,0.10)' : 'none',
+                                boxShadow: isSelected ? '0 2px 12px rgba(13,122,110,0.10)' : 'none',
                             }}
                             onMouseEnter={e => {
                                 if (!isSelected) {
