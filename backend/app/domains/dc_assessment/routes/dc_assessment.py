@@ -160,7 +160,7 @@ def _build_html(name: str, body_html: str) -> str:
 </html>"""
 
 
-@router.post("/generate-report")
+@router.post("/generate-report", response_model=None)
 async def generate_report(payload: ReportPayload) -> HTMLResponse | JSONResponse:
     """Generate an AI-powered environmental assessment report.
 
