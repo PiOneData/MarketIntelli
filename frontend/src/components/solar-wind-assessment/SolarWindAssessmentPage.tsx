@@ -373,6 +373,12 @@ export default function SolarWindAssessmentPage() {
   });
   const [loadingFromCache, setLoadingFromCache] = useState(false);
 
+  // Lock body scroll while the full-viewport map is mounted
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
   // Preload DC features from static file (like DCAssessmentPage does) so we
   // always have the full nested properties available — MapLibre serialises
   // nested objects to JSON strings when reading feature.properties, which breaks
@@ -545,7 +551,7 @@ export default function SolarWindAssessmentPage() {
   };
 
   return (
-    <div className="w-full relative" style={{ height: "calc(100vh - 68px)" }}>
+    <div className="w-full relative" style={{ height: "calc(100vh - 100px)" }}>
       {/* MAP LAYER — always mounted so the map doesn't reload on report close */}
       <div
         className="w-full h-full absolute inset-0"
