@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --font: 'DM Sans', system-ui, -apple-system, sans-serif;
+
+  /* Brand colors */
+  --blue-900: #1e3a8a;
+  --blue-800: #1d4ed8;
+  --blue-700: #2563eb;
+  --blue-600: #3b82f6;
+  --blue-100: #dbeafe;
+  --blue-50:  #eff6ff;
+
+  /* Neutrals */
+  --navy:     #0f172a;
+  --slate-800:#1e293b;
+  --slate-700:#334155;
+  --slate-500:#64748b;
+  --slate-400:#94a3b8;
+  --slate-200:#e2e8f0;
+  --slate-100:#f1f5f9;
+  --slate-50: #f8fafc;
+  --white:    #ffffff;
+
+  /* Status */
+  --green-bg: #d1fae5; --green-text: #065f46;
+  --amber-bg: #fef3c7; --amber-text: #92400e;
+  --orange-bg:#fee9d6; --orange-text:#9a3412;
+  --red-bg:   #fee2e2; --red-text:  #991b1b;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.07);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.11);
+  --shadow-xl: 0 20px 60px rgba(0,0,0,0.14);
+  --shadow-panel: 0 8px 32px rgba(15,23,42,0.12), 0 2px 8px rgba(15,23,42,0.06);
+
+  /* Radii */
+  --r-sm: 6px; --r-md: 10px; --r-lg: 14px; --r-xl: 18px; --r-full: 9999px;
+}
+
+html, body { font-family: var(--font); background: var(--slate-50); color: var(--navy); }
+
+/* ─── Badge System ─── */
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: var(--r-full); font-size: 10px; font-weight: 700; line-height: 1.5; white-space: nowrap; letter-spacing: 0.01em; }
+.badge-green  { background: var(--green-bg);  color: var(--green-text); }
+.badge-amber  { background: var(--amber-bg);  color: var(--amber-text); }
+.badge-orange { background: var(--orange-bg); color: var(--orange-text); }
+.badge-red    { background: var(--red-bg);    color: var(--red-text); }
+.badge-gray   { background: var(--slate-100); color: var(--slate-500); }
+
+/* ─── Animations ─── */
+@keyframes fadeSlideUp   { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeSlideIn   { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes fadeIn        { from { opacity: 0; } to { opacity: 1; } }
+@keyframes spin          { to { transform: rotate(360deg); } }
+@keyframes shimmer       { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+.anim-fade-slide-up  { animation: fadeSlideUp  0.4s cubic-bezier(0.16,1,0.3,1) both; }
+.anim-fade-slide-in  { animation: fadeSlideIn  0.3s cubic-bezier(0.16,1,0.3,1) both; }
+.anim-fade-in        { animation: fadeIn        0.25s ease both; }
+.anim-fade-in        { animation: fadeIn        0.25s ease both; }
+
+/* ─── Leaflet Overrides ─── */
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: var(--shadow-panel) !important;
+  border-radius: var(--r-lg) !important;
+  overflow: hidden;
+}
+.leaflet-control-zoom a {
+  background: var(--white) !important;
+  color: var(--slate-700) !important;
+  border: none !important;
+  border-bottom: 1px solid var(--slate-100) !important;
+  font-size: 16px !important;
+  width: 36px !important;
+  height: 36px !important;
+  line-height: 36px !important;
+  font-weight: 300 !important;
+  transition: background 0.1s, color 0.1s;
+}
+.leaflet-control-zoom a:hover { background: var(--blue-50) !important; color: var(--blue-700) !important; }
+.leaflet-control-zoom-out { border-bottom: none !important; }
+
+.state-tooltip {
+  background: rgba(15,23,42,0.90) !important;
+  border: none !important;
+  color: #fff !important;
+  font-family: var(--font) !important;
+  font-size: 11.5px !important;
+  border-radius: 8px !important;
+  padding: 6px 10px !important;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.2) !important;
+}
+.leaflet-tooltip {
+    font-family: var(--font) !important;
+    background: rgba(255, 255, 255, 0.94) !important;
+    backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+    border-radius: 10px !important;
+    padding: 8px 12px !important;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.08) !important;
+    color: var(--navy) !important;
+    font-size: 12px !important;
+}
+.leaflet-tooltip-top:before { border-top-color: rgba(255, 255, 255, 0.94) !important; }
+.leaflet-popup-content-wrapper { border-radius: var(--r-lg) !important; border: 1px solid var(--slate-200) !important; }
+
+/* ─── Heatmap Overlays ─── */
+.heatmap-text-overlay {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #0f172a !important;
+    font-weight: 900 !important;
+    /* Zoom-dependent font size. At zoom 4 -> 10px, zoom 5 -> 15px */
+    font-size: calc((var(--map-zoom, 5) - 4) * 5px + 10px) !important;
+    text-shadow: 
+        1.5px 1.5px 0 #fff, 
+        -1.5px -1.5px 0 #fff, 
+        1.5px -1.5px 0 #fff, 
+        -1.5px 1.5px 0 #fff,
+        0px 1.5px 0 #fff,
+        0px -1.5px 0 #fff,
+        1.5px 0px 0 #fff,
+        -1.5px 0px 0 #fff !important;
+    padding: 0 !important;
+    white-space: nowrap !important;
+}
+.heatmap-text-overlay::before {
+    display: none !important;
+}
+
+.heatmap-custom-label div {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    color: #0f172a;
+    font-weight: 900;
+    font-family: var(--font-inter);
+    font-size: calc((var(--map-zoom, 5) - 4) * 4px + 10px);
+    text-shadow: 
+        1.5px 1.5px 0 rgba(255,255,255,0.8), 
+        -1.5px -1.5px 0 rgba(255,255,255,0.8), 
+        1.5px -1.5px 0 rgba(255,255,255,0.8), 
+        -1.5px 1.5px 0 rgba(255,255,255,0.8),
+        0px 1.5px 0 rgba(255,255,255,0.8),
+        0px -1.5px 0 rgba(255,255,255,0.8),
+        1.5px 0px 0 rgba(255,255,255,0.8),
+        -1.5px 0px 0 rgba(255,255,255,0.8);
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* ─── Custom Scrollbar ─── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--slate-200); border-radius: var(--r-full); }
+::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
