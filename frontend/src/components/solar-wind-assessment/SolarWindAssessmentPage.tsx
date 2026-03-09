@@ -373,6 +373,25 @@ export default function SolarWindAssessmentPage() {
   });
   const [loadingFromCache, setLoadingFromCache] = useState(false);
 
+  // Preload DC features from static file (like DCAssessmentPage does) so we
+  // always have the full nested properties available — MapLibre serialises
+  // nested objects to JSON strings when reading feature.properties, which breaks
+  // the normalisers.  We key the map by `slno` (flat scalar field).
+  const [dcPropsMap, setDcPropsMap] = useState<Map<string, R>>(new Map());
+  useEffect(() => {
+    fetch("/data/dc_final_merged.geojson")
+      .then((r) => r.json())
+      .then((fc: { features?: { properties: R }[] }) => {
+        const m = new Map<string, R>();
+        for (const f of fc.features ?? []) {
+          const slno = String(f.properties?.slno ?? "");
+          if (slno) m.set(slno, f.properties);
+        }
+        setDcPropsMap(m);
+      })
+      .catch(console.error);
+  }, []);
+
   const fetchAnalysis = useCallback(async (
     lat: number,
     lng: number,
@@ -400,9 +419,12 @@ export default function SolarWindAssessmentPage() {
         setLoadingFromCache(true);
         setView("loading");
 
-        const liveData = await getLiveWeather(lat, lng).catch(
-          () => DEFAULT_LIVE_WEATHER,
-        );
+        const liveData = await Promise.race([
+          getLiveWeather(lat, lng),
+          new Promise<LiveWeatherData>((_, rej) =>
+            setTimeout(() => rej(new Error("live-weather timeout")), 8000)
+          ),
+        ]).catch(() => DEFAULT_LIVE_WEATHER);
 
         // Normalise name/id fields so the loading overlay and report header work
         // regardless of which GeoJSON schema (legacy `name` or merged `dc_name`).
@@ -505,7 +527,16 @@ export default function SolarWindAssessmentPage() {
     lat: number,
     lng: number,
     dcProps: DatacenterProps,
-  ) => fetchAnalysis(lat, lng, dcProps);
+  ) => {
+    // MapLibre serialises nested objects to JSON strings when reading
+    // feature.properties.  Look up the original props from our preloaded map
+    // by `slno` so normalisers receive real nested objects, not strings.
+    const slno = String((dcProps as R).slno ?? "");
+    const fullProps = (slno && dcPropsMap.get(slno))
+      ? (dcPropsMap.get(slno) as DatacenterProps)
+      : dcProps;
+    void fetchAnalysis(lat, lng, fullProps);
+  };
 
   const handleClearCache = () => {
     if (data.datacenter?.id) {
@@ -514,7 +545,7 @@ export default function SolarWindAssessmentPage() {
   };
 
   return (
-    <div className="w-full h-full relative" style={{ minHeight: "calc(100vh - 120px)" }}>
+    <div className="w-full relative" style={{ height: "calc(100vh - 68px)" }}>
       {/* MAP LAYER — always mounted so the map doesn't reload on report close */}
       <div
         className="w-full h-full absolute inset-0"
