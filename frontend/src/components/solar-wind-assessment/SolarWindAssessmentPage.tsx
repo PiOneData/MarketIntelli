@@ -162,11 +162,20 @@ function normalizeGeoJsonAnalysis(raw: R): AnalysisResult {
 // ── dc_final_merged.geojson → API schema normalizer ──────────────────────────
 // This dataset stores RE assessment directly on feature properties (no nested
 // `analysis` field).  Field names and structure differ from the old schema.
+// MapLibre GL serializes nested objects to JSON strings when querying features;
+// this helper transparently parses them back.
+function parseIfString(val: unknown): R {
+  if (typeof val === "string") {
+    try { return JSON.parse(val) as R; } catch { return {} as R; }
+  }
+  return (val ?? {}) as R;
+}
+
 function normalizeMergedDcProps(p: R): AnalysisResult {
-  const sol  = (p.solar        ?? {}) as R;
-  const wnd  = (p.wind         ?? {}) as R;
-  const wat  = (p.water        ?? {}) as R;
-  const loc  = (p.local_analysis ?? {}) as R;
+  const sol  = parseIfString(p.solar);
+  const wnd  = parseIfString(p.wind);
+  const wat  = parseIfString(p.water);
+  const loc  = parseIfString(p.local_analysis);
 
   // ── WIND ──────────────────────────────────────────────────────────────────
   // profile stored as { "10": {ws,pd,ad}, "50":…, "100":…, "150":…, "200":… }
@@ -288,7 +297,7 @@ function normalizeMergedDcProps(p: R): AnalysisResult {
   };
 
   // ── WATER ─────────────────────────────────────────────────────────────────
-  const waterScore = (p.water_score ?? 0) as number;
+  const waterScore = (p.water_score ?? wat.score ?? 0) as number;
   const pdsi       = (wat.pdsi  ?? 0) as number;
   const lwe        = (wat.lwe   ?? 0) as number;
 
@@ -514,7 +523,7 @@ export default function SolarWindAssessmentPage() {
   };
 
   return (
-    <div className="w-full h-full relative" style={{ minHeight: "calc(100vh - 120px)" }}>
+    <div className="w-full relative" style={{ height: "100%", minHeight: "calc(100vh - 100px)" }}>
       {/* MAP LAYER — always mounted so the map doesn't reload on report close */}
       <div
         className="w-full h-full absolute inset-0"

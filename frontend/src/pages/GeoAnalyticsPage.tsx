@@ -10,9 +10,18 @@ function GeoAnalyticsPage() {
   const { section } = useParams<{ section: string }>();
   const activeSection = section || "solar-potential-mapping";
 
+  // The assessment page needs full viewport height with no padding wrapper
+  if (activeSection === "assessment") {
+    return (
+      <Suspense fallback={<div style={{ padding: "2rem", color: "#64748b" }}>Loading map…</div>}>
+        <DCAssessmentPage />
+      </Suspense>
+    );
+  }
+
   return (
     <div className="geo-analytics-page">
-      {activeSection !== "solar-analysis" && activeSection !== "assessment" && (
+      {activeSection !== "solar-analysis" && (
         <h2>Geo AI &amp; Spatial Analytics</h2>
       )}
 
@@ -70,12 +79,6 @@ function GeoAnalyticsPage() {
             />
           </div>
         </section>
-      )}
-
-      {activeSection === "assessment" && (
-        <Suspense fallback={<div style={{ padding: "2rem", color: "#64748b" }}>Loading map…</div>}>
-          <DCAssessmentPage />
-        </Suspense>
       )}
     </div>
   );
