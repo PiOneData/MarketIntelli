@@ -124,36 +124,11 @@ export default function IranConflictSection() {
           ))}
         </div>
 
-        <div className="alerts-summary">
-          <span className="alerts-summary-label">Risk Summary</span>
-          <div className="alerts-stats">
-            <div className="as-item">
-              <span className="as-num red">1</span>
-              <span className="as-label">Critical</span>
-            </div>
-            <div className="as-item">
-              <span className="as-num amber">3</span>
-              <span className="as-label">High</span>
-            </div>
-            <div className="as-item">
-              <span className="as-num blue">1</span>
-              <span className="as-label">Medium</span>
-            </div>
-            <div className="as-item">
-              <span className="as-num teal">1</span>
-              <span className="as-label">Positive</span>
-            </div>
-          </div>
+        <div style={{ textAlign: "center", marginTop: "8px" }}>
           <Link to="/alerts/active-alerts" className="alerts-cta">
             View All Alerts →
           </Link>
         </div>
-
-        <p className="data-source-note">
-          Sources: Ministry of External Affairs (MEA) · International Energy Agency (IEA) ·
-          Reuters Energy · MNRE · PIB · CERC · Bloomberg · Platts · NEP 2022-32 · Gulf press reports.
-          All risk assessments are analytical and for informational purposes only.
-        </p>
       </div>
     </section>
   );

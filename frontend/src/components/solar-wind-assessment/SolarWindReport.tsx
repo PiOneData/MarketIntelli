@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import apiClient from "../../api/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Area,
@@ -61,6 +63,30 @@ interface Props {
 
 type TabId = "datacenter" | "wind" | "solar" | "water";
 
+// ── Stock types ───────────────────────────────────────────────────────────────
+interface DcStock {
+  dc_company: string;
+  parent_company: string;
+  ticker: string;
+  exchange: string;
+  price: number | null;
+  prev_close: number | null;
+  change_pct: number | null;
+  currency: string;
+  market_state: string;
+  error?: string;
+}
+
+function fmtStockPrice(price: number | null, currency: string): string {
+  if (price == null) return "—";
+  const sym = currency === "INR" ? "₹" : currency === "USD" ? "$" : currency === "SGD" ? "S$" : currency + "\u00a0";
+  return `${sym}${price.toLocaleString("en-IN", { maximumFractionDigits: 2, minimumFractionDigits: 2 })}`;
+}
+
+const EXCHANGE_NAMES: Record<string, string> = {
+  NSE: "NSE", BSE: "BSE", NASDAQ: "NASDAQ", NYSE: "NYSE", SGX: "SGX", TSE: "TSE",
+};
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const getCardinal = (angle: number): string => {
   const dirs = ["North", "North-East", "East", "South-East", "South", "South-West", "West", "North-West"];
@@ -93,6 +119,21 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
   // font-sans (Inter) is declared on the container; all children inherit it
   const [activeTab, setActiveTab] = useState<TabId>(datacenter ? "datacenter" : "wind");
   const [showGuide, setShowGuide] = useState(false);
+  const [dcStock, setDcStock] = useState<DcStock | null>(null);
+  const [stockLoading, setStockLoading] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!datacenter?.company) return;
+    setStockLoading(true);
+    apiClient.get<{ stocks: DcStock[] }>("/projects/dc-stocks")
+      .then(r => {
+        const match = r.data.stocks.find(s => s.dc_company === datacenter.company);
+        setDcStock(match ?? null);
+      })
+      .catch(() => setDcStock(null))
+      .finally(() => setStockLoading(false));
+  }, [datacenter?.company]);
 
   const windData = analysis.wind ?? {};
   const solarData = analysis.solar ?? {};
@@ -358,7 +399,11 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                   <div>
                     <div style={{ fontSize: "10px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Data Center Profile</div>
                     <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a", lineHeight: 1.2 }}>{str(datacenter.name)}</h2>
-                    <div style={{ fontSize: "13px", color: "#475569", marginTop: "4px" }}>{str(datacenter.company)}</div>
+                    <div
+                      onClick={() => navigate("/projects/developer-profiles")}
+                      style={{ fontSize: "13px", color: "#0f766e", marginTop: "4px", cursor: "pointer", textDecoration: "underline dotted", textUnderlineOffset: "3px" }}
+                      title="View developer profile"
+                    >{str(datacenter.company)}</div>
                     {datacenter.url && (
                       <a href={String(datacenter.url)} target="_blank" rel="noopener noreferrer"
                         style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "11px", fontWeight: 600, color: "#0f766e", textDecoration: "none", marginTop: "4px" }}>
@@ -392,6 +437,70 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Stock Price Viewer */}
+              <div style={{ background: "#fff", border: "1px solid #e2e8f0", padding: "20px 24px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+                  <div style={{ width: "28px", height: "28px", background: "#0f766e", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" /></svg>
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>Market Intelligence</h3>
+                    <div style={{ fontSize: "10px", color: "#94a3b8" }}>Live stock data for associated company</div>
+                  </div>
+                </div>
+                {stockLoading ? (
+                  <div style={{ padding: "16px", background: "#f8fafc", border: "1px solid #e2e8f0", textAlign: "center", fontSize: "11px", color: "#94a3b8" }}>
+                    Fetching market data…
+                  </div>
+                ) : dcStock && !dcStock.error ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
+                      <div style={{ padding: "12px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                        <div style={{ fontSize: "9px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>Price</div>
+                        <div style={{ fontSize: "16px", fontWeight: 800, color: "#1e293b", fontFamily: "monospace" }}>{fmtStockPrice(dcStock.price, dcStock.currency)}</div>
+                      </div>
+                      <div style={{ padding: "12px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                        <div style={{ fontSize: "9px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>Day Change</div>
+                        <div style={{ fontSize: "14px", fontWeight: 700, fontFamily: "monospace", color: dcStock.change_pct != null ? (dcStock.change_pct >= 0 ? "#16a34a" : "#dc2626") : "#94a3b8" }}>
+                          {dcStock.change_pct != null ? `${dcStock.change_pct >= 0 ? "▲" : "▼"} ${Math.abs(dcStock.change_pct).toFixed(2)}%` : "—"}
+                        </div>
+                      </div>
+                      <div style={{ padding: "12px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                        <div style={{ fontSize: "9px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>Exchange</div>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#1e293b" }}>
+                          <span style={{ background: "#f0f0f0", color: "#1a1a1a", padding: "2px 8px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em", border: "1px solid #d1d5db" }}>
+                            {EXCHANGE_NAMES[dcStock.exchange] ?? dcStock.exchange}
+                          </span>
+                        </div>
+                      </div>
+                      <div style={{ padding: "12px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                        <div style={{ fontSize: "9px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>Ticker</div>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#0f766e", fontFamily: "monospace" }}>{dcStock.ticker}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", background: "#f8fafc", border: "1px solid #e2e8f0", fontSize: "11px" }}>
+                      <span style={{ color: "#64748b" }}>
+                        Parent: <strong style={{ color: "#1e293b" }}>{dcStock.parent_company}</strong>
+                        {dcStock.prev_close != null && <> · Prev Close: <strong style={{ color: "#1e293b", fontFamily: "monospace" }}>{fmtStockPrice(dcStock.prev_close, dcStock.currency)}</strong></>}
+                        {" · "}Market: <strong style={{ color: dcStock.market_state === "REGULAR" ? "#16a34a" : "#94a3b8" }}>{dcStock.market_state === "REGULAR" ? "Open" : dcStock.market_state === "PRE" ? "Pre-Market" : "Closed"}</strong>
+                      </span>
+                      <a href={`https://finance.yahoo.com/quote/${encodeURIComponent(dcStock.ticker)}/`} target="_blank" rel="noopener noreferrer"
+                        style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "10px", fontWeight: 700, color: "#0f766e", textDecoration: "none", letterSpacing: "0.04em" }}>
+                        Yahoo Finance →
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ padding: "16px", background: "#f8fafc", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div style={{ width: "24px", height: "24px", background: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: "12px" }}>🔒</div>
+                    <div>
+                      <div style={{ fontSize: "12px", fontWeight: 700, color: "#475569" }}>Private / Unlisted Company</div>
+                      <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>No publicly traded stock available for this company.</div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Location + Infrastructure */}

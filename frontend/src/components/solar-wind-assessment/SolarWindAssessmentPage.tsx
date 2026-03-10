@@ -523,7 +523,7 @@ export default function SolarWindAssessmentPage() {
   };
 
   return (
-    <div className="w-full relative" style={{ height: "100%", minHeight: "calc(100vh - 100px)" }}>
+    <div className="w-full relative" style={{ height: "calc(100vh - 100px)", overflow: "hidden" }}>
       {/* MAP LAYER — always mounted so the map doesn't reload on report close */}
       <div
         className="w-full h-full absolute inset-0"

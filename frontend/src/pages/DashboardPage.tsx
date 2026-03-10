@@ -48,12 +48,12 @@ const PGEN_CARDS = [
 ];
 
 const MODULES = [
-  { n: "01", ico: "⚡", title: "Power Data",         desc: "Real-time generation, injection and scheduling across conventional and RE sources, state-by-state and ISTS-level.", tags: ["SCADA","ISGS","State Gen","Demand"], to: "/power-data/overview" },
-  { n: "02", ico: "☀️", title: "Solar Intelligence", desc: "Project-level solar capacity tracking, Solargis TMY irradiance, PLF trends, and developer pipeline.", tags: ["Capacity","PLF","GHI","Pipeline"], to: "/geo-analytics/assessment" },
-  { n: "03", ico: "💨", title: "Wind Intelligence",  desc: "Wind resource analytics, CUF data, zone-wise generation patterns, and auction tracking with P50/P90.", tags: ["CUF","P50/P90","Zones","Auctions"], to: "/geo-analytics/assessment" },
-  { n: "04", ico: "📊", title: "Power Market",       desc: "IEX & PXIL spot prices, DAM/RTM volumes, congestion patterns, REC trading and participant data.", tags: ["IEX","DAM","RTM","REC"], to: "/finance/power-trading" },
-  { n: "05", ico: "📋", title: "Policy & Regulation",desc: "State RPO compliance, CERC/SERC orders, tariff determinations, and grid code updates.", tags: ["RPO","Tariff","CERC","SERC"], to: "/policy/policy-repository" },
-  { n: "06", ico: "🔍", title: "Project Intelligence",desc: "End-to-end lifecycle from bid to COD across solar, wind, hybrid, and storage. 8,760hr BESS simulation.", tags: ["Pipeline","COD","HOMER","BESS"], to: "/projects/project-directory" },
+  { n: "01", ico: "⚡", title: "Power Data",              desc: "Real-time generation, injection and scheduling across conventional and RE sources, state-by-state and ISTS-level.", tags: ["SCADA","ISGS","State Gen","Demand"], to: "/power-data/overview" },
+  { n: "02", ico: "☀️", title: "Solar & Wind Intelligence",desc: "Project-level solar and wind capacity tracking, Solargis TMY irradiance, CUF data, P50/P90 wind resource analytics, and developer pipeline.", tags: ["Capacity","PLF","GHI","P50/P90"], to: "/geo-analytics/assessment" },
+  { n: "03", ico: "💹", title: "Finance & Investment",    desc: "IEX & PXIL spot prices, DAM/RTM volumes, Brent crude watch, REC trading, investment guidelines, FDI trends, and credit environment.", tags: ["IEX","DAM","REC","FDI"], to: "/finance/finance-intelligence" },
+  { n: "04", ico: "📊", title: "Power Market",            desc: "Live power exchange data, congestion patterns, cross-border trading, and India electricity market analytics.", tags: ["IEX","PXIL","RTM","Congestion"], to: "/finance/power-trading" },
+  { n: "05", ico: "📋", title: "Policy & Regulation",     desc: "State RPO compliance, CERC/SERC orders, tariff determinations, and grid code updates.", tags: ["RPO","Tariff","CERC","SERC"], to: "/policy/policy-repository" },
+  { n: "06", ico: "🔍", title: "Project Intelligence",    desc: "End-to-end lifecycle from bid to COD across solar, wind, hybrid, and storage. 8,760hr BESS simulation.", tags: ["Pipeline","COD","HOMER","BESS"], to: "/projects/project-directory" },
 ];
 
 const RX2_PHASES = [
@@ -67,12 +67,12 @@ const RX2_PHASES = [
 ];
 
 const TRUST_BADGES = [
-  { ico: "⚡", strong: "IEX / PXIL / HPX", span: "Live Exchange Data" },
-  { ico: "🏛️", strong: "CEA · MNRE · PIB", span: "Official Govt. Sources" },
-  { ico: "📡", strong: "RLDC / SLDC",      span: "Grid Operator Data" },
-  { ico: "🛰️", strong: "Solargis",         span: "TMY Irradiance" },
-  { ico: "🌍", strong: "NITI Aayog",       span: "India Energy Data" },
-  { ico: "📊", strong: "IEA / Bloomberg",  span: "Global Intelligence" },
+  { ico: "⚡", strong: "IEX / PXIL / HPX", span: "Live Exchange Data",      url: "https://www.iexindia.com" },
+  { ico: "🏛️", strong: "CEA · MNRE · PIB", span: "Official Govt. Sources",  url: "https://cea.nic.in" },
+  { ico: "📡", strong: "RLDC / SLDC",      span: "Grid Operator Data",      url: "https://nrldc.in" },
+  { ico: "🛰️", strong: "Solargis",         span: "TMY Irradiance",          url: "https://solargis.com" },
+  { ico: "🌍", strong: "NITI Aayog",       span: "India Energy Data",       url: "https://www.niti.gov.in" },
+  { ico: "📊", strong: "IEA / Bloomberg",  span: "Global Intelligence",     url: "https://www.iea.org" },
 ];
 
 // ── News ticker items (static — from IEX public reports, PIB, CERC orders) ─
@@ -579,13 +579,14 @@ export default function DashboardPage() {
           <div className="trust-pre">Data Sources</div>
           <div className="trust-badges">
             {TRUST_BADGES.map((b) => (
-              <div key={b.strong} className="tb">
+              <a key={b.strong} className="tb" href={b.url} target="_blank" rel="noopener noreferrer"
+                style={{ textDecoration: "none", color: "inherit" }}>
                 <span className="tb-ico">{b.ico}</span>
                 <div className="tb-text">
                   <strong>{b.strong}</strong>
                   <span>{b.span}</span>
                 </div>
-              </div>
+              </a>
             ))}
           </div>
         </div>

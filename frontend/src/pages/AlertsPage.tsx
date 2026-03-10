@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import apiClient from "../api/client";
 import IpoWatchPage from "./IpoWatchPage";
 import {
   useAlerts,
@@ -549,6 +551,166 @@ function CustomWatchlistsSection() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Brent Crude Panel                                                   */
+/* ------------------------------------------------------------------ */
+
+interface BrentData {
+  price: number | null;
+  prev_close: number | null;
+  change: number | null;
+  change_pct: number | null;
+  currency: string;
+  market_state: string;
+  unit: string;
+  last_updated: string;
+  source: string;
+  error?: string;
+}
+
+const BRENT_IMPACTS = [
+  {
+    icon: "⚡",
+    label: "INR Pressure",
+    detail: "Oil price spikes widen India's current account deficit. Every $10/bbl rise in Brent → ~₹0.40 depreciation pressure on INR/USD.",
+    severity: "high",
+  },
+  {
+    icon: "☀️",
+    label: "RE Capex Risk",
+    detail: "INR depreciation increases imported RE component costs (inverters, trackers, turbines) by 3–5%. Project IRRs erode 80–120 bps.",
+    severity: "high",
+  },
+  {
+    icon: "🚢",
+    label: "Shipping & Logistics",
+    detail: "Elevated crude prices raise freight costs for solar modules (China→India Red Sea route). +15–40% freight inflation possible in conflict scenario.",
+    severity: "medium",
+  },
+  {
+    icon: "🏭",
+    label: "Gas Power Impact",
+    detail: "Correlated LNG price spikes affect India's 8.5 GW gas-fired capacity. Short-term costliness strengthens RE economics.",
+    severity: "positive",
+  },
+];
+
+function BrentCrudePanel() {
+  const { data: brent, isLoading, isError } = useQuery<BrentData>({
+    queryKey: ["finance", "brent-crude"],
+    queryFn: async () => { const { data } = await apiClient.get("/finance/commodity/brent"); return data; },
+    staleTime: 3 * 60 * 1000,
+    retry: 2,
+  });
+
+  const isUp = (brent?.change_pct ?? 0) >= 0;
+  const sevColor: Record<string, string> = { high: "#ef4444", medium: "#f59e0b", positive: "#10b981" };
+
+  return (
+    <div style={{ background: "#fff", border: "1px solid #e2e8f0", marginBottom: "24px", overflow: "hidden" }}>
+      {/* Header */}
+      <div style={{ background: "#0f172a", padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+        <div>
+          <div style={{ fontSize: "10px", fontWeight: 700, color: "#ef4444", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "4px" }}>
+            ● LIVE · GEOPOLITICAL COMMODITY ALERT
+          </div>
+          <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#fff", margin: 0 }}>Brent Crude Oil — Live Price Monitor</h3>
+          <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px" }}>
+            ICE Brent Futures (BZ=F) · Iran Conflict Watch · India Energy Impact Tracker
+          </p>
+        </div>
+        {brent && !isError && (
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: "10px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>
+              {brent.market_state === "REGULAR" ? "Market Open" : brent.market_state === "PRE" ? "Pre-Market" : "Market Closed"}
+            </div>
+            {isLoading ? (
+              <div style={{ fontSize: "28px", fontWeight: 800, color: "#94a3b8" }}>Loading…</div>
+            ) : brent.price != null ? (
+              <>
+                <div style={{ fontSize: "32px", fontWeight: 800, color: "#fff", lineHeight: 1, fontFamily: "monospace" }}>
+                  ${brent.price.toFixed(2)}
+                  <span style={{ fontSize: "14px", color: "#94a3b8", marginLeft: "6px" }}>USD/bbl</span>
+                </div>
+                {brent.change != null && brent.change_pct != null && (
+                  <div style={{ fontSize: "14px", fontWeight: 700, color: isUp ? "#ef4444" : "#22c55e", marginTop: "4px", fontFamily: "monospace" }}>
+                    {isUp ? "▲" : "▼"} ${Math.abs(brent.change).toFixed(2)} ({isUp ? "+" : ""}{brent.change_pct.toFixed(2)}%)
+                  </div>
+                )}
+                {brent.prev_close != null && (
+                  <div style={{ fontSize: "11px", color: "#64748b", marginTop: "2px" }}>
+                    Prev close: ${brent.prev_close.toFixed(2)}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div style={{ fontSize: "16px", color: "#64748b" }}>Price unavailable</div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Impact cards */}
+      <div style={{ padding: "20px 24px" }}>
+        <div style={{ fontSize: "10px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "16px" }}>
+          India RE Sector Exposure — Key Risk Vectors
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "12px" }}>
+          {BRENT_IMPACTS.map((item) => (
+            <div key={item.label} style={{ padding: "14px 16px", background: "#f8fafc", border: `1px solid #e2e8f0`, borderLeft: `3px solid ${sevColor[item.severity] ?? "#e2e8f0"}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                <span style={{ fontSize: "16px" }}>{item.icon}</span>
+                <span style={{ fontSize: "12px", fontWeight: 700, color: "#1e293b" }}>{item.label}</span>
+                <span style={{ marginLeft: "auto", fontSize: "9px", fontWeight: 700, color: sevColor[item.severity], textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  {item.severity === "positive" ? "OPPORTUNITY" : item.severity.toUpperCase()}
+                </span>
+              </div>
+              <p style={{ fontSize: "11px", color: "#64748b", lineHeight: 1.5, margin: 0 }}>{item.detail}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Scenario table */}
+        <div style={{ marginTop: "20px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
+          <div style={{ padding: "10px 16px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", fontSize: "10px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            Brent Crude Scenario Projections — India RE Impact
+          </div>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid #e2e8f0" }}>
+                {["Scenario", "Brent Range", "INR/USD Est.", "RE Capex Impact", "LNG Price"].map(h => (
+                  <th key={h} style={{ padding: "8px 12px", textAlign: "left", fontWeight: 700, color: "#64748b", background: "#f8fafc" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { s: "Base (No Escalation)", b: "$70–80", inr: "₹83–85", capex: "+0–1%", lng: "$10–13/mmBTU" },
+                { s: "Moderate Tension", b: "$85–100", inr: "₹86–89", capex: "+2–4%", lng: "$14–18/mmBTU" },
+                { s: "Strait Closure Risk", b: "$110–140", inr: "₹90–95", capex: "+5–8%", lng: "$20–30/mmBTU" },
+              ].map((row, i) => (
+                <tr key={i} style={{ borderBottom: "1px solid #f1f5f9", background: i % 2 === 0 ? "#fff" : "#f8fafc" }}>
+                  <td style={{ padding: "8px 12px", fontWeight: 600, color: "#1e293b" }}>{row.s}</td>
+                  <td style={{ padding: "8px 12px", fontFamily: "monospace", color: "#0f766e" }}>{row.b}</td>
+                  <td style={{ padding: "8px 12px", fontFamily: "monospace", color: "#475569" }}>{row.inr}</td>
+                  <td style={{ padding: "8px 12px", fontFamily: "monospace", color: "#ef4444" }}>{row.capex}</td>
+                  <td style={{ padding: "8px 12px", fontFamily: "monospace", color: "#475569" }}>{row.lng}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {brent && (
+          <div style={{ marginTop: "12px", fontSize: "10px", color: "#94a3b8" }}>
+            Source: {brent.source} · Last updated: {new Date(brent.last_updated).toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" })} IST · All scenario projections are analytical estimates for informational purposes only.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Active Alerts Section                                               */
 /* ------------------------------------------------------------------ */
 
@@ -560,6 +722,7 @@ function ActiveAlertsSection() {
 
   return (
     <section id="active-alerts">
+      <BrentCrudePanel />
       <h3>Active Alerts ({alerts?.length ?? 0})</h3>
       <p>Real-time notifications on policy changes, project delays, or environmental risks.</p>
     </section>
