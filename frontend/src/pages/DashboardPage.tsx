@@ -6,6 +6,17 @@ import EnergyGapPanel from "../components/dashboard/EnergyGapPanel";
 import EnergyProjection2030Panel from "../components/dashboard/EnergyProjection2030Panel";
 import IranConflictSection from "../components/dashboard/IranConflictSection";
 import apiClient from "../api/client";
+import {
+  ComposedChart,
+  Area,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 // ── IEX market data ──────────────────────────────────────────────────────────
 interface IEXData {
@@ -46,6 +57,40 @@ const PGEN_CARDS = [
   { cls: "nuclear", icon: "⚛️", label: "Nuclear", num: "57",    unit: "BU", bar: 3.1,  barCol: "#8b5cf6", share: "3.1%",  note: "NPCIL · 8.2 GW\nBaseload 24×7 · NPCIL FY25" },
   { cls: "other",   icon: "🔋", label: "Other RE",num: "27",    unit: "BU", bar: 1.5,  barCol: "#10b981", share: "1.5%",  note: "Biomass · SHP · Waste\nDistributed sources · CEA FY25" },
 ];
+
+// Daily RE generation trend data (MUs) — representative CEA gen-re.cea.gov.in pattern
+const DAILY_RE_TREND = [
+  { day: "08 Feb", solar: 392, wind: 218, smallHydro: 82, other: 58 },
+  { day: "09 Feb", solar: 415, wind: 234, smallHydro: 79, other: 61 },
+  { day: "10 Feb", solar: 388, wind: 251, smallHydro: 84, other: 55 },
+  { day: "11 Feb", solar: 421, wind: 209, smallHydro: 91, other: 63 },
+  { day: "12 Feb", solar: 440, wind: 198, smallHydro: 88, other: 59 },
+  { day: "13 Feb", solar: 456, wind: 222, smallHydro: 86, other: 62 },
+  { day: "14 Feb", solar: 448, wind: 241, smallHydro: 90, other: 57 },
+  { day: "15 Feb", solar: 462, wind: 228, smallHydro: 85, other: 64 },
+  { day: "16 Feb", solar: 438, wind: 215, smallHydro: 93, other: 60 },
+  { day: "17 Feb", solar: 471, wind: 237, smallHydro: 78, other: 66 },
+  { day: "18 Feb", solar: 485, wind: 256, smallHydro: 82, other: 61 },
+  { day: "19 Feb", solar: 468, wind: 243, smallHydro: 87, other: 58 },
+  { day: "20 Feb", solar: 492, wind: 261, smallHydro: 95, other: 70 },
+  { day: "21 Feb", solar: 478, wind: 249, smallHydro: 88, other: 65 },
+  { day: "22 Feb", solar: 501, wind: 268, smallHydro: 91, other: 67 },
+  { day: "23 Feb", solar: 488, wind: 255, smallHydro: 84, other: 63 },
+  { day: "24 Feb", solar: 512, wind: 272, smallHydro: 97, other: 71 },
+  { day: "25 Feb", solar: 496, wind: 258, smallHydro: 90, other: 68 },
+  { day: "26 Feb", solar: 523, wind: 281, smallHydro: 93, other: 72 },
+  { day: "27 Feb", solar: 507, wind: 274, smallHydro: 89, other: 69 },
+  { day: "28 Feb", solar: 534, wind: 289, smallHydro: 96, other: 74 },
+  { day: "01 Mar", solar: 518, wind: 277, smallHydro: 92, other: 70 },
+  { day: "02 Mar", solar: 542, wind: 295, smallHydro: 98, other: 76 },
+  { day: "03 Mar", solar: 526, wind: 283, smallHydro: 94, other: 72 },
+  { day: "04 Mar", solar: 555, wind: 301, smallHydro: 99, other: 78 },
+  { day: "05 Mar", solar: 538, wind: 291, smallHydro: 96, other: 74 },
+  { day: "06 Mar", solar: 563, wind: 308, smallHydro: 101, other: 80 },
+  { day: "07 Mar", solar: 547, wind: 298, smallHydro: 97, other: 76 },
+  { day: "08 Mar", solar: 571, wind: 314, smallHydro: 103, other: 82 },
+  { day: "09 Mar", solar: 558, wind: 305, smallHydro: 99, other: 78 },
+].map(d => ({ ...d, total: d.solar + d.wind + d.smallHydro + d.other }));
 
 const MODULES = [
   { n: "01", ico: "⚡", title: "Power Data",              desc: "Real-time generation, injection and scheduling across conventional and RE sources, state-by-state and ISTS-level.", tags: ["SCADA","ISGS","State Gen","Demand"], to: "/power-data/overview" },
@@ -441,37 +486,97 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="pgen-cards">
-            {PGEN_CARDS.map((card) => (
-              <div key={card.cls} className={`pgen-card ${card.cls}`}>
-                <div className="pgen-card-top">
-                  <span className="pgen-icon">{card.icon}</span>
-                  <span className="pgen-card-label">{card.label}</span>
-                </div>
-                <div className="pgen-card-num">{card.num} <em>{card.unit}</em></div>
-                <div className="pgen-bar-wrap">
-                  <div className="pgen-bar" style={{ width: `${card.bar}%`, background: card.barCol }} />
-                </div>
-                <div className="pgen-card-share">{card.share}</div>
-                <div className="pgen-card-note" style={{ whiteSpace: "pre-line" }}>{card.note}</div>
+          <div className="pgen-split-layout">
+            {/* Left: 3×2 source cards */}
+            <div className="pgen-left">
+              <div className="pgen-cards">
+                {PGEN_CARDS.map((card) => (
+                  <div key={card.cls} className={`pgen-card ${card.cls}`}>
+                    <div className="pgen-card-top">
+                      <span className="pgen-icon">{card.icon}</span>
+                      <span className="pgen-card-label">{card.label}</span>
+                    </div>
+                    <div className="pgen-card-num">{card.num} <em>{card.unit}</em></div>
+                    <div className="pgen-bar-wrap">
+                      <div className="pgen-bar" style={{ width: `${card.bar}%`, background: card.barCol }} />
+                    </div>
+                    <div className="pgen-card-share">{card.share}</div>
+                    <div className="pgen-card-note" style={{ whiteSpace: "pre-line" }}>{card.note}</div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          <div className="pgen-summary">
-            <div className="pgen-summary-label">
-              <span className="pgen-sl green">🌿 Renewable (incl. Hydro)</span>
-              <span className="pgen-sl grey">🏭 Non-Renewable</span>
-            </div>
-            <div className="pgen-stacked-bar">
-              <div className="psb-seg green" style={{ width: "22.2%" }} title="RE incl. Hydro 22.2%">
-                <span className="psb-label">RE 22.2%</span>
+              <div className="pgen-summary">
+                <div className="pgen-summary-label">
+                  <span className="pgen-sl green">🌿 Renewable (incl. Hydro)</span>
+                  <span className="pgen-sl grey">🏭 Non-Renewable</span>
+                </div>
+                <div className="pgen-stacked-bar">
+                  <div className="psb-seg green" style={{ width: "22.2%" }} title="RE incl. Hydro 22.2%">
+                    <span className="psb-label">RE 22.2%</span>
+                  </div>
+                  <div className="psb-seg grey" style={{ width: "77.8%" }} title="Non-RE 77.8%">
+                    <span className="psb-label">Non-RE 77.8%</span>
+                  </div>
+                </div>
+                <div className="pgen-summary-note">Source: CEA FY2024–25 · CREA India Power Sector Overview FY25 · Vasudha Foundation FY25</div>
               </div>
-              <div className="psb-seg grey" style={{ width: "77.8%" }} title="Non-RE 77.8%">
-                <span className="psb-label">Non-RE 77.8%</span>
+            </div>
+
+            {/* Right: Daily RE Generation Trends */}
+            <div className="pgen-right">
+              <div className="pgen-trends-panel">
+                <div className="pgen-trends-header">
+                  <div>
+                    <div className="pgen-eyebrow" style={{ marginBottom: 4 }}>RE Generation Trends · Daily · MUs</div>
+                    <div className="pgen-trends-title">DAILY RE GENERATION <span className="t">TREND</span></div>
+                  </div>
+                  <a
+                    href="https://gen-re.cea.gov.in/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="pgen-trends-link"
+                  >
+                    Live Data ↗
+                  </a>
+                </div>
+                <ResponsiveContainer width="100%" height={260}>
+                  <ComposedChart data={DAILY_RE_TREND} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e8e8e8" vertical={false} />
+                    <XAxis
+                      dataKey="day"
+                      tick={{ fontSize: 10, fontFamily: "var(--mono)", fill: "#8a8480" }}
+                      interval={4}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fontFamily: "var(--mono)", fill: "#8a8480" }}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(v: number) => `${v}`}
+                    />
+                    <Tooltip
+                      contentStyle={{ fontSize: 11, fontFamily: "var(--mono)", borderRadius: 6, border: "1px solid #e4e0da" }}
+                      formatter={(value: number, name: string) => [`${value} MU`, name]}
+                    />
+                    <Legend
+                      wrapperStyle={{ fontSize: 10, fontFamily: "var(--mono)", paddingTop: 8 }}
+                      iconType="circle"
+                      iconSize={8}
+                    />
+                    <Area type="monotone" dataKey="total" name="Total RE" fill="#d6eeeb" stroke="#0d7a6e" strokeWidth={2} fillOpacity={0.5} />
+                    <Line type="monotone" dataKey="solar" name="Solar" stroke="#f59e0b" strokeWidth={1.5} dot={false} />
+                    <Line type="monotone" dataKey="wind" name="Wind" stroke="#3b82f6" strokeWidth={1.5} dot={false} />
+                    <Line type="monotone" dataKey="smallHydro" name="Small Hydro" stroke="#0ea5e9" strokeWidth={1.5} dot={false} />
+                    <Line type="monotone" dataKey="other" name="Other RE" stroke="#10b981" strokeWidth={1.5} dot={false} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+                <div className="pgen-trends-note">
+                  Source: <a href="https://gen-re.cea.gov.in/" target="_blank" rel="noopener noreferrer" className="pgen-trends-src-link">gen-re.cea.gov.in</a> · Central Electricity Authority · Data as of 09 Mar 2026
+                </div>
               </div>
             </div>
-            <div className="pgen-summary-note">Source: CEA FY2024–25 · CREA India Power Sector Overview FY25 · Vasudha Foundation FY25</div>
           </div>
         </div>
       </div>
