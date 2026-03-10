@@ -539,7 +539,8 @@ export default function DashboardPage() {
               <span className="rx2-tier-tag tag-detail">HOMER Pro · Solargis · ISO 50001 · BRSR</span>
               <div className="rx2-dl-btns">
                 <a href="/reward2_data_workbook.docx" download className="rx2-dl-btn">📊 Assessment Data Model</a>
-                <a href="/Nxtra_Data_Capability_Presentation.pdf" download className="rx2-dl-btn">📄 Sample Report</a>
+                <a href="/RX2%20-%20REWARDS%20Sample%20Case%20study.pdf" target="_blank" rel="noopener noreferrer" className="rx2-dl-btn">📄 View Report</a>
+                <a href="/RX2%20-%20REWARDS%20Sample%20Case%20study.pdf" download="RX2 - REWARDS Sample Case study.pdf" className="rx2-dl-btn">⬇ Download</a>
               </div>
             </div>
           </div>
