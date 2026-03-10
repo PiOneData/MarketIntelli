@@ -8,7 +8,10 @@ Data sources:
 
 from __future__ import annotations
 
+import asyncio
+import json
 import logging
+import urllib.request
 from datetime import date, datetime, timezone
 
 import httpx
@@ -243,3 +246,125 @@ async def check_external_link(url: str) -> dict:
     except Exception as exc:
         logger.warning(f"[check-link] {url}: {type(exc).__name__}: {exc}")
         return {"accessible": False, "status_code": 0, "error": "Connection failed"}
+
+
+# ── Brent Crude Price ─────────────────────────────────────────────────────────
+
+def _fetch_brent_yahoo() -> dict:
+    """Blocking Yahoo Finance chart API call for Brent crude (BZ=F) — run in thread pool."""
+    url = "https://query1.finance.yahoo.com/v8/finance/chart/BZ%3DF?interval=1d&range=5d"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; MarketIntelli/2.0; +https://refex.com)",
+        "Accept": "application/json",
+    }
+    try:
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=12) as resp:
+            data = json.loads(resp.read().decode())
+        result = (data.get("chart", {}).get("result") or [{}])[0]
+        meta = result.get("meta", {})
+        price = meta.get("regularMarketPrice")
+        prev = meta.get("chartPreviousClose") or meta.get("previousClose")
+        change = round(price - prev, 2) if price and prev else None
+        change_pct = round((change / prev) * 100, 2) if change and prev else None
+        return {
+            "ticker": "BZ=F",
+            "name": "Brent Crude Oil",
+            "price": price,
+            "prev_close": prev,
+            "change": change,
+            "change_pct": change_pct,
+            "currency": meta.get("currency", "USD"),
+            "market_state": meta.get("marketState", "CLOSED"),
+            "exchange": "ICE",
+            "unit": "USD/barrel",
+        }
+    except Exception as exc:
+        logger.warning(f"[brent-crude] Yahoo Finance BZ=F: {type(exc).__name__}: {exc}")
+        return {
+            "ticker": "BZ=F",
+            "name": "Brent Crude Oil",
+            "price": None,
+            "prev_close": None,
+            "change": None,
+            "change_pct": None,
+            "currency": "USD",
+            "market_state": "CLOSED",
+            "exchange": "ICE",
+            "unit": "USD/barrel",
+            "error": str(exc),
+        }
+
+
+@router.get("/commodity/brent")
+async def get_brent_crude_price() -> dict:
+    """Live Brent crude oil futures price (BZ=F) from Yahoo Finance.
+
+    Returns current price, previous close, daily change and percentage change.
+    Source: Yahoo Finance — ICE Brent Crude Futures (BZ=F).
+    """
+    result = await asyncio.to_thread(_fetch_brent_yahoo)
+    return {
+        **result,
+        "last_updated": datetime.now(tz=timezone.utc).isoformat(),
+        "source": "Yahoo Finance – ICE Brent Crude Futures (BZ=F)",
+    }
+
+
+# ── USD/INR Exchange Rate ─────────────────────────────────────────────────────
+
+def _fetch_usdinr_yahoo() -> dict:
+    """Blocking Yahoo Finance chart API call for USD/INR (USDINR=X) — run in thread pool."""
+    url = "https://query1.finance.yahoo.com/v8/finance/chart/USDINR%3DX?interval=1d&range=5d"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; MarketIntelli/2.0; +https://refex.com)",
+        "Accept": "application/json",
+    }
+    try:
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=12) as resp:
+            data = json.loads(resp.read().decode())
+        result = (data.get("chart", {}).get("result") or [{}])[0]
+        meta = result.get("meta", {})
+        rate = meta.get("regularMarketPrice")
+        prev = meta.get("chartPreviousClose") or meta.get("previousClose")
+        change = round(rate - prev, 4) if rate and prev else None
+        change_pct = round((change / prev) * 100, 3) if change and prev else None
+        return {
+            "ticker": "USDINR=X",
+            "name": "USD/INR",
+            "rate": rate,
+            "prev_close": prev,
+            "change": change,
+            "change_pct": change_pct,
+            "currency": "INR",
+            "market_state": meta.get("marketState", "CLOSED"),
+        }
+    except Exception as exc:
+        logger.warning(f"[usdinr] Yahoo Finance USDINR=X: {type(exc).__name__}: {exc}")
+        return {
+            "ticker": "USDINR=X",
+            "name": "USD/INR",
+            "rate": None,
+            "prev_close": None,
+            "change": None,
+            "change_pct": None,
+            "currency": "INR",
+            "market_state": "CLOSED",
+            "error": str(exc),
+        }
+
+
+@router.get("/commodity/usdinr")
+async def get_usdinr_rate() -> dict:
+    """Live USD/INR exchange rate from Yahoo Finance (USDINR=X).
+
+    Returns current rate, previous close, and daily change.
+    Source: Yahoo Finance — USD/INR Forex (USDINR=X).
+    """
+    result = await asyncio.to_thread(_fetch_usdinr_yahoo)
+    return {
+        **result,
+        "last_updated": datetime.now(tz=timezone.utc).isoformat(),
+        "source": "Yahoo Finance – USD/INR Forex (USDINR=X)",
+    }

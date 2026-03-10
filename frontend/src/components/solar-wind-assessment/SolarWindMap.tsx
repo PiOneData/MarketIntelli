@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
@@ -82,6 +83,7 @@ const LAYER_DEFS: { id: string; group: LayerGroup }[] = [
 
 // ── Component ────────────────────────────────────────────────────────────────
 export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: Props) {
+  const navigate = useNavigate();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const marker = useRef<maplibregl.Marker | null>(null);
@@ -694,7 +696,11 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "14px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                   <div>
-                    <div style={{ fontSize: "10px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "4px" }}>
+                    <div
+                      onClick={() => navigate("/projects/developer-profiles")}
+                      style={{ fontSize: "10px", fontWeight: 700, color: "#0f766e", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "4px", cursor: "pointer", textDecoration: "underline dotted", textUnderlineOffset: "3px" }}
+                      title="View developer profile"
+                    >
                       {String(dcPopup.dc["company"] ?? "")}
                     </div>
                     <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#1e293b", lineHeight: 1.2 }}>

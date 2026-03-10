@@ -32,8 +32,26 @@ interface IEXReMarketData {
   last_updated: string;
 }
 
+interface BrentData {
+  ticker: string;
+  name: string;
+  price: number | null;
+  prev_close: number | null;
+  change: number | null;
+  change_pct: number | null;
+  currency: string;
+  market_state: string;
+  unit: string;
+  error?: string;
+}
+
 async function fetchIEXData(): Promise<IEXReMarketData> {
   const { data } = await apiClient.get("/finance/iex/re-market-data");
+  return data;
+}
+
+async function fetchBrentData(): Promise<BrentData> {
+  const { data } = await apiClient.get("/finance/commodity/brent");
   return data;
 }
 
@@ -46,6 +64,13 @@ export default function PowerTicker() {
     queryKey: ["finance", "iex-re-market"],
     queryFn: fetchIEXData,
     staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+
+  const { data: brent } = useQuery({
+    queryKey: ["finance", "brent-crude"],
+    queryFn: fetchBrentData,
+    staleTime: 3 * 60 * 1000,
     retry: 2,
   });
 
@@ -66,7 +91,15 @@ export default function PowerTicker() {
   const rtm = data.market_summary.rtm;
   const dam = data.market_summary.dam_re_injection;
 
+  const brentLabel = brent?.price != null
+    ? `$${brent.price.toFixed(2)}/bbl`
+    : "—";
+  const brentChange = brent?.change_pct != null
+    ? ` ${brent.change_pct >= 0 ? "▲" : "▼"}${Math.abs(brent.change_pct).toFixed(2)}%`
+    : "";
+
   const items = [
+    { label: "Brent Crude", val: brentLabel, extra: brentChange || "" },
     { label: "IEX DAM", val: `₹${fmt(p.dam_mcp_inr_per_mwh / 1000)}/kWh`, extra: "" },
     { label: "IEX RTM", val: `₹${fmt(p.rtm_mcp_inr_per_mwh / 1000)}/kWh`, extra: "" },
     { label: "G-TAM MCP", val: `₹${fmt(p.gtam_mcp_inr_per_mwh / 1000)}/kWh`, extra: "" },
@@ -87,9 +120,30 @@ export default function PowerTicker() {
           {doubled.map((item, i) => (
             <span className="ticker-item" key={i}>
               <span className="ticker-label">{item.label}</span>
-              <span className="ticker-val">{item.val}</span>
+              <span
+                className="ticker-val"
+                style={
+                  item.label === "Brent Crude" && brent?.change_pct != null
+                    ? { color: brent.change_pct >= 0 ? "#ef4444" : "#22c55e" }
+                    : undefined
+                }
+              >
+                {item.val}
+              </span>
               {item.extra && <span className="ticker-sep" />}
-              {item.extra && <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--muted)" }}>{item.extra}</span>}
+              {item.extra && (
+                <span
+                  style={{
+                    fontFamily: "var(--mono)",
+                    fontSize: 10,
+                    color: item.label === "Brent Crude" && brent?.change_pct != null
+                      ? brent.change_pct >= 0 ? "#ef4444" : "#22c55e"
+                      : "var(--muted)",
+                  }}
+                >
+                  {item.extra}
+                </span>
+              )}
             </span>
           ))}
         </div>

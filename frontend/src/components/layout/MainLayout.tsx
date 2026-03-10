@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Outlet, NavLink, useLocation, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import refexLogo from "../../assets/refex-logo.png";
 import PowerTicker from "./PowerTicker";
 import AppFooter from "./AppFooter";
+import apiClient from "../../api/client";
 
 const NAV_ITEMS = [
   { path: "/", label: "Dashboard", end: true },
@@ -76,8 +78,15 @@ function MainLayout() {
 
   useEffect(() => {
     setDrawerOpen(false);
+    if (location.hash) {
+      const el = document.getElementById(location.hash.slice(1));
+      if (el) {
+        setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+        return;
+      }
+    }
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-  }, [location.pathname]);
+  }, [location.pathname, location.hash]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -105,6 +114,16 @@ function MainLayout() {
     if (active) setExpandedGroup(active.path);
   }, [location.pathname]);
 
+  const { data: usdInr } = useQuery({
+    queryKey: ["finance", "usdinr"],
+    queryFn: () => apiClient.get<{ rate: number | null; change_pct: number | null }>("/finance/commodity/usdinr").then(r => r.data),
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+
+  const inrDisplay = usdInr?.rate != null ? `₹${usdInr.rate.toFixed(2)}/$` : "₹/$ Watch";
+  const inrUp = (usdInr?.change_pct ?? 0) >= 0;
+
   return (
     <div className="app-layout">
       {/* ── Header ── */}
@@ -129,14 +148,19 @@ function MainLayout() {
           {/* Center: Iran alert */}
           <div className="nav-center">
             <Link
-              to="/alerts/active-alerts"
+              to="/#iran-conflict"
               className="nav-alert-link"
-              title="Iran Conflict — Active Geopolitical Alert"
+              title="Iran Conflict — View energy impact analysis on homepage"
             >
               <span className="nav-alert-dot" />
               <span className="nav-alert-text">IRAN Alert</span>
               <span className="nav-brent">Brent ↑</span>
-              <span className="nav-brent nav-inr">₹/$ Watch</span>
+              <span
+                className="nav-brent nav-inr"
+                style={usdInr?.rate != null ? { color: inrUp ? "#ef4444" : "#22c55e" } : undefined}
+              >
+                {inrDisplay}
+              </span>
             </Link>
           </div>
 
