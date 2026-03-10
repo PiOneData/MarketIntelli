@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import React from "react";
 
 interface AlertCard {
   severity: "critical" | "high" | "medium" | "positive";
@@ -6,8 +6,10 @@ interface AlertCard {
   title: string;
   body: string;
   impact: string;
+  impactLabel: string;
   source: string;
   date: string;
+  articleUrl: string;
   links: { label: string; url: string }[];
 }
 
@@ -15,16 +17,17 @@ const ALERT_CARDS: AlertCard[] = [
   {
     severity: "critical",
     category: "Supply Security",
-    title: "Strait of Hormuz: Crude & LPG Supply Risk",
+    title: "Strait of Hormuz — 20% of Global Oil at Risk",
     body:
-      "Ongoing Iran-Israel-US tensions threaten closure of the Strait of Hormuz, through which ~20% of global oil and ~25% of India's LPG imports transit. Any blockade would spike Brent crude prices and increase India's energy import bill by an estimated ₹1.2–2.0 lakh crore annually.",
-    impact: "Brent crude ↑35–60% in blockade scenario · India import bill +₹1.2–2.0 lakh cr",
-    source: "MEA / IEA / Reuters",
-    date: "Mar 2026",
+      "US–Israel strikes on Iran began 28 Feb 2026. Brent crude surged 10–13% to ₹6,850/bbl (~$82). India sources 51% of crude from West Asia — 2.5–2.7 mb/d transits Hormuz. LPG reserves limited to 10 days; 93% of LPG imports from Gulf region.",
+    impactLabel: "Price Impact",
+    impact: "Brent ↑$80–82/bbl · Analysts flag $100 risk if Hormuz blocked",
+    source: "Down To Earth · Business Standard",
+    date: "01 Mar 2026",
+    articleUrl: "https://www.downtoearth.org.in/energy/oil-gas-prices-continue-to-surge-as-west-asia-conflict-disrupts-hormuz-supply-route-india-allowed-to-turn-to-russian-crude",
     links: [
-      { label: "IEA Oil Security", url: "https://www.iea.org/topics/oil-security" },
-      { label: "MEA Statement", url: "https://www.mea.gov.in/press-releases.htm" },
-      { label: "Reuters Energy", url: "https://www.reuters.com/business/energy/" },
+      { label: "Down To Earth", url: "https://www.downtoearth.org.in/energy/oil-gas-prices-continue-to-surge-as-west-asia-conflict-disrupts-hormuz-supply-route-india-allowed-to-turn-to-russian-crude" },
+      { label: "Business Standard", url: "https://www.business-standard.com/world-news/iran-conflict-oil-shock-strait-of-hormuz-global-economy-126030900560_1.html" },
     ],
   },
   {
@@ -32,72 +35,77 @@ const ALERT_CARDS: AlertCard[] = [
     category: "RE Supply Chain",
     title: "Solar Module & BESS Logistics Disruption",
     body:
-      "Red Sea/Gulf shipping routes carry ~60% of India's solar module imports from China and Southeast Asia. Conflict escalation increases freight costs 15–40% and extends delivery timelines by 4–8 weeks, directly impacting RE project commissioning schedules and capex.",
-    impact: "Solar module freight +15–40% · Project timeline delays 4–8 weeks",
-    source: "IEEFA / MNRE / Shipping Intelligence",
-    date: "Mar 2026",
+      "Shipping lanes through Hormuz carry RE components and critical minerals. Freight & insurance surcharges already rising. Solar module deliveries for Q1–Q2 2026 face schedule slippage. BESS risk most acute — India pipeline jumps from 507 MWh (2025) to 5 GWh (2026) target.",
+    impactLabel: "RE Risk",
+    impact: "2–4 week delivery delays · BESS project commissioning at risk",
+    source: "SaurEnergy · CEEW Analysis",
+    date: "03 Mar 2026",
+    articleUrl: "https://www.saurenergy.com/solar-energy-blog/indias-renewable-energy-sector-implications-of-a-prolonged-middle-east-conflict-11171383",
     links: [
-      { label: "IEEFA India", url: "https://ieefa.org/tag/india/" },
-      { label: "MNRE Reports", url: "https://mnre.gov.in/physical-progress/" },
+      { label: "SaurEnergy", url: "https://www.saurenergy.com/solar-energy-blog/indias-renewable-energy-sector-implications-of-a-prolonged-middle-east-conflict-11171383" },
     ],
   },
   {
     severity: "high",
-    category: "Currency & Finance",
-    title: "Rupee Depreciation Pressure on RE Capex",
+    category: "Currency & Capex",
+    title: "Rupee Pressure Raises RE Project Costs",
     body:
-      "Oil price spikes widen India's current account deficit, depreciating the rupee against USD. A 5% INR depreciation increases RE equipment capex by ~3–5% for imported components (inverters, trackers, turbines), eroding project IRRs by 80–120 bps.",
-    impact: "INR/USD pressure · RE capex +3–5% · IRR erosion 80–120 bps",
-    source: "RBI / CERC / Bloomberg",
-    date: "Mar 2026",
+      "Elevated oil prices expand India's import bill — 85%+ of crude is imported. Higher USD demand weakens the rupee, raising costs for imported equipment (inverters, trackers, BESS cells). Project IRRs for new bids under pressure as equipment costs in INR terms rise.",
+    impactLabel: "Capex Risk",
+    impact: "INR depreciation pressure · Equipment costs ↑4–8% est.",
+    source: "Policy Circle · CEEW",
+    date: "02 Mar 2026",
+    articleUrl: "https://www.policycircle.org/economy/rupee-depreciation-indias-oil-warning/",
     links: [
-      { label: "RBI Monetary Policy", url: "https://www.rbi.org.in/Scripts/MonetaryPolicy.aspx" },
-      { label: "CERC Orders", url: "https://cercind.gov.in/" },
-    ],
-  },
-  {
-    severity: "high",
-    category: "Gas Markets",
-    title: "LNG Spot Price Spike Risk",
-    body:
-      "Iran conflict could disrupt LNG supply from Qatar and Australia through the Arabian Sea routes. India's LNG-based power plants (8.5 GW capacity) face fuel cost risk. Short-term gas power costliness strengthens the case for RE but stresses grid stability.",
-    impact: "LNG spot +25–50% · Gas genco fuel costs under pressure · 8.5 GW at risk",
-    source: "GAIL / Petronet LNG / IEA GAS2025",
-    date: "Mar 2026",
-    links: [
-      { label: "IEA Gas 2024", url: "https://www.iea.org/reports/gas-2024" },
-      { label: "GAIL India", url: "https://www.gailonline.com/" },
-      { label: "Petronet LNG", url: "https://www.petronetlng.com/" },
+      { label: "Policy Circle — Rupee Risk", url: "https://www.policycircle.org/economy/rupee-depreciation-indias-oil-warning/" },
+      { label: "Policy Circle — Oil Dependency", url: "https://www.policycircle.org/economy/iran-conflict-indias-oil-dependency/" },
     ],
   },
   {
     severity: "medium",
-    category: "Foreign Investment",
-    title: "Gulf RE Investment & Financing Disruption",
+    category: "Gas & Fertiliser",
+    title: "LNG Price Spike Threatens Power & Agriculture",
     body:
-      "Saudi Aramco, ADNOC, and sovereign wealth funds (ADIA, PIF) have committed $8.5 bn to Indian RE infrastructure. Escalating regional conflict may freeze new commitments and delay disbursements, affecting SECI auction timelines and hybrid project financing.",
-    impact: "$8.5 bn committed Gulf RE investment at risk · SECI timelines at risk",
-    source: "SECI / PIB / Gulf News / MEA",
-    date: "Mar 2026",
+      "67% of India's LNG imports (25 MT in 2025) sourced from West Asia. European gas prices up 38% after Qatar facility strikes. India's gas-based power capacity (~25 GW) faces fuel cost surge. Urea production at risk — 60% of feedstock LNG imported from Qatar.",
+    impactLabel: "Power Market",
+    impact: "Gas-based PLF may fall · DAM spot prices at risk of ↑",
+    source: "Business Standard · Policy Circle",
+    date: "01 Mar 2026",
+    articleUrl: "https://www.business-standard.com/industry/news/west-asia-crisis-triggers-severe-lng-lpg-supply-shock-for-indian-firms-126030400982_1.html",
     links: [
-      { label: "SECI Tenders", url: "https://seci.co.in/" },
-      { label: "PIB Press Releases", url: "https://pib.gov.in/AllRelease.aspx" },
-      { label: "MEA India-Gulf", url: "https://www.mea.gov.in/india-and-gulf.htm" },
+      { label: "Business Standard — LNG Shock", url: "https://www.business-standard.com/industry/news/west-asia-crisis-triggers-severe-lng-lpg-supply-shock-for-indian-firms-126030400982_1.html" },
+      { label: "Business Standard — LNG Supply Chain", url: "https://www.business-standard.com/industry/news/west-asia-crisis-lng-supply-cut-india-industry-hormuz-risk-qatar-126030900626_1.html" },
+    ],
+  },
+  {
+    severity: "high",
+    category: "Green H₂ & Investment",
+    title: "Gulf RE Investment & Green H₂ Partnerships at Risk",
+    body:
+      "Middle East has become a key partner for India in green hydrogen, critical minerals and RE project investment. Gulf SWFs (ADNOC, ACWA Power, TAQA) have active India RE commitments. Escalating instability could pause or delay deal-making and disbursements.",
+    impactLabel: "Investment Risk",
+    impact: "Gulf-India RE FDI pipeline under review · H₂ MoUs at risk",
+    source: "SaurEnergy · Columbia SIPA CGEP",
+    date: "02 Mar 2026",
+    articleUrl: "https://www.saurenergy.com/solar-energy-blog/indias-renewable-energy-sector-implications-of-a-prolonged-middle-east-conflict-11171383",
+    links: [
+      { label: "SaurEnergy — RE Sector Impact", url: "https://www.saurenergy.com/solar-energy-blog/indias-renewable-energy-sector-implications-of-a-prolonged-middle-east-conflict-11171383" },
+      { label: "Columbia CGEP", url: "https://www.energypolicy.columbia.edu/" },
     ],
   },
   {
     severity: "positive",
-    category: "RE Opportunity",
-    title: "Domestic Renewable Transition Acceleration",
+    category: "Policy Acceleration",
+    title: "Crisis Accelerates India's Renewable Transition",
     body:
-      "Geopolitical volatility underscores India's energy security imperative. The government has reaffirmed 500 GW RE target by 2030. Import substitution policies for solar manufacturing (PLI Scheme ₹24,000 cr), domestic BESS manufacturing, and green hydrogen corridors are being fast-tracked.",
-    impact: "500 GW RE target reaffirmed · PLI ₹24,000 cr solar manufacturing boost",
-    source: "MNRE / PIB / NEP 2022-32",
-    date: "Mar 2026",
+      "Sustained oil above $85–100/bbl historically accelerates RE transitions in import-dependent nations. Analysts expect faster auction rounds, expedited clearances and enhanced PLI disbursements covering full solar value chain (cells, wafers, polysilicon). Energy security narrative now politically potent.",
+    impactLabel: "Upside",
+    impact: "RE target acceleration likely · Import duty protection justified",
+    source: "SaurEnergy · Climate Trends · CEEW",
+    date: "03 Mar 2026",
+    articleUrl: "https://www.saurenergy.com/solar-energy-news/iran-conflict-signals-why-india-must-accelerate-the-clean-energy-shift-11167701",
     links: [
-      { label: "MNRE 500GW Progress", url: "https://mnre.gov.in/physical-progress/" },
-      { label: "NEP 2022-32 (CEA)", url: "https://cea.nic.in/national-electricity-plan-volume-i-generation/" },
-      { label: "PIB RE Announcements", url: "https://pib.gov.in/AllRelease.aspx" },
+      { label: "SaurEnergy — Clean Energy Shift", url: "https://www.saurenergy.com/solar-energy-news/iran-conflict-signals-why-india-must-accelerate-the-clean-energy-shift-11167701" },
     ],
   },
 ];
@@ -105,8 +113,8 @@ const ALERT_CARDS: AlertCard[] = [
 const SEV_LABEL: Record<AlertCard["severity"], string> = {
   critical: "Critical",
   high: "High",
-  medium: "Medium",
-  positive: "Positive",
+  medium: "Moderate",
+  positive: "Opportunity",
 };
 
 export default function IranConflictSection() {
@@ -121,7 +129,7 @@ export default function IranConflictSection() {
             </div>
             <h2>Iran Conflict &amp; India Energy Impact</h2>
             <p className="s-sub">
-              Six key risk vectors tracked as of March 2026 — sourced from MEA, IEA, MNRE, and market intelligence.
+              Six key risk vectors tracked as of March 2026 — live news feed sourced from Down To Earth, Business Standard, SaurEnergy, Policy Circle, and CEEW.
             </p>
           </div>
           <div className="alerts-meta">
@@ -130,53 +138,53 @@ export default function IranConflictSection() {
           </div>
         </div>
 
-        <div className="alerts-grid">
-          {ALERT_CARDS.map((card) => (
-            <div className={`alert-card ${card.severity}`} key={card.title}>
-              <div className="alert-card-top">
-                <span className={`alert-severity sev-${card.severity}`}>
-                  {SEV_LABEL[card.severity]}
-                </span>
-                <span className="alert-category">{card.category}</span>
-              </div>
-              <div className="alert-title">{card.title}</div>
-              <div className="alert-body">{card.body}</div>
-              <div className="alert-impact">
-                <span className="alert-impact-label">Impact</span>
-                <span className="alert-impact-val">{card.impact}</span>
-              </div>
-              <div className="alert-footer">
-                <span className="alert-source">Source: {card.source}</span>
-                <span className="alert-date">{card.date}</span>
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "10px" }}>
-                {card.links.map((lnk) => (
-                  <a
-                    key={lnk.url}
-                    href={lnk.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      fontSize: "10px", fontWeight: 600, color: "#0f766e",
-                      textDecoration: "none", padding: "3px 8px",
-                      border: "1px solid #0f766e", borderRadius: "2px",
-                      letterSpacing: "0.03em", lineHeight: 1.4,
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = "#0f766e"; e.currentTarget.style.color = "#fff"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#0f766e"; }}
-                  >
-                    {lnk.label} ↗
-                  </a>
-                ))}
-              </div>
-            </div>
-          ))}
+        {/* Horizontal scroll news feed */}
+        <div className="alerts-scroll-track">
+          <div className="alerts-scroll-inner">
+            {ALERT_CARDS.map((card) => (
+              <a
+                key={card.title}
+                href={card.articleUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`alert-card alert-card--link ${card.severity}`}
+              >
+                <div className="alert-card-top">
+                  <span className={`alert-severity sev-${card.severity}`}>
+                    {SEV_LABEL[card.severity]}
+                  </span>
+                  <span className="alert-category">{card.category}</span>
+                </div>
+                <div className="alert-title">{card.title}</div>
+                <div className="alert-body">{card.body}</div>
+                <div className="alert-impact">
+                  <span className="alert-impact-label">{card.impactLabel}</span>
+                  <span className="alert-impact-val">{card.impact}</span>
+                </div>
+                <div className="alert-footer">
+                  <span className="alert-source">{card.source}</span>
+                  <span className="alert-date">{card.date}</span>
+                </div>
+                <div className="alert-card-sources">
+                  {card.links.map((lnk) => (
+                    <span
+                      key={lnk.url}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(lnk.url, "_blank", "noopener,noreferrer"); }}
+                      className="alert-src-chip"
+                    >
+                      {lnk.label} ↗
+                    </span>
+                  ))}
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
 
-        <div style={{ textAlign: "center", marginTop: "8px" }}>
-          <Link to="/alerts/active-alerts" className="alerts-cta">
+        <div style={{ textAlign: "center", marginTop: "32px" }}>
+          <a href="/alerts/active-alerts" className="alerts-cta">
             View All Alerts →
-          </Link>
+          </a>
         </div>
       </div>
     </section>
