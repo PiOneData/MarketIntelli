@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Layers, ArrowLeft } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Layers } from 'lucide-react';
 import MapView from './MapView';
 import Sidebar from './Sidebar';
 import { AssetFeature, AssetType, AssetGeoJSON } from '../../types/dc';
 import { getDCId } from '../../lib/dcUtils';
-import SolarWindAssessmentPage from '../solar-wind-assessment/SolarWindAssessmentPage';
+import AssetDetailPage from '../AssetDetailPage';
 import './dc-assessment.css';
 
 // Header height: nav-top (68px) + power ticker (32px) = 100px
@@ -22,6 +22,7 @@ export default function DCAssessmentPage() {
     const [filterCompany, setFilterCompany] = useState('');
     const [heatmapMode, setHeatmapMode] = useState<'off' | 'count' | 'mw'>('off');
     const [rxOpen, setRxOpen] = useState(false);
+    const [selectedViewId, setSelectedViewId] = useState<string | null>(null);
 
     useEffect(() => {
         Promise.all([
@@ -48,14 +49,7 @@ export default function DCAssessmentPage() {
     };
 
     const handleViewDetail = (id: number) => {
-        const feature = features.find((f: AssetFeature) => getDCId(f) === id);
-        if (!feature) return;
-        const [lon, lat] = feature.geometry.coordinates;
-        sessionStorage.setItem('pending_dc_assessment', JSON.stringify({
-            props: feature.properties,
-            lat,
-            lng: lon,
-        }));
+        setSelectedViewId(String(id));
         setRxOpen(true);
     };
 
@@ -140,48 +134,20 @@ export default function DCAssessmentPage() {
                 </div>
             </div>
 
-            {/* ── RX² Geospatial Assessment Overlay ── */}
-            {rxOpen && (
+            {/* ── Geospatial Assessment Overlay ── */}
+            {rxOpen && selectedViewId && (
                 <div style={{
                     position: 'fixed',
                     inset: 0,
                     zIndex: 9000,
-                    background: '#0f172a',
+                    overflowY: 'auto',
+                    background: '#f1f5f9',
                 }}>
-                    {/* Back button — always accessible, floats above the assessment */}
-                    <button
-                        onClick={() => setRxOpen(false)}
-                        style={{
-                            position: 'absolute',
-                            top: '16px',
-                            left: '16px',
-                            zIndex: 9100,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            background: 'rgba(255,255,255,0.92)',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '8px',
-                            padding: '7px 14px',
-                            fontSize: '12px',
-                            fontWeight: 700,
-                            color: '#334155',
-                            cursor: 'pointer',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                            fontFamily: 'inherit',
-                            backdropFilter: 'blur(8px)',
-                        }}
-                        onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = '#f0fdfa'; e.currentTarget.style.color = '#0d7a6e'; }}
-                        onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = 'rgba(255,255,255,0.92)'; e.currentTarget.style.color = '#334155'; }}
-                    >
-                        <ArrowLeft size={14} />
-                        Back to Registry
-                    </button>
-
-                    {/* Assessment page fills the overlay */}
-                    <div style={{ width: '100%', height: '100%' }}>
-                        <SolarWindAssessmentPage />
-                    </div>
+                    <AssetDetailPage
+                        id={selectedViewId}
+                        type={activeAssetType}
+                        onBack={() => setRxOpen(false)}
+                    />
                 </div>
             )}
         </>
