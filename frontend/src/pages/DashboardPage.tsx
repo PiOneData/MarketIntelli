@@ -472,114 +472,168 @@ export default function DashboardPage() {
       </div>
 
       {/* ═══ POWER GENERATION BAND ══════════════════════════════════════════ */}
-      <div className="pgen-band">
-        <div className="pgen-inner">
-          <div className="pgen-header">
-            <div>
-              <div className="pgen-eyebrow">India Power Mix · FY 2024–25 Actuals · CEA / CREA</div>
-              <div className="pgen-title">CONSOLIDATED GENERATION <span className="t">BY SOURCE</span></div>
-            </div>
-            <div className="pgen-total-block">
-              <span className="pgen-total-label">Total Generation</span>
-              <span className="pgen-total-num">1,824 <span>BU</span></span>
-              <span className="pgen-total-note">FY2024–25 · CEA / CREA</span>
-            </div>
+<div className="pgen-band">
+  <div className="pgen-inner">
+    <div className="pgen-header">
+      <div>
+        <div className="pgen-eyebrow">India Power Mix · FY 2024–25 Actuals · CEA / CREA</div>
+        <div className="pgen-title">CONSOLIDATED GENERATION <span className="t">BY SOURCE</span></div>
+      </div>
+      <div className="pgen-total-block">
+        <span className="pgen-total-label">Total Generation</span>
+        <span className="pgen-total-num">1,824 <span>BU</span></span>
+        <span className="pgen-total-note">FY2024–25 · CEA / CREA</span>
+      </div>
+    </div>
+
+    {/* ROW 1 — DAILY RE GENERATION TREND */}
+    <div className="pgen-trends-panel">
+      <div className="pgen-trends-header">
+        <div>
+          <div className="pgen-eyebrow" style={{ marginBottom: 4 }}>
+            RE Generation Trends · Daily · MUs
           </div>
-
-          <div className="pgen-split-layout">
-            {/* Left: 3×2 source cards */}
-            <div className="pgen-left">
-              <div className="pgen-cards">
-                {PGEN_CARDS.map((card) => (
-                  <div key={card.cls} className={`pgen-card ${card.cls}`}>
-                    <div className="pgen-card-top">
-                      <span className="pgen-icon">{card.icon}</span>
-                      <span className="pgen-card-label">{card.label}</span>
-                    </div>
-                    <div className="pgen-card-num">{card.num} <em>{card.unit}</em></div>
-                    <div className="pgen-bar-wrap">
-                      <div className="pgen-bar" style={{ width: `${card.bar}%`, background: card.barCol }} />
-                    </div>
-                    <div className="pgen-card-share">{card.share}</div>
-                    <div className="pgen-card-note" style={{ whiteSpace: "pre-line" }}>{card.note}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="pgen-summary">
-                <div className="pgen-summary-label">
-                  <span className="pgen-sl green">🌿 Renewable (incl. Hydro)</span>
-                  <span className="pgen-sl grey">🏭 Non-Renewable</span>
-                </div>
-                <div className="pgen-stacked-bar">
-                  <div className="psb-seg green" style={{ width: "22.2%" }} title="RE incl. Hydro 22.2%">
-                    <span className="psb-label">RE 22.2%</span>
-                  </div>
-                  <div className="psb-seg grey" style={{ width: "77.8%" }} title="Non-RE 77.8%">
-                    <span className="psb-label">Non-RE 77.8%</span>
-                  </div>
-                </div>
-                <div className="pgen-summary-note">Source: CEA FY2024–25 · CREA India Power Sector Overview FY25 · Vasudha Foundation FY25</div>
-              </div>
-            </div>
-
-            {/* Right: Daily RE Generation Trends */}
-            <div className="pgen-right">
-              <div className="pgen-trends-panel">
-                <div className="pgen-trends-header">
-                  <div>
-                    <div className="pgen-eyebrow" style={{ marginBottom: 4 }}>RE Generation Trends · Daily · MUs</div>
-                    <div className="pgen-trends-title">DAILY RE GENERATION <span className="t">TREND</span></div>
-                  </div>
-                  <a
-                    href="https://gen-re.cea.gov.in/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="pgen-trends-link"
-                  >
-                    Live Data ↗
-                  </a>
-                </div>
-                <ResponsiveContainer width="100%" height={260}>
-                  <ComposedChart data={DAILY_RE_TREND} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e8e8e8" vertical={false} />
-                    <XAxis
-                      dataKey="day"
-                      tick={{ fontSize: 10, fontFamily: "var(--mono)", fill: "#8a8480" }}
-                      interval={4}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 10, fontFamily: "var(--mono)", fill: "#8a8480" }}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(v: number) => `${v}`}
-                    />
-                    <Tooltip
-                      contentStyle={{ fontSize: 11, fontFamily: "var(--mono)", borderRadius: 6, border: "1px solid #e4e0da" }}
-                      formatter={(value: number, name: string) => [`${value} MU`, name]}
-                    />
-                    <Legend
-                      wrapperStyle={{ fontSize: 10, fontFamily: "var(--mono)", paddingTop: 8 }}
-                      iconType="circle"
-                      iconSize={8}
-                    />
-                    <Area type="monotone" dataKey="total" name="Total RE" fill="#d6eeeb" stroke="#0d7a6e" strokeWidth={2} fillOpacity={0.5} />
-                    <Line type="monotone" dataKey="solar" name="Solar" stroke="#f59e0b" strokeWidth={1.5} dot={false} />
-                    <Line type="monotone" dataKey="wind" name="Wind" stroke="#3b82f6" strokeWidth={1.5} dot={false} />
-                    <Line type="monotone" dataKey="smallHydro" name="Small Hydro" stroke="#0ea5e9" strokeWidth={1.5} dot={false} />
-                    <Line type="monotone" dataKey="other" name="Other RE" stroke="#10b981" strokeWidth={1.5} dot={false} />
-                  </ComposedChart>
-                </ResponsiveContainer>
-                <div className="pgen-trends-note">
-                  Source: <a href="https://gen-re.cea.gov.in/" target="_blank" rel="noopener noreferrer" className="pgen-trends-src-link">gen-re.cea.gov.in</a> · Central Electricity Authority · Data as of 09 Mar 2026
-                </div>
-              </div>
-            </div>
+          <div className="pgen-trends-title">
+            DAILY RE GENERATION <span className="t">TREND</span>
           </div>
         </div>
+
+        <a
+          href="https://gen-re.cea.gov.in/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="pgen-trends-link"
+        >
+          Live Data ↗
+        </a>
       </div>
+
+      <ResponsiveContainer width="100%" height={260}>
+        <ComposedChart data={DAILY_RE_TREND} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e8e8e8" vertical={false} />
+
+          <XAxis
+            dataKey="day"
+            tick={{ fontSize: 10, fontFamily: "var(--mono)", fill: "#8a8480" }}
+            interval={4}
+            tickLine={false}
+            axisLine={false}
+          />
+
+          <YAxis
+            tick={{ fontSize: 10, fontFamily: "var(--mono)", fill: "#8a8480" }}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(v) => `${v}`}
+          />
+
+          <Tooltip
+            contentStyle={{
+              fontSize: 11,
+              fontFamily: "var(--mono)",
+              borderRadius: 6,
+              border: "1px solid #e4e0da",
+            }}
+            formatter={(value, name) => [`${value} MU`, name]}
+          />
+
+          <Legend
+            wrapperStyle={{
+              fontSize: 10,
+              fontFamily: "var(--mono)",
+              paddingTop: 8,
+            }}
+            iconType="circle"
+            iconSize={8}
+          />
+
+          <Area
+            type="monotone"
+            dataKey="total"
+            name="Total RE"
+            fill="#d6eeeb"
+            stroke="#0d7a6e"
+            strokeWidth={2}
+            fillOpacity={0.5}
+          />
+
+          <Line type="monotone" dataKey="solar" name="Solar" stroke="#f59e0b" strokeWidth={1.5} dot={false} />
+          <Line type="monotone" dataKey="wind" name="Wind" stroke="#3b82f6" strokeWidth={1.5} dot={false} />
+          <Line type="monotone" dataKey="smallHydro" name="Small Hydro" stroke="#0ea5e9" strokeWidth={1.5} dot={false} />
+          <Line type="monotone" dataKey="other" name="Other RE" stroke="#10b981" strokeWidth={1.5} dot={false} />
+        </ComposedChart>
+      </ResponsiveContainer>
+
+      <div className="pgen-trends-note">
+        Source:{" "}
+        <a
+          href="https://gen-re.cea.gov.in/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="pgen-trends-src-link"
+        >
+          gen-re.cea.gov.in
+        </a>{" "}
+        · Central Electricity Authority · Data as of 09 Mar 2026
+      </div>
+    </div>
+
+    {/* ROW 2 — CONSOLIDATED GENERATION BY SOURCE */}
+    <div className="pgen-left">
+      <div className="pgen-cards">
+        {PGEN_CARDS.map((card) => (
+          <div key={card.cls} className={`pgen-card ${card.cls}`}>
+            <div className="pgen-card-top">
+              <span className="pgen-icon">{card.icon}</span>
+              <span className="pgen-card-label">{card.label}</span>
+            </div>
+
+            <div className="pgen-card-num">
+              {card.num} <em>{card.unit}</em>
+            </div>
+
+            <div className="pgen-bar-wrap">
+              <div
+                className="pgen-bar"
+                style={{
+                  width: `${card.bar}%`,
+                  background: card.barCol,
+                }}
+              />
+            </div>
+
+            <div className="pgen-card-share">{card.share}</div>
+
+            <div className="pgen-card-note" style={{ whiteSpace: "pre-line" }}>
+              {card.note}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="pgen-summary">
+        <div className="pgen-summary-label">
+          <span className="pgen-sl green">🌿 Renewable (incl. Hydro)</span>
+          <span className="pgen-sl grey">🏭 Non-Renewable</span>
+        </div>
+
+        <div className="pgen-stacked-bar">
+          <div className="psb-seg green" style={{ width: "22.2%" }} title="RE incl. Hydro 22.2%">
+            <span className="psb-label">RE 22.2%</span>
+          </div>
+
+          <div className="psb-seg grey" style={{ width: "77.8%" }} title="Non-RE 77.8%">
+            <span className="psb-label">Non-RE 77.8%</span>
+          </div>
+        </div>
+
+        <div className="pgen-summary-note">
+          Source: CEA FY2024–25 · CREA India Power Sector Overview FY25 · Vasudha Foundation FY25
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* ═══ MODULES ════════════════════════════════════════════════════════ */}
       <section className="modules-section" id="modules">
