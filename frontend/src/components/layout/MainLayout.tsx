@@ -121,8 +121,17 @@ function MainLayout() {
     retry: 2,
   });
 
+  const { data: brent } = useQuery({
+    queryKey: ["finance", "brent-crude"],
+    queryFn: () => apiClient.get<{ price: number | null; change_pct: number | null }>("/finance/commodity/brent").then(r => r.data),
+    staleTime: 3 * 60 * 1000,
+    retry: 2,
+  });
+
   const inrDisplay = usdInr?.rate != null ? `₹${usdInr.rate.toFixed(2)}/$` : "₹/$ Watch";
   const inrUp = (usdInr?.change_pct ?? 0) >= 0;
+  const brentDisplay = brent?.price != null ? `Brent $${brent.price.toFixed(2)}/bbl` : "Brent Crude";
+  const brentUp = (brent?.change_pct ?? 0) >= 0;
 
   return (
     <div className="app-layout">
@@ -154,7 +163,12 @@ function MainLayout() {
             >
               <span className="nav-alert-dot" />
               <span className="nav-alert-text">IRAN Alert</span>
-              <span className="nav-brent">Brent ↑</span>
+              <span
+                className="nav-brent"
+                style={brent?.price != null ? { color: brentUp ? "#ef4444" : "#22c55e" } : undefined}
+              >
+                {brentDisplay}
+              </span>
               <span
                 className="nav-brent nav-inr"
                 style={usdInr?.rate != null ? { color: inrUp ? "#ef4444" : "#22c55e" } : undefined}
