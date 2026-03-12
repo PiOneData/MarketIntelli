@@ -48,6 +48,19 @@ interface DcProps {
   market?: string;
   country?: string;
   url?: string;
+  // Operational status & upcoming
+  status?: string;
+  is_upcoming?: boolean;
+  // Renewable energy & sustainability
+  current_renewable_pct?: string | number | null;
+  renewable_sources?: string | null;
+  pue_actual?: string | number | null;
+  pue_target?: string | number | null;
+  cooling_type?: string | null;
+  it_load_mw?: string | number | null;
+  commissioning_year?: string | number | null;
+  // Official data sources (may arrive as JSON string from MapLibre props)
+  sources?: Array<{ name: string; url: string }> | string | null;
   [key: string]: unknown;
 }
 
@@ -410,6 +423,14 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                         <Globe size={11} />{String(datacenter.url).replace("https://", "")}
                       </a>
                     )}
+                    {datacenter.status && (
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "8px" }}>
+                        <span style={{ padding: "3px 10px", fontSize: "9px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", background: datacenter.is_upcoming ? "#f59e0b" : "#16a34a", color: "#fff" }}>
+                          {datacenter.is_upcoming ? "UPCOMING" : "OPERATIONAL"}
+                        </span>
+                        <span style={{ fontSize: "10px", color: "#64748b" }}>{str(datacenter.status)}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
@@ -541,6 +562,7 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                       { label: "Whitespace",          val: str(datacenter.whitespace, "Not Specified") },
                       { label: "Market",              val: str(datacenter.market,     "Not Specified") },
                       { label: "Country",             val: str(datacenter.country,    "India") },
+                      ...(datacenter.commissioning_year ? [{ label: "Commissioned", val: String(datacenter.commissioning_year) }] : []),
                     ].map(({ label, val }) => (
                       <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
                         <div style={{ fontSize: "11px", fontWeight: 600, color: "#64748b" }}>{label}</div>
@@ -550,6 +572,109 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                   </div>
                 </div>
               </div>
+
+              {/* ── RENEWABLE ENERGY & SUSTAINABILITY ── */}
+              {(() => {
+                const rePct   = datacenter.current_renewable_pct != null ? Number(datacenter.current_renewable_pct) : null;
+                const pueAct  = datacenter.pue_actual  != null ? Number(datacenter.pue_actual)  : null;
+                const pueTgt  = datacenter.pue_target  != null ? Number(datacenter.pue_target)  : null;
+                const itLoad  = datacenter.it_load_mw  != null ? Number(datacenter.it_load_mw)  : null;
+                const reSrc   = datacenter.renewable_sources  ?? null;
+                const cooling = datacenter.cooling_type ?? null;
+                return (
+                  <div style={{ background: "#fff", border: "1px solid #e2e8f0", padding: "24px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+                      <div style={{ width: "28px", height: "28px", background: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <Zap size={14} style={{ color: "#fff" }} />
+                      </div>
+                      <div>
+                        <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>Renewable Energy &amp; Sustainability</h3>
+                        <div style={{ fontSize: "10px", color: "#94a3b8" }}>Power usage effectiveness and green energy metrics</div>
+                      </div>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "12px" }}>
+                      {/* RE% tile */}
+                      <div style={{ padding: "14px", background: rePct != null && rePct >= 90 ? "#f0fdf4" : "#f8fafc", border: `1px solid ${rePct != null && rePct >= 90 ? "#bbf7d0" : "#e2e8f0"}` }}>
+                        <div style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", color: "#64748b", letterSpacing: "0.06em", marginBottom: "4px" }}>Renewable Energy</div>
+                        <div style={{ fontSize: "26px", fontWeight: 800, color: rePct != null ? (rePct >= 90 ? "#16a34a" : rePct >= 50 ? "#ca8a04" : "#64748b") : "#94a3b8", lineHeight: 1 }}>
+                          {rePct != null ? `${rePct}%` : "—"}
+                        </div>
+                        {rePct != null && (
+                          <div style={{ marginTop: "8px", height: "4px", background: "#e2e8f0" }}>
+                            <div style={{ width: `${rePct}%`, height: "100%", background: rePct >= 90 ? "#16a34a" : rePct >= 50 ? "#ca8a04" : "#64748b", transition: "width 0.6s ease" }} />
+                          </div>
+                        )}
+                      </div>
+                      {/* PUE tile */}
+                      <div style={{ padding: "14px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                        <div style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", color: "#64748b", letterSpacing: "0.06em", marginBottom: "4px" }}>PUE (Actual)</div>
+                        <div style={{ fontSize: "26px", fontWeight: 800, color: "#334155", lineHeight: 1 }}>{pueAct != null ? pueAct.toFixed(2) : "—"}</div>
+                        {pueTgt != null && <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "6px" }}>Target: {pueTgt.toFixed(2)}</div>}
+                        <div style={{ fontSize: "9px", color: "#94a3b8", marginTop: "2px" }}>Lower is better · Ideal: 1.0</div>
+                      </div>
+                      {/* IT Load tile */}
+                      <div style={{ padding: "14px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                        <div style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", color: "#64748b", letterSpacing: "0.06em", marginBottom: "4px" }}>IT Load</div>
+                        <div style={{ fontSize: "22px", fontWeight: 800, color: "#334155", lineHeight: 1 }}>{itLoad != null ? `${itLoad} MW` : "—"}</div>
+                        <div style={{ fontSize: "9px", color: "#94a3b8", marginTop: "6px" }}>Actual IT equipment load</div>
+                      </div>
+                    </div>
+                    {(reSrc || cooling) && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                        {reSrc && (
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "10px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0" }}>
+                            <span style={{ fontSize: "11px", fontWeight: 600, color: "#166534", flexShrink: 0, marginRight: "12px" }}>RE Sources</span>
+                            <span style={{ fontSize: "11px", fontWeight: 700, color: "#166534", textAlign: "right" }}>{reSrc}</span>
+                          </div>
+                        )}
+                        {cooling && (
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                            <span style={{ fontSize: "11px", fontWeight: 600, color: "#64748b" }}>Cooling System</span>
+                            <span style={{ fontSize: "11px", fontWeight: 700, color: "#1e293b" }}>{cooling}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* ── OFFICIAL DATA SOURCES ── */}
+              {(() => {
+                let parsedSources: Array<{ name: string; url: string }> = [];
+                const raw = datacenter.sources;
+                if (raw) {
+                  if (typeof raw === "string") {
+                    try { parsedSources = JSON.parse(raw) as typeof parsedSources; } catch { parsedSources = []; }
+                  } else if (Array.isArray(raw)) {
+                    parsedSources = raw as typeof parsedSources;
+                  }
+                }
+                if (parsedSources.length === 0) return null;
+                return (
+                  <div style={{ background: "#fff", border: "1px solid #e2e8f0", padding: "24px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+                      <BookOpen size={14} style={{ color: "#475569" }} />
+                      <div>
+                        <h3 style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>Official Data Sources</h3>
+                        <div style={{ fontSize: "10px", color: "#94a3b8" }}>Verified references for this datacenter</div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      {parsedSources.map((src, i) => (
+                        <a key={i} href={src.url} target="_blank" rel="noopener noreferrer"
+                          style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", textDecoration: "none" }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = "#f0fdf4"; e.currentTarget.style.borderColor = "#bbf7d0"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "#f8fafc"; e.currentTarget.style.borderColor = "#e2e8f0"; }}>
+                          <Zap size={11} style={{ color: "#0f766e", flexShrink: 0 }} />
+                          <span style={{ fontSize: "12px", fontWeight: 600, color: "#1e293b", flex: 1 }}>{src.name}</span>
+                          <span style={{ fontSize: "9px", color: "#94a3b8", fontFamily: "monospace" }}>{src.url.replace(/^https?:\/\//, "").split("/")[0]}</span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </motion.div>
           )}
 

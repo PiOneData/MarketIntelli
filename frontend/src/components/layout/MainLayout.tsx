@@ -178,11 +178,8 @@ function MainLayout() {
             </Link>
           </div>
 
-          {/* Right: RX² button + profile */}
+          {/* Right: profile */}
           <div className="nav-btns">
-            <Link to="/geo-analytics/assessment" className="nav-rx2-btn">
-              RX² Energy Assessment
-            </Link>
             <Link to="/profile" className="header-profile-btn" title="My Profile">
               <span className="header-profile-avatar">AS</span>
             </Link>

@@ -669,9 +669,9 @@ export default function DashboardPage() {
             <p className="rx2-desc">A structured, standards-backed methodology to assess, size, simulate and deploy renewable energy systems for power-critical infrastructure. Two tiers deliver actionable intelligence at every stage of decision-making.</p>
           </div>
 
-          <div className="rx2-tiers">
+          <div className="rx2-tiers" style={{ maxWidth: "540px", margin: "0 auto" }}>
             <Link to="/geo-analytics/assessment" className="rx2-tier rx2-tier--link">
-              <div className="rx2-tier-label">Tier 1 · 24-Hour Turnaround</div>
+              <div className="rx2-tier-label">Satellite Intelligence · Real-Time Assessment</div>
               <span className="rx2-tier-icon">🔍</span>
               <div className="rx2-tier-name">QUICK ASSESSMENT</div>
               <p className="rx2-tier-desc">Online assessment using geo-spatial data and market intelligence for Wind, Solar and Hydro resource potential. Indicative sizing and economics delivered within 24 hours.</p>
@@ -684,24 +684,6 @@ export default function DashboardPage() {
               <span className="rx2-tier-tag tag-quick">Geo-Spatial · Market Intelligence · Online</span>
               <span className="rx2-tier-cta">Open Assessment →</span>
             </Link>
-            <div className="rx2-tier featured">
-              <div className="rx2-tier-label">Tier 2 · Full 8-Phase Study</div>
-              <span className="rx2-tier-icon">⚡</span>
-              <div className="rx2-tier-name">DETAILED ASSESSMENT</div>
-              <p className="rx2-tier-desc">Specialised deep study: 8-phase REWARD² workbook, 8,760-hour dispatch simulation, 3-scenario NPV modelling, GHG Protocol carbon audit, and full IEEE/IEC standards verification.</p>
-              <ul className="rx2-tier-features">
-                <li>8,760-hour HOMER Pro simulation</li>
-                <li>Solargis TMY + P50/P90 wind gate</li>
-                <li>Bear / Base / Bull NPV scenarios</li>
-                <li>ISO 50001 · BRSR · TCFD reporting</li>
-              </ul>
-              <span className="rx2-tier-tag tag-detail">HOMER Pro · Solargis · ISO 50001 · BRSR</span>
-              <div className="rx2-dl-btns">
-                <a href="/reward2_data_workbook.docx" download className="rx2-dl-btn">📊 Assessment Data Model</a>
-                <a href="/RX2%20-%20REWARDS%20Sample%20Case%20study.pdf" target="_blank" rel="noopener noreferrer" className="rx2-dl-btn">📄 View Report</a>
-                <a href="/RX2%20-%20REWARDS%20Sample%20Case%20study.pdf" download="RX2 - REWARDS Sample Case study.pdf" className="rx2-dl-btn">⬇ Download</a>
-              </div>
-            </div>
           </div>
 
           <div className="rx2-phases-wrap">

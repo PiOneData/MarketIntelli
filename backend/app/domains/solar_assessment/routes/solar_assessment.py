@@ -33,7 +33,7 @@ BASE_DIR = Path(__file__).resolve().parents[4]
 DATA_DIR = BASE_DIR / "data"
 EE_KEY_PATH = DATA_DIR / "ee-dharanv2006-02c1bec957ad.json"
 WIND_SOLAR_GEOJSON = DATA_DIR / "wind_solar_data.geojson"
-DC_MERGED_GEOJSON  = BASE_DIR / "dc_final_merged.geojson"
+DC_MERGED_GEOJSON  = BASE_DIR / "dc_enriched_286.geojson"
 
 # ── Lazy singletons ─────────────────────────────────────────────────────────
 _assessment_service = None
