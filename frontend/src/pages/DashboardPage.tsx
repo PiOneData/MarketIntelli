@@ -669,7 +669,7 @@ export default function DashboardPage() {
             <p className="rx2-desc">A structured, standards-backed methodology to assess, size, simulate and deploy renewable energy systems for power-critical infrastructure. Two tiers deliver actionable intelligence at every stage of decision-making.</p>
           </div>
 
-          <div className="rx2-tiers" style={{ maxWidth: "540px", margin: "0 auto" }}>
+          <div className="rx2-tiers" style={{ gridTemplateColumns: "1fr" }}>
             <Link to="/geo-analytics/assessment" className="rx2-tier rx2-tier--link">
               <div className="rx2-tier-label">Satellite Intelligence · Real-Time Assessment</div>
               <span className="rx2-tier-icon">🔍</span>

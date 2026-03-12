@@ -1,625 +1,500 @@
-import { useState, useEffect, useRef, useCallback, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
-import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
-import { fetchAirports, fetchAirportsMeta, fetchAirportsPowerStats, type Airport } from "../api/airports";
+import { useState, useMemo, useEffect } from "react";
+import { MapContainer, TileLayer, CircleMarker, Tooltip } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 
-// ── Satellite map style (ESRI World Imagery — free, no API key) ───────────────
-const SATELLITE_STYLE: maplibregl.StyleSpecification = {
-  version: 8,
-  sources: {
-    "esri-satellite": {
-      type: "raster",
-      tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
-      tileSize: 256,
-      attribution: "Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
-    },
-    "esri-labels": {
-      type: "raster",
-      tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"],
-      tileSize: 256,
-    },
-  },
-  layers: [
-    { id: "esri-satellite-layer", type: "raster", source: "esri-satellite" },
-    { id: "esri-labels-layer",    type: "raster", source: "esri-labels" },
-  ],
-};
+// ── Types ──────────────────────────────────────────────────────────────────────
+interface AirportOperations {
+  annual_passengers_mn?: string | number | null;
+  no_of_runways?: string | number | null;
+  power_consumption_mw?: string | null;
+  operator_concessionaire?: string | null;
+}
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-const TYPE_COLORS: Record<string, string> = {
-  International: "#2563eb",
-  Domestic: "#7c3aed",
-  Civil: "#0891b2",
-  Military: "#dc2626",
-  "Military / Civil Enclave": "#ea580c",
-  "Cargo / Civil": "#059669",
-};
+interface AirportGreenEnergy {
+  solar_capacity_installed_mw?: string | number | null;
+  pct_green_coverage?: string | null;
+  carbon_neutral_aci_level?: string | null;
+  green_energy_sources?: string | null;
+}
 
-function typeColor(t: string): string {
-  for (const [k, v] of Object.entries(TYPE_COLORS)) {
-    if (t?.toLowerCase().includes(k.toLowerCase())) return v;
-  }
+interface AirportProperties {
+  slno: number;
+  airport_name: string;
+  iata_code?: string | null;
+  city?: string | null;
+  state?: string | null;
+  type?: string | null;
+  status?: string | null;
+  is_notable_green?: boolean;
+  operations?: AirportOperations;
+  green_energy?: AirportGreenEnergy;
+  overall_rating?: string | null;
+  lat?: number | null;
+  lon?: number | null;
+}
+
+type SortDir = "asc" | "desc";
+type SortKey = "airport_name" | "iata_code" | "city" | "state" | "type" | "status" | "solar_mw" | "re_pct" | "aci";
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const UPCOMING_STATUSES = [
+  "Under Development",
+  "Under Development / Proposed",
+  "Under Construction (Phase 1 Launch ~2025-26)",
+];
+
+function statusColor(status: string | null | undefined): string {
+  if (!status) return "#94a3b8";
+  if (status === "Operational") return "#16a34a";
+  if (status.startsWith("Limited") || status.startsWith("Operational (")) return "#d97706";
+  if (UPCOMING_STATUSES.includes(status)) return "#a855f7";
+  if (status === "Disused") return "#dc2626";
   return "#64748b";
 }
 
-function statusBadgeClass(s: string): string {
-  if (!s) return "ar-badge ar-badge--gray";
-  const l = s.toLowerCase();
-  if (l.includes("operational")) return "ar-badge ar-badge--green";
-  if (l.includes("limited")) return "ar-badge ar-badge--yellow";
-  if (l.includes("under") || l.includes("construction")) return "ar-badge ar-badge--blue";
-  if (l.includes("closed") || l.includes("decommission")) return "ar-badge ar-badge--red";
-  return "ar-badge ar-badge--gray";
+function statusBg(status: string | null | undefined): string {
+  if (!status) return "#f1f5f9";
+  if (status === "Operational") return "#f0fdf4";
+  if (status.startsWith("Limited") || status.startsWith("Operational (")) return "#fffbeb";
+  if (UPCOMING_STATUSES.includes(status)) return "#faf5ff";
+  if (status === "Disused") return "#fef2f2";
+  return "#f1f5f9";
 }
 
-function displayVal(v: string | number | null | undefined): string {
-  if (v === null || v === undefined || v === "") return "—";
-  return String(v);
+function solarMw(p: AirportProperties): number {
+  const v = p.green_energy?.solar_capacity_installed_mw;
+  if (v == null) return 0;
+  const n = parseFloat(String(v));
+  return isNaN(n) ? 0 : n;
 }
 
-// ── Detail Section ─────────────────────────────────────────────────────────────
-function InfoRow({ label, value }: { label: string; value: string | number | null | undefined }) {
-  return (
-    <div className="ar-info-row">
-      <span className="ar-info-label">{label}</span>
-      <span className="ar-info-value">{displayVal(value)}</span>
-    </div>
-  );
+function rePct(p: AirportProperties): number {
+  const v = p.green_energy?.pct_green_coverage;
+  if (!v) return 0;
+  const n = parseFloat(String(v).replace("%", ""));
+  return isNaN(n) ? 0 : n;
 }
 
-function SectionCard({ title, icon, children }: { title: string; icon: string; children: ReactNode }) {
-  return (
-    <div className="ar-section-card">
-      <div className="ar-section-header">
-        <span className="ar-section-icon">{icon}</span>
-        <h3 className="ar-section-title">{title}</h3>
-      </div>
-      <div className="ar-section-body">{children}</div>
-    </div>
-  );
+function typeShort(type: string | null | undefined): string {
+  if (!type) return "—";
+  if (type.startsWith("International")) return "International";
+  if (type.startsWith("Domestic")) return "Domestic";
+  if (type.startsWith("Military")) return "Military";
+  if (type.startsWith("Civil")) return "Civil";
+  return type;
 }
 
-// ── Mini Map ────────────────────────────────────────────────────────────────────
-function AirportMiniMap({ lat, lng, name }: { lat: number; lng: number; name: string }) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<maplibregl.Map | null>(null);
-
-  useEffect(() => {
-    if (!mapRef.current) return;
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.remove();
-      mapInstanceRef.current = null;
-    }
-
-    const map = new maplibregl.Map({
-      container: mapRef.current,
-      style: SATELLITE_STYLE,
-      center: [lng, lat],
-      zoom: 11,
-      attributionControl: false,
-    });
-
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-
-    map.on("load", () => {
-      const el = document.createElement("div");
-      el.className = "ar-map-marker";
-      new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map);
-    });
-
-    mapInstanceRef.current = map;
-
-    return () => {
-      map.remove();
-      mapInstanceRef.current = null;
-    };
-  }, [lat, lng]);
-
-  return (
-    <div className="ar-mini-map-wrap">
-      <div ref={mapRef} className="ar-mini-map" />
-      <div className="ar-mini-map-label">
-        <span className="ar-mini-map-pin">📍</span> {name}
-      </div>
-    </div>
-  );
+function typeColor(type: string | null | undefined): string {
+  const t = typeShort(type);
+  if (t === "International") return "#2563eb";
+  if (t === "Domestic") return "#7c3aed";
+  if (t === "Military") return "#dc2626";
+  if (t === "Civil") return "#0891b2";
+  return "#64748b";
 }
 
-// ── All-Airports Map ────────────────────────────────────────────────────────────
-function AllAirportsMap({
-  airports,
-  selectedId,
-  onSelect,
-}: {
-  airports: Airport[];
-  selectedId: number | null;
-  onSelect: (id: number) => void;
-}) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<maplibregl.Map | null>(null);
-  const markersRef = useRef<maplibregl.Marker[]>([]);
-
-  const clearMarkers = () => {
-    markersRef.current.forEach((m) => m.remove());
-    markersRef.current = [];
-  };
-
-  useEffect(() => {
-    if (!mapRef.current) return;
-    if (mapInstanceRef.current) return;
-
-    const map = new maplibregl.Map({
-      container: mapRef.current,
-      style: SATELLITE_STYLE,
-      center: [80.0, 22.5],
-      zoom: 4.2,
-      attributionControl: false,
-    });
-
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-    mapInstanceRef.current = map;
-
-    return () => {
-      clearMarkers();
-      map.remove();
-      mapInstanceRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    const map = mapInstanceRef.current;
-    if (!map) return;
-
-    const addMarkers = () => {
-      clearMarkers();
-      airports.forEach((airport) => {
-        if (airport.latitude === null || airport.longitude === null) return;
-        const sno = airport["S.No"];
-        const isSelected = sno === selectedId;
-
-        const el = document.createElement("div");
-        el.className = airport.is_green
-          ? `ar-map-dot ar-map-dot--green${isSelected ? " ar-map-dot--selected" : ""}`
-          : `ar-map-dot${isSelected ? " ar-map-dot--selected" : ""}`;
-        el.title = airport["Airport Name"];
-
-        const popup = new maplibregl.Popup({
-          closeButton: false,
-          closeOnClick: false,
-          offset: 12,
-          className: "ar-map-popup",
-        }).setHTML(
-          `<div class="ar-popup-content">
-            <div class="ar-popup-name">${airport["Airport Name"]}</div>
-            <div class="ar-popup-meta">${airport.City}, ${airport["State / UT"]}</div>
-            ${airport["IATA Code"] !== "N/A" ? `<div class="ar-popup-iata">${airport["IATA Code"]}</div>` : ""}
-            ${airport.is_green ? '<div class="ar-popup-green">🌿 Green Airport</div>' : ""}
-          </div>`
-        );
-
-        const marker = new maplibregl.Marker({ element: el })
-          .setLngLat([airport.longitude!, airport.latitude!])
-          .addTo(map);
-
-        el.addEventListener("mouseenter", () => popup.addTo(map).setLngLat([airport.longitude!, airport.latitude!]));
-        el.addEventListener("mouseleave", () => popup.remove());
-        el.addEventListener("click", () => onSelect(sno));
-
-        markersRef.current.push(marker);
-      });
-    };
-
-    if (map.loaded()) {
-      addMarkers();
-    } else {
-      map.on("load", addMarkers);
-    }
-  }, [airports, selectedId, onSelect]);
-
-  useEffect(() => {
-    const map = mapInstanceRef.current;
-    if (!map || selectedId === null) return;
-    const airport = airports.find((a) => a["S.No"] === selectedId);
-    if (airport?.latitude && airport?.longitude) {
-      map.flyTo({ center: [airport.longitude, airport.latitude], zoom: 10, speed: 1.5 });
-    }
-  }, [selectedId, airports]);
-
-  return <div ref={mapRef} className="ar-full-map" />;
+function exportCsv(rows: AirportProperties[]) {
+  const header = ["#", "Airport Name", "IATA", "City", "State", "Type", "Status", "Solar (MW)", "RE%", "ACI Level"];
+  const lines = rows.map(p => [
+    p.slno,
+    `"${p.airport_name}"`,
+    p.iata_code ?? "",
+    p.city ?? "",
+    p.state ?? "",
+    p.type ?? "",
+    p.status ?? "",
+    solarMw(p) || "",
+    p.green_energy?.pct_green_coverage ?? "",
+    p.green_energy?.carbon_neutral_aci_level ?? "",
+  ].join(","));
+  const csv = [header.join(","), ...lines].join("\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+  const a = document.createElement("a");
+  a.href = url; a.download = "india_airports_registry.csv"; a.click();
+  URL.revokeObjectURL(url);
 }
 
-// ── Airport Detail ──────────────────────────────────────────────────────────────
-function AirportDetail({
-  airport,
-  onClose,
-  powerDataMissing,
-}: {
-  airport: Airport;
-  onClose: () => void;
-  powerDataMissing: number;
-}) {
-  const hasCoords = airport.latitude !== null && airport.longitude !== null;
-
-  return (
-    <div className="ar-detail-panel">
-      <div className="ar-detail-header">
-        <div className="ar-detail-title-row">
-          <div className="ar-detail-title-block">
-            <div className="ar-detail-badges">
-              {airport.is_green && <span className="ar-green-badge">🌿 Green Airport</span>}
-              <span className="ar-badge" style={{ backgroundColor: typeColor(airport.Type), color: "#fff" }}>
-                {airport.Type}
-              </span>
-              <span className={statusBadgeClass(airport.Status)}>{airport.Status}</span>
-            </div>
-            <h2 className="ar-detail-name">{airport["Airport Name"]}</h2>
-            <div className="ar-detail-subtitle">
-              {airport["IATA Code"] !== "N/A" && (
-                <span className="ar-iata-code">{airport["IATA Code"]}</span>
-              )}
-              <span className="ar-detail-location">
-                {airport.City}, {airport["State / UT"]}
-              </span>
-            </div>
-          </div>
-          <button className="ar-close-btn" onClick={onClose} aria-label="Close">✕</button>
-        </div>
-      </div>
-
-      <div className="ar-detail-body">
-        {hasCoords && (
-          <AirportMiniMap
-            lat={airport.latitude!}
-            lng={airport.longitude!}
-            name={airport["Airport Name"]}
-          />
-        )}
-
-        <div className="ar-sections-grid">
-          {/* Overview */}
-          <SectionCard title="Overview" icon="✈️">
-            <InfoRow label="Operator / Concessionaire" value={airport["Operator / Concessionaire"]} />
-            {airport["Official Website"] && airport["Official Website"] !== "N/A" ? (
-              <div className="ar-info-row">
-                <span className="ar-info-label">Official Website</span>
-                <a
-                  href={airport["Official Website"]}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ar-info-link"
-                >
-                  {airport["Official Website"]}
-                </a>
-              </div>
-            ) : (
-              <InfoRow label="Official Website" value={airport["Official Website"]} />
-            )}
-            <InfoRow label="Data Source" value={airport["Data Source"]} />
-            <InfoRow label="Last Updated" value={airport["Last Updated"]} />
-          </SectionCard>
-
-          {/* Location */}
-          <SectionCard title="Location" icon="📍">
-            <InfoRow label="Full Address" value={airport["Full Address"]} />
-            <InfoRow label="City" value={airport.City} />
-            <InfoRow label="State / UT" value={airport["State / UT"]} />
-            <InfoRow label="Pincode" value={airport.Pincode} />
-            {hasCoords && (
-              <InfoRow
-                label="Coordinates"
-                value={`${airport.latitude?.toFixed(4)}°N, ${airport.longitude?.toFixed(4)}°E`}
-              />
-            )}
-          </SectionCard>
-
-          {/* Traffic */}
-          <SectionCard title="Traffic & Operations" icon="📊">
-            <InfoRow label="Annual Passengers" value={airport["Annual Passengers (Mn)"] !== null ? `${airport["Annual Passengers (Mn)"]} Mn` : null} />
-            <InfoRow label="Annual Flight Movements" value={airport["Annual Flight Movements"]} />
-            <InfoRow label="Avg Daily Departures" value={airport["Avg Daily Departures"]} />
-            <InfoRow label="Avg Daily Arrivals" value={airport["Avg Daily Arrivals"]} />
-          </SectionCard>
-
-          {/* Infrastructure */}
-          <SectionCard title="Infrastructure" icon="🏗️">
-            <InfoRow label="No. of Runways" value={airport["No. of Runways"]} />
-            <InfoRow label="No. of Terminals" value={airport["No. of Terminals"]} />
-            <InfoRow label="Check-In Counters" value={airport["Check-In Counters"]} />
-            <InfoRow label="Immigration Desks" value={airport["Immigration Desks"]} />
-            <InfoRow label="Baggage Carousels" value={airport["Baggage Carousels"]} />
-            <InfoRow label="Lounges" value={airport.Lounges} />
-            <InfoRow label="Wi-Fi" value={airport["Wi-Fi"]} />
-          </SectionCard>
-
-          {/* Cargo */}
-          <SectionCard title="Cargo" icon="📦">
-            <InfoRow label="Cargo Capacity" value={airport["Cargo Capacity (MTPA)"] !== null && airport["Cargo Capacity (MTPA)"] !== "N/A" ? `${airport["Cargo Capacity (MTPA)"]} MTPA` : airport["Cargo Capacity (MTPA)"]} />
-            <InfoRow label="Actual Cargo Handled" value={airport["Actual Cargo Handled (MT)"] !== null && airport["Actual Cargo Handled (MT)"] !== "N/A" ? `${airport["Actual Cargo Handled (MT)"]} MT` : airport["Actual Cargo Handled (MT)"]} />
-          </SectionCard>
-
-          {/* Power & Sustainability */}
-          <SectionCard title="Power & Sustainability" icon="⚡">
-            {powerDataMissing > 0 && (
-              <div className="ar-power-disclaimer">
-                ⚠️ Power consumption data is incomplete — unavailable for {powerDataMissing} airport{powerDataMissing !== 1 ? "s" : ""} in this dataset.
-              </div>
-            )}
-            <InfoRow label="Power Consumption" value={airport["Power Consumption (MW)"] !== null && airport["Power Consumption (MW)"] !== "N/A" ? `${airport["Power Consumption (MW)"]} MW` : airport["Power Consumption (MW)"]} />
-            <InfoRow label="Power Mode / Renewables" value={airport["Power Mode / Renewables"]} />
-            <InfoRow label="Solar Capacity Installed" value={airport["Solar Capacity Installed (MW)"] !== null && airport["Solar Capacity Installed (MW)"] !== "N/A" ? `${airport["Solar Capacity Installed (MW)"]} MW` : airport["Solar Capacity Installed (MW)"]} />
-            <InfoRow label="Annual Generation" value={airport["Annual Generation (Million Units)"] !== null && airport["Annual Generation (Million Units)"] !== "N/A" ? `${airport["Annual Generation (Million Units)"]} MU` : airport["Annual Generation (Million Units)"]} />
-            <InfoRow label="Annual Consumption" value={airport["Annual Consumption (Million Units)"] !== null && airport["Annual Consumption (Million Units)"] !== "N/A" ? `${airport["Annual Consumption (Million Units)"]} MU` : airport["Annual Consumption (Million Units)"]} />
-            <InfoRow label="Green Energy Coverage" value={airport["% Green Energy Coverage"]} />
-            <InfoRow label="Green Energy Sources" value={airport["Green Energy Sources"]} />
-            <InfoRow label="Carbon Neutral / ACI Level" value={airport["Carbon Neutral / ACI Level"]} />
-          </SectionCard>
-
-          {/* Services */}
-          <SectionCard title="Services" icon="🛎️">
-            <InfoRow label="Special Assistance" value={airport["Special Assistance Services"]} />
-            <InfoRow label="Key Vendors & Operators" value={airport["Key Vendors & Operators"]} />
-          </SectionCard>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Airport List Item ────────────────────────────────────────────────────────────
-function AirportListItem({
-  airport,
-  isSelected,
-  onClick,
-}: {
-  airport: Airport;
-  isSelected: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      className={`ar-list-item${isSelected ? " ar-list-item--selected" : ""}${airport.is_green ? " ar-list-item--green" : ""}`}
-      onClick={onClick}
-    >
-      <div className="ar-list-item-top">
-        <span className="ar-list-item-name">{airport["Airport Name"]}</span>
-        {airport.is_green && <span className="ar-list-green-dot" title="Green Airport">🌿</span>}
-      </div>
-      <div className="ar-list-item-meta">
-        <span className="ar-list-item-city">{airport.City}, {airport["State / UT"]}</span>
-        {airport["IATA Code"] !== "N/A" && (
-          <span className="ar-list-item-iata">{airport["IATA Code"]}</span>
-        )}
-      </div>
-      <div className="ar-list-item-tags">
-        <span
-          className="ar-type-dot"
-          style={{ backgroundColor: typeColor(airport.Type) }}
-        />
-        <span className="ar-list-type">{airport.Type}</span>
-        <span className={statusBadgeClass(airport.Status)}>{airport.Status}</span>
-        {airport["Power Consumption (MW)"] && airport["Power Consumption (MW)"] !== "N/A" && airport["Power Consumption (MW)"] !== null && (
-          <span style={{ fontSize: "10px", color: "#f59e0b", fontWeight: 600, marginLeft: "2px" }}>
-            ⚡ {airport["Power Consumption (MW)"]} MW
-          </span>
-        )}
-        {airport.is_green && airport["Solar Capacity Installed (MW)"] && airport["Solar Capacity Installed (MW)"] !== "N/A" && airport["Solar Capacity Installed (MW)"] !== null && (
-          <span style={{ fontSize: "10px", color: "#16a34a", fontWeight: 600 }}>
-            ☀ {airport["Solar Capacity Installed (MW)"]} MW solar
-          </span>
-        )}
-      </div>
-    </button>
-  );
-}
-
-// ── Main Page ────────────────────────────────────────────────────────────────────
+// ── Main Page ─────────────────────────────────────────────────────────────────
 export default function AirportRegistryPage() {
+  const [airports, setAirports] = useState<AirportProperties[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"registry" | "map">("registry");
+
+  // Filters
   const [search, setSearch] = useState("");
   const [filterState, setFilterState] = useState("");
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [greenOnly, setGreenOnly] = useState(false);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [view, setView] = useState<"map" | "list">("map");
 
-  const { data: meta } = useQuery({
-    queryKey: ["airports-meta"],
-    queryFn: fetchAirportsMeta,
-    staleTime: Infinity,
-  });
+  // Sort
+  const [sortKey, setSortKey] = useState<SortKey>("airport_name");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
 
-  const { data: powerStats } = useQuery({
-    queryKey: ["airports-power-stats"],
-    queryFn: fetchAirportsPowerStats,
-    staleTime: Infinity,
-  });
+  // Pagination
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
 
-  const powerDataMissing =
-    powerStats != null
-      ? powerStats.total_airports - powerStats.airports_with_power_data
-      : 0;
-
-  const { data, isLoading } = useQuery({
-    queryKey: ["airports", search, filterState, filterType, filterStatus, greenOnly],
-    queryFn: () =>
-      fetchAirports({
-        search: search || undefined,
-        state: filterState || undefined,
-        type: filterType || undefined,
-        status: filterStatus || undefined,
-        green_only: greenOnly || undefined,
-      }),
-    staleTime: 60_000,
-  });
-
-  const airports = data?.airports ?? [];
-  const selectedAirport = selectedId !== null ? airports.find((a) => a["S.No"] === selectedId) ?? null : null;
-
-  const handleSelect = useCallback((id: number) => {
-    setSelectedId((prev) => (prev === id ? null : id));
+  useEffect(() => {
+    fetch("/data/india_airports_unified.geojson")
+      .then(r => r.json())
+      .then((data: { features: Array<{ geometry: { coordinates: [number, number] }; properties: AirportProperties }> }) => {
+        setAirports(data.features.map(f => ({
+          ...f.properties,
+          lat: f.geometry.coordinates[1],
+          lon: f.geometry.coordinates[0],
+        })));
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
-  const handleClearFilters = () => {
-    setSearch("");
-    setFilterState("");
-    setFilterType("");
-    setFilterStatus("");
-    setGreenOnly(false);
+  // Derived filter options
+  const states = useMemo(() => [...new Set(airports.map(a => a.state ?? "").filter(Boolean))].sort(), [airports]);
+  const types = useMemo(() => [...new Set(airports.map(a => typeShort(a.type)).filter(s => s !== "—"))].sort(), [airports]);
+  const statusOptions = useMemo(() => [...new Set(airports.map(a => a.status ?? "").filter(Boolean))].sort(), [airports]);
+
+  // Stats
+  const totalSolar = useMemo(() => airports.reduce((sum, a) => sum + solarMw(a), 0), [airports]);
+  const greenCount = useMemo(() => airports.filter(a => a.is_notable_green).length, [airports]);
+  const statesCount = useMemo(() => new Set(airports.map(a => a.state).filter(Boolean)).size, [airports]);
+
+  // Filtered + sorted
+  const filtered = useMemo(() => {
+    let rows = [...airports];
+    if (search) {
+      const q = search.toLowerCase();
+      rows = rows.filter(a => a.airport_name.toLowerCase().includes(q) || (a.iata_code ?? "").toLowerCase().includes(q) || (a.city ?? "").toLowerCase().includes(q));
+    }
+    if (filterState) rows = rows.filter(a => a.state === filterState);
+    if (filterType) rows = rows.filter(a => typeShort(a.type) === filterType);
+    if (filterStatus) rows = rows.filter(a => a.status === filterStatus);
+    if (greenOnly) rows = rows.filter(a => a.is_notable_green);
+
+    rows.sort((a, b) => {
+      let av: string | number = 0, bv: string | number = 0;
+      if (sortKey === "airport_name") { av = a.airport_name; bv = b.airport_name; }
+      else if (sortKey === "iata_code") { av = a.iata_code ?? ""; bv = b.iata_code ?? ""; }
+      else if (sortKey === "city") { av = a.city ?? ""; bv = b.city ?? ""; }
+      else if (sortKey === "state") { av = a.state ?? ""; bv = b.state ?? ""; }
+      else if (sortKey === "type") { av = typeShort(a.type); bv = typeShort(b.type); }
+      else if (sortKey === "status") { av = a.status ?? ""; bv = b.status ?? ""; }
+      else if (sortKey === "solar_mw") { av = solarMw(a); bv = solarMw(b); }
+      else if (sortKey === "re_pct") { av = rePct(a); bv = rePct(b); }
+      else if (sortKey === "aci") { av = a.green_energy?.carbon_neutral_aci_level ?? ""; bv = b.green_energy?.carbon_neutral_aci_level ?? ""; }
+
+      if (typeof av === "number" && typeof bv === "number") return sortDir === "asc" ? av - bv : bv - av;
+      return sortDir === "asc" ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+    });
+    return rows;
+  }, [airports, search, filterState, filterType, filterStatus, greenOnly, sortKey, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortKey(key); setSortDir("asc"); }
+    setPage(1);
   };
 
-  const hasFilters = search || filterState || filterType || filterStatus || greenOnly;
+  const resetFilters = () => {
+    setSearch(""); setFilterState(""); setFilterType(""); setFilterStatus(""); setGreenOnly(false); setPage(1);
+  };
+
+  const thStyle = (key: SortKey): React.CSSProperties => ({
+    padding: "10px 12px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase",
+    letterSpacing: "0.08em", color: sortKey === key ? "#0d7a6e" : "#64748b",
+    background: "#f8fafc", borderBottom: "2px solid #e2e8f0", cursor: "pointer",
+    whiteSpace: "nowrap", userSelect: "none",
+  });
+
+  const SortArrow = ({ col }: { col: SortKey }) =>
+    sortKey === col ? <span style={{ marginLeft: 4 }}>{sortDir === "asc" ? "↑" : "↓"}</span> : null;
+
+  if (loading) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh", color: "#64748b", fontFamily: "var(--sans, system-ui)" }}>
+      Loading airport registry…
+    </div>
+  );
 
   return (
-    <div className="ar-page">
-      {/* ── Left Panel: Filters + List ── */}
-      <aside className="ar-left-panel">
-        <div className="ar-panel-header">
-          <h1 className="ar-panel-title">Airport Registry</h1>
-          <p className="ar-panel-subtitle">
-            {isLoading ? "Loading…" : `${data?.total ?? 0} airports`}
-          </p>
-        </div>
-
-        {/* Search */}
-        <div className="ar-search-wrap">
-          <span className="ar-search-icon">🔍</span>
-          <input
-            className="ar-search-input"
-            placeholder="Search name, city, IATA…"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setSelectedId(null); }}
-          />
-          {search && (
-            <button className="ar-search-clear" onClick={() => setSearch("")}>✕</button>
-          )}
-        </div>
-
-        {/* Filters */}
-        <div className="ar-filters">
-          <select
-            className="ar-filter-select"
-            value={filterState}
-            onChange={(e) => { setFilterState(e.target.value); setSelectedId(null); }}
-          >
-            <option value="">All States / UTs</option>
-            {meta?.states.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-
-          <select
-            className="ar-filter-select"
-            value={filterType}
-            onChange={(e) => { setFilterType(e.target.value); setSelectedId(null); }}
-          >
-            <option value="">All Types</option>
-            {meta?.types.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-
-          <select
-            className="ar-filter-select"
-            value={filterStatus}
-            onChange={(e) => { setFilterStatus(e.target.value); setSelectedId(null); }}
-          >
-            <option value="">All Statuses</option>
-            {meta?.statuses.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-
-          <label className="ar-green-toggle">
-            <input
-              type="checkbox"
-              checked={greenOnly}
-              onChange={(e) => { setGreenOnly(e.target.checked); setSelectedId(null); }}
-            />
-            <span className="ar-green-toggle-label">🌿 Green airports only</span>
-          </label>
-
-          {hasFilters && (
-            <button className="ar-clear-filters-btn" onClick={handleClearFilters}>
-              Clear filters
-            </button>
-          )}
-        </div>
-
-        {/* View toggle */}
-        <div className="ar-view-toggle">
-          <button
-            className={`ar-view-btn${view === "map" ? " ar-view-btn--active" : ""}`}
-            onClick={() => setView("map")}
-          >
-            🗺 Map
-          </button>
-          <button
-            className={`ar-view-btn${view === "list" ? " ar-view-btn--active" : ""}`}
-            onClick={() => setView("list")}
-          >
-            ☰ List
-          </button>
-        </div>
-
-        {/* Airport list */}
-        <div className="ar-list">
-          {isLoading ? (
-            <div className="ar-list-loading">Loading airports…</div>
-          ) : airports.length === 0 ? (
-            <div className="ar-list-empty">No airports found.</div>
-          ) : (
-            airports.map((airport) => (
-              <AirportListItem
-                key={airport["S.No"]}
-                airport={airport}
-                isSelected={airport["S.No"] === selectedId}
-                onClick={() => handleSelect(airport["S.No"])}
-              />
-            ))
-          )}
-        </div>
-      </aside>
-
-      {/* ── Right Panel: Map + Detail ── */}
-      <div className="ar-right-panel">
-        {view === "map" && (
-          <div className="ar-map-container">
-            <AllAirportsMap
-              airports={airports}
-              selectedId={selectedId}
-              onSelect={handleSelect}
-            />
-            <div className="ar-map-legend">
-              <div className="ar-legend-item">
-                <span className="ar-map-dot ar-map-dot--small" />
-                <span>Airport</span>
+    <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "var(--sans, 'DM Sans', system-ui, sans-serif)" }}>
+      {/* ── Header ── */}
+      <div style={{ background: "#fff", borderBottom: "1px solid #e2e8f0", padding: "24px 32px" }}>
+        <div style={{ maxWidth: 1400, margin: "0 auto" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#0d7a6e", marginBottom: "6px" }}>
+                India Infrastructure Registry
               </div>
-              <div className="ar-legend-item">
-                <span className="ar-map-dot ar-map-dot--green ar-map-dot--small" />
-                <span>Green Airport</span>
-              </div>
+              <h1 style={{ fontSize: "26px", fontWeight: 800, color: "#0f172a", margin: 0, letterSpacing: "-0.02em" }}>
+                Airport Registry
+              </h1>
+              <p style={{ fontSize: "13px", color: "#64748b", marginTop: "4px" }}>
+                {airports.length} airports across India — operational, upcoming, and green-certified
+              </p>
             </div>
-            {!selectedAirport && (
-              <div className="ar-map-hint">Click an airport pin or list item to view details</div>
-            )}
+            <button
+              onClick={() => exportCsv(filtered)}
+              style={{ padding: "8px 18px", background: "#0d7a6e", color: "#fff", border: "none", fontSize: "12px", fontWeight: 700, cursor: "pointer", letterSpacing: "0.04em" }}
+            >
+              ↓ Export CSV ({filtered.length})
+            </button>
           </div>
+
+          {/* Stats cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginTop: "20px" }}>
+            {[
+              { val: airports.length, lbl: "Total Airports", color: "#0d7a6e" },
+              { val: greenCount, lbl: "Green Certified", color: "#16a34a" },
+              { val: statesCount, lbl: "States / UTs", color: "#2563eb" },
+              { val: `${totalSolar.toFixed(1)} MW`, lbl: "Total Solar Capacity", color: "#f59e0b" },
+            ].map(k => (
+              <div key={k.lbl} style={{ padding: "16px 20px", background: "#fff", border: "1px solid #e2e8f0", borderTop: `3px solid ${k.color}` }}>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "#0f172a" }}>{k.val}</div>
+                <div style={{ fontSize: "11px", color: "#64748b", fontWeight: 500, marginTop: "2px" }}>{k.lbl}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Tabs */}
+          <div style={{ display: "flex", gap: 0, marginTop: "20px", borderBottom: "2px solid #e2e8f0" }}>
+            {(["registry", "map"] as const).map(tab => (
+              <button key={tab} onClick={() => setActiveTab(tab)} style={{
+                padding: "8px 20px", fontSize: "12px", fontWeight: 700, textTransform: "uppercase",
+                letterSpacing: "0.06em", border: "none", background: "transparent", cursor: "pointer",
+                color: activeTab === tab ? "#0d7a6e" : "#64748b",
+                borderBottom: activeTab === tab ? "2px solid #0d7a6e" : "2px solid transparent",
+                marginBottom: "-2px",
+              }}>
+                {tab === "registry" ? "Registry" : "Map View"}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "24px 32px" }}>
+        {activeTab === "registry" && (
+          <>
+            {/* ── Filters ── */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center", marginBottom: "16px", background: "#fff", padding: "14px 16px", border: "1px solid #e2e8f0" }}>
+              <input
+                type="text"
+                placeholder="Search airport, IATA, city…"
+                value={search}
+                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                style={{ flex: "1 1 200px", padding: "7px 12px", border: "1px solid #e2e8f0", fontSize: "13px", outline: "none", fontFamily: "inherit" }}
+              />
+              <select value={filterState} onChange={e => { setFilterState(e.target.value); setPage(1); }}
+                style={{ padding: "7px 10px", border: "1px solid #e2e8f0", fontSize: "12px", fontFamily: "inherit", background: "#fff" }}>
+                <option value="">All States</option>
+                {states.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <select value={filterType} onChange={e => { setFilterType(e.target.value); setPage(1); }}
+                style={{ padding: "7px 10px", border: "1px solid #e2e8f0", fontSize: "12px", fontFamily: "inherit", background: "#fff" }}>
+                <option value="">All Types</option>
+                {types.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }}
+                style={{ padding: "7px 10px", border: "1px solid #e2e8f0", fontSize: "12px", fontFamily: "inherit", background: "#fff" }}>
+                <option value="">All Statuses</option>
+                {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: 600, color: "#16a34a", cursor: "pointer" }}>
+                <input type="checkbox" checked={greenOnly} onChange={e => { setGreenOnly(e.target.checked); setPage(1); }} />
+                Green Only
+              </label>
+              {(search || filterState || filterType || filterStatus || greenOnly) && (
+                <button onClick={resetFilters} style={{ padding: "7px 12px", fontSize: "11px", border: "1px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", fontFamily: "inherit", color: "#475569" }}>
+                  ✕ Clear
+                </button>
+              )}
+              <span style={{ fontSize: "11px", color: "#94a3b8", marginLeft: "auto" }}>
+                {filtered.length} of {airports.length} airports
+              </span>
+            </div>
+
+            {/* ── Table ── */}
+            <div style={{ background: "#fff", border: "1px solid #e2e8f0", overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                <thead>
+                  <tr>
+                    <th style={{ ...thStyle("airport_name"), textAlign: "left" }} onClick={() => handleSort("airport_name")}>
+                      Airport Name <SortArrow col="airport_name" />
+                    </th>
+                    <th style={thStyle("iata_code")} onClick={() => handleSort("iata_code")}>
+                      IATA <SortArrow col="iata_code" />
+                    </th>
+                    <th style={{ ...thStyle("city"), textAlign: "left" }} onClick={() => handleSort("city")}>
+                      City <SortArrow col="city" />
+                    </th>
+                    <th style={{ ...thStyle("state"), textAlign: "left" }} onClick={() => handleSort("state")}>
+                      State <SortArrow col="state" />
+                    </th>
+                    <th style={thStyle("type")} onClick={() => handleSort("type")}>
+                      Type <SortArrow col="type" />
+                    </th>
+                    <th style={thStyle("status")} onClick={() => handleSort("status")}>
+                      Status <SortArrow col="status" />
+                    </th>
+                    <th style={{ ...thStyle("solar_mw"), textAlign: "right" }} onClick={() => handleSort("solar_mw")}>
+                      Solar (MW) <SortArrow col="solar_mw" />
+                    </th>
+                    <th style={{ ...thStyle("re_pct"), textAlign: "right" }} onClick={() => handleSort("re_pct")}>
+                      RE% <SortArrow col="re_pct" />
+                    </th>
+                    <th style={{ ...thStyle("aci"), textAlign: "left" }} onClick={() => handleSort("aci")}>
+                      ACI Level <SortArrow col="aci" />
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginated.map((a, idx) => {
+                    const solar = solarMw(a);
+                    const pct = rePct(a);
+                    const aci = a.green_energy?.carbon_neutral_aci_level;
+                    const isUpcoming = UPCOMING_STATUSES.includes(a.status ?? "");
+                    return (
+                      <tr key={a.slno} style={{ borderBottom: "1px solid #f1f5f9", background: idx % 2 === 0 ? "#fff" : "#fafbfc" }}>
+                        <td style={{ padding: "10px 12px", maxWidth: 280 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            {a.is_notable_green && (
+                              <span title="Green Certified" style={{ fontSize: "12px" }}>🌿</span>
+                            )}
+                            <div style={{ fontWeight: 600, color: "#0f172a", lineHeight: 1.3 }}>{a.airport_name}</div>
+                          </div>
+                        </td>
+                        <td style={{ padding: "10px 12px", textAlign: "center" }}>
+                          {a.iata_code ? (
+                            <span style={{ fontFamily: "var(--mono, monospace)", fontSize: "12px", fontWeight: 700, color: "#0d7a6e", background: "#f0fdfa", padding: "2px 6px" }}>
+                              {a.iata_code}
+                            </span>
+                          ) : <span style={{ color: "#94a3b8" }}>—</span>}
+                        </td>
+                        <td style={{ padding: "10px 12px", color: "#334155", whiteSpace: "nowrap" }}>{a.city ?? "—"}</td>
+                        <td style={{ padding: "10px 12px", color: "#334155", fontSize: "12px" }}>{a.state ?? "—"}</td>
+                        <td style={{ padding: "10px 12px", textAlign: "center" }}>
+                          <span style={{
+                            fontSize: "10px", fontWeight: 700, padding: "2px 7px",
+                            background: `${typeColor(a.type)}18`,
+                            color: typeColor(a.type), letterSpacing: "0.04em",
+                          }}>
+                            {typeShort(a.type)}
+                          </span>
+                        </td>
+                        <td style={{ padding: "10px 12px", textAlign: "center" }}>
+                          <span style={{
+                            fontSize: "10px", fontWeight: 700, padding: "3px 8px",
+                            background: statusBg(a.status), color: statusColor(a.status),
+                            letterSpacing: "0.03em", whiteSpace: "nowrap",
+                          }}>
+                            {isUpcoming ? "UPCOMING" : (a.status ?? "—")}
+                          </span>
+                        </td>
+                        <td style={{ padding: "10px 12px", textAlign: "right", color: solar > 0 ? "#16a34a" : "#94a3b8", fontWeight: solar > 0 ? 700 : 400 }}>
+                          {solar > 0 ? solar.toFixed(1) : "—"}
+                        </td>
+                        <td style={{ padding: "10px 12px", textAlign: "right" }}>
+                          {pct > 0 ? (
+                            <span style={{ fontWeight: 700, color: "#16a34a" }}>{pct}%</span>
+                          ) : <span style={{ color: "#94a3b8" }}>—</span>}
+                        </td>
+                        <td style={{ padding: "10px 12px", fontSize: "11px", color: aci && aci !== "Not designated" ? "#16a34a" : "#94a3b8", fontWeight: 600 }}>
+                          {aci && aci !== "Not designated" ? aci : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {paginated.length === 0 && (
+                    <tr>
+                      <td colSpan={9} style={{ padding: "40px", textAlign: "center", color: "#94a3b8", fontSize: "14px" }}>
+                        No airports match the current filters.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* ── Pagination ── */}
+            {totalPages > 1 && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "16px" }}>
+                <span style={{ fontSize: "12px", color: "#64748b" }}>
+                  Page {page} of {totalPages} · {filtered.length} results
+                </span>
+                <div style={{ display: "flex", gap: "4px" }}>
+                  <button onClick={() => setPage(1)} disabled={page === 1}
+                    style={{ padding: "5px 10px", fontSize: "12px", border: "1px solid #e2e8f0", background: "#fff", cursor: page === 1 ? "not-allowed" : "pointer", opacity: page === 1 ? 0.4 : 1 }}>
+                    «
+                  </button>
+                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                    style={{ padding: "5px 10px", fontSize: "12px", border: "1px solid #e2e8f0", background: "#fff", cursor: page === 1 ? "not-allowed" : "pointer", opacity: page === 1 ? 0.4 : 1 }}>
+                    ‹
+                  </button>
+                  {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+                    const pg = totalPages <= 7 ? i + 1 : Math.max(1, Math.min(totalPages - 6, page - 3)) + i;
+                    return (
+                      <button key={pg} onClick={() => setPage(pg)}
+                        style={{ padding: "5px 10px", fontSize: "12px", border: `1px solid ${pg === page ? "#0d7a6e" : "#e2e8f0"}`, background: pg === page ? "#0d7a6e" : "#fff", color: pg === page ? "#fff" : "#334155", cursor: "pointer", fontWeight: pg === page ? 700 : 400 }}>
+                        {pg}
+                      </button>
+                    );
+                  })}
+                  <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                    style={{ padding: "5px 10px", fontSize: "12px", border: "1px solid #e2e8f0", background: "#fff", cursor: page === totalPages ? "not-allowed" : "pointer", opacity: page === totalPages ? 0.4 : 1 }}>
+                    ›
+                  </button>
+                  <button onClick={() => setPage(totalPages)} disabled={page === totalPages}
+                    style={{ padding: "5px 10px", fontSize: "12px", border: "1px solid #e2e8f0", background: "#fff", cursor: page === totalPages ? "not-allowed" : "pointer", opacity: page === totalPages ? 0.4 : 1 }}>
+                    »
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
-        {selectedAirport ? (
-          <div className={`ar-detail-container${view === "map" ? " ar-detail-container--overlay" : ""}`}>
-            <AirportDetail
-              airport={selectedAirport}
-              onClose={() => setSelectedId(null)}
-              powerDataMissing={powerDataMissing}
-            />
+        {/* ── Map Tab ── */}
+        {activeTab === "map" && (
+          <div style={{ position: "relative", height: "65vh", border: "1px solid #e2e8f0", overflow: "hidden" }}>
+            <MapContainer center={[20.5937, 78.9629]} zoom={5} style={{ height: "100%", width: "100%" }} preferCanvas>
+              <TileLayer attribution="© CartoDB" url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
+              {airports.filter(a => a.lat && a.lon).map(a => {
+                const isUpcoming = UPCOMING_STATUSES.includes(a.status ?? "");
+                const color = a.is_notable_green ? "#10b981" : (isUpcoming ? "#a855f7" : "#0d7a6e");
+                return (
+                  <CircleMarker
+                    key={a.slno}
+                    center={[a.lat!, a.lon!]}
+                    radius={4}
+                    pathOptions={{ fillColor: color, color: "transparent", fillOpacity: 0.85 }}
+                  >
+                    <Tooltip direction="top" offset={[0, -6]} opacity={1}>
+                      <div style={{ fontSize: "12px", fontWeight: 700 }}>{a.airport_name}</div>
+                      <div style={{ fontSize: "10px", color: "#64748b" }}>{a.city}, {a.state}</div>
+                      <div style={{ fontSize: "10px" }}>{a.status ?? ""}</div>
+                    </Tooltip>
+                  </CircleMarker>
+                );
+              })}
+            </MapContainer>
+            {/* Legend */}
+            <div style={{ position: "absolute", bottom: 24, right: 24, background: "rgba(255,255,255,0.92)", padding: "10px 14px", border: "1px solid #e2e8f0", fontSize: "11px", zIndex: 1000 }}>
+              {[
+                { color: "#10b981", label: "Green Certified" },
+                { color: "#a855f7", label: "Upcoming" },
+                { color: "#0d7a6e", label: "Operational" },
+              ].map(l => (
+                <div key={l.label} style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "4px" }}>
+                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: l.color, flexShrink: 0 }} />
+                  <span style={{ color: "#334155" }}>{l.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        ) : view === "list" ? (
-          <div className="ar-detail-placeholder">
-            <div className="ar-placeholder-icon">✈️</div>
-            <p className="ar-placeholder-text">Select an airport to view its details</p>
-          </div>
-        ) : null}
+        )}
       </div>
     </div>
   );
