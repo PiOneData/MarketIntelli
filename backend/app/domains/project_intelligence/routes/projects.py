@@ -39,6 +39,13 @@ _DC_TICKERS: dict[str, dict[str, str]] = {
     "STT GDC India":              {"parent": "Singapore Telecom Ltd",    "ticker": "Z74.SI",        "exchange": "SGX"},
 }
 
+# ── Airport operator → listed stock mapping ────────────────────────────────────
+_AIRPORT_TICKERS: dict[str, dict[str, str]] = {
+    "adani":  {"parent": "Adani Enterprises Ltd",          "ticker": "ADANIENT.NS",   "exchange": "NSE"},
+    "gmr":    {"parent": "GMR Airports Infrastructure Ltd", "ticker": "GMRAIRPORT.NS", "exchange": "NSE"},
+    "zurich": {"parent": "Zurich Airport AG",               "ticker": "FLUGHAFEN.SW",  "exchange": "SIX"},
+}
+
 
 def _yahoo_quote(ticker: str) -> dict:
     """Blocking Yahoo Finance chart API call — run inside thread pool."""
@@ -156,6 +163,52 @@ async def get_dc_company_stocks() -> dict:
             change_pct = round(((price - prev_close) / prev_close) * 100, 2)
         stocks.append({
             "dc_company":     dc_company,
+            "parent_company": info["parent"],
+            "ticker":         info["ticker"],
+            "exchange":       info["exchange"],
+            "price":          price,
+            "prev_close":     prev_close,
+            "change_pct":     change_pct,
+            "currency":       q.get("currency", ""),
+            "market_state":   q.get("market_state", ""),
+            "error":          q.get("error"),
+        })
+
+    return {
+        "stocks": stocks,
+        "fetched_at": datetime.now(tz=timezone.utc).isoformat(),
+    }
+
+
+@router.get("/airport-stocks")
+async def get_airport_operator_stocks() -> dict:
+    """
+    Fetch end-of-day stock prices for publicly listed airport operators.
+    Uses Yahoo Finance (free, no API key). Called on page load.
+    """
+    keys = list(_AIRPORT_TICKERS.keys())
+    coroutines = [
+        asyncio.to_thread(_yahoo_quote, _AIRPORT_TICKERS[k]["ticker"])
+        for k in keys
+    ]
+    results = await asyncio.gather(*coroutines, return_exceptions=True)
+    quotes: dict[str, dict] = {}
+    for k, result in zip(keys, results):
+        if isinstance(result, Exception):
+            quotes[k] = {"error": str(result)}
+        else:
+            quotes[k] = result
+
+    stocks = []
+    for op_key, info in _AIRPORT_TICKERS.items():
+        q = quotes.get(op_key, {})
+        price = q.get("price")
+        prev_close = q.get("prev_close")
+        change_pct: float | None = None
+        if price is not None and prev_close and prev_close != 0:
+            change_pct = round(((price - prev_close) / prev_close) * 100, 2)
+        stocks.append({
+            "operator_key":   op_key,
             "parent_company": info["parent"],
             "ticker":         info["ticker"],
             "exchange":       info["exchange"],
