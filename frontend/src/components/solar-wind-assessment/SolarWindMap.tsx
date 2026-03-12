@@ -12,6 +12,8 @@ import {
   Layers,
   ExternalLink,
   Navigation,
+  Plane,
+  Building2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -27,10 +29,59 @@ interface DcEntry {
   props: Record<string, unknown>;
 }
 
+interface AirportEntry {
+  slno: number;
+  airport_name: string;
+  iata_code: string | null;
+  city: string;
+  state: string;
+  type: string;
+  status: string;
+  lat: number;
+  lon: number;
+  is_notable_green: boolean;
+  green_energy: {
+    solar_capacity_installed_mw?: string | number | null;
+    annual_generation_mu?: string | number | null;
+    annual_consumption_mu?: string | number | null;
+    pct_green_coverage?: string | null;
+    carbon_neutral_aci_level?: string | null;
+  } | null;
+  operations: {
+    power_consumption_mw?: string | number | null;
+    [key: string]: unknown;
+  } | null;
+}
+
 interface DcPopupState {
   dc: Record<string, unknown>;
   lat: number;
   lng: number;
+}
+
+interface AirportPopupState {
+  airport: AirportEntry;
+  lat: number;
+  lng: number;
+}
+
+interface StateKpiData {
+  stateName: string;
+  dc: {
+    count: number;
+    totalPowerMw: number;
+    companies: string[];
+    avgScore: number;
+    tiers: Record<string, number>;
+  } | null;
+  airport: {
+    count: number;
+    totalSolarMw: number;
+    totalPowerConsumptionMw: number;
+    greenCount: number;
+    operationalCount: number;
+    types: Record<string, number>;
+  } | null;
 }
 
 interface Props {
@@ -43,7 +94,7 @@ interface Props {
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
-const LAYER_GROUPS = ["wind", "solar", "dc"] as const;
+const LAYER_GROUPS = ["wind", "solar", "dc", "airports"] as const;
 type LayerGroup = (typeof LAYER_GROUPS)[number];
 
 const TOGGLE_GROUPS: {
@@ -51,35 +102,120 @@ const TOGGLE_GROUPS: {
   label: string;
   icon: React.ReactNode;
 }[] = [
-  {
-    key: "wind",
-    label: "Wind",
-    icon: <Wind size={12} />,
-  },
-  {
-    key: "solar",
-    label: "Solar",
-    icon: <Sun size={12} />,
-  },
-  {
-    key: "dc",
-    label: "Data Centers",
-    icon: <Server size={12} />,
-  },
+  { key: "wind",     label: "Wind",        icon: <Wind size={12} /> },
+  { key: "solar",    label: "Solar",       icon: <Sun size={12} /> },
+  { key: "dc",       label: "Data Centers",icon: <Server size={12} /> },
+  { key: "airports", label: "Airports",    icon: <Plane size={12} /> },
 ];
 
 const LAYER_DEFS: { id: string; group: LayerGroup }[] = [
-  { id: "wind-heat", group: "wind" },
-  { id: "turbines-glow", group: "wind" },
-  { id: "turbines-core", group: "wind" },
-  { id: "solar-heat", group: "solar" },
-  { id: "solar-glow", group: "solar" },
-  { id: "solar-core", group: "solar" },
-  { id: "dc-glow", group: "dc" },
-  { id: "dc-core", group: "dc" },
-  { id: "dc-label", group: "dc" },
+  { id: "wind-heat",      group: "wind" },
+  { id: "turbines-glow",  group: "wind" },
+  { id: "turbines-core",  group: "wind" },
+  { id: "solar-heat",     group: "solar" },
+  { id: "solar-glow",     group: "solar" },
+  { id: "solar-core",     group: "solar" },
+  { id: "dc-glow",        group: "dc" },
+  { id: "dc-core",        group: "dc" },
+  { id: "dc-label",       group: "dc" },
+  { id: "airport-glow",   group: "airports" },
+  { id: "airport-core",   group: "airports" },
+  { id: "airport-label",  group: "airports" },
 ];
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function parseNum(val: unknown): number {
+  if (val === null || val === undefined || val === "" || val === "N/A") return 0;
+  const n = parseFloat(String(val).replace(/[^0-9.-]/g, ""));
+  return isNaN(n) ? 0 : n;
+}
+
+function normalizeStateName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/\s*&\s*/g, " and ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function statesMatch(geoJsonName: string, dataName: string): boolean {
+  const n1 = normalizeStateName(geoJsonName);
+  const n2 = normalizeStateName(dataName);
+  if (n1 === n2) return true;
+  // Handle cases like "Andaman & Nicobar Islands" vs "Andaman and Nicobar"
+  if (n1.includes(n2) || n2.includes(n1)) return true;
+  // Split multi-state names like "Chandigarh / Punjab / Haryana"
+  const parts = n2.split(/\s*\/\s*/);
+  return parts.some((p) => n1.includes(p.trim()) || p.trim().includes(n1));
+}
+
+function computeStateKpi(
+  stateName: string,
+  dcList: DcEntry[],
+  airportList: AirportEntry[],
+  layerVis: Record<LayerGroup, boolean>,
+): StateKpiData {
+  const kpi: StateKpiData = { stateName, dc: null, airport: null };
+
+  if (layerVis.dc) {
+    const stateDcs = dcList.filter((dc) =>
+      statesMatch(stateName, String(dc.props["state"] ?? "")),
+    );
+    const totalPowerMw = stateDcs.reduce(
+      (sum, dc) => sum + parseNum(dc.props["power_mw"]),
+      0,
+    );
+    const companies = [
+      ...new Set(stateDcs.map((dc) => dc.company).filter(Boolean)),
+    ];
+    const scores = stateDcs
+      .map((dc) => parseNum(dc.props["overall_score"]))
+      .filter((s) => s > 0);
+    const avgScore =
+      scores.length > 0
+        ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+        : 0;
+    const tiers: Record<string, number> = {};
+    for (const dc of stateDcs) {
+      const t = String(dc.tier ?? dc.props["tier_design"] ?? "Not Specified");
+      tiers[t] = (tiers[t] ?? 0) + 1;
+    }
+    kpi.dc = { count: stateDcs.length, totalPowerMw, companies, avgScore, tiers };
+  }
+
+  if (layerVis.airports) {
+    const stateAirports = airportList.filter((a) =>
+      statesMatch(stateName, a.state),
+    );
+    const totalSolarMw = stateAirports.reduce(
+      (sum, a) => sum + parseNum(a.green_energy?.solar_capacity_installed_mw),
+      0,
+    );
+    const totalPowerConsumptionMw = stateAirports.reduce(
+      (sum, a) => sum + parseNum(a.operations?.power_consumption_mw),
+      0,
+    );
+    const greenCount = stateAirports.filter((a) => a.is_notable_green).length;
+    const operationalCount = stateAirports.filter((a) =>
+      a.status?.toLowerCase().includes("operational"),
+    ).length;
+    const types: Record<string, number> = {};
+    for (const a of stateAirports) {
+      const t = a.type || "Unknown";
+      types[t] = (types[t] ?? 0) + 1;
+    }
+    kpi.airport = {
+      count: stateAirports.length,
+      totalSolarMw,
+      totalPowerConsumptionMw,
+      greenCount,
+      operationalCount,
+      types,
+    };
+  }
+
+  return kpi;
+}
 
 // ── Component ────────────────────────────────────────────────────────────────
 export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: Props) {
@@ -94,17 +230,30 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
     wind: true,
     solar: true,
     dc: true,
+    airports: false,
   });
   const [dcPopup, setDcPopup] = useState<DcPopupState | null>(null);
+  const [airportPopup, setAirportPopup] = useState<AirportPopupState | null>(null);
   const [markerPos, setMarkerPos] = useState<{ lat: number; lng: number } | null>(null);
   const [dcList, setDcList] = useState<DcEntry[]>([]);
+  const [airportList, setAirportList] = useState<AirportEntry[]>([]);
   const [dcSearch, setDcSearch] = useState("");
+  const [stateKpi, setStateKpi] = useState<StateKpiData | null>(null);
+
+  // Refs to keep latest values accessible inside map event callbacks (closures)
+  const layerVisRef = useRef(layerVis);
+  const dcListRef = useRef<DcEntry[]>([]);
+  const airportListRef = useRef<AirportEntry[]>([]);
+
+  useEffect(() => { layerVisRef.current = layerVis; }, [layerVis]);
+  useEffect(() => { dcListRef.current = dcList; }, [dcList]);
+  useEffect(() => { airportListRef.current = airportList; }, [airportList]);
 
   const toggleGroup = (group: LayerGroup) => {
     setLayerVis((prev) => ({ ...prev, [group]: !prev[group] }));
   };
 
-  // Load DC list for search autocomplete (uses dc_final_merged.geojson via API)
+  // Load DC list for search autocomplete
   useEffect(() => {
     fetch("/api/v1/solar-assessment/data/datacenter-assessment")
       .then((res) => res.json())
@@ -116,17 +265,13 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
           )
           .map((f) => ({
             ...(f.properties as Record<string, unknown>),
-            // dc_final_merged uses dc_name; legacy used name
             name: String(f.properties?.["dc_name"] ?? f.properties?.["name"] ?? ""),
             company: String(f.properties?.["company"] ?? ""),
             address: f.properties?.["address"] as string | undefined,
-            // dc_final_merged uses tier_design; legacy used tier
             tier: (f.properties?.["tier_design"] ?? f.properties?.["tier"]) as string | undefined,
-            // dc_final_merged uses slno as id; legacy used id string
             id: f.properties?.["slno"] != null
               ? String(f.properties?.["slno"])
               : (f.properties?.["id"] as string | undefined),
-            // dc_final_merged uses lon; legacy used lng (also in geometry)
             lng: (f.properties?.["lon"] ?? (f.geometry as GeoJSON.Point).coordinates[0] ?? 0) as number,
             lat: (f.properties?.["lat"] ?? (f.geometry as GeoJSON.Point).coordinates[1] ?? 0) as number,
             props: f.properties as Record<string, unknown>,
@@ -134,6 +279,40 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
         setDcList(list);
       })
       .catch((err) => console.error("Failed to load DC list", err));
+  }, []);
+
+  // Load airport list
+  useEffect(() => {
+    fetch("/data/india_airports_unified.geojson")
+      .then((res) => res.json())
+      .then((data: GeoJSON.FeatureCollection) => {
+        const list: AirportEntry[] = data.features
+          .filter(
+            (f): f is GeoJSON.Feature<GeoJSON.Point> =>
+              f.geometry.type === "Point",
+          )
+          .map((f) => {
+            const p = f.properties as Record<string, unknown>;
+            const ge = p["green_energy"] as AirportEntry["green_energy"];
+            const ops = p["operations"] as AirportEntry["operations"];
+            return {
+              slno: p["slno"] as number,
+              airport_name: String(p["airport_name"] ?? ""),
+              iata_code: p["iata_code"] as string | null,
+              city: String(p["city"] ?? ""),
+              state: String(p["state"] ?? ""),
+              type: String(p["type"] ?? ""),
+              status: String(p["status"] ?? ""),
+              lat: (p["lat"] ?? (f.geometry as GeoJSON.Point).coordinates[1]) as number,
+              lon: (p["lon"] ?? (f.geometry as GeoJSON.Point).coordinates[0]) as number,
+              is_notable_green: Boolean(p["is_notable_green"]),
+              green_energy: ge ?? null,
+              operations: ops ?? null,
+            };
+          });
+        setAirportList(list);
+      })
+      .catch((err) => console.error("Failed to load airport list", err));
   }, []);
 
   // Initialize MapLibre GL map
@@ -144,7 +323,6 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
       container: mapContainer.current,
       style: {
         version: 8,
-        // Free OpenMapTiles glyphs — required for symbol/label layers
         glyphs: "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
         sources: {
           "satellite-source": {
@@ -164,6 +342,14 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
             type: "geojson",
             data: "/api/v1/solar-assessment/data/datacenter-assessment",
           },
+          airports: {
+            type: "geojson",
+            data: "/data/india_airports_unified.geojson",
+          },
+          "india-states": {
+            type: "geojson",
+            data: "/data/india_states.geojson",
+          },
         },
         layers: [
           {
@@ -172,6 +358,36 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
             source: "satellite-source",
             minzoom: 0,
             maxzoom: 24,
+          },
+          // State boundaries (always visible, very subtle)
+          {
+            id: "states-fill",
+            type: "fill",
+            source: "india-states",
+            paint: {
+              "fill-color": "rgba(255,255,255,0)",
+              "fill-opacity": 0,
+            },
+          },
+          {
+            id: "states-outline",
+            type: "line",
+            source: "india-states",
+            paint: {
+              "line-color": "rgba(255,255,255,0.18)",
+              "line-width": 1,
+            },
+          },
+          // State highlight on click
+          {
+            id: "states-highlight",
+            type: "fill",
+            source: "india-states",
+            filter: ["==", "NAME_1", ""],
+            paint: {
+              "fill-color": "rgba(99,211,196,0.12)",
+              "fill-opacity": 1,
+            },
           },
           // Wind heatmap
           {
@@ -184,9 +400,7 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               "heatmap-weight": ["interpolate", ["linear"], ["zoom"], 0, 0.1, 9, 0.6],
               "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 0.1, 9, 1.5],
               "heatmap-color": [
-                "interpolate",
-                ["linear"],
-                ["heatmap-density"],
+                "interpolate", ["linear"], ["heatmap-density"],
                 0, "rgba(0,255,255,0)",
                 0.2, "rgba(0,255,255,0.2)",
                 0.5, "rgba(0,255,255,0.6)",
@@ -234,9 +448,7 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               "heatmap-weight": ["interpolate", ["linear"], ["zoom"], 0, 0.1, 9, 0.6],
               "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 0.1, 9, 1.5],
               "heatmap-color": [
-                "interpolate",
-                ["linear"],
-                ["heatmap-density"],
+                "interpolate", ["linear"], ["heatmap-density"],
                 0, "rgba(255,255,0,0)",
                 0.2, "rgba(255,255,0,0.2)",
                 0.5, "rgba(255,200,0,0.6)",
@@ -273,7 +485,62 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               "circle-opacity": 1,
             },
           },
-          // Data centers glow — all DC features
+          // Airports glow
+          {
+            id: "airport-glow",
+            type: "circle",
+            source: "airports",
+            layout: { visibility: "none" },
+            paint: {
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 9, 10, 20, 14, 28],
+              "circle-color": "#2563eb",
+              "circle-opacity": 0.25,
+              "circle-blur": 0.5,
+            },
+          },
+          // Airports core
+          {
+            id: "airport-core",
+            type: "circle",
+            source: "airports",
+            layout: { visibility: "none" },
+            paint: {
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 5, 10, 10, 14, 14],
+              "circle-color": [
+                "case",
+                ["boolean", ["get", "is_notable_green"], false],
+                "#16a34a",
+                "#2563eb",
+              ],
+              "circle-stroke-color": "#ffffff",
+              "circle-stroke-width": 2,
+              "circle-opacity": 1,
+            },
+          },
+          // Airports label
+          {
+            id: "airport-label",
+            type: "symbol",
+            source: "airports",
+            minzoom: 9,
+            layout: {
+              visibility: "none",
+              "text-field": ["coalesce", ["get", "airport_name"], ""],
+              "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
+              "text-size": 10,
+              "text-anchor": "top",
+              "text-offset": [0, 1.2],
+              "text-max-width": 12,
+              "text-allow-overlap": false,
+            },
+            paint: {
+              "text-color": "#ffffff",
+              "text-halo-color": "#1e3a5f",
+              "text-halo-width": 1.8,
+              "text-opacity": ["interpolate", ["linear"], ["zoom"], 9, 0, 10, 1],
+            },
+          },
+          // Data centers glow
           {
             id: "dc-glow",
             type: "circle",
@@ -285,7 +552,7 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               "circle-blur": 0.5,
             },
           },
-          // Data centers core — all DC features
+          // Data centers core
           {
             id: "dc-core",
             type: "circle",
@@ -298,7 +565,7 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               "circle-opacity": 1,
             },
           },
-          // Data centers label — name at zoom 10+, name + coordinates at zoom 13+
+          // Data centers label
           {
             id: "dc-label",
             type: "symbol",
@@ -306,8 +573,7 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
             minzoom: 10,
             layout: {
               "text-field": [
-                "step",
-                ["zoom"],
+                "step", ["zoom"],
                 ["coalesce", ["get", "dc_name"], ["get", "name"], ""],
                 13,
                 [
@@ -335,9 +601,7 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               "text-color": "#ffffff",
               "text-halo-color": "#0f172a",
               "text-halo-width": 1.8,
-              "text-opacity": [
-                "interpolate", ["linear"], ["zoom"], 10, 0, 11, 1,
-              ],
+              "text-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0, 11, 1],
             },
           },
         ],
@@ -357,11 +621,9 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
       if (!feature) return;
       const coords = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
       map.current?.flyTo({ center: coords, zoom: 17.5, duration: 1000 });
-      setDcPopup({
-        dc: feature.properties as Record<string, unknown>,
-        lat: coords[1],
-        lng: coords[0],
-      });
+      setDcPopup({ dc: feature.properties as Record<string, unknown>, lat: coords[1], lng: coords[0] });
+      setAirportPopup(null);
+      setStateKpi(null);
     });
 
     map.current.on("mouseenter", "dc-core", () => {
@@ -371,17 +633,103 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
       if (map.current) map.current.getCanvas().style.cursor = "";
     });
 
-    // Map click — place marker for custom location
+    // Airport click — show popup
+    map.current.on("click", "airport-core", (e) => {
+      e.preventDefault();
+      const feature = e.features?.[0];
+      if (!feature) return;
+      const coords = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
+      map.current?.flyTo({ center: coords, zoom: 13, duration: 1000 });
+      const p = feature.properties as Record<string, unknown>;
+      const parseJsonField = (val: unknown) => {
+        if (typeof val === "string") { try { return JSON.parse(val); } catch { return null; } }
+        return val ?? null;
+      };
+      const airport: AirportEntry = {
+        slno: p["slno"] as number,
+        airport_name: String(p["airport_name"] ?? ""),
+        iata_code: p["iata_code"] as string | null,
+        city: String(p["city"] ?? ""),
+        state: String(p["state"] ?? ""),
+        type: String(p["type"] ?? ""),
+        status: String(p["status"] ?? ""),
+        lat: coords[1],
+        lon: coords[0],
+        is_notable_green: Boolean(p["is_notable_green"]),
+        green_energy: parseJsonField(p["green_energy"]) as AirportEntry["green_energy"],
+        operations: parseJsonField(p["operations"]) as AirportEntry["operations"],
+      };
+      setAirportPopup({ airport, lat: coords[1], lng: coords[0] });
+      setDcPopup(null);
+      setStateKpi(null);
+    });
+
+    map.current.on("mouseenter", "airport-core", () => {
+      if (map.current) map.current.getCanvas().style.cursor = "pointer";
+    });
+    map.current.on("mouseleave", "airport-core", () => {
+      if (map.current) map.current.getCanvas().style.cursor = "";
+    });
+
+    // State click — show KPI overview
+    map.current.on("click", "states-fill", (e) => {
+      const feature = e.features?.[0];
+      if (!feature) return;
+      const stateName = String(feature.properties?.["NAME_1"] ?? "");
+      if (!stateName) return;
+
+      const currentLayerVis = layerVisRef.current;
+      const hasActiveOverlay = currentLayerVis.dc || currentLayerVis.airports;
+      if (!hasActiveOverlay) return;
+
+      // Highlight clicked state
+      if (map.current?.getLayer("states-highlight")) {
+        map.current.setFilter("states-highlight", ["==", "NAME_1", stateName]);
+      }
+
+      const kpi = computeStateKpi(
+        stateName,
+        dcListRef.current,
+        airportListRef.current,
+        currentLayerVis,
+      );
+      setStateKpi(kpi);
+      setDcPopup(null);
+      setAirportPopup(null);
+    });
+
+    map.current.on("mouseenter", "states-fill", () => {
+      if (map.current) map.current.getCanvas().style.cursor = "crosshair";
+    });
+    map.current.on("mouseleave", "states-fill", () => {
+      if (map.current) map.current.getCanvas().style.cursor = "";
+    });
+
+    // General map click — place marker for custom location
     map.current.on("click", (e) => {
-      const dcFeats = map.current?.queryRenderedFeatures(e.point, {
-        layers: ["dc-core"],
-      });
+      const dcFeats = map.current?.queryRenderedFeatures(e.point, { layers: ["dc-core"] });
       if (dcFeats && dcFeats.length > 0) return;
 
+      const airportFeats = map.current?.queryRenderedFeatures(e.point, { layers: ["airport-core"] });
+      if (airportFeats && airportFeats.length > 0) return;
+
+      // If a state overlay is active, state click handles it — don't place marker
+      const stateFeats = map.current?.queryRenderedFeatures(e.point, { layers: ["states-fill"] });
+      const currentLayerVis = layerVisRef.current;
+      if (stateFeats && stateFeats.length > 0 && (currentLayerVis.dc || currentLayerVis.airports)) {
+        return;
+      }
+
       setDcPopup(null);
+      setAirportPopup(null);
+      setStateKpi(null);
+      // Clear state highlight
+      if (map.current?.getLayer("states-highlight")) {
+        map.current.setFilter("states-highlight", ["==", "NAME_1", ""]);
+      }
+
       const { lng, lat } = e.lngLat;
-      const isIndia =
-        lat >= 6.0 && lat <= 37.5 && lng >= 68.0 && lng <= 97.5;
+      const isIndia = lat >= 6.0 && lat <= 37.5 && lng >= 68.0 && lng <= 97.5;
       if (!isIndia) {
         alert("Analysis available only for India region");
         return;
@@ -395,17 +743,11 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
         marker.current.setLngLat([lng, lat]);
       }
 
-      // Store position in state and populate the coordinate form
       setMarkerPos({ lat, lng });
-      setSearchCoords({
-        lat: lat.toFixed(6),
-        lng: lng.toFixed(6),
-      });
+      setSearchCoords({ lat: lat.toFixed(6), lng: lng.toFixed(6) });
     });
 
-    return () => {
-      // Don't destroy on re-render — only destroy if component fully unmounts
-    };
+    return () => {};
   }, []);
 
   // Apply layer visibility toggles
@@ -420,16 +762,18 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
         );
       }
     }
+    // Clear state KPI and highlight when both DC and airport are toggled off
+    if (!layerVis.dc && !layerVis.airports) {
+      setStateKpi(null);
+      if (map.current?.getLayer("states-highlight")) {
+        map.current.setFilter("states-highlight", ["==", "NAME_1", ""]);
+      }
+    }
   }, [layerVis, loaded]);
 
   const flyToDc = (dc: DcEntry) => {
     if (!map.current) return;
-    map.current.flyTo({
-      center: [dc.lng, dc.lat],
-      zoom: 17.5,
-      duration: 2000,
-      essential: true,
-    });
+    map.current.flyTo({ center: [dc.lng, dc.lat], zoom: 17.5, duration: 2000, essential: true });
     setDcPopup({ dc: dc.props, lat: dc.lat, lng: dc.lng });
     setDcSearch("");
   };
@@ -472,6 +816,13 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
           .slice(0, 5)
       : [];
 
+  const closeStateKpi = () => {
+    setStateKpi(null);
+    if (map.current?.getLayer("states-highlight")) {
+      map.current.setFilter("states-highlight", ["==", "NAME_1", ""]);
+    }
+  };
+
   return (
     <div className={fullscreen ? "map-fullscreen-overlay" : "w-full h-full absolute top-0 left-0 overflow-hidden"} style={{ fontFamily: "var(--font-family, 'Inter', 'Segoe UI', system-ui, sans-serif)" }}>
       <div ref={mapContainer} className="w-full h-full" />
@@ -502,18 +853,14 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               type="text"
               placeholder="Lat"
               value={searchCoords.lat}
-              onChange={(e) =>
-                setSearchCoords((p) => ({ ...p, lat: e.target.value }))
-              }
+              onChange={(e) => setSearchCoords((p) => ({ ...p, lat: e.target.value }))}
               style={{ flex: 1, minWidth: 0, boxSizing: "border-box", background: "#f8fafc", border: "1px solid #e2e8f0", padding: "6px 8px", fontSize: "11px", fontWeight: 600, color: "#334155", outline: "none", fontFamily: "inherit" }}
             />
             <input
               type="text"
               placeholder="Lng"
               value={searchCoords.lng}
-              onChange={(e) =>
-                setSearchCoords((p) => ({ ...p, lng: e.target.value }))
-              }
+              onChange={(e) => setSearchCoords((p) => ({ ...p, lng: e.target.value }))}
               style={{ flex: 1, minWidth: 0, boxSizing: "border-box", background: "#f8fafc", border: "1px solid #e2e8f0", padding: "6px 8px", fontSize: "11px", fontWeight: 600, color: "#334155", outline: "none", fontFamily: "inherit" }}
             />
           </div>
@@ -539,11 +886,7 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               style={{ background: "transparent", border: "none", outline: "none", fontSize: "12px", fontWeight: 600, color: "#334155", width: "100%", fontFamily: "inherit" }}
             />
             {dcSearch && (
-              <X
-                size={14}
-                style={{ color: "#94a3b8", cursor: "pointer", flexShrink: 0 }}
-                onClick={() => setDcSearch("")}
-              />
+              <X size={14} style={{ color: "#94a3b8", cursor: "pointer", flexShrink: 0 }} onClick={() => setDcSearch("")} />
             )}
           </div>
           <AnimatePresence>
@@ -599,12 +942,19 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               </label>
             ))}
           </div>
+          {(layerVis.dc || layerVis.airports) && (
+            <div style={{ padding: "6px 12px 8px", borderTop: "1px solid #f1f5f9" }}>
+              <div style={{ fontSize: "9px", color: "#94a3b8", fontWeight: 500 }}>
+                Click a state to view KPI overview
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Custom location analyze panel */}
       <AnimatePresence>
-        {markerPos && !dcPopup && (
+        {markerPos && !dcPopup && !airportPopup && !stateKpi && (
           <motion.div
             key="location-panel"
             initial={{ opacity: 0, y: 40 }}
@@ -625,24 +975,205 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               <button
                 onClick={() => {
                   setMarkerPos(null);
-                  if (marker.current) {
-                    marker.current.remove();
-                    marker.current = null;
-                  }
+                  if (marker.current) { marker.current.remove(); marker.current = null; }
                 }}
                 style={{ width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "1px solid #e2e8f0", cursor: "pointer", color: "#64748b", flexShrink: 0 }}
               >
                 <X size={14} />
               </button>
               <button
-                onClick={() => {
-                  onLocationAnalyze?.(markerPos.lat, markerPos.lng);
-                }}
+                onClick={() => { onLocationAnalyze?.(markerPos.lat, markerPos.lng); }}
                 style={{ background: "#1e293b", color: "#fff", border: "none", padding: "8px 16px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", flexShrink: 0, fontFamily: "inherit" }}
               >
                 <Search size={12} />
                 Analyze
               </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* State KPI Overview Panel */}
+      <AnimatePresence>
+        {stateKpi && (
+          <motion.div
+            key="state-kpi-panel"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 max-w-[95vw]"
+            style={{ width: stateKpi.dc && stateKpi.airport ? "760px" : "560px" }}
+          >
+            <div style={{ background: "#fff", border: "1px solid #e2e8f0", boxShadow: "0 16px 48px rgba(0,0,0,0.2)", overflow: "hidden" }}>
+              {/* Header */}
+              <div style={{ padding: "14px 20px", background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <MapPin size={14} style={{ color: "#5eead4" }} />
+                  <div>
+                    <div style={{ fontSize: "9px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.1em" }}>State Overview</div>
+                    <div style={{ fontSize: "16px", fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>{stateKpi.stateName}</div>
+                  </div>
+                </div>
+                <button
+                  onClick={closeStateKpi}
+                  style={{ width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer", color: "#fff", borderRadius: "2px" }}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+
+              {/* KPI Body */}
+              <div style={{ display: "flex", gap: 0 }}>
+                {/* DC KPIs */}
+                {stateKpi.dc && (
+                  <div style={{ flex: 1, padding: "16px 20px", borderRight: stateKpi.airport ? "1px solid #e2e8f0" : "none" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "14px" }}>
+                      <Server size={13} style={{ color: "#0f766e" }} />
+                      <span style={{ fontSize: "11px", fontWeight: 700, color: "#0f766e", textTransform: "uppercase", letterSpacing: "0.08em" }}>Data Centers</span>
+                      {stateKpi.dc.count === 0 && (
+                        <span style={{ fontSize: "10px", color: "#94a3b8" }}>— none in dataset</span>
+                      )}
+                    </div>
+                    {stateKpi.dc.count > 0 ? (
+                      <>
+                        {/* Main metrics */}
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
+                          <KpiTile
+                            label="Total Data Centers"
+                            value={String(stateKpi.dc.count)}
+                            unit=""
+                            accent="#0f766e"
+                            icon={<Server size={11} />}
+                          />
+                          <KpiTile
+                            label="Total Power Capacity"
+                            value={stateKpi.dc.totalPowerMw > 0 ? stateKpi.dc.totalPowerMw.toFixed(0) : "—"}
+                            unit={stateKpi.dc.totalPowerMw > 0 ? "MW" : ""}
+                            accent="#7c3aed"
+                            icon={<Building2 size={11} />}
+                          />
+                          <KpiTile
+                            label="Avg RE Score"
+                            value={stateKpi.dc.avgScore > 0 ? String(stateKpi.dc.avgScore) : "—"}
+                            unit={stateKpi.dc.avgScore > 0 ? "/100" : ""}
+                            accent="#0891b2"
+                            icon={<Sun size={11} />}
+                          />
+                          <KpiTile
+                            label="Companies"
+                            value={String(stateKpi.dc.companies.length)}
+                            unit=""
+                            accent="#d97706"
+                            icon={<Building2 size={11} />}
+                          />
+                        </div>
+                        {/* Companies list */}
+                        {stateKpi.dc.companies.length > 0 && (
+                          <div style={{ marginBottom: "10px" }}>
+                            <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>Companies</div>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                              {stateKpi.dc.companies.slice(0, 6).map((c) => (
+                                <span key={c} style={{ padding: "2px 8px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "2px", fontSize: "9px", fontWeight: 600, color: "#166534" }}>{c}</span>
+                              ))}
+                              {stateKpi.dc.companies.length > 6 && (
+                                <span style={{ padding: "2px 8px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "2px", fontSize: "9px", color: "#64748b" }}>+{stateKpi.dc.companies.length - 6} more</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {/* Tier breakdown */}
+                        {Object.keys(stateKpi.dc.tiers).length > 0 && (
+                          <div>
+                            <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>Tier Breakdown</div>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                              {Object.entries(stateKpi.dc.tiers).map(([tier, count]) => (
+                                <span key={tier} style={{ padding: "2px 8px", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "2px", fontSize: "9px", fontWeight: 600, color: "#1d4ed8" }}>
+                                  {tier}: {count}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div style={{ fontSize: "11px", color: "#94a3b8", padding: "8px 0" }}>
+                        No data centers found for this state in the current dataset.
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Airport KPIs */}
+                {stateKpi.airport && (
+                  <div style={{ flex: 1, padding: "16px 20px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "14px" }}>
+                      <Plane size={13} style={{ color: "#2563eb" }} />
+                      <span style={{ fontSize: "11px", fontWeight: 700, color: "#2563eb", textTransform: "uppercase", letterSpacing: "0.08em" }}>Airports</span>
+                      {stateKpi.airport.count === 0 && (
+                        <span style={{ fontSize: "10px", color: "#94a3b8" }}>— none found</span>
+                      )}
+                    </div>
+                    {stateKpi.airport.count > 0 ? (
+                      <>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
+                          <KpiTile
+                            label="Total Airports"
+                            value={String(stateKpi.airport.count)}
+                            unit=""
+                            accent="#2563eb"
+                            icon={<Plane size={11} />}
+                          />
+                          <KpiTile
+                            label="Solar Capacity"
+                            value={stateKpi.airport.totalSolarMw > 0 ? stateKpi.airport.totalSolarMw.toFixed(1) : "—"}
+                            unit={stateKpi.airport.totalSolarMw > 0 ? "MW" : ""}
+                            accent="#eab308"
+                            icon={<Sun size={11} />}
+                          />
+                          <KpiTile
+                            label="Power Consumption"
+                            value={stateKpi.airport.totalPowerConsumptionMw > 0 ? stateKpi.airport.totalPowerConsumptionMw.toFixed(1) : "—"}
+                            unit={stateKpi.airport.totalPowerConsumptionMw > 0 ? "MW" : ""}
+                            accent="#7c3aed"
+                            icon={<Building2 size={11} />}
+                          />
+                          <KpiTile
+                            label="Green Airports"
+                            value={String(stateKpi.airport.greenCount)}
+                            unit={`/ ${stateKpi.airport.count}`}
+                            accent="#16a34a"
+                            icon={<Wind size={11} />}
+                          />
+                        </div>
+                        {/* Operational */}
+                        <div style={{ padding: "8px 10px", background: "#f8fafc", border: "1px solid #e2e8f0", marginBottom: "10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <span style={{ fontSize: "10px", fontWeight: 600, color: "#475569" }}>Operational</span>
+                          <span style={{ fontSize: "12px", fontWeight: 700, color: "#0f766e" }}>
+                            {stateKpi.airport.operationalCount} / {stateKpi.airport.count}
+                          </span>
+                        </div>
+                        {/* Type breakdown */}
+                        {Object.keys(stateKpi.airport.types).length > 0 && (
+                          <div>
+                            <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>By Type</div>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                              {Object.entries(stateKpi.airport.types).map(([type, count]) => (
+                                <span key={type} style={{ padding: "2px 8px", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "2px", fontSize: "9px", fontWeight: 600, color: "#1d4ed8" }}>
+                                  {type}: {count}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div style={{ fontSize: "11px", color: "#94a3b8", padding: "8px 0" }}>
+                        No airports matched for this state.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
@@ -750,6 +1281,153 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Airport popup card */}
+      <AnimatePresence>
+        {airportPopup && (
+          <motion.div
+            key="airport-popup"
+            initial={{ opacity: 0, y: 60 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 60 }}
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 w-[500px] max-w-[95vw]"
+          >
+            <div style={{ background: "#fff", border: "1px solid #e2e8f0", boxShadow: "0 16px 48px rgba(0,0,0,0.2)", overflow: "hidden" }}>
+              {/* Header */}
+              <div style={{ padding: "16px 20px", background: "linear-gradient(135deg, #1e3a5f 0%, #1d4ed8 100%)", position: "relative" }}>
+                <button
+                  onClick={() => setAirportPopup(null)}
+                  style={{ position: "absolute", top: "12px", right: "12px", width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", cursor: "pointer" }}
+                >
+                  <X size={14} />
+                </button>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <Plane size={18} style={{ color: "#93c5fd" }} />
+                  <div>
+                    {airportPopup.airport.iata_code && (
+                      <div style={{ fontSize: "10px", fontWeight: 700, color: "#93c5fd", letterSpacing: "0.12em", marginBottom: "2px" }}>
+                        {airportPopup.airport.iata_code}
+                      </div>
+                    )}
+                    <div style={{ fontSize: "17px", fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>
+                      {airportPopup.airport.airport_name}
+                    </div>
+                    <div style={{ fontSize: "11px", color: "#bfdbfe", marginTop: "2px" }}>
+                      {airportPopup.airport.city}, {airportPopup.airport.state}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Info grid */}
+              <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+                  <AirportKpiCell label="Type" value={airportPopup.airport.type} />
+                  <AirportKpiCell label="Status" value={airportPopup.airport.status} />
+                  <AirportKpiCell
+                    label="Green"
+                    value={airportPopup.airport.is_notable_green ? "Yes 🌿" : "No"}
+                    accent={airportPopup.airport.is_notable_green ? "#16a34a" : undefined}
+                  />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                  <AirportKpiCell
+                    label="Solar Capacity"
+                    value={
+                      airportPopup.airport.green_energy?.solar_capacity_installed_mw
+                        ? `${airportPopup.airport.green_energy.solar_capacity_installed_mw} MW`
+                        : "—"
+                    }
+                    accent="#eab308"
+                  />
+                  <AirportKpiCell
+                    label="Power Consumption"
+                    value={
+                      airportPopup.airport.operations?.power_consumption_mw
+                        ? `${airportPopup.airport.operations.power_consumption_mw} MW`
+                        : "—"
+                    }
+                    accent="#7c3aed"
+                  />
+                  <AirportKpiCell
+                    label="Annual Generation"
+                    value={
+                      airportPopup.airport.green_energy?.annual_generation_mu
+                        ? `${airportPopup.airport.green_energy.annual_generation_mu} MU`
+                        : "—"
+                    }
+                    accent="#0891b2"
+                  />
+                  <AirportKpiCell
+                    label="Green Coverage"
+                    value={airportPopup.airport.green_energy?.pct_green_coverage ?? "—"}
+                    accent="#16a34a"
+                  />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                  <AirportKpiCell
+                    label="Carbon / ACI Level"
+                    value={airportPopup.airport.green_energy?.carbon_neutral_aci_level ?? "—"}
+                  />
+                  <div style={{ padding: "10px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                    <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>Coordinates</div>
+                    <div style={{ fontFamily: "monospace", fontSize: "10px", fontWeight: 700, color: "#334155" }}>
+                      {airportPopup.lat.toFixed(4)}°N · {airportPopup.lng.toFixed(4)}°E
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+function KpiTile({
+  label,
+  value,
+  unit,
+  accent,
+  icon,
+}: {
+  label: string;
+  value: string;
+  unit: string;
+  accent: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div style={{ padding: "10px 12px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "5px", marginBottom: "6px" }}>
+        <span style={{ color: accent }}>{icon}</span>
+        <span style={{ fontSize: "9px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</span>
+      </div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: "3px" }}>
+        <span style={{ fontSize: "20px", fontWeight: 800, color: "#1e293b", fontVariantNumeric: "tabular-nums" }}>{value}</span>
+        {unit && <span style={{ fontSize: "11px", fontWeight: 600, color: "#64748b" }}>{unit}</span>}
+      </div>
+    </div>
+  );
+}
+
+function AirportKpiCell({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: string;
+}) {
+  return (
+    <div style={{ padding: "10px 12px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+      <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>{label}</div>
+      <div style={{ fontSize: "12px", fontWeight: 700, color: accent ?? "#334155" }}>{value}</div>
     </div>
   );
 }
