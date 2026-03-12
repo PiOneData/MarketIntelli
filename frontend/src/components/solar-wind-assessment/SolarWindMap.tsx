@@ -69,6 +69,7 @@ interface StateKpiData {
   stateName: string;
   dc: {
     count: number;
+    upcomingCount: number;
     totalPowerMw: number;
     companies: string[];
     avgScore: number;
@@ -109,18 +110,24 @@ const TOGGLE_GROUPS: {
 ];
 
 const LAYER_DEFS: { id: string; group: LayerGroup }[] = [
-  { id: "wind-heat",      group: "wind" },
-  { id: "turbines-glow",  group: "wind" },
-  { id: "turbines-core",  group: "wind" },
-  { id: "solar-heat",     group: "solar" },
-  { id: "solar-glow",     group: "solar" },
-  { id: "solar-core",     group: "solar" },
-  { id: "dc-glow",        group: "dc" },
-  { id: "dc-core",        group: "dc" },
-  { id: "dc-label",       group: "dc" },
-  { id: "airport-glow",   group: "airports" },
-  { id: "airport-core",   group: "airports" },
-  { id: "airport-label",  group: "airports" },
+  { id: "wind-heat",             group: "wind" },
+  { id: "turbines-glow",         group: "wind" },
+  { id: "turbines-core",         group: "wind" },
+  { id: "solar-heat",            group: "solar" },
+  { id: "solar-glow",            group: "solar" },
+  { id: "solar-core",            group: "solar" },
+  { id: "dc-glow",               group: "dc" },
+  { id: "dc-core",               group: "dc" },
+  { id: "dc-label",              group: "dc" },
+  { id: "dc-upcoming-glow",      group: "dc" },
+  { id: "dc-upcoming-core",      group: "dc" },
+  { id: "dc-upcoming-label",     group: "dc" },
+  { id: "airport-glow",          group: "airports" },
+  { id: "airport-core",          group: "airports" },
+  { id: "airport-label",         group: "airports" },
+  { id: "airport-upcoming-glow", group: "airports" },
+  { id: "airport-upcoming-core", group: "airports" },
+  { id: "airport-upcoming-label",group: "airports" },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -180,7 +187,8 @@ function computeStateKpi(
       const t = String(dc.tier ?? dc.props["tier_design"] ?? "Not Specified");
       tiers[t] = (tiers[t] ?? 0) + 1;
     }
-    kpi.dc = { count: stateDcs.length, totalPowerMw, companies, avgScore, tiers };
+    const upcomingCount = stateDcs.filter((dc) => Boolean(dc.props["is_upcoming"])).length;
+    kpi.dc = { count: stateDcs.length, upcomingCount, totalPowerMw, companies, avgScore, tiers };
   }
 
   if (layerVis.airports) {
@@ -485,11 +493,12 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               "circle-opacity": 1,
             },
           },
-          // Airports glow
+          // Airports glow (operational only)
           {
             id: "airport-glow",
             type: "circle",
             source: "airports",
+            filter: ["match", ["get", "status"], ["Operational", "Limited Use", "Limited Operations", "Operational (Limited)", "Operational (Charter)", "Disused"], true, false],
             layout: { visibility: "none" },
             paint: {
               "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 9, 10, 20, 14, 28],
@@ -498,11 +507,12 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               "circle-blur": 0.5,
             },
           },
-          // Airports core
+          // Airports core (operational only)
           {
             id: "airport-core",
             type: "circle",
             source: "airports",
+            filter: ["match", ["get", "status"], ["Operational", "Limited Use", "Limited Operations", "Operational (Limited)", "Operational (Charter)", "Disused"], true, false],
             layout: { visibility: "none" },
             paint: {
               "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 5, 10, 10, 14, 14],
@@ -517,12 +527,13 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               "circle-opacity": 1,
             },
           },
-          // Airports label
+          // Airports label (operational only)
           {
             id: "airport-label",
             type: "symbol",
             source: "airports",
             minzoom: 9,
+            filter: ["match", ["get", "status"], ["Operational", "Limited Use", "Limited Operations", "Operational (Limited)", "Operational (Charter)", "Disused"], true, false],
             layout: {
               visibility: "none",
               "text-field": ["coalesce", ["get", "airport_name"], ""],
@@ -540,11 +551,65 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               "text-opacity": ["interpolate", ["linear"], ["zoom"], 9, 0, 10, 1],
             },
           },
-          // Data centers glow
+          // Upcoming airports glow (amber-purple)
+          {
+            id: "airport-upcoming-glow",
+            type: "circle",
+            source: "airports",
+            filter: ["match", ["get", "status"], ["Under Development", "Under Development / Proposed", "Under Construction (Phase 1 Launch ~2025-26)"], true, false],
+            layout: { visibility: "none" },
+            paint: {
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 9, 10, 20, 14, 28],
+              "circle-color": "#a855f7",
+              "circle-opacity": 0.3,
+              "circle-blur": 0.7,
+            },
+          },
+          // Upcoming airports core
+          {
+            id: "airport-upcoming-core",
+            type: "circle",
+            source: "airports",
+            filter: ["match", ["get", "status"], ["Under Development", "Under Development / Proposed", "Under Construction (Phase 1 Launch ~2025-26)"], true, false],
+            layout: { visibility: "none" },
+            paint: {
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 5, 10, 10, 14, 14],
+              "circle-color": "#a855f7",
+              "circle-stroke-color": "#ffffff",
+              "circle-stroke-width": 2,
+              "circle-opacity": 0.9,
+            },
+          },
+          // Upcoming airports label
+          {
+            id: "airport-upcoming-label",
+            type: "symbol",
+            source: "airports",
+            minzoom: 9,
+            filter: ["match", ["get", "status"], ["Under Development", "Under Development / Proposed", "Under Construction (Phase 1 Launch ~2025-26)"], true, false],
+            layout: {
+              visibility: "none",
+              "text-field": ["coalesce", ["get", "airport_name"], ""],
+              "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
+              "text-size": 10,
+              "text-anchor": "top",
+              "text-offset": [0, 1.2],
+              "text-max-width": 12,
+              "text-allow-overlap": false,
+            },
+            paint: {
+              "text-color": "#e9d5ff",
+              "text-halo-color": "#3b0764",
+              "text-halo-width": 1.8,
+              "text-opacity": ["interpolate", ["linear"], ["zoom"], 9, 0, 10, 1],
+            },
+          },
+          // Data centers glow (operational only)
           {
             id: "dc-glow",
             type: "circle",
             source: "datacenters",
+            filter: ["!=", ["get", "is_upcoming"], true],
             paint: {
               "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 10, 10, 22, 14, 32],
               "circle-color": "#0f766e",
@@ -552,11 +617,12 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               "circle-blur": 0.5,
             },
           },
-          // Data centers core
+          // Data centers core (operational only)
           {
             id: "dc-core",
             type: "circle",
             source: "datacenters",
+            filter: ["!=", ["get", "is_upcoming"], true],
             paint: {
               "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 6, 10, 12, 14, 16],
               "circle-color": "#0f766e",
@@ -565,12 +631,13 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               "circle-opacity": 1,
             },
           },
-          // Data centers label
+          // Data centers label (operational only)
           {
             id: "dc-label",
             type: "symbol",
             source: "datacenters",
             minzoom: 10,
+            filter: ["!=", ["get", "is_upcoming"], true],
             layout: {
               "text-field": [
                 "step", ["zoom"],
@@ -604,6 +671,73 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
               "text-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0, 11, 1],
             },
           },
+          // Upcoming data centers glow (amber)
+          {
+            id: "dc-upcoming-glow",
+            type: "circle",
+            source: "datacenters",
+            filter: ["==", ["get", "is_upcoming"], true],
+            paint: {
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 10, 10, 22, 14, 32],
+              "circle-color": "#f59e0b",
+              "circle-opacity": 0.3,
+              "circle-blur": 0.7,
+            },
+          },
+          // Upcoming data centers core (amber)
+          {
+            id: "dc-upcoming-core",
+            type: "circle",
+            source: "datacenters",
+            filter: ["==", ["get", "is_upcoming"], true],
+            paint: {
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 4, 6, 10, 12, 14, 16],
+              "circle-color": "#f59e0b",
+              "circle-stroke-color": "#ffffff",
+              "circle-stroke-width": 2.5,
+              "circle-opacity": 0.95,
+            },
+          },
+          // Upcoming data centers label (amber)
+          {
+            id: "dc-upcoming-label",
+            type: "symbol",
+            source: "datacenters",
+            minzoom: 10,
+            filter: ["==", ["get", "is_upcoming"], true],
+            layout: {
+              "text-field": [
+                "step", ["zoom"],
+                ["coalesce", ["get", "dc_name"], ["get", "name"], ""],
+                13,
+                [
+                  "format",
+                  ["coalesce", ["get", "dc_name"], ["get", "name"], ""], { "font-scale": 1.0 },
+                  "\n", {},
+                  [
+                    "concat",
+                    ["number-format", ["to-number", ["get", "lat"]], { "max-fraction-digits": 4 }],
+                    "°N  ",
+                    ["number-format", ["to-number", ["coalesce", ["get", "lon"], ["get", "lng"]]], { "max-fraction-digits": 4 }],
+                    "°E",
+                  ],
+                  { "font-scale": 0.78 },
+                ],
+              ],
+              "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
+              "text-size": 11,
+              "text-anchor": "top",
+              "text-offset": [0, 1.3],
+              "text-max-width": 14,
+              "text-allow-overlap": false,
+            },
+            paint: {
+              "text-color": "#fef3c7",
+              "text-halo-color": "#78350f",
+              "text-halo-width": 1.8,
+              "text-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0, 11, 1],
+            },
+          },
         ],
       },
       center: [78.96, 20.59],
@@ -630,6 +764,24 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
       if (map.current) map.current.getCanvas().style.cursor = "pointer";
     });
     map.current.on("mouseleave", "dc-core", () => {
+      if (map.current) map.current.getCanvas().style.cursor = "";
+    });
+
+    // Upcoming DC click — same popup logic as operational
+    map.current.on("click", "dc-upcoming-core", (e) => {
+      e.preventDefault();
+      const feature = e.features?.[0];
+      if (!feature) return;
+      const coords = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
+      map.current?.flyTo({ center: coords, zoom: 17.5, duration: 1000 });
+      setDcPopup({ dc: feature.properties as Record<string, unknown>, lat: coords[1], lng: coords[0] });
+      setAirportPopup(null);
+      setStateKpi(null);
+    });
+    map.current.on("mouseenter", "dc-upcoming-core", () => {
+      if (map.current) map.current.getCanvas().style.cursor = "pointer";
+    });
+    map.current.on("mouseleave", "dc-upcoming-core", () => {
       if (map.current) map.current.getCanvas().style.cursor = "";
     });
 
@@ -671,6 +823,43 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
       if (map.current) map.current.getCanvas().style.cursor = "";
     });
 
+    // Upcoming airport click — same popup logic
+    map.current.on("click", "airport-upcoming-core", (e) => {
+      e.preventDefault();
+      const feature = e.features?.[0];
+      if (!feature) return;
+      const coords = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
+      map.current?.flyTo({ center: coords, zoom: 13, duration: 1000 });
+      const p = feature.properties as Record<string, unknown>;
+      const parseJsonField = (val: unknown) => {
+        if (typeof val === "string") { try { return JSON.parse(val); } catch { return null; } }
+        return val ?? null;
+      };
+      const airport: AirportEntry = {
+        slno: p["slno"] as number,
+        airport_name: String(p["airport_name"] ?? ""),
+        iata_code: p["iata_code"] as string | null,
+        city: String(p["city"] ?? ""),
+        state: String(p["state"] ?? ""),
+        type: String(p["type"] ?? ""),
+        status: String(p["status"] ?? ""),
+        lat: coords[1],
+        lon: coords[0],
+        is_notable_green: Boolean(p["is_notable_green"]),
+        green_energy: parseJsonField(p["green_energy"]) as AirportEntry["green_energy"],
+        operations: parseJsonField(p["operations"]) as AirportEntry["operations"],
+      };
+      setAirportPopup({ airport, lat: coords[1], lng: coords[0] });
+      setDcPopup(null);
+      setStateKpi(null);
+    });
+    map.current.on("mouseenter", "airport-upcoming-core", () => {
+      if (map.current) map.current.getCanvas().style.cursor = "pointer";
+    });
+    map.current.on("mouseleave", "airport-upcoming-core", () => {
+      if (map.current) map.current.getCanvas().style.cursor = "";
+    });
+
     // State click — show KPI overview
     map.current.on("click", "states-fill", (e) => {
       const feature = e.features?.[0];
@@ -707,10 +896,10 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
 
     // General map click — place marker for custom location
     map.current.on("click", (e) => {
-      const dcFeats = map.current?.queryRenderedFeatures(e.point, { layers: ["dc-core"] });
+      const dcFeats = map.current?.queryRenderedFeatures(e.point, { layers: ["dc-core", "dc-upcoming-core"] });
       if (dcFeats && dcFeats.length > 0) return;
 
-      const airportFeats = map.current?.queryRenderedFeatures(e.point, { layers: ["airport-core"] });
+      const airportFeats = map.current?.queryRenderedFeatures(e.point, { layers: ["airport-core", "airport-upcoming-core"] });
       if (airportFeats && airportFeats.length > 0) return;
 
       // If a state overlay is active, state click handles it — don't place marker
@@ -1030,6 +1219,11 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
                     <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "14px" }}>
                       <Server size={13} style={{ color: "#0f766e" }} />
                       <span style={{ fontSize: "11px", fontWeight: 700, color: "#0f766e", textTransform: "uppercase", letterSpacing: "0.08em" }}>Data Centers</span>
+                      {stateKpi.dc.upcomingCount > 0 && (
+                        <span style={{ padding: "2px 6px", background: "#f59e0b", color: "#fff", fontSize: "8px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                          {stateKpi.dc.upcomingCount} UPCOMING
+                        </span>
+                      )}
                       {stateKpi.dc.count === 0 && (
                         <span style={{ fontSize: "10px", color: "#94a3b8" }}>— none in dataset</span>
                       )}
@@ -1238,8 +1432,15 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
                       {String(dcPopup.dc["dc_name"] ?? dcPopup.dc["name"] ?? "")}
                     </h3>
                   </div>
-                  <div style={{ padding: "4px 10px", border: "1px solid #e2e8f0", fontSize: "10px", fontWeight: 700, color: "#475569", textTransform: "uppercase" }}>
-                    {String(dcPopup.dc["tier_design"] ?? dcPopup.dc["tier"] ?? "")}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
+                    {Boolean(dcPopup.dc["is_upcoming"]) && (
+                      <span style={{ padding: "3px 8px", background: "#f59e0b", color: "#fff", fontSize: "9px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                        UPCOMING
+                      </span>
+                    )}
+                    <div style={{ padding: "4px 10px", border: "1px solid #e2e8f0", fontSize: "10px", fontWeight: 700, color: "#475569", textTransform: "uppercase" }}>
+                      {String(dcPopup.dc["tier_design"] ?? dcPopup.dc["tier"] ?? "")}
+                    </div>
                   </div>
                 </div>
 
@@ -1263,6 +1464,28 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
                     </div>
                   </div>
                 </div>
+
+                {/* Quick RE summary */}
+                {(dcPopup.dc["current_renewable_pct"] != null || dcPopup.dc["status"]) && (
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                    {dcPopup.dc["current_renewable_pct"] != null && (
+                      <div style={{ padding: "10px 12px", background: Number(dcPopup.dc["current_renewable_pct"]) >= 90 ? "#f0fdf4" : "#f8fafc", border: `1px solid ${Number(dcPopup.dc["current_renewable_pct"]) >= 90 ? "#bbf7d0" : "#e2e8f0"}` }}>
+                        <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>Renewable Energy</div>
+                        <div style={{ fontSize: "16px", fontWeight: 800, color: Number(dcPopup.dc["current_renewable_pct"]) >= 90 ? "#16a34a" : "#334155" }}>
+                          {String(dcPopup.dc["current_renewable_pct"])}%
+                        </div>
+                      </div>
+                    )}
+                    {dcPopup.dc["status"] && (
+                      <div style={{ padding: "10px 12px", background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                        <div style={{ fontSize: "9px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>Status</div>
+                        <div style={{ fontSize: "11px", fontWeight: 700, color: Boolean(dcPopup.dc["is_upcoming"]) ? "#f59e0b" : "#0f766e" }}>
+                          {String(dcPopup.dc["status"])}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <button
                   onClick={() => {
@@ -1304,11 +1527,18 @@ export default function SolarWindMap({ onDatacenterClick, onLocationAnalyze }: P
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <Plane size={18} style={{ color: "#93c5fd" }} />
                   <div>
-                    {airportPopup.airport.iata_code && (
-                      <div style={{ fontSize: "10px", fontWeight: 700, color: "#93c5fd", letterSpacing: "0.12em", marginBottom: "2px" }}>
-                        {airportPopup.airport.iata_code}
-                      </div>
-                    )}
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
+                      {airportPopup.airport.iata_code && (
+                        <span style={{ fontSize: "10px", fontWeight: 700, color: "#93c5fd", letterSpacing: "0.12em" }}>
+                          {airportPopup.airport.iata_code}
+                        </span>
+                      )}
+                      {!["Operational", "Limited Use", "Limited Operations", "Operational (Limited)", "Operational (Charter)", "Disused"].includes(airportPopup.airport.status) && (
+                        <span style={{ padding: "2px 7px", background: "#a855f7", color: "#fff", fontSize: "8px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                          UPCOMING
+                        </span>
+                      )}
+                    </div>
                     <div style={{ fontSize: "17px", fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>
                       {airportPopup.airport.airport_name}
                     </div>

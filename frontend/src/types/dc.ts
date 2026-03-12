@@ -128,6 +128,22 @@ export interface AssetProperties {
     power_mw?: string | number;
     whitespace?: string;
 
+    // Operational status & upcoming flag
+    status?: string;             // "Operational" | "Under Construction" | "Planned"
+    is_upcoming?: boolean;
+
+    // Renewable energy & sustainability
+    current_renewable_pct?: number | null;
+    renewable_sources?: string | null;
+    pue_actual?: number | null;
+    pue_target?: number | null;
+    cooling_type?: string | null;
+    it_load_mw?: number | null;
+    commissioning_year?: number | null;
+
+    // Official data sources
+    sources?: Array<{ name: string; url: string }>;
+
     // ---------------------------------
     // Airport Specific Fields
     // ---------------------------------
@@ -136,7 +152,7 @@ export interface AssetProperties {
     official_website?: string | null;
     pincode?: string;
     type?: string;           // e.g. "International", "Military"
-    status?: string;         // e.g. "Operational"
+    // status is shared with DC section above — e.g. "Operational", "Under Construction"
 
     operations?: {
         annual_passengers_mn: string | null;
