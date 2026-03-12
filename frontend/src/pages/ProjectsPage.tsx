@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, type ReactNode } from "react";
+import { useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import { useProjects } from "../hooks/useProjects";
 import { useCompanies, useFacilityStats } from "../hooks/useDataCenters";
@@ -1517,6 +1517,270 @@ function UpcomingProjectsSection() {
 }
 
 /* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ */
+/*  Airport Developer Profiles Section                                  */
+/* ------------------------------------------------------------------ */
+
+interface AirportOperatorProfile {
+  key: string;
+  name: string;
+  shortName: string;
+  type: string;
+  description: string;
+  color: string;
+  website?: string;
+  matchFn: (op: string) => boolean;
+}
+
+const AIRPORT_OPERATORS: AirportOperatorProfile[] = [
+  {
+    key: "aai",
+    name: "Airports Authority of India",
+    shortName: "AAI",
+    type: "Government",
+    description: "India's primary airport authority managing the majority of airports across the country under the Ministry of Civil Aviation.",
+    color: "#0d7a6e",
+    website: "https://www.aai.aero",
+    matchFn: (op) => op.includes("AAI") && !op.includes("GMR") && !op.includes("Adani") && !op.includes("BIAL") && !op.includes("CIAL") && !op.includes("Zurich") && !op.includes("KIAL"),
+  },
+  {
+    key: "adani",
+    name: "Adani Airport Holdings",
+    shortName: "Adani Airports",
+    type: "Private (Listed)",
+    description: "Part of Adani Group, managing Mumbai, Ahmedabad, Mangaluru, Lucknow, Jaipur, Guwahati, and Thiruvananthapuram airports under PPP concessions.",
+    color: "#2563eb",
+    website: "https://www.adaniairports.com",
+    matchFn: (op) => op.includes("Adani"),
+  },
+  {
+    key: "gmr",
+    name: "GMR Airports Infrastructure",
+    shortName: "GMR Airports",
+    type: "Private (Listed)",
+    description: "GMR Group manages Indira Gandhi International (Delhi), Rajiv Gandhi International (Hyderabad), and Manohar International (Goa) under long-term concessions.",
+    color: "#7c3aed",
+    website: "https://www.gmrairports.com",
+    matchFn: (op) => op.includes("GMR"),
+  },
+  {
+    key: "bial",
+    name: "Bangalore International Airport Ltd",
+    shortName: "BIAL",
+    type: "Private (PPP)",
+    description: "Operates Kempegowda International Airport Bengaluru. Shareholding: Fairfax India 54%, Karnataka Govt 13%, AAI 13%, Siemens 20%.",
+    color: "#0891b2",
+    website: "https://www.bengaluruairport.com",
+    matchFn: (op) => op.includes("BIAL") || op.includes("Fairfax"),
+  },
+  {
+    key: "cial",
+    name: "Cochin International Airport Ltd",
+    shortName: "CIAL",
+    type: "State Government",
+    description: "World's first fully solar-powered airport. Operated by Kerala Government-led consortium. ACI Level 4+ carbon neutral.",
+    color: "#16a34a",
+    website: "https://www.cial.aero",
+    matchFn: (op) => op.includes("CIAL") || op.includes("Cochin International"),
+  },
+  {
+    key: "zurich",
+    name: "Zurich Airport International / YIAPL",
+    shortName: "Zurich Airport",
+    type: "Private (International)",
+    description: "Yamuna International Airport Pvt Ltd — operates the upcoming Noida International Airport at Jewar. Zurich Airport holds 80%, UP Govt 20%.",
+    color: "#dc2626",
+    website: "https://www.niaup.com",
+    matchFn: (op) => op.includes("Zurich") || op.includes("YIAPL"),
+  },
+  {
+    key: "kial",
+    name: "Kannur International Airport Ltd",
+    shortName: "KIAL",
+    type: "State Government",
+    description: "Operates Kannur International Airport in Kerala. Managed by Kerala Government with NRI shareholder participation.",
+    color: "#d97706",
+    matchFn: (op) => op.includes("KIAL") || op.includes("Kannur International Airport Ltd"),
+  },
+  {
+    key: "iaf",
+    name: "Indian Air Force / Military",
+    shortName: "IAF / Military",
+    type: "Military",
+    description: "Civil enclaves within Indian Air Force and Indian Navy bases, typically with restricted civilian operations.",
+    color: "#475569",
+    matchFn: (op) => (op.includes("Indian Air Force") || op.includes("IAF") || op.includes("Indian Navy") || op.includes("INS")) && !op.includes("AAI"),
+  },
+];
+
+function classifyOperator(operatorStr: string | null | undefined): string {
+  if (!operatorStr) return "other";
+  const op = operatorStr;
+  for (const profile of AIRPORT_OPERATORS) {
+    if (profile.matchFn(op)) return profile.key;
+  }
+  return "other";
+}
+
+function AirportDeveloperProfilesSection() {
+  const [airports, setAirports] = useState<Array<{
+    airport_name: string;
+    is_notable_green?: boolean;
+    status?: string | null;
+    green_energy?: { solar_capacity_installed_mw?: string | number | null; pct_green_coverage?: string | null; carbon_neutral_aci_level?: string | null };
+    operations?: { operator_concessionaire?: string | null };
+    type?: string | null;
+    state?: string | null;
+  }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    fetch("/data/india_airports_unified.geojson")
+      .then(r => r.json())
+      .then((data: { features: Array<{ properties: typeof airports[number] }> }) => {
+        setAirports(data.features.map(f => f.properties));
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const UPCOMING_STATUSES_AP = ["Under Development", "Under Development / Proposed", "Under Construction (Phase 1 Launch ~2025-26)"];
+
+  const operatorStats = useMemo(() => {
+    const stats: Record<string, { total: number; green: number; upcoming: number; solar: number; states: Set<string> }> = {};
+    for (const profile of AIRPORT_OPERATORS) {
+      stats[profile.key] = { total: 0, green: 0, upcoming: 0, solar: 0, states: new Set() };
+    }
+    stats["other"] = { total: 0, green: 0, upcoming: 0, solar: 0, states: new Set() };
+
+    for (const a of airports) {
+      const key = classifyOperator(a.operations?.operator_concessionaire);
+      if (!stats[key]) continue;
+      stats[key].total++;
+      if (a.is_notable_green) stats[key].green++;
+      if (UPCOMING_STATUSES_AP.includes(a.status ?? "")) stats[key].upcoming++;
+      const solar = parseFloat(String(a.green_energy?.solar_capacity_installed_mw || 0));
+      if (!isNaN(solar)) stats[key].solar += solar;
+      if (a.state) stats[key].states.add(a.state);
+    }
+    return stats;
+  }, [airports]);
+
+  const totalOperators = AIRPORT_OPERATORS.filter(p => (operatorStats[p.key]?.total ?? 0) > 0).length;
+  const totalGreen = airports.filter(a => a.is_notable_green).length;
+
+  const filtered = AIRPORT_OPERATORS.filter(p => {
+    const s = (operatorStats[p.key]?.total ?? 0);
+    if (s === 0) return false;
+    if (!search) return true;
+    return p.name.toLowerCase().includes(search.toLowerCase()) || p.shortName.toLowerCase().includes(search.toLowerCase());
+  });
+
+  if (loading) return <LoadingSpinner message="Loading airport developer profiles…" />;
+
+  return (
+    <section style={{ fontFamily: "var(--font-family, 'Inter', system-ui, sans-serif)" }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
+        <div>
+          <h3 style={{ margin: 0, fontSize: "20px", fontWeight: 700, color: "#111827" }}>
+            Airport Developer Profiles
+          </h3>
+          <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#6b7280" }}>
+            {totalOperators} airport operators & concessionaires managing India's civil aviation infrastructure
+          </p>
+        </div>
+        <input
+          type="text"
+          placeholder="Search operators…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={{ padding: "7px 12px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", minWidth: "200px" }}
+        />
+      </div>
+
+      {/* KPIs */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px", marginBottom: "24px" }}>
+        {[
+          { val: totalOperators, lbl: "Airport Operators", topColor: "#0d7a6e" },
+          { val: totalGreen, lbl: "Green Certified Airports", topColor: "#16a34a" },
+          { val: airports.length, lbl: "Total Airports", topColor: "#2563eb" },
+        ].map(k => (
+          <div key={k.lbl} style={{ padding: "20px", background: "#fff", border: "1px solid #e2e8f0", borderTop: `3px solid ${k.topColor}`, borderRadius: "0.75rem", boxShadow: "0 1px 3px rgba(0,0,0,0.07)" }}>
+            <span style={{ fontSize: "1.875rem", fontWeight: 700, color: "#0f172a" }}>{k.val}</span>
+            <div style={{ fontSize: "0.875rem", color: "#64748b", fontWeight: 500, marginTop: "4px" }}>{k.lbl}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Operator Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "20px" }}>
+        {filtered.map(profile => {
+          const st = operatorStats[profile.key] ?? { total: 0, green: 0, upcoming: 0, solar: 0, states: new Set<string>() };
+          return (
+            <div key={profile.key} style={{ background: "#fff", border: "1px solid #e2e8f0", borderTop: `3px solid ${profile.color}`, borderRadius: "0.75rem", padding: "20px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+              {/* Card header */}
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "12px" }}>
+                <div>
+                  <div style={{ fontSize: "18px", fontWeight: 700, color: "#111827", lineHeight: 1.2 }}>{profile.shortName}</div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>{profile.name}</div>
+                </div>
+                <span style={{ fontSize: "9px", fontWeight: 700, padding: "3px 8px", background: `${profile.color}18`, color: profile.color, letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                  {profile.type}
+                </span>
+              </div>
+
+              <p style={{ fontSize: "12px", color: "#4b5563", lineHeight: 1.6, marginBottom: "14px" }}>
+                {profile.description}
+              </p>
+
+              {/* Stats row */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "14px" }}>
+                {[
+                  { label: "Airports", val: st.total, color: profile.color },
+                  { label: "Green", val: st.green > 0 ? `${st.green} 🌿` : "—", color: "#16a34a" },
+                  { label: "Upcoming", val: st.upcoming > 0 ? st.upcoming : "—", color: "#a855f7" },
+                ].map(s => (
+                  <div key={s.label} style={{ padding: "10px 8px", background: "#f8fafc", border: "1px solid #f1f5f9", textAlign: "center", borderRadius: "6px" }}>
+                    <div style={{ fontSize: "18px", fontWeight: 800, color: s.color }}>{s.val}</div>
+                    <div style={{ fontSize: "9px", color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* States */}
+              {st.states.size > 0 && (
+                <div style={{ fontSize: "11px", color: "#64748b", marginBottom: "10px" }}>
+                  <span style={{ fontWeight: 600 }}>States: </span>
+                  {[...st.states].slice(0, 4).join(", ")}
+                  {st.states.size > 4 && ` +${st.states.size - 4} more`}
+                </div>
+              )}
+
+              {/* Solar */}
+              {st.solar > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "7px 10px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "6px", marginBottom: "10px" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 600, color: "#64748b" }}>Total Solar Installed</span>
+                  <span style={{ fontSize: "12px", fontWeight: 800, color: "#16a34a" }}>{st.solar.toFixed(1)} MW</span>
+                </div>
+              )}
+
+              {/* Website */}
+              {profile.website && (
+                <a href={profile.website} target="_blank" rel="noopener noreferrer"
+                  style={{ display: "inline-flex", alignItems: "center", gap: "5px", fontSize: "11px", color: profile.color, fontWeight: 600, textDecoration: "none" }}>
+                  ↗ Official Website
+                </a>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 /*  Main Page                                                           */
 /* ------------------------------------------------------------------ */
 
@@ -1550,6 +1814,8 @@ function ProjectsPage() {
       )}
 
       {activeSection === "developer-profiles" && <DeveloperProfilesSection />}
+
+      {activeSection === "airport-developer-profiles" && <AirportDeveloperProfilesSection />}
 
       {activeSection === "tender-intelligence" && (
         <section id="tender-intelligence">
