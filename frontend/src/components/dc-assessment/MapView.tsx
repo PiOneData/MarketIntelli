@@ -413,6 +413,9 @@ export default function MapView({ features, selectedId, onSelectDC, filterState,
                         const [lon, lat] = feature.geometry.coordinates;
                         const isSelected = selectedId === id;
 
+                        const isUpcoming = Boolean(p.is_upcoming);
+                        const isAirportUpcoming = activeAssetType === 'airport' && !['Operational', 'Limited Use', 'Limited Operations', 'Operational (Limited)', 'Operational (Charter)'].includes(p.status as string ?? '');
+
                         let fillColor = activeAssetType === 'airport' ? '#0ea5e9' : '#0d7a6e';
                         let opacity = 0.9;
                         let radius = isSelected ? 8 : 4;
@@ -422,6 +425,14 @@ export default function MapView({ features, selectedId, onSelectDC, filterState,
                         // Support for Light green glow on green airports
                         if (activeAssetType === 'airport' && p.is_notable_green) {
                             fillColor = '#10b981';
+                        }
+                        // Amber for upcoming/under-construction DCs
+                        if (activeAssetType === 'datacenter' && isUpcoming) {
+                            fillColor = '#f59e0b';
+                        }
+                        // Purple for upcoming/under-development airports
+                        if (isAirportUpcoming) {
+                            fillColor = '#a855f7';
                         }
 
                         const matchState = !filterState || p.state === filterState;
@@ -496,10 +507,24 @@ export default function MapView({ features, selectedId, onSelectDC, filterState,
                     fontFamily: "var(--sans, 'DM Sans', system-ui, sans-serif)",
                 }}>
                     {/* Header band */}
-                    <div style={{ background: activeAssetType === 'airport' ? (selectedFeature.properties.is_notable_green ? 'linear-gradient(130deg, #059669 0%, #10b981 60%, #34d399 100%)' : 'linear-gradient(130deg, #0284c7 0%, #0ea5e9 60%, #38bdf8 100%)') : 'linear-gradient(130deg, #0d5f59 0%, #0d7a6e 60%, #0f9b8c 100%)', padding: '14px 48px 12px 16px', position: 'relative' }}>
-                        <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.65)', fontWeight: 600, marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-                            Selected {activeAssetType === 'airport' ? 'Airport' : 'Datacenter'}
-                        </p>
+                    {(() => {
+                        const selIsUpcoming = Boolean(selectedFeature.properties.is_upcoming);
+                        const selAirportUpcoming = activeAssetType === 'airport' && !['Operational', 'Limited Use', 'Limited Operations', 'Operational (Limited)', 'Operational (Charter)'].includes(selectedFeature.properties.status as string ?? '');
+                        const headerBg = activeAssetType === 'airport'
+                            ? (selAirportUpcoming ? 'linear-gradient(130deg, #7e22ce 0%, #a855f7 60%, #c084fc 100%)' : (selectedFeature.properties.is_notable_green ? 'linear-gradient(130deg, #059669 0%, #10b981 60%, #34d399 100%)' : 'linear-gradient(130deg, #0284c7 0%, #0ea5e9 60%, #38bdf8 100%)'))
+                            : (selIsUpcoming ? 'linear-gradient(130deg, #b45309 0%, #d97706 60%, #f59e0b 100%)' : 'linear-gradient(130deg, #0d5f59 0%, #0d7a6e 60%, #0f9b8c 100%)');
+                        return (
+                    <div style={{ background: headerBg, padding: '14px 48px 12px 16px', position: 'relative' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
+                            <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.65)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', margin: 0 }}>
+                                Selected {activeAssetType === 'airport' ? 'Airport' : 'Datacenter'}
+                            </p>
+                            {(selIsUpcoming || selAirportUpcoming) && (
+                                <span style={{ padding: '2px 7px', background: 'rgba(255,255,255,0.25)', color: '#fff', fontSize: '8px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', borderRadius: '3px' }}>
+                                    UPCOMING
+                                </span>
+                            )}
+                        </div>
                         <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#fff', lineHeight: 1.25, marginBottom: '3px' }}>
                             {selectedFeature.properties.dc_name || selectedFeature.properties.airport_name}
                         </h3>
@@ -511,6 +536,8 @@ export default function MapView({ features, selectedId, onSelectDC, filterState,
                             <X size={14} />
                         </button>
                     </div>
+                        );
+                    })()}
 
                     {/* Overview grid */}
                     <div style={{ padding: '12px 14px 14px' }}>
