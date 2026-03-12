@@ -30,6 +30,24 @@ interface DcStockResponse {
   fetched_at: string;
 }
 
+interface AirportStock {
+  operator_key: string;
+  parent_company: string;
+  ticker: string;
+  exchange: string;
+  price: number | null;
+  prev_close: number | null;
+  change_pct: number | null;
+  currency: string;
+  market_state: string;
+  error?: string;
+}
+
+interface AirportStockResponse {
+  stocks: AirportStock[];
+  fetched_at: string;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Stock price link helper                                             */
 /* ------------------------------------------------------------------ */
@@ -1530,6 +1548,18 @@ interface AirportOperatorProfile {
   color: string;
   website?: string;
   matchFn: (op: string) => boolean;
+  // Enriched profile fields
+  headquarters?: string;
+  established?: string;
+  employeeCount?: string;
+  revenue?: string;
+  parentCompany?: string;
+  stockKey?: string;
+  annualPassengers?: string;
+  totalCapacity?: string;
+  keyAirports?: Array<{ name: string; iata: string; city: string; state: string }>;
+  certifications?: string[];
+  specialization?: string;
 }
 
 const AIRPORT_OPERATORS: AirportOperatorProfile[] = [
@@ -1542,26 +1572,77 @@ const AIRPORT_OPERATORS: AirportOperatorProfile[] = [
     color: "#0d7a6e",
     website: "https://www.aai.aero",
     matchFn: (op) => op.includes("AAI") && !op.includes("GMR") && !op.includes("Adani") && !op.includes("BIAL") && !op.includes("CIAL") && !op.includes("Zurich") && !op.includes("KIAL"),
+    headquarters: "New Delhi, Delhi",
+    established: "1995",
+    employeeCount: "~14,500",
+    revenue: "₹18,000 Cr (FY2024)",
+    annualPassengers: "~280 mn (across network)",
+    totalCapacity: "400+ mn pax/year (network)",
+    specialization: "Government-owned airport management, Air Navigation Services (ANS), Ground Handling",
+    certifications: ["ISO 9001", "ISO 14001", "ACI Airport Health Accreditation"],
+    keyAirports: [
+      { name: "Chennai International Airport", iata: "MAA", city: "Chennai", state: "Tamil Nadu" },
+      { name: "Netaji Subhas Chandra Bose International", iata: "CCU", city: "Kolkata", state: "West Bengal" },
+      { name: "Chhatrapati Shivaji Maharaj International (CSIA) [AAI portion]", iata: "BOM", city: "Mumbai", state: "Maharashtra" },
+      { name: "Lal Bahadur Shastri International", iata: "VNS", city: "Varanasi", state: "Uttar Pradesh" },
+      { name: "Lok Nayak Jayaprakash Airport", iata: "PAT", city: "Patna", state: "Bihar" },
+      { name: "Biju Patnaik International Airport", iata: "BBI", city: "Bhubaneswar", state: "Odisha" },
+      { name: "Devi Ahilya Bai Holkar Airport", iata: "IDR", city: "Indore", state: "Madhya Pradesh" },
+      { name: "Coimbatore International Airport", iata: "CJB", city: "Coimbatore", state: "Tamil Nadu" },
+    ],
   },
   {
     key: "adani",
-    name: "Adani Airport Holdings",
+    name: "Adani Airport Holdings Ltd",
     shortName: "Adani Airports",
     type: "Private (Listed)",
     description: "Part of Adani Group, managing Mumbai, Ahmedabad, Mangaluru, Lucknow, Jaipur, Guwahati, and Thiruvananthapuram airports under PPP concessions.",
     color: "#2563eb",
     website: "https://www.adaniairports.com",
     matchFn: (op) => op.includes("Adani"),
+    headquarters: "Ahmedabad, Gujarat",
+    established: "2019",
+    employeeCount: "~10,000",
+    revenue: "₹8,800 Cr (FY2024)",
+    parentCompany: "Adani Enterprises Ltd",
+    stockKey: "adani",
+    annualPassengers: "~110 mn (FY2024)",
+    totalCapacity: "200+ mn pax/year (network)",
+    specialization: "PPP airport concessions, retail & commercial development, renewable-powered terminals",
+    certifications: ["ACI Airport Excellence", "ISO 45001", "Green Terminal Certifications"],
+    keyAirports: [
+      { name: "Chhatrapati Shivaji Maharaj International Airport", iata: "BOM", city: "Mumbai", state: "Maharashtra" },
+      { name: "Sardar Vallabhbhai Patel International Airport", iata: "AMD", city: "Ahmedabad", state: "Gujarat" },
+      { name: "Mangaluru International Airport", iata: "IXE", city: "Mangaluru", state: "Karnataka" },
+      { name: "Chaudhary Charan Singh International Airport", iata: "LKO", city: "Lucknow", state: "Uttar Pradesh" },
+      { name: "Jaipur International Airport", iata: "JAI", city: "Jaipur", state: "Rajasthan" },
+      { name: "Lokpriya Gopinath Bordoloi International Airport", iata: "GAU", city: "Guwahati", state: "Assam" },
+      { name: "Trivandrum International Airport", iata: "TRV", city: "Thiruvananthapuram", state: "Kerala" },
+    ],
   },
   {
     key: "gmr",
-    name: "GMR Airports Infrastructure",
+    name: "GMR Airports Infrastructure Ltd",
     shortName: "GMR Airports",
     type: "Private (Listed)",
     description: "GMR Group manages Indira Gandhi International (Delhi), Rajiv Gandhi International (Hyderabad), and Manohar International (Goa) under long-term concessions.",
     color: "#7c3aed",
     website: "https://www.gmrairports.com",
     matchFn: (op) => op.includes("GMR"),
+    headquarters: "New Delhi, Delhi",
+    established: "2015",
+    employeeCount: "~15,000",
+    revenue: "₹12,700 Cr (FY2024)",
+    stockKey: "gmr",
+    annualPassengers: "~95 mn (FY2024)",
+    totalCapacity: "150+ mn pax/year (network)",
+    specialization: "Large hub airport development, aero city & real estate, international airport partnerships",
+    certifications: ["ACI Level 3 Carbon Accreditation", "ISO 14001", "IGBC Green Airport"],
+    keyAirports: [
+      { name: "Indira Gandhi International Airport", iata: "DEL", city: "New Delhi", state: "Delhi" },
+      { name: "Rajiv Gandhi International Airport", iata: "HYD", city: "Hyderabad", state: "Telangana" },
+      { name: "Manohar International Airport (Goa)", iata: "GOX", city: "Mopa", state: "Goa" },
+    ],
   },
   {
     key: "bial",
@@ -1572,6 +1653,18 @@ const AIRPORT_OPERATORS: AirportOperatorProfile[] = [
     color: "#0891b2",
     website: "https://www.bengaluruairport.com",
     matchFn: (op) => op.includes("BIAL") || op.includes("Fairfax"),
+    headquarters: "Bengaluru, Karnataka",
+    established: "2001",
+    employeeCount: "~2,500",
+    revenue: "₹5,200 Cr (FY2024)",
+    parentCompany: "Fairfax India Holdings (54% stake)",
+    annualPassengers: "~37.5 mn (FY2024)",
+    totalCapacity: "55 mn pax/year (with T2)",
+    specialization: "Single hub airport development, sustainability leadership, Terminal 2 (Ramp) flagship",
+    certifications: ["ACI Level 4 Carbon Accreditation", "LEED Platinum (T2)", "ISO 14001", "ISO 50001"],
+    keyAirports: [
+      { name: "Kempegowda International Airport", iata: "BLR", city: "Bengaluru", state: "Karnataka" },
+    ],
   },
   {
     key: "cial",
@@ -1582,16 +1675,38 @@ const AIRPORT_OPERATORS: AirportOperatorProfile[] = [
     color: "#16a34a",
     website: "https://www.cial.aero",
     matchFn: (op) => op.includes("CIAL") || op.includes("Cochin International"),
+    headquarters: "Ernakulam, Kerala",
+    established: "1994",
+    employeeCount: "~2,000",
+    revenue: "₹2,100 Cr (FY2024)",
+    annualPassengers: "~9.5 mn (FY2024)",
+    totalCapacity: "15 mn pax/year",
+    specialization: "Renewable energy leadership, fully solar-powered operations, NRI-funded public-private model",
+    certifications: ["ACI Level 4+ Carbon Neutral", "ISO 14001", "Solar Powered Airport Certification", "IGBC Platinum"],
+    keyAirports: [
+      { name: "Cochin International Airport", iata: "COK", city: "Kochi", state: "Kerala" },
+    ],
   },
   {
     key: "zurich",
     name: "Zurich Airport International / YIAPL",
     shortName: "Zurich Airport",
     type: "Private (International)",
-    description: "Yamuna International Airport Pvt Ltd — operates the upcoming Noida International Airport at Jewar. Zurich Airport holds 80%, UP Govt 20%.",
+    description: "Yamuna International Airport Pvt Ltd — operates the upcoming Noida International Airport at Jewar. Zurich Airport AG holds 80%, UP Govt 20%.",
     color: "#dc2626",
     website: "https://www.niaup.com",
     matchFn: (op) => op.includes("Zurich") || op.includes("YIAPL"),
+    headquarters: "Jewar, Uttar Pradesh (project site)",
+    established: "2021",
+    parentCompany: "Zurich Airport AG (80% stake)",
+    stockKey: "zurich",
+    annualPassengers: "12 mn (Phase 1 target, ~2025–26)",
+    totalCapacity: "70 mn pax/year (ultimate capacity)",
+    specialization: "Greenfield airport development, multi-modal connectivity, Zurich Airport operational expertise",
+    certifications: ["Under development — targeting ACI Carbon Neutral", "Green Building Standards planned"],
+    keyAirports: [
+      { name: "Noida International Airport (Jewar)", iata: "DXN", city: "Jewar", state: "Uttar Pradesh" },
+    ],
   },
   {
     key: "kial",
@@ -1600,7 +1715,19 @@ const AIRPORT_OPERATORS: AirportOperatorProfile[] = [
     type: "State Government",
     description: "Operates Kannur International Airport in Kerala. Managed by Kerala Government with NRI shareholder participation.",
     color: "#d97706",
+    website: "https://www.kannurairport.aero",
     matchFn: (op) => op.includes("KIAL") || op.includes("Kannur International Airport Ltd"),
+    headquarters: "Kannur, Kerala",
+    established: "2018",
+    employeeCount: "~500",
+    revenue: "₹600 Cr (FY2024)",
+    annualPassengers: "~2.2 mn (FY2024)",
+    totalCapacity: "3.7 mn pax/year",
+    specialization: "NRI-funded airport, Kerala Government-owned, serves North Kerala and Lakshadweep region",
+    certifications: ["ACI Airport Health Accreditation", "ISO 9001"],
+    keyAirports: [
+      { name: "Kannur International Airport", iata: "CNN", city: "Kannur", state: "Kerala" },
+    ],
   },
   {
     key: "iaf",
@@ -1610,6 +1737,14 @@ const AIRPORT_OPERATORS: AirportOperatorProfile[] = [
     description: "Civil enclaves within Indian Air Force and Indian Navy bases, typically with restricted civilian operations.",
     color: "#475569",
     matchFn: (op) => (op.includes("Indian Air Force") || op.includes("IAF") || op.includes("Indian Navy") || op.includes("INS")) && !op.includes("AAI"),
+    headquarters: "New Delhi, Delhi",
+    specialization: "Dual-use military-civil airports, civil enclaves on defence bases, restricted operations",
+    keyAirports: [
+      { name: "Leh Kushok Bakula Rimpochhe Airport", iata: "IXL", city: "Leh", state: "Ladakh" },
+      { name: "Jammu Airport", iata: "IXJ", city: "Jammu", state: "Jammu & Kashmir" },
+      { name: "Veer Savarkar International Airport", iata: "IXZ", city: "Port Blair", state: "Andaman & Nicobar Islands" },
+      { name: "Srinagar International Airport", iata: "SXR", city: "Srinagar", state: "Jammu & Kashmir" },
+    ],
   },
 ];
 
@@ -1622,28 +1757,615 @@ function classifyOperator(operatorStr: string | null | undefined): string {
   return "other";
 }
 
+/* ------------------------------------------------------------------ */
+/*  Airport Operator Profile Modal                                      */
+/* ------------------------------------------------------------------ */
+
+type AirportModalTab = "overview" | "specs" | "ecosystem" | "location" | "stock";
+
+interface AirportItem {
+  airport_name: string;
+  state?: string | null;
+  iata_code?: string | null;
+  city?: string | null;
+  type?: string | null;
+  status?: string | null;
+  is_notable_green?: boolean;
+  operations?: {
+    operator_concessionaire?: string | null;
+    annual_passengers_mn?: string | number | null;
+    no_of_runways?: string | number | null;
+  };
+  green_energy?: {
+    solar_capacity_installed_mw?: string | number | null;
+    pct_green_coverage?: string | null;
+    carbon_neutral_aci_level?: string | null;
+  };
+}
+
+interface AirportOperatorProfileModalProps {
+  profile: AirportOperatorProfile;
+  airports: AirportItem[];
+  stock: AirportStock | undefined;
+  onClose: () => void;
+}
+
+function AirportOperatorProfileModal({ profile, airports, stock, onClose }: AirportOperatorProfileModalProps) {
+  const [tab, setTab] = useState<AirportModalTab>("overview");
+
+  const TABS: { id: AirportModalTab; label: string }[] = [
+    { id: "overview",  label: "Overview" },
+    { id: "specs",     label: "Specs" },
+    { id: "ecosystem", label: "Ecosystem" },
+    { id: "location",  label: "Location" },
+    { id: "stock",     label: "Stock Price" },
+  ];
+
+  const initials = profile.shortName.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase();
+
+  const hasStock = !!(stock && !stock.error && stock.price != null);
+  const isPos = (stock?.change_pct ?? 0) > 0;
+  const isNeg = (stock?.change_pct ?? 0) < 0;
+
+  // Compute dynamic stats from airport list
+  const airportStates = [...new Set(airports.map(a => a.state).filter(Boolean) as string[])].sort();
+  const greenCount = airports.filter(a => a.is_notable_green).length;
+  const totalSolar = airports.reduce((sum, a) => {
+    const v = parseFloat(String(a.green_energy?.solar_capacity_installed_mw ?? 0));
+    return sum + (isNaN(v) ? 0 : v);
+  }, 0);
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
+          zIndex: 1000,
+        }}
+      />
+
+      {/* Panel */}
+      <div style={{
+        position: "fixed", top: 0, right: 0, bottom: 0, width: "560px",
+        background: "#fff", zIndex: 1001,
+        borderLeft: "1px solid #e5e7eb",
+        display: "flex", flexDirection: "column",
+        fontFamily: "var(--font-family, 'Inter', system-ui, sans-serif)",
+        overflow: "hidden",
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: "24px 24px 0",
+          borderBottom: "1px solid #e5e7eb",
+          background: "#f9fafb",
+        }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginBottom: "20px" }}>
+            <div style={{
+              width: "52px", height: "52px", background: profile.color,
+              color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "18px", fontWeight: 700, flexShrink: 0,
+            }}>
+              {initials}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h2 style={{ margin: 0, fontSize: "18px", fontWeight: 700, color: "#111827", lineHeight: 1.3 }}>
+                {profile.name}
+              </h2>
+              {profile.parentCompany && (
+                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#6b7280" }}>
+                  {profile.parentCompany}
+                </p>
+              )}
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px", flexWrap: "wrap" }}>
+                <span style={{
+                  fontSize: "10px", fontWeight: 700, padding: "2px 8px",
+                  background: `${profile.color}18`, color: profile.color,
+                  letterSpacing: "0.06em", textTransform: "uppercase",
+                }}>
+                  {profile.type}
+                </span>
+                {stock && stock.ticker && <ExchangeBadge exchange={stock.exchange} />}
+                {hasStock && stock && (
+                  <a
+                    href={getStockLink(stock.ticker)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: "12px", color: "#1e293b", textDecoration: "underline" }}
+                  >
+                    {stock.ticker} on Yahoo Finance ↗
+                  </a>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              style={{
+                border: "1px solid #e5e7eb", background: "#fff",
+                width: "32px", height: "32px", display: "flex",
+                alignItems: "center", justifyContent: "center",
+                cursor: "pointer", flexShrink: 0, fontSize: "16px",
+                color: "#6b7280",
+              }}
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Tab bar */}
+          <div style={{ display: "flex", gap: 0, overflowX: "auto" }}>
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                style={{
+                  padding: "10px 16px",
+                  border: "none",
+                  borderBottom: tab === t.id ? `2px solid ${profile.color}` : "2px solid transparent",
+                  background: "transparent",
+                  cursor: "pointer",
+                  fontSize: "13px",
+                  fontWeight: tab === t.id ? 600 : 400,
+                  color: tab === t.id ? profile.color : "#6b7280",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Body */}
+        <div style={{ flex: 1, overflow: "auto", padding: "24px" }}>
+
+          {/* Overview Tab */}
+          {tab === "overview" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                {[
+                  { lbl: "Airports Managed", val: airports.length > 0 ? airports.length.toString() : (profile.keyAirports?.length?.toString() ?? "—") },
+                  { lbl: "Annual Passengers", val: profile.annualPassengers ?? "—" },
+                  { lbl: "Headquarters", val: profile.headquarters ?? "—" },
+                  { lbl: "Established", val: profile.established ?? "—" },
+                ].map((item) => (
+                  <div key={item.lbl} style={{
+                    padding: "14px 16px", border: "1px solid #e5e7eb",
+                    background: "#f9fafb",
+                  }}>
+                    <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      {item.lbl}
+                    </div>
+                    <div style={{ fontSize: "15px", fontWeight: 600, color: "#111827" }}>{item.val}</div>
+                  </div>
+                ))}
+              </div>
+
+              <p style={{ margin: 0, fontSize: "13px", color: "#4b5563", lineHeight: 1.7 }}>
+                {profile.description}
+              </p>
+
+              {profile.certifications && profile.certifications.length > 0 && (
+                <div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Certifications & Ratings
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                    {profile.certifications.map((c) => (
+                      <span key={c} style={{
+                        padding: "4px 10px", border: "1px solid #bbf7d0",
+                        background: "#f0fdf4", fontSize: "11px", color: "#15803d", fontWeight: 600,
+                      }}>
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {profile.website && (
+                <div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Website
+                  </div>
+                  <a
+                    href={profile.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: "14px", color: "#1e293b", textDecoration: "underline" }}
+                  >
+                    {profile.website}
+                  </a>
+                </div>
+              )}
+
+              {profile.keyAirports && profile.keyAirports.length > 0 && (
+                <div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Key Airports ({profile.keyAirports.length})
+                  </div>
+                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {profile.keyAirports.map((ap) => (
+                      <li key={ap.iata} style={{
+                        padding: "10px 12px", border: "1px solid #e5e7eb",
+                        background: "#fff", display: "flex", alignItems: "center", gap: "10px",
+                      }}>
+                        <span style={{
+                          padding: "2px 8px", background: profile.color, color: "#fff",
+                          fontSize: "11px", fontWeight: 700, flexShrink: 0,
+                        }}>
+                          {ap.iata}
+                        </span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: "13px", fontWeight: 600, color: "#111827" }}>{ap.name}</div>
+                          <div style={{ fontSize: "11px", color: "#6b7280" }}>{ap.city}, {ap.state}</div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Specs Tab */}
+          {tab === "specs" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {[
+                { lbl: "Established", val: profile.established ?? "—" },
+                { lbl: "Employee Count", val: profile.employeeCount ?? "—" },
+                { lbl: "Annual Revenue", val: profile.revenue ?? "—" },
+                { lbl: "Annual Passengers", val: profile.annualPassengers ?? "—" },
+                { lbl: "Total Network Capacity", val: profile.totalCapacity ?? "—" },
+                { lbl: "Airports in Database", val: airports.length > 0 ? airports.length.toString() : "—" },
+                { lbl: "Green Certified Airports", val: greenCount > 0 ? `${greenCount} airport${greenCount > 1 ? "s" : ""}` : "—" },
+                { lbl: "Total Solar Installed", val: totalSolar > 0 ? `${totalSolar.toFixed(1)} MW` : "—" },
+                { lbl: "Operator Type", val: profile.type },
+                { lbl: "Specialization", val: profile.specialization ?? "—" },
+              ].map((row) => (
+                <div key={row.lbl} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+                  padding: "12px 16px", border: "1px solid #e5e7eb", background: "#f9fafb", gap: "12px",
+                }}>
+                  <span style={{ fontSize: "13px", color: "#6b7280", flexShrink: 0 }}>{row.lbl}</span>
+                  <span style={{ fontSize: "13px", fontWeight: 600, color: "#111827", textAlign: "right" }}>{row.val}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Ecosystem Tab */}
+          {tab === "ecosystem" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <p style={{ fontSize: "13px", color: "#6b7280", margin: 0 }}>
+                Ecosystem overview for {profile.name} — geographic presence, airport network, and affiliations.
+              </p>
+
+              {/* States */}
+              <div>
+                <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Geographic Presence
+                  {airportStates.length > 0 && (
+                    <span style={{ marginLeft: "6px", fontWeight: 400, textTransform: "none", color: "#9ca3af", fontSize: "10px" }}>
+                      ({airportStates.length} {airportStates.length === 1 ? "state/UT" : "states/UTs"})
+                    </span>
+                  )}
+                </div>
+                {airportStates.length > 0 ? (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                    {airportStates.map((s) => {
+                      const count = airports.filter(a => a.state === s).length;
+                      return (
+                        <span key={s} style={{
+                          padding: "4px 10px", border: "1px solid #d1d5db",
+                          fontSize: "12px", color: "#374151", background: "#f9fafb",
+                          display: "flex", alignItems: "center", gap: "5px",
+                        }}>
+                          {s}
+                          <span style={{ background: profile.color, color: "#fff", borderRadius: "9999px", fontSize: "9px", padding: "0px 5px", fontWeight: 700 }}>
+                            {count}
+                          </span>
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p style={{ fontSize: "13px", color: "#9ca3af", margin: 0 }}>No state data in database.</p>
+                )}
+              </div>
+
+              {/* Airport breakdown by state */}
+              {airports.length > 0 && (
+                <div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Airport Breakdown by State
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    {airportStates.map((state) => {
+                      const stateAirports = airports.filter(a => a.state === state);
+                      return (
+                        <div key={state} style={{ padding: "10px 14px", border: "1px solid #e5e7eb", background: "#f9fafb" }}>
+                          <div style={{ fontWeight: 600, fontSize: "13px", color: "#111827", marginBottom: "4px" }}>
+                            {state} <span style={{ fontWeight: 400, color: "#9ca3af", fontSize: "12px" }}>({stateAirports.length} {stateAirports.length === 1 ? "airport" : "airports"})</span>
+                          </div>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                            {stateAirports.map((a) => (
+                              <span key={a.airport_name} style={{ fontSize: "11px", color: "#374151", padding: "2px 8px", border: "1px solid #e5e7eb", background: "#fff" }}>
+                                {a.airport_name}
+                                {a.iata_code && <span style={{ color: profile.color, marginLeft: "4px" }}>({a.iata_code})</span>}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {profile.parentCompany && (
+                <div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Parent / Holding Company
+                  </div>
+                  <div style={{ padding: "12px 16px", border: "1px solid #e5e7eb", background: "#f9fafb", fontSize: "14px", color: "#111827" }}>
+                    {profile.parentCompany}
+                  </div>
+                </div>
+              )}
+
+              {profile.certifications && profile.certifications.length > 0 && (
+                <div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Certifications & Standards
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    {profile.certifications.map((c) => (
+                      <div key={c} style={{ padding: "8px 12px", border: "1px solid #bbf7d0", background: "#f0fdf4", fontSize: "12px", color: "#15803d" }}>
+                        {c}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Location Tab */}
+          {tab === "location" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ padding: "14px 16px", border: "1px solid #e5e7eb", background: "#f9fafb" }}>
+                <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  Headquarters
+                </div>
+                <div style={{ fontSize: "15px", fontWeight: 600, color: "#111827" }}>
+                  {profile.headquarters ?? "Not specified"}
+                </div>
+              </div>
+
+              {airportStates.length > 0 && (
+                <div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    States / UTs with Airports
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                    {airportStates.map((s) => (
+                      <span key={s} style={{
+                        padding: "6px 12px", border: "1px solid #d1d5db",
+                        fontSize: "13px", color: "#111827", background: "#fff", fontWeight: 500,
+                      }}>
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {airports.length > 0 ? (
+                <div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Airport Locations ({airports.length})
+                  </div>
+                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {airports.map((a) => {
+                      const pax = a.operations?.annual_passengers_mn;
+                      return (
+                        <li key={a.airport_name} style={{ padding: "10px 14px", border: "1px solid #e5e7eb", background: "#fff" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                            {a.iata_code && (
+                              <span style={{
+                                padding: "2px 7px", background: profile.color, color: "#fff",
+                                fontSize: "10px", fontWeight: 700, flexShrink: 0,
+                              }}>
+                                {a.iata_code}
+                              </span>
+                            )}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontWeight: 600, fontSize: "13px", color: "#111827" }}>{a.airport_name}</div>
+                              <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                                <span>📍 {a.city ?? "—"}, {a.state ?? "—"}</span>
+                                {a.type && <span style={{ color: "#374151" }}>{a.type}</span>}
+                                {pax != null && pax !== "" && <span>✈ {pax} mn pax/yr</span>}
+                                {a.is_notable_green && <span style={{ color: "#16a34a", fontWeight: 600 }}>🌿 Green</span>}
+                              </div>
+                            </div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ) : profile.keyAirports && profile.keyAirports.length > 0 ? (
+                <div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Key Airport Locations
+                  </div>
+                  <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {profile.keyAirports.map((ap) => (
+                      <li key={ap.iata} style={{ padding: "10px 14px", border: "1px solid #e5e7eb", background: "#fff" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span style={{
+                            padding: "2px 7px", background: profile.color, color: "#fff",
+                            fontSize: "10px", fontWeight: 700, flexShrink: 0,
+                          }}>
+                            {ap.iata}
+                          </span>
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: "13px", color: "#111827" }}>{ap.name}</div>
+                            <div style={{ fontSize: "11px", color: "#6b7280" }}>📍 {ap.city}, {ap.state}</div>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
+          )}
+
+          {/* Stock Price Tab */}
+          {tab === "stock" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {hasStock && stock ? (
+                <>
+                  <div style={{
+                    padding: "20px", border: "1px solid #e5e7eb", background: "#f9fafb",
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div>
+                        <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                          Current Price
+                        </div>
+                        <div style={{ fontSize: "28px", fontWeight: 700, color: "#111827" }}>
+                          {formatPrice(stock.price, stock.currency)}
+                        </div>
+                        <div style={{ fontSize: "13px", color: "#6b7280", marginTop: "4px" }}>
+                          Prev close: {formatPrice(stock.prev_close, stock.currency)}
+                        </div>
+                      </div>
+                      <div style={{
+                        padding: "8px 14px",
+                        background: isPos ? "#f0fdf4" : isNeg ? "#fef2f2" : "#f9fafb",
+                        border: `1px solid ${isPos ? "#bbf7d0" : isNeg ? "#fecaca" : "#e5e7eb"}`,
+                        textAlign: "right",
+                      }}>
+                        <div style={{
+                          fontSize: "18px", fontWeight: 700,
+                          color: isPos ? "#16a34a" : isNeg ? "#dc2626" : "#374151",
+                        }}>
+                          {isPos ? "▲" : isNeg ? "▼" : "—"}{" "}
+                          {stock.change_pct != null ? `${Math.abs(stock.change_pct).toFixed(2)}%` : "0.00%"}
+                        </div>
+                        <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>Day change</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {[
+                    { lbl: "Ticker", val: stock.ticker },
+                    { lbl: "Exchange", val: getExchangeDisplayName(stock.exchange) },
+                    { lbl: "Currency", val: stock.currency },
+                    { lbl: "Market State", val: stock.market_state },
+                    { lbl: "Parent Company", val: stock.parent_company },
+                  ].map((row) => (
+                    <div key={row.lbl} style={{
+                      display: "flex", justifyContent: "space-between", alignItems: "center",
+                      padding: "10px 14px", border: "1px solid #e5e7eb", background: "#fff",
+                    }}>
+                      <span style={{ fontSize: "13px", color: "#6b7280" }}>{row.lbl}</span>
+                      <span style={{ fontSize: "13px", fontWeight: 500, color: "#111827" }}>{row.val}</span>
+                    </div>
+                  ))}
+
+                  <a
+                    href={getStockLink(stock.ticker)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                      padding: "12px 20px", background: profile.color, color: "#fff",
+                      textDecoration: "none", fontSize: "14px", fontWeight: 600,
+                      border: "none", borderRadius: "0.375rem",
+                    }}
+                  >
+                    View {stock.ticker} on Yahoo Finance ↗
+                  </a>
+
+                  <p style={{ fontSize: "11px", color: "#9ca3af", margin: 0 }}>
+                    Prices from Yahoo Finance (end-of-day). Not investment advice.
+                  </p>
+                </>
+              ) : stock?.error ? (
+                <div style={{ padding: "20px", border: "1px solid #e5e7eb", background: "#fefce8", textAlign: "center" }}>
+                  <div style={{ fontSize: "14px", color: "#713f12", fontWeight: 500 }}>Price unavailable</div>
+                  <div style={{ fontSize: "12px", color: "#92400e", marginTop: "4px" }}>Market may be closed or data temporarily unavailable.</div>
+                  {profile.stockKey && (
+                    <a
+                      href={getStockLink(stock.ticker)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: "inline-block", marginTop: "10px", fontSize: "12px", color: "#92400e", textDecoration: "underline" }}
+                    >
+                      Try viewing {stock.ticker} on Yahoo Finance ↗
+                    </a>
+                  )}
+                </div>
+              ) : profile.stockKey ? (
+                <div style={{ padding: "20px", border: "1px solid #e5e7eb", background: "#fefce8", textAlign: "center" }}>
+                  <div style={{ fontSize: "14px", color: "#713f12", fontWeight: 500 }}>Loading stock data…</div>
+                  <div style={{ fontSize: "12px", color: "#92400e", marginTop: "4px" }}>Fetching latest price from Yahoo Finance.</div>
+                </div>
+              ) : (
+                <div style={{ padding: "20px", border: "1px solid #e5e7eb", background: "#f9fafb", textAlign: "center" }}>
+                  <div style={{ fontSize: "14px", color: "#6b7280" }}>Not publicly listed</div>
+                  <div style={{ fontSize: "12px", color: "#9ca3af", marginTop: "4px" }}>
+                    {profile.name} ({profile.type}) does not have a public stock listing in our database.
+                  </div>
+                  {profile.parentCompany && (
+                    <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "8px" }}>
+                      Parent: <strong>{profile.parentCompany}</strong>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Airport Developer Profiles Section                                  */
+/* ------------------------------------------------------------------ */
+
 function AirportDeveloperProfilesSection() {
-  const [airports, setAirports] = useState<Array<{
-    airport_name: string;
-    is_notable_green?: boolean;
-    status?: string | null;
-    green_energy?: { solar_capacity_installed_mw?: string | number | null; pct_green_coverage?: string | null; carbon_neutral_aci_level?: string | null };
-    operations?: { operator_concessionaire?: string | null };
-    type?: string | null;
-    state?: string | null;
-  }>>([]);
+  const [airports, setAirports] = useState<AirportItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [selectedOperator, setSelectedOperator] = useState<AirportOperatorProfile | null>(null);
+  const [airportStocks, setAirportStocks] = useState<AirportStock[]>([]);
 
   useEffect(() => {
     fetch("/data/india_airports_unified.geojson")
       .then(r => r.json())
-      .then((data: { features: Array<{ properties: typeof airports[number] }> }) => {
+      .then((data: { features: Array<{ properties: AirportItem }> }) => {
         setAirports(data.features.map(f => f.properties));
       })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    apiClient.get<AirportStockResponse>("/projects/airport-stocks")
+      .then(r => setAirportStocks(r.data.stocks))
+      .catch(() => {});
+  }, []);
+
+  const stockByKey = Object.fromEntries(airportStocks.map(s => [s.operator_key, s]));
 
   const UPCOMING_STATUSES_AP = ["Under Development", "Under Development / Proposed", "Under Construction (Phase 1 Launch ~2025-26)"];
 
@@ -1719,7 +2441,7 @@ function AirportDeveloperProfilesSection() {
         {filtered.map(profile => {
           const st = operatorStats[profile.key] ?? { total: 0, green: 0, upcoming: 0, solar: 0, states: new Set<string>() };
           return (
-            <div key={profile.key} style={{ background: "#fff", border: "1px solid #e2e8f0", borderTop: `3px solid ${profile.color}`, borderRadius: "0.75rem", padding: "20px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+            <div key={profile.key} onClick={() => setSelectedOperator(profile)} style={{ background: "#fff", border: "1px solid #e2e8f0", borderTop: `3px solid ${profile.color}`, borderRadius: "0.75rem", padding: "20px", boxShadow: "0 1px 3px rgba(0,0,0,0.06)", cursor: "pointer", transition: "box-shadow 0.15s" }}>
               {/* Card header */}
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "12px" }}>
                 <div>
@@ -1769,14 +2491,29 @@ function AirportDeveloperProfilesSection() {
               {/* Website */}
               {profile.website && (
                 <a href={profile.website} target="_blank" rel="noopener noreferrer"
+                  onClick={e => e.stopPropagation()}
                   style={{ display: "inline-flex", alignItems: "center", gap: "5px", fontSize: "11px", color: profile.color, fontWeight: 600, textDecoration: "none" }}>
                   ↗ Official Website
                 </a>
               )}
+
+              {/* Click hint */}
+              <div style={{ marginTop: "10px", fontSize: "10px", color: "#94a3b8", fontStyle: "italic" }}>
+                Click to view full profile →
+              </div>
             </div>
           );
         })}
       </div>
+
+      {selectedOperator && (
+        <AirportOperatorProfileModal
+          profile={selectedOperator}
+          airports={airports.filter(a => classifyOperator(a.operations?.operator_concessionaire) === selectedOperator.key)}
+          stock={stockByKey[selectedOperator.stockKey ?? ""]}
+          onClose={() => setSelectedOperator(null)}
+        />
+      )}
     </section>
   );
 }
