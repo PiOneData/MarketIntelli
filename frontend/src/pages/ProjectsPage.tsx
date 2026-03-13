@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useProjects } from "../hooks/useProjects";
 import { useCompanies, useFacilityStats } from "../hooks/useDataCenters";
 import LoadingSpinner from "../components/common/LoadingSpinner";
@@ -861,6 +861,7 @@ function CompanyProfileModal({ company, stock, onClose }: CompanyProfileModalPro
 /* ------------------------------------------------------------------ */
 
 function DeveloperProfilesSection() {
+  const [searchParams] = useSearchParams();
   const [stocks, setStocks]             = useState<DcStock[]>([]);
   const [stockLoading, setStockLoading] = useState(true);
   const [fetchError, setFetchError]     = useState<string | null>(null);
@@ -868,6 +869,7 @@ function DeveloperProfilesSection() {
   const [viewMode, setViewMode]         = useState<"grid" | "list">("grid");
   const [search, setSearch]             = useState("");
   const [selectedCompany, setSelectedCompany] = useState<DataCenterCompany | null>(null);
+  const [autoOpened, setAutoOpened]     = useState(false);
 
   const { data: companiesData, isLoading: companiesLoading } = useCompanies({ page_size: 500 });
   const { data: facilityStats } = useFacilityStats();
@@ -889,6 +891,21 @@ function DeveloperProfilesSection() {
   useEffect(() => { void loadStockData(); }, [loadStockData]);
 
   const companies = companiesData ?? [];
+
+  // Auto-open company modal from URL ?company= param
+  useEffect(() => {
+    if (autoOpened || companiesLoading || companies.length === 0) return;
+    const companyParam = searchParams.get("company");
+    if (!companyParam) return;
+    const match = companies.find((c) =>
+      c.name.toLowerCase().includes(companyParam.toLowerCase())
+    );
+    if (match) {
+      setSelectedCompany(match);
+      setAutoOpened(true);
+    }
+  }, [companies, companiesLoading, searchParams, autoOpened]);
+
   const stockByCompany = Object.fromEntries(stocks.map((s) => [s.dc_company, s]));
   const listedCount = stocks.filter((s) => !s.error && s.price != null).length;
   const totalDcs = facilityStats?.total_facilities ?? 0;
@@ -2343,11 +2360,13 @@ function AirportOperatorProfileModal({ profile, airports, stock, onClose }: Airp
 /* ------------------------------------------------------------------ */
 
 function AirportDeveloperProfilesSection() {
+  const [searchParams] = useSearchParams();
   const [airports, setAirports] = useState<AirportItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedOperator, setSelectedOperator] = useState<AirportOperatorProfile | null>(null);
   const [airportStocks, setAirportStocks] = useState<AirportStock[]>([]);
+  const [autoOpened, setAutoOpened] = useState(false);
 
   useEffect(() => {
     fetch("/data/india_airports_unified.geojson")
@@ -2364,6 +2383,19 @@ function AirportDeveloperProfilesSection() {
       .then(r => setAirportStocks(r.data.stocks))
       .catch(() => {});
   }, []);
+
+  // Auto-open operator modal from URL ?operator= param
+  useEffect(() => {
+    if (autoOpened || loading || airports.length === 0) return;
+    const operatorParam = searchParams.get("operator");
+    if (!operatorParam) return;
+    const key = classifyOperator(operatorParam);
+    const match = AIRPORT_OPERATORS.find(p => p.key === key);
+    if (match) {
+      setSelectedOperator(match);
+      setAutoOpened(true);
+    }
+  }, [airports, loading, searchParams, autoOpened]);
 
   const stockByKey = Object.fromEntries(airportStocks.map(s => [s.operator_key, s]));
 
