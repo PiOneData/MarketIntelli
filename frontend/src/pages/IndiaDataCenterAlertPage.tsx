@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import DataCenterHeatMap from "../components/DataCenterHeatMap";
 import SubstationView from "../components/SubstationView";
 import { useFacilities, useFacilityStats } from "../hooks/useDataCenters";
 import { listFacilities, createFacility } from "../api/dataCenters";
@@ -74,28 +73,6 @@ const EMPTY_FORM = {
   sizeSqFt: "",
   status: "",
 };
-
-/**
- * Adapts API facility data to the shape expected by DataCenterMap component.
- */
-function toMapFormat(facilities: DataCenterFacility[]) {
-  return facilities.map((f) => ({
-    id: f.id,
-    name: f.name,
-    dateAdded: f.date_added ? f.date_added.split("T")[0] : "",
-    company: f.company_name,
-    city: f.city,
-    location: f.location_detail || f.name,
-    locationDetail: f.location_detail ?? undefined,
-    state: f.state,
-    powerMW: f.power_capacity_mw,
-    sizeSqFt: f.size_sqft,
-    status: STATUS_DISPLAY[f.status] || f.status,
-    tierLevel: f.tier_level ?? undefined,
-    lat: f.latitude ?? undefined,
-    lng: f.longitude ?? undefined,
-  }));
-}
 
 type SortField = "company_name" | "city" | "state" | "power_capacity_mw" | "size_sqft" | "status" | "current_renewable_pct";
 
@@ -440,7 +417,7 @@ function IndiaDataCenterAlertPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [showAddModal, setShowAddModal] = useState(false);
   const [filters, setFilters] = useState({ state: "", city: "", company: "", power: "", greenOnly: false });
-  const [activeTab, setActiveTab] = useState<"registry" | "map" | "substations">("registry");
+  const [activeTab, setActiveTab] = useState<"registry" | "substations">("registry");
   const [stocksByCompany, setStocksByCompany] = useState<Record<string, DcStock>>({});
   const [sortField, setSortField] = useState<SortField>("company_name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -489,8 +466,6 @@ function IndiaDataCenterAlertPage() {
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / PAGE_SIZE));
   const paginatedData = filteredData.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
-  const mapData = useMemo(() => toMapFormat(facilities), [facilities]);
 
   const uniqueStates = useMemo(
     () => [...new Set(facilities.map((f) => normalizeState(f.state)))].sort(),
@@ -633,7 +608,7 @@ function IndiaDataCenterAlertPage() {
 
           {/* Tab Navigation */}
           <div style={{ display: "flex", gap: 0, marginTop: "20px", borderBottom: "2px solid #e2e8f0" }}>
-            {(["registry", "map", "substations"] as const).map(tab => (
+            {(["registry", "substations"] as const).map(tab => (
               <button key={tab} onClick={() => setActiveTab(tab)} style={{
                 padding: "8px 20px", fontSize: "12px", fontWeight: 700, textTransform: "uppercase",
                 letterSpacing: "0.06em", border: "none", background: "transparent", cursor: "pointer",
@@ -641,7 +616,7 @@ function IndiaDataCenterAlertPage() {
                 borderBottom: activeTab === tab ? "2px solid #0d7a6e" : "2px solid transparent",
                 marginBottom: "-2px", fontFamily: "inherit",
               }}>
-                {tab === "registry" ? "Registry" : tab === "map" ? "Map View" : "Substation Map"}
+                {tab === "registry" ? "Registry" : "Substation Map"}
               </button>
             ))}
           </div>
@@ -650,9 +625,6 @@ function IndiaDataCenterAlertPage() {
 
       {/* ── Content Area ── */}
       <div style={{ maxWidth: 1400, margin: "0 auto", padding: "24px 32px" }}>
-
-        {/* Map View */}
-        {activeTab === "map" && <DataCenterHeatMap dataCenters={mapData} />}
 
         {/* Substation Map View */}
         {activeTab === "substations" && <SubstationView />}

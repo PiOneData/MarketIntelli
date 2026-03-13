@@ -1,7 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { MapContainer, TileLayer, CircleMarker, Tooltip } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface AirportOperations {
@@ -358,7 +356,6 @@ export default function AirportRegistryPage() {
   const navigate = useNavigate();
   const [airports, setAirports] = useState<AirportProperties[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"registry" | "map">("registry");
   const [selectedAirport, setSelectedAirport] = useState<AirportProperties | null>(null);
 
   // Filters
@@ -499,26 +496,11 @@ export default function AirportRegistryPage() {
             ))}
           </div>
 
-          {/* Tabs */}
-          <div style={{ display: "flex", gap: 0, marginTop: "20px", borderBottom: "2px solid #e2e8f0" }}>
-            {(["registry", "map"] as const).map(tab => (
-              <button key={tab} onClick={() => setActiveTab(tab)} style={{
-                padding: "8px 20px", fontSize: "12px", fontWeight: 700, textTransform: "uppercase",
-                letterSpacing: "0.06em", border: "none", background: "transparent", cursor: "pointer",
-                color: activeTab === tab ? "#0d7a6e" : "#64748b",
-                borderBottom: activeTab === tab ? "2px solid #0d7a6e" : "2px solid transparent",
-                marginBottom: "-2px",
-              }}>
-                {tab === "registry" ? "Registry" : "Map View"}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
 
       <div style={{ maxWidth: 1400, margin: "0 auto", padding: "24px 32px" }}>
-        {activeTab === "registry" && (
-          <>
+        <>
             {/* ── Filters ── */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center", marginBottom: "16px", background: "#fff", padding: "14px 16px", border: "1px solid #e2e8f0" }}>
               <input
@@ -701,48 +683,8 @@ export default function AirportRegistryPage() {
                 </div>
               </div>
             )}
-          </>
-        )}
+        </>
 
-        {/* ── Map Tab ── */}
-        {activeTab === "map" && (
-          <div style={{ position: "relative", height: "65vh", border: "1px solid #e2e8f0", overflow: "hidden" }}>
-            <MapContainer center={[20.5937, 78.9629]} zoom={5} style={{ height: "100%", width: "100%" }} preferCanvas>
-              <TileLayer attribution="© CartoDB" url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-              {airports.filter(a => a.lat && a.lon).map(a => {
-                const isUpcoming = UPCOMING_STATUSES.includes(a.status ?? "");
-                const color = a.is_notable_green ? "#10b981" : (isUpcoming ? "#a855f7" : "#0d7a6e");
-                return (
-                  <CircleMarker
-                    key={a.slno}
-                    center={[a.lat!, a.lon!]}
-                    radius={4}
-                    pathOptions={{ fillColor: color, color: "transparent", fillOpacity: 0.85 }}
-                  >
-                    <Tooltip direction="top" offset={[0, -6]} opacity={1}>
-                      <div style={{ fontSize: "12px", fontWeight: 700 }}>{a.airport_name}</div>
-                      <div style={{ fontSize: "10px", color: "#64748b" }}>{a.city}, {a.state}</div>
-                      <div style={{ fontSize: "10px" }}>{a.status ?? ""}</div>
-                    </Tooltip>
-                  </CircleMarker>
-                );
-              })}
-            </MapContainer>
-            {/* Legend */}
-            <div style={{ position: "absolute", bottom: 24, right: 24, background: "rgba(255,255,255,0.92)", padding: "10px 14px", border: "1px solid #e2e8f0", fontSize: "11px", zIndex: 1000 }}>
-              {[
-                { color: "#10b981", label: "Green Certified" },
-                { color: "#a855f7", label: "Upcoming" },
-                { color: "#0d7a6e", label: "Operational" },
-              ].map(l => (
-                <div key={l.label} style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "4px" }}>
-                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: l.color, flexShrink: 0 }} />
-                  <span style={{ color: "#334155" }}>{l.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {selectedAirport && (
