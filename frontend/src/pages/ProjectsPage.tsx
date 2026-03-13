@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { useProjects } from "../hooks/useProjects";
 import { useCompanies, useFacilityStats } from "../hooks/useDataCenters";
 import LoadingSpinner from "../components/common/LoadingSpinner";
@@ -1788,6 +1788,8 @@ interface AirportItem {
   type?: string | null;
   status?: string | null;
   is_notable_green?: boolean;
+  lat?: number | null;
+  lon?: number | null;
   operations?: {
     operator_concessionaire?: string | null;
     annual_passengers_mn?: string | number | null;
@@ -1803,11 +1805,13 @@ interface AirportItem {
 interface AirportOperatorProfileModalProps {
   profile: AirportOperatorProfile;
   airports: AirportItem[];
+  allAirports: AirportItem[];
   stock: AirportStock | undefined;
   onClose: () => void;
+  onNavigateToGeo: (lat: number, lon: number, iata: string, name: string) => void;
 }
 
-function AirportOperatorProfileModal({ profile, airports, stock, onClose }: AirportOperatorProfileModalProps) {
+function AirportOperatorProfileModal({ profile, airports, allAirports, stock, onClose, onNavigateToGeo }: AirportOperatorProfileModalProps) {
   const [tab, setTab] = useState<AirportModalTab>("overview");
 
   const TABS: { id: AirportModalTab; label: string }[] = [
@@ -2003,23 +2007,45 @@ function AirportOperatorProfileModal({ profile, airports, stock, onClose }: Airp
                     Key Airports ({profile.keyAirports.length})
                   </div>
                   <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "6px" }}>
-                    {profile.keyAirports.map((ap) => (
-                      <li key={ap.iata} style={{
-                        padding: "10px 12px", border: "1px solid #e5e7eb",
-                        background: "#fff", display: "flex", alignItems: "center", gap: "10px",
-                      }}>
-                        <span style={{
-                          padding: "2px 8px", background: profile.color, color: "#fff",
-                          fontSize: "11px", fontWeight: 700, flexShrink: 0,
-                        }}>
-                          {ap.iata}
-                        </span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: "13px", fontWeight: 600, color: "#111827" }}>{ap.name}</div>
-                          <div style={{ fontSize: "11px", color: "#6b7280" }}>{ap.city}, {ap.state}</div>
-                        </div>
-                      </li>
-                    ))}
+                    {profile.keyAirports.map((ap) => {
+                      const geoAirport = allAirports.find(a => a.iata_code === ap.iata);
+                      const hasGeo = !!(geoAirport?.lat && geoAirport?.lon);
+                      return (
+                        <li
+                          key={ap.iata}
+                          onClick={() => {
+                            if (hasGeo) {
+                              onNavigateToGeo(geoAirport!.lat!, geoAirport!.lon!, ap.iata, ap.name);
+                            }
+                          }}
+                          title={hasGeo ? `View ${ap.name} on geospatial map` : ap.name}
+                          style={{
+                            padding: "10px 12px", border: "1px solid #e5e7eb",
+                            background: "#fff", display: "flex", alignItems: "center", gap: "10px",
+                            cursor: hasGeo ? "pointer" : "default",
+                            transition: "background 0.12s, border-color 0.12s",
+                          }}
+                          onMouseEnter={(e) => { if (hasGeo) { (e.currentTarget as HTMLLIElement).style.background = "#f0fdfa"; (e.currentTarget as HTMLLIElement).style.borderColor = "#0d7a6e"; } }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLLIElement).style.background = "#fff"; (e.currentTarget as HTMLLIElement).style.borderColor = "#e5e7eb"; }}
+                        >
+                          <span style={{
+                            padding: "2px 8px", background: profile.color, color: "#fff",
+                            fontSize: "11px", fontWeight: 700, flexShrink: 0,
+                          }}>
+                            {ap.iata}
+                          </span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: "13px", fontWeight: 600, color: "#111827" }}>{ap.name}</div>
+                            <div style={{ fontSize: "11px", color: "#6b7280" }}>{ap.city}, {ap.state}</div>
+                          </div>
+                          {hasGeo && (
+                            <span style={{ fontSize: "10px", color: "#0d7a6e", fontWeight: 600, flexShrink: 0 }}>
+                              View Map →
+                            </span>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               )}
@@ -2361,6 +2387,7 @@ function AirportOperatorProfileModal({ profile, airports, stock, onClose }: Airp
 
 function AirportDeveloperProfilesSection() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [airports, setAirports] = useState<AirportItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -2371,8 +2398,12 @@ function AirportDeveloperProfilesSection() {
   useEffect(() => {
     fetch("/data/india_airports_unified.geojson")
       .then(r => r.json())
-      .then((data: { features: Array<{ properties: AirportItem }> }) => {
-        setAirports(data.features.map(f => f.properties));
+      .then((data: { features: Array<{ geometry: { coordinates: [number, number] }; properties: AirportItem }> }) => {
+        setAirports(data.features.map(f => ({
+          ...f.properties,
+          lat: f.geometry.coordinates[1],
+          lon: f.geometry.coordinates[0],
+        })));
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -2542,8 +2573,13 @@ function AirportDeveloperProfilesSection() {
         <AirportOperatorProfileModal
           profile={selectedOperator}
           airports={airports.filter(a => classifyOperator(a.operations?.operator_concessionaire) === selectedOperator.key)}
+          allAirports={airports}
           stock={stockByKey[selectedOperator.stockKey ?? ""]}
           onClose={() => setSelectedOperator(null)}
+          onNavigateToGeo={(lat, lon, iata, name) => {
+            setSelectedOperator(null);
+            navigate("/geo-analytics/assessment", { state: { lat, lon, iata, name } });
+          }}
         />
       )}
     </section>

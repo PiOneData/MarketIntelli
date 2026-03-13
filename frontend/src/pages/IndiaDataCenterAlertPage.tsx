@@ -177,6 +177,263 @@ function SortIcon({ active, dir }: { active: boolean; dir: "asc" | "desc" }) {
 
 const PAGE_SIZE = 10;
 
+// ── DC Facility Detail Panel ───────────────────────────────────────────────────
+type DCDetailTab = "overview" | "specs" | "green_energy" | "developer";
+
+interface DCFacilityDetailPanelProps {
+  facility: DataCenterFacility;
+  onClose: () => void;
+  onViewDeveloper: (companyName: string) => void;
+}
+
+function DCFacilityDetailPanel({ facility, onClose, onViewDeveloper }: DCFacilityDetailPanelProps) {
+  const [tab, setTab] = useState<DCDetailTab>("overview");
+
+  const TABS: { id: DCDetailTab; label: string }[] = [
+    { id: "overview", label: "Overview" },
+    { id: "specs", label: "Specs" },
+    { id: "green_energy", label: "Green Energy" },
+    { id: "developer", label: "Developer" },
+  ];
+
+  const isGreen = facility.current_renewable_pct != null && facility.current_renewable_pct > 0;
+  const statusDisplay = STATUS_DISPLAY[facility.status] || facility.status;
+
+  const statusColor = facility.status === "operational" ? "#16a34a"
+    : facility.status === "under_construction" ? "#d97706"
+    : "#2563eb";
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed", inset: 0, background: "rgba(15,23,42,0.35)",
+          zIndex: 1000, backdropFilter: "blur(2px)",
+        }}
+      />
+      {/* Panel */}
+      <div style={{
+        position: "fixed", top: 0, right: 0, bottom: 0,
+        width: "560px", maxWidth: "100vw",
+        background: "#fff", zIndex: 1001,
+        display: "flex", flexDirection: "column",
+        boxShadow: "-8px 0 40px rgba(15,23,42,0.16)",
+        fontFamily: "var(--sans, 'DM Sans', system-ui, sans-serif)",
+        overflowY: "auto",
+      }}>
+        {/* Header */}
+        <div style={{
+          background: isGreen
+            ? "linear-gradient(130deg, #059669 0%, #10b981 60%, #34d399 100%)"
+            : (facility.status === "under_construction"
+              ? "linear-gradient(130deg, #b45309 0%, #d97706 60%, #f59e0b 100%)"
+              : "linear-gradient(130deg, #0d5f59 0%, #0d7a6e 60%, #0f9b8c 100%)"),
+          padding: "24px 24px 20px",
+          position: "relative", flexShrink: 0,
+        }}>
+          <button
+            onClick={onClose}
+            style={{
+              position: "absolute", top: "16px", right: "16px",
+              background: "rgba(255,255,255,0.18)", border: "none",
+              borderRadius: "8px", padding: "6px 10px", cursor: "pointer",
+              color: "#fff", fontSize: "14px", fontWeight: 700,
+            }}
+          >
+            ✕
+          </button>
+          <div style={{
+            display: "inline-block", padding: "2px 10px",
+            background: "rgba(255,255,255,0.25)", color: "#fff",
+            fontSize: "11px", fontWeight: 800, letterSpacing: "0.08em",
+            marginBottom: "8px",
+          }}>
+            DATA CENTER
+          </div>
+          <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#fff", margin: 0, lineHeight: 1.25 }}>
+            {facility.location_detail || facility.name}
+          </h2>
+          <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.8)", marginTop: "4px" }}>
+            {facility.company_name} · {facility.city}, {facility.state}
+          </div>
+          <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap" }}>
+            <span style={{
+              padding: "3px 10px", fontSize: "10px", fontWeight: 700,
+              background: "rgba(255,255,255,0.2)", color: "#fff",
+              letterSpacing: "0.05em",
+            }}>
+              {statusDisplay}
+            </span>
+            {facility.tier_level && (
+              <span style={{
+                padding: "3px 10px", fontSize: "10px", fontWeight: 700,
+                background: "rgba(255,255,255,0.2)", color: "#fff",
+              }}>
+                {facility.tier_level}
+              </span>
+            )}
+            {isGreen && (
+              <span style={{
+                padding: "3px 10px", fontSize: "10px", fontWeight: 700,
+                background: "rgba(255,255,255,0.2)", color: "#fff",
+              }}>
+                🌿 Green DC
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: "flex", borderBottom: "2px solid #f1f5f9", flexShrink: 0 }}>
+          {TABS.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              style={{
+                flex: 1, padding: "12px 4px", border: "none",
+                background: "transparent", cursor: "pointer",
+                fontSize: "11px", fontWeight: 700, textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                color: tab === t.id ? "#0d7a6e" : "#64748b",
+                borderBottom: tab === t.id ? "2px solid #0d7a6e" : "2px solid transparent",
+                marginBottom: "-2px", transition: "color 0.15s",
+                fontFamily: "inherit",
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab content */}
+        <div style={{ padding: "20px 24px", flex: 1, display: "flex", flexDirection: "column", gap: "16px" }}>
+
+          {/* Overview */}
+          {tab === "overview" && (
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                {[
+                  { lbl: "Facility Name", val: facility.name },
+                  { lbl: "Company", val: facility.company_name },
+                  { lbl: "City", val: facility.city },
+                  { lbl: "State", val: facility.state },
+                  { lbl: "Status", val: statusDisplay },
+                  { lbl: "Tier Level", val: facility.tier_level ?? "—" },
+                  { lbl: "Location Detail", val: facility.location_detail ?? "—" },
+                  { lbl: "Commissioning Date", val: facility.commissioning_date ?? "—" },
+                ].map(row => (
+                  <div key={row.lbl} style={{
+                    padding: "12px 14px", border: "1px solid #e5e7eb",
+                    background: "#f9fafb",
+                  }}>
+                    <div style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#94a3b8", marginBottom: "4px" }}>
+                      {row.lbl}
+                    </div>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: row.lbl === "Status" ? statusColor : "#111827" }}>{row.val}</div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Specs */}
+          {tab === "specs" && (
+            <>
+              {[
+                { lbl: "Power Capacity (MW)", val: `${facility.power_capacity_mw} MW` },
+                { lbl: "IT Load (MW)", val: facility.it_load_mw != null ? `${facility.it_load_mw} MW` : "—" },
+                { lbl: "Size (Sq Ft)", val: facility.size_sqft > 0 ? facility.size_sqft.toLocaleString() : "—" },
+                { lbl: "PUE Target", val: facility.pue_target != null ? String(facility.pue_target) : "—" },
+                { lbl: "PUE Actual", val: facility.pue_actual != null ? String(facility.pue_actual) : "—" },
+                { lbl: "Cooling Type", val: facility.cooling_type ?? "—" },
+                { lbl: "Water Consumption (KLD)", val: facility.water_consumption_kld != null ? String(facility.water_consumption_kld) : "—" },
+                { lbl: "Expansion Plans", val: facility.expansion_plans ?? "—" },
+                { lbl: "Compliance Status", val: facility.compliance_status ?? "—" },
+              ].map(row => (
+                <div key={row.lbl} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+                  padding: "12px 16px", border: "1px solid #e5e7eb", background: "#f9fafb", gap: "12px",
+                }}>
+                  <span style={{ fontSize: "13px", color: "#6b7280", flexShrink: 0 }}>{row.lbl}</span>
+                  <span style={{ fontSize: "13px", fontWeight: 600, color: "#111827", textAlign: "right" }}>{row.val}</span>
+                </div>
+              ))}
+            </>
+          )}
+
+          {/* Green Energy */}
+          {tab === "green_energy" && (
+            <>
+              {[
+                { lbl: "Current Renewable %", val: facility.current_renewable_pct != null ? `${facility.current_renewable_pct}%` : "—", highlight: isGreen },
+                { lbl: "Target Renewable %", val: facility.target_renewable_pct != null ? `${facility.target_renewable_pct}%` : "—", highlight: false },
+              ].map(row => (
+                <div key={row.lbl} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+                  padding: "12px 16px", border: "1px solid #e5e7eb", background: "#f9fafb", gap: "12px",
+                }}>
+                  <span style={{ fontSize: "13px", color: "#6b7280", flexShrink: 0 }}>{row.lbl}</span>
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: row.highlight ? "#16a34a" : "#111827", textAlign: "right" }}>{row.val}</span>
+                </div>
+              ))}
+              {facility.current_renewable_pct != null && facility.current_renewable_pct > 0 && (
+                <div style={{ padding: "14px 16px", border: "1px solid #d1fae5", background: "#f0fdf4" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 700, color: "#059669", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                    Renewable Energy Progress
+                  </div>
+                  <div style={{ height: "8px", background: "#d1fae5", borderRadius: "4px", overflow: "hidden" }}>
+                    <div style={{
+                      height: "100%",
+                      width: `${Math.min(100, facility.current_renewable_pct)}%`,
+                      background: "linear-gradient(90deg, #059669, #10b981)",
+                      borderRadius: "4px",
+                      transition: "width 0.6s ease",
+                    }} />
+                  </div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "6px" }}>
+                    {facility.current_renewable_pct}% of energy from renewables
+                    {facility.target_renewable_pct != null && ` · Target: ${facility.target_renewable_pct}%`}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Developer */}
+          {tab === "developer" && (
+            <>
+              <p style={{ fontSize: "13px", color: "#6b7280", margin: 0 }}>
+                Developer / company profile for this data center.
+              </p>
+              <div style={{ padding: "16px", border: "1px solid #e5e7eb", background: "#f9fafb" }}>
+                <div style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#94a3b8", marginBottom: "8px" }}>
+                  Developer / Company
+                </div>
+                <button
+                  onClick={() => onViewDeveloper(facility.company_name)}
+                  style={{
+                    fontSize: "15px", fontWeight: 700, color: "#0d7a6e",
+                    background: "none", border: "none", padding: 0,
+                    cursor: "pointer", textDecoration: "underline",
+                    fontFamily: "inherit", textAlign: "left",
+                  }}
+                >
+                  {facility.company_name} →
+                </button>
+                <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "6px" }}>
+                  Click the name above to view the full developer profile.
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
 function IndiaDataCenterAlertPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -188,6 +445,7 @@ function IndiaDataCenterAlertPage() {
   const [sortField, setSortField] = useState<SortField>("company_name");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedFacility, setSelectedFacility] = useState<DataCenterFacility | null>(null);
 
   // Fetch facilities from API
   const { data: facilities = [], isLoading, error } = useFacilities({ page_size: 500 });
@@ -620,8 +878,8 @@ function IndiaDataCenterAlertPage() {
                     <tr
                       key={f.id}
                       style={{ cursor: "pointer" }}
-                      title="View developer profile"
-                      onClick={() => navigate(`/projects/developer-profiles?company=${encodeURIComponent(f.company_name)}`)}
+                      title="View data center profile"
+                      onClick={() => setSelectedFacility(f)}
                       onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = "#f0fdfa"; }}
                       onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = ""; }}
                     >
@@ -723,6 +981,17 @@ function IndiaDataCenterAlertPage() {
       </div>
 
       </>}
+
+      {selectedFacility && (
+        <DCFacilityDetailPanel
+          facility={selectedFacility}
+          onClose={() => setSelectedFacility(null)}
+          onViewDeveloper={(companyName) => {
+            setSelectedFacility(null);
+            navigate(`/projects/developer-profiles?company=${encodeURIComponent(companyName)}`);
+          }}
+        />
+      )}
     </div>
   );
 }

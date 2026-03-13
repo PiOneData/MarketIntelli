@@ -95,6 +95,7 @@ interface MapViewProps {
     activeAssetType: AssetType;
     heatmapMode: 'off' | 'count' | 'mw';
     onViewDetail: (id: number) => void;
+    initialFlyTarget?: [number, number];
 }
 
 const getHeatmapColor = (val: number, max: number, mode: 'count' | 'mw' | 'off') => {
@@ -119,9 +120,9 @@ const getHeatmapColor = (val: number, max: number, mode: 'count' | 'mw' | 'off')
     }
 };
 
-export default function MapView({ features, selectedId, onSelectDC, filterState, filterCity, filterCompany, setFilterState, setFilterCity, setFilterCompany, activeAssetType, heatmapMode, onViewDetail }: MapViewProps) {
+export default function MapView({ features, selectedId, onSelectDC, filterState, filterCity, filterCompany, setFilterState, setFilterCity, setFilterCompany, activeAssetType, heatmapMode, onViewDetail, initialFlyTarget }: MapViewProps) {
     const [isLoading, setIsLoading] = useState(false);
-    const [flyTarget, setFlyTarget] = useState<[number, number] | null>(null);
+    const [flyTarget, setFlyTarget] = useState<[number, number] | null>(initialFlyTarget ?? null);
     const [statesGeoJson, setStatesGeoJson] = useState<unknown>(null);
     const [indiaOutlineGeoJson, setIndiaOutlineGeoJson] = useState<unknown>(null);
     const hasMounted = useRef(false);
