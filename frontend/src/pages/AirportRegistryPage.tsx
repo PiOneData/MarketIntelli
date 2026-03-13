@@ -115,12 +115,251 @@ function exportCsv(rows: AirportProperties[]) {
   URL.revokeObjectURL(url);
 }
 
+// ── Airport Detail Panel ───────────────────────────────────────────────────────
+type AirportDetailTab = "overview" | "operations" | "green_energy" | "developer";
+
+interface AirportDetailPanelProps {
+  airport: AirportProperties;
+  onClose: () => void;
+  onViewDeveloper: (operatorName: string) => void;
+}
+
+function AirportDetailPanel({ airport, onClose, onViewDeveloper }: AirportDetailPanelProps) {
+  const [tab, setTab] = useState<AirportDetailTab>("overview");
+
+  const TABS: { id: AirportDetailTab; label: string }[] = [
+    { id: "overview", label: "Overview" },
+    { id: "operations", label: "Operations" },
+    { id: "green_energy", label: "Green Energy" },
+    { id: "developer", label: "Developer" },
+  ];
+
+  const solar = solarMw(airport);
+  const pct = rePct(airport);
+  const aci = airport.green_energy?.carbon_neutral_aci_level;
+  const isUpcoming = UPCOMING_STATUSES.includes(airport.status ?? "");
+  const operator = airport.operations?.operator_concessionaire ?? "";
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed", inset: 0, background: "rgba(15,23,42,0.35)",
+          zIndex: 1000, backdropFilter: "blur(2px)",
+        }}
+      />
+      {/* Panel */}
+      <div style={{
+        position: "fixed", top: 0, right: 0, bottom: 0,
+        width: "560px", maxWidth: "100vw",
+        background: "#fff", zIndex: 1001,
+        display: "flex", flexDirection: "column",
+        boxShadow: "-8px 0 40px rgba(15,23,42,0.16)",
+        fontFamily: "var(--sans, 'DM Sans', system-ui, sans-serif)",
+        overflowY: "auto",
+      }}>
+        {/* Header */}
+        <div style={{
+          background: airport.is_notable_green
+            ? "linear-gradient(130deg, #059669 0%, #10b981 60%, #34d399 100%)"
+            : (isUpcoming
+              ? "linear-gradient(130deg, #7e22ce 0%, #a855f7 60%, #c084fc 100%)"
+              : "linear-gradient(130deg, #0284c7 0%, #0ea5e9 60%, #38bdf8 100%)"),
+          padding: "24px 24px 20px",
+          position: "relative", flexShrink: 0,
+        }}>
+          <button
+            onClick={onClose}
+            style={{
+              position: "absolute", top: "16px", right: "16px",
+              background: "rgba(255,255,255,0.18)", border: "none",
+              borderRadius: "8px", padding: "6px 10px", cursor: "pointer",
+              color: "#fff", fontSize: "14px", fontWeight: 700,
+            }}
+          >
+            ✕
+          </button>
+          {airport.iata_code && (
+            <div style={{
+              display: "inline-block", padding: "2px 10px",
+              background: "rgba(255,255,255,0.25)", color: "#fff",
+              fontSize: "12px", fontWeight: 800, letterSpacing: "0.1em",
+              marginBottom: "8px",
+            }}>
+              {airport.iata_code}
+            </div>
+          )}
+          <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#fff", margin: 0, lineHeight: 1.25 }}>
+            {airport.airport_name}
+          </h2>
+          <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.8)", marginTop: "4px" }}>
+            {airport.city}{airport.state ? `, ${airport.state}` : ""}
+          </div>
+          <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap" }}>
+            <span style={{
+              padding: "3px 10px", fontSize: "10px", fontWeight: 700,
+              background: "rgba(255,255,255,0.2)", color: "#fff",
+              letterSpacing: "0.05em",
+            }}>
+              {typeShort(airport.type)}
+            </span>
+            <span style={{
+              padding: "3px 10px", fontSize: "10px", fontWeight: 700,
+              background: "rgba(255,255,255,0.2)", color: "#fff",
+              letterSpacing: "0.05em",
+            }}>
+              {isUpcoming ? "UPCOMING" : (airport.status ?? "—")}
+            </span>
+            {airport.is_notable_green && (
+              <span style={{
+                padding: "3px 10px", fontSize: "10px", fontWeight: 700,
+                background: "rgba(255,255,255,0.2)", color: "#fff",
+              }}>
+                🌿 Green Certified
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: "flex", borderBottom: "2px solid #f1f5f9", flexShrink: 0 }}>
+          {TABS.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              style={{
+                flex: 1, padding: "12px 4px", border: "none",
+                background: "transparent", cursor: "pointer",
+                fontSize: "11px", fontWeight: 700, textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                color: tab === t.id ? "#0d7a6e" : "#64748b",
+                borderBottom: tab === t.id ? "2px solid #0d7a6e" : "2px solid transparent",
+                marginBottom: "-2px", transition: "color 0.15s",
+                fontFamily: "inherit",
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab content */}
+        <div style={{ padding: "20px 24px", flex: 1, display: "flex", flexDirection: "column", gap: "16px" }}>
+
+          {/* Overview */}
+          {tab === "overview" && (
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                {[
+                  { lbl: "Airport Name", val: airport.airport_name },
+                  { lbl: "IATA Code", val: airport.iata_code ?? "—" },
+                  { lbl: "City", val: airport.city ?? "—" },
+                  { lbl: "State / UT", val: airport.state ?? "—" },
+                  { lbl: "Type", val: typeShort(airport.type) },
+                  { lbl: "Status", val: isUpcoming ? "Upcoming" : (airport.status ?? "—") },
+                  { lbl: "Overall Rating", val: airport.overall_rating ?? "—" },
+                ].map(row => (
+                  <div key={row.lbl} style={{
+                    padding: "12px 14px", border: "1px solid #e5e7eb",
+                    background: "#f9fafb",
+                  }}>
+                    <div style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#94a3b8", marginBottom: "4px" }}>
+                      {row.lbl}
+                    </div>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#111827" }}>{row.val}</div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Operations */}
+          {tab === "operations" && (
+            <>
+              {[
+                { lbl: "Annual Passengers (MN)", val: airport.operations?.annual_passengers_mn != null ? String(airport.operations.annual_passengers_mn) : "—" },
+                { lbl: "Number of Runways", val: airport.operations?.no_of_runways != null ? String(airport.operations.no_of_runways) : "—" },
+                { lbl: "Power Consumption (MW)", val: airport.operations?.power_consumption_mw ?? "—" },
+                { lbl: "Operator / Concessionaire", val: operator || "—" },
+              ].map(row => (
+                <div key={row.lbl} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+                  padding: "12px 16px", border: "1px solid #e5e7eb", background: "#f9fafb", gap: "12px",
+                }}>
+                  <span style={{ fontSize: "13px", color: "#6b7280", flexShrink: 0 }}>{row.lbl}</span>
+                  <span style={{ fontSize: "13px", fontWeight: 600, color: "#111827", textAlign: "right" }}>{row.val}</span>
+                </div>
+              ))}
+            </>
+          )}
+
+          {/* Green Energy */}
+          {tab === "green_energy" && (
+            <>
+              {[
+                { lbl: "Solar Capacity Installed (MW)", val: solar > 0 ? `${solar.toFixed(2)} MW` : "—" },
+                { lbl: "Renewable Energy Coverage", val: pct > 0 ? `${pct}%` : "—" },
+                { lbl: "ACI Carbon Neutral Level", val: (aci && aci !== "Not designated") ? aci : "Not Designated" },
+                { lbl: "Green Energy Sources", val: airport.green_energy?.green_energy_sources ?? "—" },
+                { lbl: "Green Certified", val: airport.is_notable_green ? "Yes ✅" : "No" },
+              ].map(row => (
+                <div key={row.lbl} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+                  padding: "12px 16px", border: "1px solid #e5e7eb", background: "#f9fafb", gap: "12px",
+                }}>
+                  <span style={{ fontSize: "13px", color: "#6b7280", flexShrink: 0 }}>{row.lbl}</span>
+                  <span style={{ fontSize: "13px", fontWeight: 600, color: row.lbl === "Green Certified" && airport.is_notable_green ? "#16a34a" : "#111827", textAlign: "right" }}>{row.val}</span>
+                </div>
+              ))}
+            </>
+          )}
+
+          {/* Developer */}
+          {tab === "developer" && (
+            <>
+              <p style={{ fontSize: "13px", color: "#6b7280", margin: 0 }}>
+                Developer / operator profile for this airport.
+              </p>
+              <div style={{ padding: "16px", border: "1px solid #e5e7eb", background: "#f9fafb" }}>
+                <div style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#94a3b8", marginBottom: "8px" }}>
+                  Operator / Developer
+                </div>
+                {operator ? (
+                  <button
+                    onClick={() => onViewDeveloper(operator)}
+                    style={{
+                      fontSize: "15px", fontWeight: 700, color: "#0d7a6e",
+                      background: "none", border: "none", padding: 0,
+                      cursor: "pointer", textDecoration: "underline",
+                      fontFamily: "inherit", textAlign: "left",
+                    }}
+                  >
+                    {operator} →
+                  </button>
+                ) : (
+                  <span style={{ fontSize: "14px", color: "#94a3b8" }}>Not specified</span>
+                )}
+                <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "6px" }}>
+                  Click the name above to view the full developer profile.
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function AirportRegistryPage() {
   const navigate = useNavigate();
   const [airports, setAirports] = useState<AirportProperties[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"registry" | "map">("registry");
+  const [selectedAirport, setSelectedAirport] = useState<AirportProperties | null>(null);
 
   // Filters
   const [search, setSearch] = useState("");
@@ -358,13 +597,12 @@ export default function AirportRegistryPage() {
                     const pct = rePct(a);
                     const aci = a.green_energy?.carbon_neutral_aci_level;
                     const isUpcoming = UPCOMING_STATUSES.includes(a.status ?? "");
-                    const operatorStr = a.operations?.operator_concessionaire ?? "";
                     return (
                       <tr
                         key={a.slno}
                         style={{ borderBottom: "1px solid #f1f5f9", background: idx % 2 === 0 ? "#fff" : "#fafbfc", cursor: "pointer" }}
-                        title="View operator profile"
-                        onClick={() => navigate(`/projects/airport-developer-profiles?operator=${encodeURIComponent(operatorStr)}`)}
+                        title="View airport profile"
+                        onClick={() => setSelectedAirport(a)}
                         onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = "#f0fdfa"; }}
                         onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? "#fff" : "#fafbfc"; }}
                       >
@@ -506,6 +744,17 @@ export default function AirportRegistryPage() {
           </div>
         )}
       </div>
+
+      {selectedAirport && (
+        <AirportDetailPanel
+          airport={selectedAirport}
+          onClose={() => setSelectedAirport(null)}
+          onViewDeveloper={(operatorName) => {
+            setSelectedAirport(null);
+            navigate(`/projects/airport-developer-profiles?operator=${encodeURIComponent(operatorName)}`);
+          }}
+        />
+      )}
     </div>
   );
 }

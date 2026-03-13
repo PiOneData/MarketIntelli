@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Layers } from 'lucide-react';
 import MapView from './MapView';
 import Sidebar from './Sidebar';
@@ -7,15 +8,32 @@ import { getDCId } from '../../lib/dcUtils';
 import AssetDetailPage from '../AssetDetailPage';
 import './dc-assessment.css';
 
+interface AirportNavState {
+    lat?: number;
+    lon?: number;
+    iata?: string;
+    name?: string;
+}
+
 // Header height: nav-top (68px) + power ticker (32px) = 100px
 const HEADER_HEIGHT = 100;
 
 export default function DCAssessmentPage() {
+    const routerLocation = useLocation();
+    const navState = (routerLocation.state ?? null) as AirportNavState | null;
+
     const [dcFeatures, setDcFeatures] = useState<AssetFeature[]>([]);
     const [airportFeatures, setAirportFeatures] = useState<AssetFeature[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const [activeAssetType, setActiveAssetType] = useState<AssetType>('datacenter');
+    const initialFlyTarget: [number, number] | undefined =
+        navState?.lat != null && navState?.lon != null
+            ? [navState.lat, navState.lon]
+            : undefined;
+
+    const [activeAssetType, setActiveAssetType] = useState<AssetType>(
+        navState?.lat != null ? 'airport' : 'datacenter'
+    );
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [filterState, setFilterState] = useState('');
     const [filterCity, setFilterCity] = useState('');
@@ -37,6 +55,15 @@ export default function DCAssessmentPage() {
             setLoading(false);
         });
     }, []);
+
+    // Auto-select airport when navigated from developer profile Key Airports
+    useEffect(() => {
+        if (!navState?.iata || airportFeatures.length === 0) return;
+        const match = airportFeatures.find(
+            f => f.properties.iata_code === navState.iata
+        );
+        if (match) setSelectedId(getDCId(match));
+    }, [airportFeatures]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const features = activeAssetType === 'datacenter' ? dcFeatures : airportFeatures;
 
@@ -100,6 +127,7 @@ export default function DCAssessmentPage() {
                         activeAssetType={activeAssetType}
                         heatmapMode={heatmapMode}
                         onViewDetail={handleViewDetail}
+                        initialFlyTarget={initialFlyTarget}
                     />
 
                     {/* ── Heatmap mode toggle (floating, top-right) ── */}
