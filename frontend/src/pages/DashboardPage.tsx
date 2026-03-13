@@ -659,16 +659,9 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* ═══ RX² FRAMEWORK ══════════════════════════════════════════════════ */}
+      {/* ═══ QUICK ASSESSMENT ════════════════════════════════════════════════ */}
       <section className="rx2-section" id="rx2">
         <div className="wrap">
-          <div className="rx2-hero">
-            <div className="rx2-badge">RX² · REWARDS Framework · Smart Energy Assessment</div>
-            <h2>RX² <span className="t">REWARDS</span><br />FRAMEWORK.</h2>
-            <p className="rx2-full">Rigorous Power Assessment &amp; Renewable Energy Transition — An Innovative Framework for Smart Energy Transition</p>
-            <p className="rx2-desc">A structured, standards-backed methodology to assess, size, simulate and deploy renewable energy systems for power-critical infrastructure. Two tiers deliver actionable intelligence at every stage of decision-making.</p>
-          </div>
-
           <div className="rx2-tiers" style={{ gridTemplateColumns: "1fr" }}>
             <Link to="/geo-analytics/assessment" className="rx2-tier rx2-tier--link">
               <div className="rx2-tier-label">Satellite Intelligence · Real-Time Assessment</div>
@@ -684,24 +677,6 @@ export default function DashboardPage() {
               <span className="rx2-tier-tag tag-quick">Geo-Spatial · Market Intelligence · Online</span>
               <span className="rx2-tier-cta">Open Assessment →</span>
             </Link>
-          </div>
-
-          <div className="rx2-phases-wrap">
-            <div className="rx2-phase-title">REWARD² — 7 Assessment Phases</div>
-            <div className="rx2-phase-grid">
-              {RX2_PHASES.map((phase, i) => (
-                <div key={i} className={`phase-card${phase.warn ? " warn" : ""}`}>
-                  <span className="phase-card-letter">{phase.letter}</span>
-                  <div className="phase-card-name">{phase.name}</div>
-                  <div className="phase-card-desc">{phase.desc}</div>
-                  <span className={`phase-card-grade ${phase.gradeClass}`}>{phase.grade}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rx2-cta-row">
-            <Link to="/geo-analytics/assessment" className="rx2-btn">Access RX² Framework →</Link>
           </div>
         </div>
       </section>

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, CircleMarker, Tooltip } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -116,6 +117,7 @@ function exportCsv(rows: AirportProperties[]) {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function AirportRegistryPage() {
+  const navigate = useNavigate();
   const [airports, setAirports] = useState<AirportProperties[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"registry" | "map">("registry");
@@ -356,8 +358,16 @@ export default function AirportRegistryPage() {
                     const pct = rePct(a);
                     const aci = a.green_energy?.carbon_neutral_aci_level;
                     const isUpcoming = UPCOMING_STATUSES.includes(a.status ?? "");
+                    const operatorStr = a.operations?.operator_concessionaire ?? "";
                     return (
-                      <tr key={a.slno} style={{ borderBottom: "1px solid #f1f5f9", background: idx % 2 === 0 ? "#fff" : "#fafbfc" }}>
+                      <tr
+                        key={a.slno}
+                        style={{ borderBottom: "1px solid #f1f5f9", background: idx % 2 === 0 ? "#fff" : "#fafbfc", cursor: "pointer" }}
+                        title="View operator profile"
+                        onClick={() => navigate(`/projects/airport-developer-profiles?operator=${encodeURIComponent(operatorStr)}`)}
+                        onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = "#f0fdfa"; }}
+                        onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? "#fff" : "#fafbfc"; }}
+                      >
                         <td style={{ padding: "10px 12px", maxWidth: 280 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             {a.is_notable_green && (

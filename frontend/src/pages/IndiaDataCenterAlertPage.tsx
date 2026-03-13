@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import DataCenterHeatMap from "../components/DataCenterHeatMap";
 import SubstationView from "../components/SubstationView";
 import { useFacilities, useFacilityStats } from "../hooks/useDataCenters";
@@ -96,203 +97,7 @@ function toMapFormat(facilities: DataCenterFacility[]) {
   }));
 }
 
-type SortField = "date_added" | "company_name" | "city" | "state" | "power_capacity_mw" | "size_sqft" | "status";
-
-/* ------------------------------------------------------------------ */
-/*  State Analytics Panel                                               */
-/* ------------------------------------------------------------------ */
-
-interface StateAnalyticsData {
-  state: string;
-  count: number;
-  powerMW: number;
-  powerCount: number;
-}
-
-// Top-5 accent colours (rank 1–5); rest are neutral
-const TOP5_ACCENTS = ["#0f766e", "#0369a1", "#7c3aed", "#b45309", "#be123c"];
-
-function TopStatesAnalytics({ facilities }: { facilities: DataCenterFacility[] }) {
-  const [expanded, setExpanded] = useState(false);
-
-  const stateMap: Record<string, StateAnalyticsData> = {};
-  for (const f of facilities) {
-    const state = normalizeState(f.state);
-    if (!stateMap[state]) stateMap[state] = { state, count: 0, powerMW: 0, powerCount: 0 };
-    stateMap[state].count += 1;
-    if (f.power_capacity_mw && f.power_capacity_mw > 0) {
-      stateMap[state].powerMW += f.power_capacity_mw;
-      stateMap[state].powerCount += 1;
-    }
-  }
-
-  // Sort by capacity descending (states with 0 MW go to bottom, sorted by count)
-  const sorted = Object.values(stateMap).sort((a, b) =>
-    b.powerMW !== a.powerMW ? b.powerMW - a.powerMW : b.count - a.count
-  );
-  const maxMW = sorted[0]?.powerMW ?? 1;
-  const TOP_N = 5;
-  const visibleRows = expanded ? sorted : sorted.slice(0, TOP_N);
-  const hiddenCount = sorted.length - TOP_N;
-
-  if (sorted.length === 0) return null;
-
-  const renderRow = (s: StateAnalyticsData, i: number) => {
-    const isTop5 = i < TOP_N;
-    const accent = isTop5 ? (TOP5_ACCENTS[i] ?? "#0f766e") : "#64748b";
-    const barPct = maxMW > 0 && s.powerMW > 0 ? Math.max(2, Math.round((s.powerMW / maxMW) * 100)) : 0;
-
-    return (
-      <div
-        key={s.state}
-        style={{
-          display: "grid",
-          gridTemplateColumns: "20px 1fr auto",
-          alignItems: "center",
-          gap: "10px",
-          padding: "7px 16px",
-          borderBottom: "1px solid #f1f5f9",
-          background: isTop5 && i === 0 ? "#f0fdfa" : "#fff",
-        }}
-      >
-        {/* Rank number */}
-        <span style={{
-          fontSize: "11px", fontWeight: 700,
-          color: isTop5 ? accent : "#cbd5e1",
-          textAlign: "right",
-          fontVariantNumeric: "tabular-nums",
-        }}>
-          {i + 1}
-        </span>
-
-        {/* State + bar */}
-        <div style={{ minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "3px" }}>
-            <span style={{
-              fontSize: "12px", fontWeight: isTop5 ? 700 : 500,
-              color: isTop5 ? "#0f172a" : "#475569",
-              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-            }}>
-              {s.state}
-            </span>
-            <span style={{
-              fontSize: "11px", color: "#94a3b8", marginLeft: "8px", whiteSpace: "nowrap",
-              fontVariantNumeric: "tabular-nums",
-            }}>
-              {s.count} DC
-            </span>
-          </div>
-          {/* Capacity bar */}
-          <div style={{
-            height: "4px", background: "#f1f5f9", borderRadius: "999px", overflow: "hidden",
-          }}>
-            {barPct > 0 && (
-              <div style={{
-                height: "100%", width: `${barPct}%`,
-                background: isTop5
-                  ? `linear-gradient(90deg, ${accent}cc, ${accent})`
-                  : "#cbd5e1",
-                borderRadius: "999px",
-              }} />
-            )}
-          </div>
-        </div>
-
-        {/* MW value */}
-        <div style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-          <span style={{
-            fontSize: "12px", fontWeight: 700,
-            color: s.powerMW > 0 ? (isTop5 ? accent : "#475569") : "#cbd5e1",
-            fontVariantNumeric: "tabular-nums",
-          }}>
-            {s.powerMW > 0
-              ? `${s.powerMW >= 1000
-                  ? (s.powerMW / 1000).toFixed(2) + " GW"
-                  : s.powerMW % 1 === 0
-                    ? s.powerMW.toFixed(0) + " MW"
-                    : s.powerMW.toFixed(2) + " MW"}`
-              : "—"}
-          </span>
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <div style={{
-      marginBottom: "24px",
-      border: "1px solid #e2e8f0",
-      borderRadius: "0.75rem",
-      overflow: "hidden",
-      background: "#fff",
-      boxShadow: "0 1px 8px rgba(0,0,0,0.06)",
-    }}>
-      {/* Header */}
-      <div style={{
-        padding: "12px 16px",
-        background: "#f8fafc",
-        borderBottom: "1px solid #e2e8f0",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <span style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>By State</span>
-          <span style={{
-            background: "#0f766e", color: "#fff",
-            fontSize: "11px", fontWeight: 700,
-            padding: "1px 7px", borderRadius: "999px",
-          }}>
-            {sorted.length}
-          </span>
-        </div>
-        <span style={{ fontSize: "11px", color: "#94a3b8" }}>
-          Capacity where available · sorted by MW
-        </span>
-      </div>
-
-      {/* Rows */}
-      <div style={{ padding: "6px 0" }}>
-        {visibleRows.map((s, i) => renderRow(s, i))}
-      </div>
-
-      {/* Expand / Collapse */}
-      {hiddenCount > 0 && (
-        <div style={{ borderTop: "1px solid #f1f5f9" }}>
-          <button
-            onClick={() => setExpanded((v) => !v)}
-            style={{
-              width: "100%", padding: "9px 16px",
-              background: "none", border: "none", cursor: "pointer",
-              fontSize: "12px", fontWeight: 600,
-              color: "#0f766e", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-            }}
-          >
-            {expanded ? (
-              <>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-                Show less
-              </>
-            ) : (
-              <>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                Show {hiddenCount} more {hiddenCount === 1 ? "state" : "states"}
-              </>
-            )}
-          </button>
-        </div>
-      )}
-
-      {/* Footer */}
-      <div style={{
-        padding: "8px 16px",
-        borderTop: "1px solid #f1f5f9",
-        background: "#fafbfc",
-        fontSize: "10px", color: "#94a3b8",
-      }}>
-        MW totals reflect disclosed capacity only · {sorted.filter(s => s.powerCount > 0).length} of {sorted.length} states have capacity data
-      </div>
-    </div>
-  );
-}
+type SortField = "company_name" | "city" | "state" | "power_capacity_mw" | "size_sqft" | "status" | "current_renewable_pct";
 
 const TOP5_KPI_ACCENTS = ["#0f766e", "#0369a1", "#7c3aed", "#b45309", "#be123c"];
 
@@ -373,14 +178,15 @@ function SortIcon({ active, dir }: { active: boolean; dir: "asc" | "desc" }) {
 const PAGE_SIZE = 10;
 
 function IndiaDataCenterAlertPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [form, setForm] = useState(EMPTY_FORM);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [filters, setFilters] = useState({ state: "", city: "", company: "", power: "" });
+  const [filters, setFilters] = useState({ state: "", city: "", company: "", power: "", greenOnly: false });
   const [activeTab, setActiveTab] = useState<"registry" | "map" | "substations">("registry");
   const [stocksByCompany, setStocksByCompany] = useState<Record<string, DcStock>>({});
-  const [sortField, setSortField] = useState<SortField>("date_added");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [sortField, setSortField] = useState<SortField>("company_name");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [currentPage, setCurrentPage] = useState(1);
 
   // Fetch facilities from API
@@ -408,6 +214,7 @@ function IndiaDataCenterAlertPage() {
         if (filters.power === "50-100" && (mw < 50 || mw > 100)) return false;
         if (filters.power === ">100" && mw <= 100) return false;
       }
+      if (filters.greenOnly && !(f.current_renewable_pct != null && f.current_renewable_pct > 0)) return false;
       return true;
     });
     return [...data].sort((a, b) => {
@@ -480,9 +287,8 @@ function IndiaDataCenterAlertPage() {
 
   const handleExportCSV = async () => {
     const allFacilities = await listFacilities({ page_size: 500 });
-    const headers = ["Date Added", "Company/Group", "City", "Location", "State", "Power (MW)", "Size (Sq. Ft.)", "Status"];
+    const headers = ["Company/Group", "City", "Location", "State", "Power (MW)", "Size (Sq. Ft.)", "Status", "RE%"];
     const rows = allFacilities.map((f) => [
-      f.date_added ? f.date_added.split("T")[0] : "",
       f.company_name,
       f.city,
       f.location_detail || f.name,
@@ -490,6 +296,7 @@ function IndiaDataCenterAlertPage() {
       f.power_capacity_mw,
       f.size_sqft,
       STATUS_DISPLAY[f.status] || f.status,
+      f.current_renewable_pct != null ? f.current_renewable_pct : "",
     ]);
     const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -502,7 +309,7 @@ function IndiaDataCenterAlertPage() {
   };
 
   const clearFilters = () => {
-    setFilters({ state: "", city: "", company: "", power: "" });
+    setFilters({ state: "", city: "", company: "", power: "", greenOnly: false });
     setCurrentPage(1);
   };
 
@@ -581,10 +388,13 @@ function IndiaDataCenterAlertPage() {
           <span className="india-dc-stat-value">{Math.round(stats?.total_power_mw ?? 0)} MW</span>
           <span className="india-dc-stat-label">Total Power Capacity</span>
         </div>
+        <div className="india-dc-stat-card" style={{ borderTop: "3px solid #16a34a" }}>
+          <span className="india-dc-stat-value" style={{ color: "#16a34a" }}>
+            {facilities.filter(f => f.current_renewable_pct != null && f.current_renewable_pct > 0).length}
+          </span>
+          <span className="india-dc-stat-label">Green DCs (RE% reported)</span>
+        </div>
       </div>
-
-      {/* Top 5 States Analytics */}
-      <TopStatesAnalytics facilities={facilities} />
 
 
       {/* Add Data Center Modal */}
@@ -721,6 +531,16 @@ function IndiaDataCenterAlertPage() {
               <option value=">100">&gt; 100 MW</option>
             </select>
           </div>
+          <div className="india-dc-field" style={{ justifyContent: "center" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: 600, color: "#16a34a", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={filters.greenOnly}
+                onChange={(e) => { setFilters({ ...filters, greenOnly: e.target.checked }); setCurrentPage(1); }}
+              />
+              Green DC Only
+            </label>
+          </div>
           <div className="india-dc-field india-dc-field--action">
             <button type="button" className="india-dc-btn india-dc-btn--outline" onClick={clearFilters}>Clear Filters</button>
           </div>
@@ -752,7 +572,6 @@ function IndiaDataCenterAlertPage() {
               <tr>
                 {(
                   [
-                    { label: "Date Added", field: "date_added" },
                     { label: "Company / Group", field: "company_name" },
                     { label: "City", field: "city" },
                     { label: "Location", field: null },
@@ -760,6 +579,7 @@ function IndiaDataCenterAlertPage() {
                     { label: "Power (MW)", field: "power_capacity_mw" },
                     { label: "Size (Sq. Ft.)", field: "size_sqft" },
                     { label: "Status", field: "status" },
+                    { label: "RE%", field: "current_renewable_pct" },
                     { label: "Stock", field: null },
                   ] as { label: string; field: SortField | null }[]
                 ).map(({ label, field }) =>
@@ -794,9 +614,17 @@ function IndiaDataCenterAlertPage() {
                 paginatedData.map((f) => {
                   const stock = stocksByCompany[f.company_name];
                   const hasStock = !!(stock && !stock.error && stock.price != null);
+                  const rePct = f.current_renewable_pct;
+                  const isGreen = rePct != null && rePct > 0;
                   return (
-                    <tr key={f.id}>
-                      <td>{f.date_added ? f.date_added.split("T")[0] : ""}</td>
+                    <tr
+                      key={f.id}
+                      style={{ cursor: "pointer" }}
+                      title="View developer profile"
+                      onClick={() => navigate(`/projects/developer-profiles?company=${encodeURIComponent(f.company_name)}`)}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = "#f0fdfa"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = ""; }}
+                    >
                       <td className="india-dc-table-company">{f.company_name}</td>
                       <td>{f.city}</td>
                       <td>{f.location_detail || f.name}</td>
@@ -808,7 +636,17 @@ function IndiaDataCenterAlertPage() {
                           {STATUS_DISPLAY[f.status] || f.status}
                         </span>
                       </td>
-                      <td>
+                      <td style={{ textAlign: "right" }}>
+                        {isGreen ? (
+                          <span style={{ fontWeight: 700, color: "#16a34a", display: "inline-flex", alignItems: "center", gap: "3px" }}>
+                            {rePct! >= 50 && <span title="High green energy">🌿</span>}
+                            {rePct}%
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: "12px", color: "#94a3b8" }}>—</span>
+                        )}
+                      </td>
+                      <td onClick={(e) => e.stopPropagation()}>
                         {hasStock && stock ? (
                           <a
                             href={`https://finance.yahoo.com/quote/${encodeURIComponent(stock.ticker)}/`}
