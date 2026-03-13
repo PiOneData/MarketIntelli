@@ -573,87 +573,92 @@ function IndiaDataCenterAlertPage() {
 
   if (error) {
     return (
-      <div className="india-dc-page">
-        <div className="india-dc-header">
-          <h2>India Data Center Registry</h2>
-          <p style={{ color: "#ef4444" }}>Failed to load data centers. Please try again later.</p>
+      <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "var(--sans, 'DM Sans', system-ui, sans-serif)" }}>
+        <div style={{ background: "#fff", borderBottom: "1px solid #e2e8f0", padding: "24px 32px" }}>
+          <div style={{ maxWidth: 1400, margin: "0 auto" }}>
+            <h1 style={{ fontSize: "26px", fontWeight: 800, color: "#0f172a", margin: 0 }}>Data Center Registry</h1>
+            <p style={{ color: "#ef4444", marginTop: "8px", fontSize: "13px" }}>Failed to load data centers. Please try again later.</p>
+          </div>
         </div>
       </div>
     );
   }
 
+  const hasFilters = !!(filters.state || filters.city || filters.company || filters.power || filters.greenOnly);
+
   return (
-    <div className="india-dc-page">
-      <div className="india-dc-header">
-        <h2>India Data Center Registry</h2>
-        <p>Track and monitor data center developments across India. Get real-time alerts on new facilities, expansions, and power capacity changes.</p>
-      </div>
+    <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "var(--sans, 'DM Sans', system-ui, sans-serif)" }}>
 
-      {/* Tab Navigation */}
-      <div className="india-dc-tabs">
-        <button
-          className={`india-dc-tab ${activeTab === "registry" ? "india-dc-tab--active" : ""}`}
-          onClick={() => setActiveTab("registry")}
-        >
-          <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-            <path fillRule="evenodd" d="M5 4a3 3 0 00-3 3v6a3 3 0 003 3h10a3 3 0 003-3V7a3 3 0 00-3-3H5zm-1 9v-1h5v2H5a1 1 0 01-1-1zm7 1h4a1 1 0 001-1v-1h-5v2zm0-4h5V8h-5v2zM9 8H4v2h5V8z" clipRule="evenodd" />
-          </svg>
-          Registry
-        </button>
-        <button
-          className={`india-dc-tab ${activeTab === "map" ? "india-dc-tab--active" : ""}`}
-          onClick={() => setActiveTab("map")}
-        >
-          <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-            <path fillRule="evenodd" d="M12 1.586l-4 4v12.828l4-4V1.586zM3.707 3.293A1 1 0 002 4v10a1 1 0 00.293.707L6 18.414V5.586L3.707 3.293zM14 5.586v12.828l2.293-2.293A1 1 0 0018 16V6a1 1 0 00-.293-.707L14 1.586v4z" clipRule="evenodd" />
-          </svg>
-          Map View
-        </button>
-        <button
-          className={`india-dc-tab ${activeTab === "substations" ? "india-dc-tab--active" : ""}`}
-          onClick={() => setActiveTab("substations")}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-          </svg>
-          Substation Map
-        </button>
-      </div>
+      {/* ── White Header Bar ── */}
+      <div style={{ background: "#fff", borderBottom: "1px solid #e2e8f0", padding: "24px 32px" }}>
+        <div style={{ maxWidth: 1400, margin: "0 auto" }}>
 
-      {/* Map View */}
-      {activeTab === "map" && (
-        <DataCenterHeatMap dataCenters={mapData} />
-      )}
+          {/* Title row */}
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#0d7a6e", marginBottom: "6px" }}>
+                India Infrastructure Registry
+              </div>
+              <h1 style={{ fontSize: "26px", fontWeight: 800, color: "#0f172a", margin: 0, letterSpacing: "-0.02em" }}>
+                Data Center Registry
+              </h1>
+              <p style={{ fontSize: "13px", color: "#64748b", marginTop: "4px" }}>
+                {facilities.length} data centers across India — operational, under construction, and planned
+              </p>
+            </div>
+            <button
+              onClick={handleExportCSV}
+              style={{ padding: "8px 18px", background: "#0d7a6e", color: "#fff", border: "none", fontSize: "12px", fontWeight: 700, cursor: "pointer", letterSpacing: "0.04em" }}
+            >
+              ↓ Export CSV ({filteredData.length})
+            </button>
+          </div>
 
-      {/* Substation Map View */}
-      {activeTab === "substations" && <SubstationView />}
+          {/* Stats Cards */}
+          <div className="india-dc-stats">
+            <div className="india-dc-stat-card">
+              <span className="india-dc-stat-value">{stats?.total_facilities ?? facilities.length}</span>
+              <span className="india-dc-stat-label">Total Data Centers</span>
+            </div>
+            <div className="india-dc-stat-card india-dc-stat-card--accent">
+              <span className="india-dc-stat-value">{Object.keys(stats?.by_company ?? {}).length}</span>
+              <span className="india-dc-stat-label">Companies</span>
+            </div>
+            <CompactTopStates facilities={facilities} />
+            <div className="india-dc-stat-card india-dc-stat-card--success">
+              <span className="india-dc-stat-value">{Math.round(stats?.total_power_mw ?? 0)} MW</span>
+              <span className="india-dc-stat-label">Total Power Capacity</span>
+            </div>
+          </div>
 
-      {/* Registry View */}
-      {activeTab === "registry" && <>
-
-      {/* Stats Cards */}
-      <div className="india-dc-stats">
-        <div className="india-dc-stat-card">
-          <span className="india-dc-stat-value">{stats?.total_facilities ?? facilities.length}</span>
-          <span className="india-dc-stat-label">Total Data Centers</span>
-        </div>
-        <div className="india-dc-stat-card india-dc-stat-card--accent">
-          <span className="india-dc-stat-value">{Object.keys(stats?.by_company ?? {}).length}</span>
-          <span className="india-dc-stat-label">Companies</span>
-        </div>
-        <CompactTopStates facilities={facilities} />
-        <div className="india-dc-stat-card india-dc-stat-card--success">
-          <span className="india-dc-stat-value">{Math.round(stats?.total_power_mw ?? 0)} MW</span>
-          <span className="india-dc-stat-label">Total Power Capacity</span>
-        </div>
-        <div className="india-dc-stat-card" style={{ borderTop: "3px solid #16a34a" }}>
-          <span className="india-dc-stat-value" style={{ color: "#16a34a" }}>
-            {facilities.filter(f => f.current_renewable_pct != null && f.current_renewable_pct > 0).length}
-          </span>
-          <span className="india-dc-stat-label">Green DCs (RE% reported)</span>
+          {/* Tab Navigation */}
+          <div style={{ display: "flex", gap: 0, marginTop: "20px", borderBottom: "2px solid #e2e8f0" }}>
+            {(["registry", "map", "substations"] as const).map(tab => (
+              <button key={tab} onClick={() => setActiveTab(tab)} style={{
+                padding: "8px 20px", fontSize: "12px", fontWeight: 700, textTransform: "uppercase",
+                letterSpacing: "0.06em", border: "none", background: "transparent", cursor: "pointer",
+                color: activeTab === tab ? "#0d7a6e" : "#64748b",
+                borderBottom: activeTab === tab ? "2px solid #0d7a6e" : "2px solid transparent",
+                marginBottom: "-2px", fontFamily: "inherit",
+              }}>
+                {tab === "registry" ? "Registry" : tab === "map" ? "Map View" : "Substation Map"}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
+      {/* ── Content Area ── */}
+      <div style={{ maxWidth: 1400, margin: "0 auto", padding: "24px 32px" }}>
+
+        {/* Map View */}
+        {activeTab === "map" && <DataCenterHeatMap dataCenters={mapData} />}
+
+        {/* Substation Map View */}
+        {activeTab === "substations" && <SubstationView />}
+
+        {/* Registry View */}
+        {activeTab === "registry" && <>
 
       {/* Add Data Center Modal */}
       {showAddModal && (
@@ -746,86 +751,65 @@ function IndiaDataCenterAlertPage() {
         </div>
       )}
 
-      {/* Filters */}
-      <div className="india-dc-filters">
-        <h3>Filters</h3>
-        <div className="india-dc-filters-row">
-          <div className="india-dc-field">
-            <label htmlFor="filter-state">Filter by State</label>
-            <select id="filter-state" name="state" value={filters.state} onChange={handleFilterChange}>
-              <option value="">All States</option>
-              {uniqueStates.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </div>
-          <div className="india-dc-field">
-            <label htmlFor="filter-city">Filter by City</label>
-            <select id="filter-city" name="city" value={filters.city} onChange={handleFilterChange}>
-              <option value="">All Cities</option>
-              {uniqueCities.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-          <div className="india-dc-field">
-            <label htmlFor="filter-company">Filter by Company</label>
-            <input
-              id="filter-company"
-              name="company"
-              type="text"
-              placeholder="Search company..."
-              value={filters.company}
-              onChange={handleFilterChange}
-            />
-          </div>
-          <div className="india-dc-field">
-            <label htmlFor="filter-power">Power Capacity</label>
-            <select id="filter-power" name="power" value={filters.power} onChange={handleFilterChange}>
-              <option value="">All Power Ranges</option>
-              <option value="<10">&lt; 10 MW</option>
-              <option value="10-50">10 – 50 MW</option>
-              <option value="50-100">50 – 100 MW</option>
-              <option value=">100">&gt; 100 MW</option>
-            </select>
-          </div>
-          <div className="india-dc-field" style={{ justifyContent: "center" }}>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: 600, color: "#16a34a", cursor: "pointer" }}>
-              <input
-                type="checkbox"
-                checked={filters.greenOnly}
-                onChange={(e) => { setFilters({ ...filters, greenOnly: e.target.checked }); setCurrentPage(1); }}
-              />
-              Green DC Only
-            </label>
-          </div>
-          <div className="india-dc-field india-dc-field--action">
-            <button type="button" className="india-dc-btn india-dc-btn--outline" onClick={clearFilters}>Clear Filters</button>
-          </div>
-        </div>
+      {/* Compact inline filter bar */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center", marginBottom: "16px", background: "#fff", padding: "14px 16px", border: "1px solid #e2e8f0" }}>
+        <input
+          type="text"
+          placeholder="Search company, city…"
+          name="company"
+          value={filters.company}
+          onChange={handleFilterChange}
+          style={{ flex: "1 1 200px", padding: "7px 12px", border: "1px solid #e2e8f0", fontSize: "13px", outline: "none", fontFamily: "inherit" }}
+        />
+        <select name="state" value={filters.state} onChange={handleFilterChange}
+          style={{ padding: "7px 10px", border: "1px solid #e2e8f0", fontSize: "12px", fontFamily: "inherit", background: "#fff" }}>
+          <option value="">All States</option>
+          {uniqueStates.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+        <select name="city" value={filters.city} onChange={handleFilterChange}
+          style={{ padding: "7px 10px", border: "1px solid #e2e8f0", fontSize: "12px", fontFamily: "inherit", background: "#fff" }}>
+          <option value="">All Cities</option>
+          {uniqueCities.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+        <select name="power" value={filters.power} onChange={handleFilterChange}
+          style={{ padding: "7px 10px", border: "1px solid #e2e8f0", fontSize: "12px", fontFamily: "inherit", background: "#fff" }}>
+          <option value="">All Power Ranges</option>
+          <option value="<10">&lt; 10 MW</option>
+          <option value="10-50">10 – 50 MW</option>
+          <option value="50-100">50 – 100 MW</option>
+          <option value=">100">&gt; 100 MW</option>
+        </select>
+        <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: 600, color: "#16a34a", cursor: "pointer" }}>
+          <input
+            type="checkbox"
+            checked={filters.greenOnly}
+            onChange={(e) => { setFilters({ ...filters, greenOnly: e.target.checked }); setCurrentPage(1); }}
+          />
+          Green DC Only
+        </label>
+        {hasFilters && (
+          <button onClick={clearFilters} style={{ padding: "7px 12px", fontSize: "11px", border: "1px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", fontFamily: "inherit", color: "#475569" }}>
+            ✕ Clear
+          </button>
+        )}
+        <button
+          onClick={() => setShowAddModal(true)}
+          style={{ padding: "7px 14px", background: "#0d7a6e", color: "#fff", border: "none", fontSize: "12px", fontWeight: 700, cursor: "pointer", letterSpacing: "0.04em", fontFamily: "inherit" }}
+        >
+          + Add
+        </button>
+        <span style={{ fontSize: "11px", color: "#94a3b8", marginLeft: "auto" }}>
+          {isLoading ? "Loading…" : `${filteredData.length} of ${facilities.length} data centers`}
+        </span>
       </div>
 
-      {/* Data Center Registry Table */}
-      <div className="india-dc-table-section">
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "4px" }}>
-          <h3 style={{ margin: 0, color: "var(--color-primary-dark)" }}>Data Center Registry</h3>
-          <div style={{ display: "flex", gap: "8px", flexShrink: 0, marginLeft: "12px" }}>
-            <button
-              className="india-dc-btn india-dc-btn--primary"
-              onClick={() => setShowAddModal(true)}
-            >
-              + Add Data Center
-            </button>
-            <button type="button" className="india-dc-btn india-dc-btn--info" onClick={handleExportCSV}>
-              Export to CSV
-            </button>
-          </div>
-        </div>
-        <p className="india-dc-table-count">
-          {isLoading ? "Loading..." : `${filteredData.length} of ${facilities.length} data centers — page ${currentPage} of ${totalPages}`}
-        </p>
-        <div className="india-dc-table-wrapper">
-          <table className="india-dc-table">
+      {/* Table */}
+      <div style={{ background: "#fff", border: "1px solid #e2e8f0", overflowX: "auto" }}>
+        <table className="india-dc-table">
             <thead>
               <tr>
                 {(
@@ -935,52 +919,54 @@ function IndiaDataCenterAlertPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
         {totalPages > 1 && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "16px", flexWrap: "wrap" }}>
-            <button
-              className="india-dc-btn india-dc-btn--outline"
-              onClick={() => setCurrentPage(1)}
-              disabled={currentPage === 1}
-            >«</button>
-            <button
-              className="india-dc-btn india-dc-btn--outline"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            >‹ Prev</button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
-              .reduce<(number | "…")[]>((acc, p, idx, arr) => {
-                if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("…");
-                acc.push(p);
-                return acc;
-              }, [])
-              .map((p, idx) =>
-                p === "…" ? (
-                  <span key={`ellipsis-${idx}`} style={{ padding: "0 4px", color: "#94a3b8" }}>…</span>
-                ) : (
-                  <button
-                    key={p}
-                    className={`india-dc-btn ${currentPage === p ? "india-dc-btn--primary" : "india-dc-btn--outline"}`}
-                    onClick={() => setCurrentPage(p as number)}
-                    style={{ minWidth: "36px" }}
-                  >{p}</button>
-                )
-              )}
-            <button
-              className="india-dc-btn india-dc-btn--outline"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-            >Next ›</button>
-            <button
-              className="india-dc-btn india-dc-btn--outline"
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={currentPage === totalPages}
-            >»</button>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "16px" }}>
+            <span style={{ fontSize: "12px", color: "#64748b" }}>
+              Page {currentPage} of {totalPages} · {filteredData.length} results
+            </span>
+            <div style={{ display: "flex", gap: "4px" }}>
+              <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}
+                style={{ padding: "5px 10px", fontSize: "12px", border: "1px solid #e2e8f0", background: "#fff", cursor: currentPage === 1 ? "not-allowed" : "pointer", opacity: currentPage === 1 ? 0.4 : 1 }}>
+                «
+              </button>
+              <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}
+                style={{ padding: "5px 10px", fontSize: "12px", border: "1px solid #e2e8f0", background: "#fff", cursor: currentPage === 1 ? "not-allowed" : "pointer", opacity: currentPage === 1 ? 0.4 : 1 }}>
+                ‹
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
+                .reduce<(number | "…")[]>((acc, p, idx, arr) => {
+                  if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("…");
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((p, idx) =>
+                  p === "…" ? (
+                    <span key={`ellipsis-${idx}`} style={{ padding: "0 4px", color: "#94a3b8" }}>…</span>
+                  ) : (
+                    <button key={p} onClick={() => setCurrentPage(p as number)}
+                      style={{ padding: "5px 10px", fontSize: "12px", border: `1px solid ${p === currentPage ? "#0d7a6e" : "#e2e8f0"}`, background: p === currentPage ? "#0d7a6e" : "#fff", color: p === currentPage ? "#fff" : "#334155", cursor: "pointer", fontWeight: p === currentPage ? 700 : 400 }}>
+                      {p}
+                    </button>
+                  )
+                )}
+              <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
+                style={{ padding: "5px 10px", fontSize: "12px", border: "1px solid #e2e8f0", background: "#fff", cursor: currentPage === totalPages ? "not-allowed" : "pointer", opacity: currentPage === totalPages ? 0.4 : 1 }}>
+                ›
+              </button>
+              <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}
+                style={{ padding: "5px 10px", fontSize: "12px", border: "1px solid #e2e8f0", background: "#fff", cursor: currentPage === totalPages ? "not-allowed" : "pointer", opacity: currentPage === totalPages ? 0.4 : 1 }}>
+                »
+              </button>
+            </div>
           </div>
         )}
-      </div>
 
-      </>}
+        </>}
+
+      </div>
 
       {selectedFacility && (
         <DCFacilityDetailPanel
