@@ -12526,12 +12526,20 @@ h2.serif-heading .t { color: var(--teal); }
 .alerts-meta { text-align: right; }
 .alerts-meta-date { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
 .alerts-meta-badge { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--red); background: #fef2f2; border: 1px solid #f5c6c6; padding: 5px 14px; border-radius: 20px; display: inline-block; }
-/* Horizontal scroll news feed */
-.alerts-scroll-track { overflow-x: auto; margin: 0 -8px 32px; padding: 0 8px 12px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+/* Carousel wrapper for alert cards */
+.alerts-carousel-wrapper { display: flex; align-items: center; gap: 0; margin-bottom: 32px; }
+.alerts-carousel-wrapper .alerts-scroll-track { flex: 1; overflow: hidden; margin: 0; padding: 0; scrollbar-width: none; }
+.alerts-carousel-wrapper .alerts-scroll-track::-webkit-scrollbar { display: none; }
+.alerts-scroll-track { overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
 .alerts-scroll-track::-webkit-scrollbar { height: 5px; }
 .alerts-scroll-track::-webkit-scrollbar-track { background: transparent; }
 .alerts-scroll-track::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 .alerts-scroll-inner { display: flex; gap: 16px; width: max-content; padding-bottom: 4px; }
+/* Carousel nav buttons */
+.alerts-carousel-btn { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); background: var(--white); color: var(--ink); font-size: 26px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s, box-shadow 0.15s, opacity 0.15s; opacity: 0.65; user-select: none; }
+.alerts-carousel-btn:hover { background: var(--teal); color: #fff; box-shadow: var(--shadow-lg); opacity: 1; }
+.alerts-carousel-btn--left { margin-right: 12px; }
+.alerts-carousel-btn--right { margin-left: 12px; }
 .alerts-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 32px; }
 @media(max-width:1100px){ .alerts-grid { grid-template-columns: 1fr 1fr; } }
 @media(max-width:640px){ .alerts-grid { grid-template-columns: 1fr; } }

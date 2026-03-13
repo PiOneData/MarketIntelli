@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useCallback } from "react";
 
 interface AlertCard {
   severity: "critical" | "high" | "medium" | "positive";
@@ -118,6 +118,25 @@ const SEV_LABEL: Record<AlertCard["severity"], string> = {
 };
 
 export default function IranConflictSection() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startScroll = useCallback((direction: "left" | "right") => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollLeft += direction === "right" ? 6 : -6;
+      }
+    }, 16);
+  }, []);
+
+  const stopScroll = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
   return (
     <section className="alerts-section" id="iran-conflict">
       <div className="alerts-inner">
@@ -138,47 +157,65 @@ export default function IranConflictSection() {
           </div>
         </div>
 
-        {/* Horizontal scroll news feed */}
-        <div className="alerts-scroll-track">
-          <div className="alerts-scroll-inner">
-            {ALERT_CARDS.map((card) => (
-              <a
-                key={card.title}
-                href={card.articleUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`alert-card alert-card--link ${card.severity}`}
-              >
-                <div className="alert-card-top">
-                  <span className={`alert-severity sev-${card.severity}`}>
-                    {SEV_LABEL[card.severity]}
-                  </span>
-                  <span className="alert-category">{card.category}</span>
-                </div>
-                <div className="alert-title">{card.title}</div>
-                <div className="alert-body">{card.body}</div>
-                <div className="alert-impact">
-                  <span className="alert-impact-label">{card.impactLabel}</span>
-                  <span className="alert-impact-val">{card.impact}</span>
-                </div>
-                <div className="alert-footer">
-                  <span className="alert-source">{card.source}</span>
-                  <span className="alert-date">{card.date}</span>
-                </div>
-                <div className="alert-card-sources">
-                  {card.links.map((lnk) => (
-                    <span
-                      key={lnk.url}
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(lnk.url, "_blank", "noopener,noreferrer"); }}
-                      className="alert-src-chip"
-                    >
-                      {lnk.label} ↗
+        {/* Hover-driven carousel */}
+        <div className="alerts-carousel-wrapper">
+          <button
+            className="alerts-carousel-btn alerts-carousel-btn--left"
+            onMouseEnter={() => startScroll("left")}
+            onMouseLeave={stopScroll}
+            aria-label="Scroll left"
+          >
+            ‹
+          </button>
+          <div className="alerts-scroll-track" ref={scrollRef}>
+            <div className="alerts-scroll-inner">
+              {ALERT_CARDS.map((card) => (
+                <a
+                  key={card.title}
+                  href={card.articleUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`alert-card alert-card--link ${card.severity}`}
+                >
+                  <div className="alert-card-top">
+                    <span className={`alert-severity sev-${card.severity}`}>
+                      {SEV_LABEL[card.severity]}
                     </span>
-                  ))}
-                </div>
-              </a>
-            ))}
+                    <span className="alert-category">{card.category}</span>
+                  </div>
+                  <div className="alert-title">{card.title}</div>
+                  <div className="alert-body">{card.body}</div>
+                  <div className="alert-impact">
+                    <span className="alert-impact-label">{card.impactLabel}</span>
+                    <span className="alert-impact-val">{card.impact}</span>
+                  </div>
+                  <div className="alert-footer">
+                    <span className="alert-source">{card.source}</span>
+                    <span className="alert-date">{card.date}</span>
+                  </div>
+                  <div className="alert-card-sources">
+                    {card.links.map((lnk) => (
+                      <span
+                        key={lnk.url}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(lnk.url, "_blank", "noopener,noreferrer"); }}
+                        className="alert-src-chip"
+                      >
+                        {lnk.label} ↗
+                      </span>
+                    ))}
+                  </div>
+                </a>
+              ))}
+            </div>
           </div>
+          <button
+            className="alerts-carousel-btn alerts-carousel-btn--right"
+            onMouseEnter={() => startScroll("right")}
+            onMouseLeave={stopScroll}
+            aria-label="Scroll right"
+          >
+            ›
+          </button>
         </div>
 
         <div style={{ textAlign: "center", marginTop: "32px" }}>
