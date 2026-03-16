@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import String, Float, DateTime, Integer, Text, Date, func
+from sqlalchemy import String, Float, DateTime, Integer, BigInteger, Text, Date, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -199,7 +199,7 @@ class DailyREGeneration(Base):
 
     __tablename__ = "daily_re_generation"
 
-    id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4, init=False)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, init=False)
     date: Mapped[datetime] = mapped_column(Date, unique=True)
     wind_mu: Mapped[float] = mapped_column(Float)
     solar_mu: Mapped[float] = mapped_column(Float)
