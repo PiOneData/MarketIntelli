@@ -9,7 +9,7 @@ import csv
 import logging
 from datetime import date
 
-from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import async_session_factory
@@ -17,10 +17,10 @@ from app.domains.power_market.models.power_market import DailyREGeneration
 
 logger = logging.getLogger(__name__)
 
-# Path relative to the project root (two levels up from this script)
+# Path relative to the project root (three levels up from this script)
 import pathlib
 
-CSV_PATH = pathlib.Path(__file__).parents[4] / "chart_data (1).csv"
+CSV_PATH = pathlib.Path(__file__).parents[3] / "chart_data (1).csv"
 
 
 def _parse_date(raw: str) -> date:
@@ -30,13 +30,7 @@ def _parse_date(raw: str) -> date:
 
 
 async def seed(db: AsyncSession) -> None:
-    # Skip if already populated
-    result = await db.execute(select(DailyREGeneration).limit(1))
-    if result.scalars().first() is not None:
-        logger.info("daily_re_generation already seeded — skipping")
-        return
-
-    rows: list[DailyREGeneration] = []
+    rows: list[dict] = []
     with open(CSV_PATH, newline="", encoding="utf-8") as fh:
         reader = csv.DictReader(fh)
         for line in reader:
@@ -44,17 +38,23 @@ async def seed(db: AsyncSession) -> None:
             if not raw_date:
                 continue
             rows.append(
-                DailyREGeneration(
-                    date=_parse_date(raw_date),
-                    wind_mu=float(line["Wind"]),
-                    solar_mu=float(line["Solar"]),
-                    other_mu=float(line["Other"]),
-                )
+                {
+                    "date": _parse_date(raw_date),
+                    "wind_mu": float(line["Wind"]),
+                    "solar_mu": float(line["Solar"]),
+                    "other_mu": float(line["Other"]),
+                }
             )
 
-    db.add_all(rows)
+    if not rows:
+        logger.warning("No rows found in CSV — nothing to seed")
+        return
+
+    # Upsert: insert new rows, skip dates that already exist
+    stmt = insert(DailyREGeneration).values(rows).on_conflict_do_nothing(index_elements=["date"])
+    await db.execute(stmt)
     await db.commit()
-    logger.info("Seeded %d daily RE generation records", len(rows))
+    logger.info("Upserted %d daily RE generation records from CSV", len(rows))
 
 
 async def main() -> None:
