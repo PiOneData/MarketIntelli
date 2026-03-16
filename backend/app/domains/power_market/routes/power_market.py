@@ -10,6 +10,7 @@ from app.domains.power_market.schemas.power_market import (
     RETariffRead,
     InvestmentGuidelineRead,
     DataRepositoryRead,
+    DailyREGenerationRead,
 )
 from app.domains.power_market.services.power_market_service import PowerMarketService
 
@@ -188,3 +189,22 @@ async def get_power_market_overview(
     """Aggregate overview of the renewable power market."""
     service = PowerMarketService(db)
     return await service.get_power_market_overview()
+
+
+@router.get("/daily-re-generation", response_model=list[DailyREGenerationRead])
+async def list_daily_re_generation(
+    db: AsyncSession = Depends(get_db),
+) -> list[DailyREGenerationRead]:
+    """Daily RE generation timeseries (Wind, Solar, Other) in MUs."""
+    service = PowerMarketService(db)
+    records = await service.list_daily_re_generation()
+    return [
+        DailyREGenerationRead(
+            id=r.id,
+            date=r.date,
+            wind_mu=r.wind_mu,
+            solar_mu=r.solar_mu,
+            other_mu=r.other_mu,
+        )
+        for r in records
+    ]

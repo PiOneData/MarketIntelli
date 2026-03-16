@@ -9,6 +9,7 @@ import type {
   InvestmentGuideline,
   DataRepositoryEntry,
   PowerMarketOverview,
+  DailyREGeneration,
 } from "../types/powerMarket";
 
 export async function getOverview(): Promise<PowerMarketOverview> {
@@ -80,5 +81,10 @@ export async function listDataRepository(params?: {
   organization?: string;
 }): Promise<DataRepositoryEntry[]> {
   const { data } = await apiClient.get("/power-market/data-repository", { params });
+  return data;
+}
+
+export async function listDailyREGeneration(): Promise<DailyREGeneration[]> {
+  const { data } = await apiClient.get("/power-market/daily-re-generation");
   return data;
 }

@@ -9,6 +9,7 @@ import {
   listRETariffs,
   listInvestmentGuidelines,
   listDataRepository,
+  listDailyREGeneration,
 } from "../api/powerMarket";
 
 export function usePowerMarketOverview() {
@@ -96,5 +97,12 @@ export function useDataRepository(params?: {
   return useQuery({
     queryKey: ["power-market", "data-repository", params],
     queryFn: () => listDataRepository(params),
+  });
+}
+
+export function useDailyREGeneration() {
+  return useQuery({
+    queryKey: ["power-market", "daily-re-generation"],
+    queryFn: listDailyREGeneration,
   });
 }

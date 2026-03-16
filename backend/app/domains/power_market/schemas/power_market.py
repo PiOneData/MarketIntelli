@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -111,6 +111,14 @@ class DataRepositoryRead(BaseModel):
     data_year: int | None = None
     last_updated: str | None = None
     is_active: bool
+
+
+class DailyREGenerationRead(BaseModel):
+    id: UUID
+    date: date
+    wind_mu: float
+    solar_mu: float
+    other_mu: float
 
 
 class PowerMarketOverview(BaseModel):

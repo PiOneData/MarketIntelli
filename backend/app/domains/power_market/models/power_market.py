@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import String, Float, DateTime, Integer, Text, func
+from sqlalchemy import String, Float, DateTime, Integer, Text, Date, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -185,6 +185,25 @@ class DataRepository(Base):
     data_year: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
     last_updated: Mapped[str | None] = mapped_column(String(100), nullable=True, default=None)
     is_active: Mapped[bool] = mapped_column(default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), init=False
+    )
+
+
+@dataclass
+class DailyREGeneration(Base):
+    """Daily RE generation timeseries by source (Wind, Solar, Other).
+
+    Data sourced from chart_data CSV; values in Million Units (MU).
+    """
+
+    __tablename__ = "daily_re_generation"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4, init=False)
+    date: Mapped[datetime] = mapped_column(Date, unique=True)
+    wind_mu: Mapped[float] = mapped_column(Float)
+    solar_mu: Mapped[float] = mapped_column(Float)
+    other_mu: Mapped[float] = mapped_column(Float)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), init=False
     )
