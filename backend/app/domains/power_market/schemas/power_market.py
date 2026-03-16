@@ -114,7 +114,7 @@ class DataRepositoryRead(BaseModel):
 
 
 class DailyREGenerationRead(BaseModel):
-    id: UUID
+    id: int
     date: date
     wind_mu: float
     solar_mu: float

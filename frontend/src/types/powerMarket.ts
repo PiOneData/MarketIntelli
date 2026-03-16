@@ -120,7 +120,7 @@ export interface PowerMarketOverview {
 }
 
 export interface DailyREGeneration {
-  id: string;
+  id: number;
   date: string; // ISO date string YYYY-MM-DD
   wind_mu: number;
   solar_mu: number;
