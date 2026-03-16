@@ -470,7 +470,7 @@ export default function AssetDetailPage({ id, type, onBack }: { id: string; type
 
 
                 {/* ══════════ HERO (Split: Info left · Map right) ══════════ */}
-                <div style={{ background: heroBg, borderRadius: '24px', marginBottom: '22px', color: '#fff', position: 'relative', overflow: 'hidden', animation: 'fadeSlideUp 0.5s ease', display: 'flex', minHeight: '280px' }}>
+                <div style={{ background: heroBg, borderRadius: '24px', marginBottom: '22px', color: '#fff', position: 'relative', overflow: 'hidden', animation: 'fadeSlideUp 0.5s ease', display: 'flex', minHeight: '360px' }}>
 
                     {/* Decorative circles */}
                     <div style={{ position: 'absolute', top: '-60px', left: '-60px', width: '220px', height: '220px', borderRadius: '50%', background: 'rgba(255,255,255,0.02)', pointerEvents: 'none' }} />
@@ -593,9 +593,9 @@ export default function AssetDetailPage({ id, type, onBack }: { id: string; type
                     </div>
 
                     {/* ── RIGHT: Mini Map Panel ── */}
-                    <div style={{ width: '580px', flexShrink: 0, display: 'flex', flexDirection: 'column', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ width: '720px', flexShrink: 0, display: 'flex', flexDirection: 'column', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
                         {/* Map fills top — no overlay ON the map to avoid Leaflet z-index conflicts */}
-                        <div style={{ flex: 1, minHeight: '190px', overflow: 'hidden' }}>
+                        <div style={{ flex: 1, minHeight: '280px', overflow: 'hidden' }}>
                             <MiniMap lat={lat} lon={lon} name={p.dc_name || p.airport_name || 'Asset'} color={hasGW ? gwColors.accent : '#6b7280'} />
                         </div>
                         {/* Bottom strip with COORDINATES + LOCATION + Google Maps */}
