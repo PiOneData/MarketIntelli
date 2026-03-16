@@ -128,7 +128,32 @@ export default function DashboardPage() {
   const newsIdx = useNewsCycle(NEWS_ITEMS.length);
   const reGenQ = useDailyREGeneration();
 
-  const dailyRETrend = (reGenQ.data ?? []).map((r) => {
+  type RePreset = "7D" | "14D" | "1M" | "ALL";
+  const [rePreset, setRePreset] = useState<RePreset>("ALL");
+  const [reFrom, setReFrom] = useState<string>("");
+  const [reTo, setReTo] = useState<string>("");
+  const isCustomRange = reFrom !== "" || reTo !== "";
+
+  const allREData = reGenQ.data ?? [];
+  const maxDateStr = allREData.at(-1)?.date ?? "";
+  const minDateStr = allREData[0]?.date ?? "";
+
+  const filteredREData = allREData.filter((r) => {
+    if (isCustomRange) {
+      if (reFrom && r.date < reFrom) return false;
+      if (reTo && r.date > reTo) return false;
+      return true;
+    }
+    if (rePreset !== "ALL" && maxDateStr) {
+      const days = rePreset === "7D" ? 7 : rePreset === "14D" ? 14 : 30;
+      const cutoff = new Date(maxDateStr);
+      cutoff.setDate(cutoff.getDate() - days + 1);
+      return r.date >= cutoff.toISOString().slice(0, 10);
+    }
+    return true;
+  });
+
+  const dailyRETrend = filteredREData.map((r) => {
     const day = new Date(r.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
     return {
       day,
@@ -487,6 +512,49 @@ export default function DashboardPage() {
         </a>
       </div>
 
+      {/* ── Date range filter bar ── */}
+      <div className="re-filter-bar">
+        <div className="re-filter-presets">
+          {(["7D", "14D", "1M", "ALL"] as const).map((p) => (
+            <button
+              key={p}
+              className={`re-filter-btn${!isCustomRange && rePreset === p ? " active" : ""}`}
+              onClick={() => { setRePreset(p); setReFrom(""); setReTo(""); }}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+        <div className="re-filter-dates">
+          <input
+            type="date"
+            className="re-date-input"
+            value={reFrom}
+            min={minDateStr}
+            max={reTo || maxDateStr}
+            onChange={(e) => { setReFrom(e.target.value); }}
+          />
+          <span className="re-filter-sep">→</span>
+          <input
+            type="date"
+            className="re-date-input"
+            value={reTo}
+            min={reFrom || minDateStr}
+            max={maxDateStr}
+            onChange={(e) => { setReTo(e.target.value); }}
+          />
+          {isCustomRange && (
+            <button
+              className="re-filter-clear"
+              title="Clear custom range"
+              onClick={() => { setReFrom(""); setReTo(""); }}
+            >
+              ×
+            </button>
+          )}
+        </div>
+      </div>
+
       <ResponsiveContainer width="100%" height={260}>
         <ComposedChart data={dailyRETrend} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e8e8e8" vertical={false} />
@@ -494,7 +562,7 @@ export default function DashboardPage() {
           <XAxis
             dataKey="day"
             tick={{ fontSize: 10, fontFamily: "var(--mono)", fill: "#8a8480" }}
-            interval={4}
+            interval={filteredREData.length <= 10 ? 0 : filteredREData.length <= 21 ? 1 : 4}
             tickLine={false}
             axisLine={false}
           />
@@ -552,7 +620,10 @@ export default function DashboardPage() {
         >
           gen-re.cea.gov.in
         </a>{" "}
-        · Central Electricity Authority · Data as of 12 Mar 2026
+        · Central Electricity Authority
+        {filteredREData.length > 0 && (
+          <> · {filteredREData[0]?.date} – {filteredREData.at(-1)?.date}</>
+        )}
       </div>
     </div>
 

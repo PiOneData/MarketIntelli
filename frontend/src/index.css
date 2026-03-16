@@ -12416,6 +12416,20 @@ h2.serif-heading .t { color: var(--teal); }
 .pgen-trends-note { font-family: var(--mono); font-size: 10px; color: var(--faint); margin-top: 8px; letter-spacing: .04em; }
 .pgen-trends-src-link { color: var(--teal); text-decoration: none; }
 .pgen-trends-src-link:hover { text-decoration: underline; }
+
+/* ── RE Generation date-range filter bar ─────────────────────────── */
+.re-filter-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.re-filter-presets { display: flex; gap: 4px; }
+.re-filter-btn { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; padding: 3px 9px; border: 1px solid var(--border); background: var(--white); color: var(--faint); border-radius: 4px; cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
+.re-filter-btn:hover { border-color: var(--teal); color: var(--teal); }
+.re-filter-btn.active { background: var(--teal); color: #fff; border-color: var(--teal); }
+.re-filter-dates { display: flex; align-items: center; gap: 6px; }
+.re-date-input { font-family: var(--mono); font-size: 10px; padding: 3px 6px; border: 1px solid var(--border); border-radius: 4px; background: var(--white); color: var(--ink); outline: none; }
+.re-date-input:focus { border-color: var(--teal); }
+.re-filter-sep { font-family: var(--mono); font-size: 10px; color: var(--faint); }
+.re-filter-clear { font-family: var(--mono); font-size: 13px; line-height: 1; padding: 2px 7px; border: 1px solid var(--border); background: var(--white); color: var(--faint); border-radius: 4px; cursor: pointer; }
+.re-filter-clear:hover { border-color: #e53935; color: #e53935; }
+
 .pgen-card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 18px 16px; transition: box-shadow .2s; }
 .pgen-card:hover { box-shadow: var(--shadow); }
 .pgen-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }

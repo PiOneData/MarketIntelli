@@ -21,6 +21,7 @@ from app.domains.alerts.models.alerts import Alert, Watchlist, Notification, New
 from app.domains.power_market.models.power_market import (  # noqa: F401
     RenewableCapacity, PowerGeneration, TransmissionLine,
     PowerConsumption, RETariff, InvestmentGuideline, DataRepository,
+    DailyREGeneration,
 )
 
 logger = logging.getLogger(__name__)
