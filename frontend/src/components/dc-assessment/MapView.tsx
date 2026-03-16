@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
-import { MapContainer, TileLayer, CircleMarker, useMap, GeoJSON, Tooltip, FeatureGroup, Pane, Marker } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, useMap, GeoJSON, Tooltip, FeatureGroup, Pane, Marker, ZoomControl } from 'react-leaflet';
 import { AssetFeature, AssetType } from '../../types/dc';
 import { getDCId } from '../../lib/dcUtils';
 import { X, Loader2, ArrowRight, Layers } from 'lucide-react';
@@ -300,11 +300,16 @@ export default function MapView({ features, selectedId, onSelectDC, filterState,
                 center={[20.5937, 78.9629]}
                 zoom={5}
                 style={{ height: '100%', width: '100%' }}
-                zoomControl={true}
+                zoomControl={false}
                 preferCanvas={true}
             >
+                <ZoomControl position="bottomright" />
                 <ZoomListener />
-                <TileLayer attribution='© CartoDB' url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
+                <TileLayer
+                    attribution='&copy; Esri, Maxar'
+                    url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                    maxZoom={18}
+                />
 
                 {/* Thick Global India Outline Layer */}
                 {indiaOutlineGeoJson && !activeStateGeoJson && (
@@ -314,9 +319,9 @@ export default function MapView({ features, selectedId, onSelectDC, filterState,
                         interactive={false}
                         style={{
                             fill: false,
-                            color: '#0f172a',    // Dark, strong color for national border
-                            weight: 1.5,           // Thick boundary line
-                            opacity: 0.6,
+                            color: '#ffffff',    // White for visibility on satellite
+                            weight: 1.5,
+                            opacity: 0.7,
                             dashArray: '8 4',
                         }}
                     />
@@ -331,10 +336,10 @@ export default function MapView({ features, selectedId, onSelectDC, filterState,
                         style={{
                             fill: true,
                             fillColor: '#0f9b8c',
-                            fillOpacity: heatmapMode === 'off' ? 0.08 : 0,
-                            color: '#0d7a6e',
+                            fillOpacity: heatmapMode === 'off' ? 0.12 : 0,
+                            color: '#ffffff',
                             weight: 2,
-                            opacity: 0.7,
+                            opacity: 0.85,
                             dashArray: '6 4',
                         } as L.PathOptions}
                     />
@@ -357,7 +362,7 @@ export default function MapView({ features, selectedId, onSelectDC, filterState,
                             if (!hasData || heatmapMode === 'off' || (filterState && dataName !== filterState)) {
                                 // Default mode: extremely faint internal state outlines, to let outer edge pop
                                 // Added near-invisible fill to guarantee Leaflet SVG hit detection across all browsers
-                                return { fillColor: '#000000', weight: 0.5, color: '#334155', opacity: 0.15, fillOpacity: 0.01, interactive: false };
+                                return { fillColor: '#000000', weight: 0.5, color: '#ffffff', opacity: 0.25, fillOpacity: 0.01, interactive: false };
                             }
 
                             return {
