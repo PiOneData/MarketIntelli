@@ -9,6 +9,7 @@ from app.domains.power_market.models.power_market import (
     RETariff,
     InvestmentGuideline,
     DataRepository,
+    DailyREGeneration,
 )
 
 
@@ -206,3 +207,8 @@ class PowerMarketService:
             "data_year": latest_year,
             "states_tracked": states_tracked,
         }
+
+    async def list_daily_re_generation(self) -> list[DailyREGeneration]:
+        stmt = select(DailyREGeneration).order_by(DailyREGeneration.date)
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all())

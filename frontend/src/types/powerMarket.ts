@@ -119,6 +119,14 @@ export interface PowerMarketOverview {
   states_tracked: number;
 }
 
+export interface DailyREGeneration {
+  id: string;
+  date: string; // ISO date string YYYY-MM-DD
+  wind_mu: number;
+  solar_mu: number;
+  other_mu: number;
+}
+
 export interface IexREMarketData {
   date: string;
   gtam_buy_volume_mu: number;

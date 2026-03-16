@@ -96,6 +96,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as e:
         logger.warning("Power market seed skipped: %s", e)
 
+    # Seed daily RE generation timeseries from CSV
+    try:
+        from app.scripts.seed_daily_re_generation import seed
+        from app.db.session import async_session_factory as _asf
+        async with _asf() as _db:
+            await seed(_db)
+    except Exception as e:
+        logger.warning("Daily RE generation seed skipped: %s", e)
+
     # Seed policy intelligence data if tables are empty
     try:
         from app.scripts.seed_policy import seed_policy
