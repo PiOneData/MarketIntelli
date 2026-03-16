@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Layers } from 'lucide-react';
 import MapView from './MapView';
 import Sidebar from './Sidebar';
+import StateBriefing from './StateBriefing';
 import { AssetFeature, AssetType, AssetGeoJSON } from '../../types/dc';
 import { getDCId } from '../../lib/dcUtils';
 import AssetDetailPage from '../AssetDetailPage';
@@ -129,6 +130,18 @@ export default function DCAssessmentPage() {
                         onViewDetail={handleViewDetail}
                         initialFlyTarget={initialFlyTarget}
                     />
+
+                    {/* ── State Briefing overlay (top-left of map) ── */}
+                    {filterState && (
+                        <div style={{ position: 'absolute', top: '12px', left: '12px', zIndex: 1000, width: '280px' }}>
+                            <StateBriefing
+                                features={features}
+                                state={filterState}
+                                onClear={() => { setFilterState(''); setFilterCity(''); setFilterCompany(''); }}
+                                activeAssetType={activeAssetType}
+                            />
+                        </div>
+                    )}
 
                     {/* ── Heatmap mode toggle (floating, top-right) ── */}
                     <div style={{
