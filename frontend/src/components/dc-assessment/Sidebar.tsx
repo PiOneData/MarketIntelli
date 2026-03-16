@@ -2,7 +2,6 @@ import { useState, useMemo, useRef, useEffect, type CSSProperties } from 'react'
 import { AssetFeature, AssetType } from '../../types/dc';
 import { getDCId } from '../../lib/dcUtils';
 import { Search, X, ChevronDown, MapPin, Building, PlaneTakeoff, ShieldCheck } from 'lucide-react';
-import StateBriefing from './StateBriefing';
 
 interface SidebarProps {
     features: AssetFeature[];
@@ -367,17 +366,6 @@ export default function Sidebar({ features, selectedId, onSelectDC, filterState,
                 <div style={{ height: '1px', background: '#f1f5f9', marginLeft: '-16px', marginRight: '-16px' }} />
             </div>
 
-            {/* ── State Briefing ── */}
-            {filterState && (
-                <div style={{ borderBottom: '1px solid #f1f5f9', flexShrink: 0 }}>
-                    <StateBriefing
-                        features={features}
-                        state={filterState}
-                        onClear={() => { setFilterState(''); setFilterCity(''); setFilterCompany(''); }}
-                        activeAssetType={activeAssetType}
-                    />
-                </div>
-            )}
 
 
 
