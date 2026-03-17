@@ -54,7 +54,6 @@ const NAV_ITEMS = [
     path: "/policy", label: "Policy",
     children: [
       { path: "/policy/policy-repository", label: "Policy Repository" },
-      { path: "/policy/tariff-tracker", label: "Tariff Tracker" },
       { path: "/policy/compliance-alerts", label: "Compliance Alerts" },
       { path: "/policy/subsidy-monitor", label: "Subsidy Monitor" },
     ],
