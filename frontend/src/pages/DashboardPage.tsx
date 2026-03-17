@@ -495,7 +495,16 @@ export default function DashboardPage() {
       <div className="pgen-trends-header">
         <div>
           <div className="pgen-eyebrow" style={{ marginBottom: 4 }}>
-            RE Generation Trends · Daily · MUs
+            RE Generation Trends · Daily · MUs &nbsp;·&nbsp; Source:{" "}
+            <a
+              href="https://gen-re.cea.gov.in/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pgen-trends-src-link"
+            >
+              gen-re.cea.gov.in
+            </a>{" "}
+            · Central Electricity Authority
           </div>
           <div className="pgen-trends-title">
             DAILY RE GENERATION <span className="t">TREND</span>
@@ -610,21 +619,6 @@ export default function DashboardPage() {
         </ComposedChart>
       </ResponsiveContainer>
 
-      <div className="pgen-trends-note">
-        Source:{" "}
-        <a
-          href="https://gen-re.cea.gov.in/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="pgen-trends-src-link"
-        >
-          gen-re.cea.gov.in
-        </a>{" "}
-        · Central Electricity Authority
-        {filteredREData.length > 0 && (
-          <> · {filteredREData[0]?.date} – {filteredREData.at(-1)?.date}</>
-        )}
-      </div>
     </div>
 
     {/* ROW 2 — CONSOLIDATED GENERATION BY SOURCE */}

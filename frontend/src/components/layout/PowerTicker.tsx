@@ -45,6 +45,18 @@ interface BrentData {
   error?: string;
 }
 
+interface INRData {
+  ticker: string;
+  name: string;
+  rate: number | null;
+  prev_close: number | null;
+  change: number | null;
+  change_pct: number | null;
+  currency: string;
+  market_state: string;
+  error?: string;
+}
+
 async function fetchIEXData(): Promise<IEXReMarketData> {
   const { data } = await apiClient.get("/finance/iex/re-market-data");
   return data;
@@ -52,6 +64,11 @@ async function fetchIEXData(): Promise<IEXReMarketData> {
 
 async function fetchBrentData(): Promise<BrentData> {
   const { data } = await apiClient.get("/finance/commodity/brent");
+  return data;
+}
+
+async function fetchINRData(): Promise<INRData> {
+  const { data } = await apiClient.get("/finance/commodity/usdinr");
   return data;
 }
 
@@ -71,6 +88,13 @@ export default function PowerTicker() {
     queryKey: ["finance", "brent-crude"],
     queryFn: fetchBrentData,
     staleTime: 3 * 60 * 1000,
+    retry: 2,
+  });
+
+  const { data: inr } = useQuery({
+    queryKey: ["finance", "usdinr"],
+    queryFn: fetchINRData,
+    staleTime: 5 * 60 * 1000,
     retry: 2,
   });
 
@@ -98,8 +122,14 @@ export default function PowerTicker() {
     ? ` ${brent.change_pct >= 0 ? "▲" : "▼"}${Math.abs(brent.change_pct).toFixed(2)}%`
     : "";
 
+  const inrLabel = inr?.rate != null ? `₹${inr.rate.toFixed(2)}` : "—";
+  const inrChange = inr?.change_pct != null
+    ? ` ${inr.change_pct >= 0 ? "▲" : "▼"}${Math.abs(inr.change_pct).toFixed(3)}%`
+    : "";
+
   const items = [
     { label: "Brent Crude", val: brentLabel, extra: brentChange || "" },
+    { label: "USD/INR", val: inrLabel, extra: inrChange || "" },
     { label: "IEX DAM", val: `₹${fmt(p.dam_mcp_inr_per_mwh / 1000)}/kWh`, extra: "" },
     { label: "IEX RTM", val: `₹${fmt(p.rtm_mcp_inr_per_mwh / 1000)}/kWh`, extra: "" },
     { label: "G-TAM MCP", val: `₹${fmt(p.gtam_mcp_inr_per_mwh / 1000)}/kWh`, extra: "" },
@@ -125,6 +155,8 @@ export default function PowerTicker() {
                 style={
                   item.label === "Brent Crude" && brent?.change_pct != null
                     ? { color: brent.change_pct >= 0 ? "#ef4444" : "#22c55e" }
+                    : item.label === "USD/INR" && inr?.change_pct != null
+                    ? { color: inr.change_pct >= 0 ? "#ef4444" : "#22c55e" }
                     : undefined
                 }
               >
@@ -138,6 +170,8 @@ export default function PowerTicker() {
                     fontSize: 10,
                     color: item.label === "Brent Crude" && brent?.change_pct != null
                       ? brent.change_pct >= 0 ? "#ef4444" : "#22c55e"
+                      : item.label === "USD/INR" && inr?.change_pct != null
+                      ? inr.change_pct >= 0 ? "#ef4444" : "#22c55e"
                       : "var(--muted)",
                   }}
                 >

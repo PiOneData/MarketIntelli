@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { usePolicies, useTariffs, useSubsidies, useComplianceAlerts } from "../hooks/usePolicy";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ErrorMessage from "../components/common/ErrorMessage";
+import type { Policy } from "../types/policy";
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return "—";
@@ -23,12 +24,57 @@ function recencyLabel(dateStr: string | null): { text: string; className: string
 }
 
 /* ------------------------------------------------------------------ */
+/*  Policy Detail Modal                                                */
+/* ------------------------------------------------------------------ */
+
+function PolicyDetailModal({ policy, onClose }: { policy: Policy; onClose: () => void }) {
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
+  return (
+    <div className="pol-modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="pol-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="pol-modal-close" onClick={onClose} aria-label="Close">×</button>
+        <div className="pol-modal-header">
+          <span className={`pol-category-badge pol-category-badge--${policy.category}`}>
+            {policy.category}
+          </span>
+          <span className="pol-authority" style={{ marginLeft: "0.5rem" }}>{policy.authority}</span>
+          {policy.state && <span className="pol-state" style={{ marginLeft: "0.5rem" }}>{policy.state}</span>}
+        </div>
+        <h3 className="pol-modal-title">{policy.title}</h3>
+        <p className="pol-modal-date">Effective: {formatDate(policy.effective_date)}</p>
+        <div className="pol-modal-body">
+          <p className="pol-modal-summary">{policy.summary}</p>
+        </div>
+        {policy.document_url && (
+          <div className="pol-modal-footer">
+            <a
+              href={policy.document_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pol-read-more"
+            >
+              View Official Document ↗
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Policy Repository Section                                          */
 /* ------------------------------------------------------------------ */
 
 function PolicyRepositorySection() {
   const [authorityFilter, setAuthorityFilter] = useState("");
   const [stateFilter, setStateFilter] = useState("");
+  const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
   const { data: policies = [], isLoading, error } = usePolicies();
 
   const authorities = useMemo(
@@ -54,6 +100,9 @@ function PolicyRepositorySection() {
 
   return (
     <section className="pol-section">
+      {selectedPolicy && (
+        <PolicyDetailModal policy={selectedPolicy} onClose={() => setSelectedPolicy(null)} />
+      )}
       <h3>Policy Repository</h3>
       <p className="pol-section-desc">
         Centralized access to MNRE, SECI, SERC, and state-level renewable energy regulations and guidelines.
@@ -96,24 +145,20 @@ function PolicyRepositorySection() {
                 </span>
                 <span className={`pol-recency ${recency.className}`}>{recency.text}</span>
               </div>
-              <h4>{p.title}</h4>
+              <h4 className="pol-card-title">{p.title}</h4>
               <div className="pol-card-meta">
                 <span className="pol-authority">{p.authority}</span>
                 {p.state && <span className="pol-state">{p.state}</span>}
               </div>
-              <p className="pol-summary">{p.summary}</p>
+              <p className="pol-summary pol-summary--clamped">{p.summary}</p>
               <div className="pol-card-footer">
                 <span className="pol-date">Effective: {formatDate(p.effective_date)}</span>
-                {p.document_url && (
-                  <a
-                    href={p.document_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="pol-read-more"
-                  >
-                    READ MORE
-                  </a>
-                )}
+                <button
+                  className="pol-read-more"
+                  onClick={() => setSelectedPolicy(p)}
+                >
+                  READ MORE
+                </button>
               </div>
             </div>
           );
@@ -162,8 +207,18 @@ function TariffTrackerSection() {
       <p className="pol-section-desc">
         Historical and current feed-in tariffs, SECI/NTPC auction results, and PPA rates across states.
       </p>
-      <div className="pol-data-source">
-        Data sources: SECI Auction Results, CERC/SERC Tariff Orders, State DISCOM Auctions
+      <div className="pol-data-source" style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
+        <span>Official sources:</span>
+        <a href="https://www.seci.co.in/tenders.aspx" target="_blank" rel="noopener noreferrer" className="pol-link">SECI Auction Results</a>
+        <span>·</span>
+        <a href="https://cercind.gov.in/orders.html" target="_blank" rel="noopener noreferrer" className="pol-link">CERC Tariff Orders</a>
+        <span>·</span>
+        <a href="https://mercomindia.com/category/regulation/" target="_blank" rel="noopener noreferrer" className="pol-link">SERC Orders (Mercom India)</a>
+        <span>·</span>
+        <a href="https://ntpctender.com/" target="_blank" rel="noopener noreferrer" className="pol-link">NTPC RE Auctions</a>
+        <span>·</span>
+        <a href="https://mnre.gov.in/" target="_blank" rel="noopener noreferrer" className="pol-link">MNRE</a>
+        <span className="pol-data-note">· All tariffs shown are for renewable energy sources (solar, wind, hybrid, small hydro, biomass)</span>
       </div>
       <div className="pm-filters">
         <select value={stateFilter} onChange={(e) => setStateFilter(e.target.value)}>
@@ -458,10 +513,92 @@ function SubsidyMonitorSection() {
     <section className="pol-section">
       <h3>Subsidy Monitor</h3>
       <p className="pol-section-desc">
-        Real-time tracking of central and state-level subsidy programs, disbursements, and incentive schemes.
+        Central and state-level subsidy programs, disbursements, and incentive schemes for renewable energy in India.
       </p>
-      <div className="pol-data-source">
-        Data sources: MNRE Scheme Portal, State Nodal Agencies, MoF Notifications
+      <div className="pol-data-source" style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
+        <span>Official sources:</span>
+        <a href="https://mnre.gov.in/scheme/" target="_blank" rel="noopener noreferrer" className="pol-link">MNRE Scheme Portal</a>
+        <span>·</span>
+        <a href="https://www.indiabudget.gov.in/" target="_blank" rel="noopener noreferrer" className="pol-link">MoF / Union Budget</a>
+        <span>·</span>
+        <a href="https://pib.gov.in/allRel.aspx?regid=3" target="_blank" rel="noopener noreferrer" className="pol-link">PIB (MNRE Notifications)</a>
+      </div>
+
+      {/* Key Official Programs */}
+      <div className="pol-programs-section">
+        <h4 className="pol-programs-heading">Key Official Programs</h4>
+        <div className="pol-programs-grid">
+          {[
+            { name: "PM-KUSUM", desc: "Solar pumps & plants for farmers", url: "https://pmkusum.mnre.gov.in/", tag: "MNRE · Active" },
+            { name: "PM Surya Ghar", desc: "Muft Bijli Yojana — 1 Cr rooftop solar", url: "https://pmsuryaghar.gov.in/", tag: "MNRE · Active" },
+            { name: "PLI Solar", desc: "Production-linked incentive for solar modules/cells", url: "https://mnre.gov.in/solar/schemes/", tag: "MNRE · Active" },
+            { name: "BESS VGF", desc: "Viability Gap Funding for 4,000 MWh BESS", url: "https://mnre.gov.in/scheme/renewable-energy-storage/", tag: "MNRE · Active" },
+            { name: "Green Hydrogen Mission", desc: "5 MMT annual GH₂ production by 2030", url: "https://mnre.gov.in/hydrogen/", tag: "MNRE · Active" },
+            { name: "SHANTI Act / BSMR-200", desc: "SMR regulatory framework & PLI for nuclear", url: "https://powermin.gov.in/", tag: "MoP/DAE · 2025" },
+          ].map((prog) => (
+            <a
+              key={prog.name}
+              href={prog.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pol-program-tile"
+            >
+              <span className="pol-program-name">{prog.name}</span>
+              <span className="pol-program-desc">{prog.desc}</span>
+              <span className="pol-program-tag">{prog.tag}</span>
+            </a>
+          ))}
+        </div>
+      </div>
+
+      {/* Recent News & Circulars */}
+      <div className="pol-news-section">
+        <h4 className="pol-programs-heading">Recent News &amp; Circulars</h4>
+        <div className="pol-news-list">
+          {[
+            {
+              title: "PM Surya Ghar Muft Bijli Yojana crosses 1 crore registrations",
+              source: "PIB / MNRE",
+              date: "Feb 2026",
+              url: "https://pib.gov.in/PressReleasePage.aspx?PRID=2093817",
+            },
+            {
+              title: "MNRE releases revised PM-KUSUM Component C guidelines; 60% subsidy retained",
+              source: "MNRE Notification",
+              date: "Jan 2026",
+              url: "https://mnre.gov.in/scheme/pm-kusum/",
+            },
+            {
+              title: "CERC revises REC floor price to ₹1,000 and forbearance to ₹3,000 from Apr 2026",
+              source: "CERC Order",
+              date: "Mar 2026",
+              url: "https://cercind.gov.in/orders.html",
+            },
+            {
+              title: "Union Budget 2025-26: MNRE allocation ₹24,000 Cr; BSMR-200 gets ₹20,000 Cr",
+              source: "MoF / India Budget",
+              date: "Feb 2025",
+              url: "https://www.indiabudget.gov.in/",
+            },
+            {
+              title: "PLI Solar Phase-II: ₹3,620 Cr disbursed for 50 GWh domestic battery manufacturing",
+              source: "Economic Times Energy",
+              date: "Jan 2026",
+              url: "https://economictimes.indiatimes.com/industry/energy/power",
+            },
+          ].map((item) => (
+            <a
+              key={item.url}
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pol-news-item"
+            >
+              <span className="pol-news-title">{item.title}</span>
+              <span className="pol-news-meta">{item.source} · {item.date} ↗</span>
+            </a>
+          ))}
+        </div>
       </div>
       <div className="pm-filters">
         <select value={stateFilter} onChange={(e) => setStateFilter(e.target.value)}>
