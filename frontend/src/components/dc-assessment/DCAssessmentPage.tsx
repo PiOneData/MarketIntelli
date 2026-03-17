@@ -129,6 +129,7 @@ export default function DCAssessmentPage() {
                         heatmapMode={heatmapMode}
                         onViewDetail={handleViewDetail}
                         initialFlyTarget={initialFlyTarget}
+                        assessmentOpen={rxOpen}
                     />
 
                     {/* ── State Briefing overlay (top-left of map) ── */}

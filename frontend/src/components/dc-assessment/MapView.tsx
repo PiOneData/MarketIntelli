@@ -96,6 +96,7 @@ interface MapViewProps {
     heatmapMode: 'off' | 'count' | 'mw';
     onViewDetail: (id: number) => void;
     initialFlyTarget?: [number, number];
+    assessmentOpen?: boolean;
 }
 
 const getHeatmapColor = (val: number, max: number, mode: 'count' | 'mw' | 'off') => {
@@ -120,7 +121,7 @@ const getHeatmapColor = (val: number, max: number, mode: 'count' | 'mw' | 'off')
     }
 };
 
-export default function MapView({ features, selectedId, onSelectDC, filterState, filterCity, filterCompany, setFilterState, setFilterCity, setFilterCompany, activeAssetType, heatmapMode, onViewDetail, initialFlyTarget }: MapViewProps) {
+export default function MapView({ features, selectedId, onSelectDC, filterState, filterCity, filterCompany, setFilterState, setFilterCity, setFilterCompany, activeAssetType, heatmapMode, onViewDetail, initialFlyTarget, assessmentOpen }: MapViewProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [flyTarget, setFlyTarget] = useState<[number, number] | null>(initialFlyTarget ?? null);
     const [statesGeoJson, setStatesGeoJson] = useState<unknown>(null);
@@ -145,6 +146,11 @@ export default function MapView({ features, selectedId, onSelectDC, filterState,
     useEffect(() => {
         setIsLoading(false);
     }, [selectedId]);
+
+    // Reset isLoading when the assessment overlay closes (selectedId may not change)
+    useEffect(() => {
+        if (!assessmentOpen) setIsLoading(false);
+    }, [assessmentOpen]);
 
     const handleMarkerClick = useCallback((feature: AssetFeature) => {
         const id = getDCId(feature);
