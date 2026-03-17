@@ -87,7 +87,7 @@ function OverviewSection() {
 
   return (
     <section id="overview" className="pm-section">
-      <h3>Renewable Power Market Overview — {overview.data_year}</h3>
+      <h3>Renewable Power Market Overview — 2026</h3>
       <div className="pm-stats-grid">
         {stats.map((s) => (
           <div key={s.label} className={`pm-stat-card ${s.accent ? "pm-stat-card--accent" : ""}`}>
@@ -104,7 +104,7 @@ function OverviewSection() {
           <a href="https://mnre.gov.in/physical-progress/" target="_blank" rel="noopener noreferrer" className="pm-source-link">MNRE Physical Progress</a>
           <span>·</span>
           <a href="https://npp.gov.in/" target="_blank" rel="noopener noreferrer" className="pm-source-link">National Power Portal</a>
-          <span className="pm-source-year">· Data as of {overview.data_year}</span>
+          <span className="pm-source-year">· Data as of 28.02.2026</span>
         </div>
         <Link to="/power-data/renewable-capacity" className="pm-capacity-link">
           View State-wise Installed Capacity →
@@ -155,6 +155,7 @@ function CapacitySection({
   return (
     <section id="renewable-capacity" className="pm-section">
       <h3>State-wise Renewable Energy Installed Capacity</h3>
+      <p className="pm-data-date">Data as of 28.02.2026 · Source: MNRE State-wise Installed Capacity Report</p>
       <div className="pm-filters">
         <select value={stateFilter} onChange={(e) => setStateFilter(e.target.value)}>
           <option value="">All States</option>
@@ -215,7 +216,7 @@ function CapacitySection({
       </div>
       <div className="pm-source-bar" style={{ marginTop: "0.75rem" }}>
         <span className="pm-source-label">Source:</span>
-        <a href="https://cea.nic.in/report/monthly/" target="_blank" rel="noopener noreferrer" className="pm-source-link">CEA Monthly Reports</a>
+        <a href="https://cdnbbsr.s3waas.gov.in/s3716e1b8c6cd17b771da77391355749f3/uploads/2026/03/202603111194797922.pdf" target="_blank" rel="noopener noreferrer" className="pm-source-link">MNRE Installed Capacity 28.02.2026</a>
         <span>·</span>
         <a href="https://mnre.gov.in/physical-progress/" target="_blank" rel="noopener noreferrer" className="pm-source-link">MNRE Physical Progress Dashboard</a>
         <span>·</span>

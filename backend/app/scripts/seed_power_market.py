@@ -1,8 +1,8 @@
 """Seed the power_market tables with comprehensive Indian renewable energy data.
 
 Sources:
-- MNRE State-wise Installed Capacity Jan-2026
-  https://cdnbbsr.s3waas.gov.in/s3716e1b8c6cd17b771da77391355749f3/uploads/2026/02/202602091660392380.pdf
+- MNRE State-wise Installed Capacity as on 28.02.2026
+  https://cdnbbsr.s3waas.gov.in/s3716e1b8c6cd17b771da77391355749f3/uploads/2026/03/202603111194797922.pdf
 - CEA Monthly Generation Reports
 - National Power Portal (https://npp.gov.in)
 - CERC/SERC Tariff Orders
@@ -31,8 +31,9 @@ logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Renewable Capacity – state-wise installed capacity (MW) by source
-# Source: MNRE State-wise Installed Capacity of Renewable Power as on 31.01.2026
-# https://cdnbbsr.s3waas.gov.in/s3716e1b8c6cd17b771da77391355749f3/uploads/2026/02/202602091660392380.pdf
+# Source: MNRE State-wise (Location based) Installed Capacity of Renewable Power
+#         as on 28.02.2026
+# https://cdnbbsr.s3waas.gov.in/s3716e1b8c6cd17b771da77391355749f3/uploads/2026/03/202603111194797922.pdf
 #
 # Columns in source: Small Hydro Power | Wind Power | Bio-Power Total |
 #   Solar Power Total (Ground Mounted + RTS + Hybrid + Offgrid) | Large Hydro
@@ -40,222 +41,223 @@ logger = logging.getLogger(__name__)
 # Tuple: (state, source, installed_mw, available_mw, potential_mw,
 #         cuf_pct, developer, ppa_rate, year, month, source_text)
 # ---------------------------------------------------------------------------
-_SRC = "MNRE State-wise Installed Capacity Jan-2026"
+_SRC = "MNRE State-wise Installed Capacity as on 28.02.2026"
+_SRC_URL = "https://cdnbbsr.s3waas.gov.in/s3716e1b8c6cd17b771da77391355749f3/uploads/2026/03/202603111194797922.pdf"
 
 RENEWABLE_CAPACITY_DATA = [
     # ── Andhra Pradesh ──────────────────────────────────────────────────────
-    ("Andhra Pradesh", "solar",       6935.38, None, 38440.0, 20.0, "Greenko, SB Energy, Adani Green", 2.44, 2026, 1, _SRC),
-    ("Andhra Pradesh", "wind",        4415.78, None, 44229.0, 26.0, "Mytrah Energy, Ostro Energy",     2.88, 2026, 1, _SRC),
-    ("Andhra Pradesh", "small_hydro",  164.51, None,    None, None, None,                              None, 2026, 1, _SRC),
-    ("Andhra Pradesh", "biomass",      594.02, None,    None, None, None,                              None, 2026, 1, _SRC),
-    ("Andhra Pradesh", "large_hydro", 3290.00, None,    None, None, None,                              None, 2026, 1, _SRC),
+    ("Andhra Pradesh", "solar",       7208.18, None, 38440.0, 20.0, "Greenko, SB Energy, Adani Green", 2.44, 2026, 2, _SRC),
+    ("Andhra Pradesh", "wind",        4415.78, None, 44229.0, 26.0, "Mytrah Energy, Ostro Energy",     2.88, 2026, 2, _SRC),
+    ("Andhra Pradesh", "small_hydro",  164.51, None,    None, None, None,                              None, 2026, 2, _SRC),
+    ("Andhra Pradesh", "biomass",      594.02, None,    None, None, None,                              None, 2026, 2, _SRC),
+    ("Andhra Pradesh", "large_hydro", 3290.00, None,    None, None, None,                              None, 2026, 2, _SRC),
 
     # ── Arunachal Pradesh ───────────────────────────────────────────────────
-    ("Arunachal Pradesh", "small_hydro",  140.61, None, None, None, None, None, 2026, 1, _SRC),
-    ("Arunachal Pradesh", "biomass",       15.44, None, None, None, None, None, 2026, 1, _SRC),
-    ("Arunachal Pradesh", "large_hydro", 1615.00, None, None, None, None, None, 2026, 1, _SRC),
+    ("Arunachal Pradesh", "small_hydro",  140.61, None, None, None, None, None, 2026, 2, _SRC),
+    ("Arunachal Pradesh", "biomass",       15.44, None, None, None, None, None, 2026, 2, _SRC),
+    ("Arunachal Pradesh", "large_hydro", 1615.00, None, None, None, None, None, 2026, 2, _SRC),
 
     # ── Assam ───────────────────────────────────────────────────────────────
-    ("Assam", "small_hydro",   34.11, None, None, None, "APDCL", None, 2026, 1, _SRC),
-    ("Assam", "biomass",        2.00, None, None, None, None,    None, 2026, 1, _SRC),
-    ("Assam", "solar",        474.21, None, 13760.0, 15.0, "AEDA", 3.00, 2026, 1, _SRC),
-    ("Assam", "large_hydro",  346.00, None, None, None, None,    None, 2026, 1, _SRC),
+    ("Assam", "small_hydro",   34.11, None, None, None, "APDCL", None, 2026, 2, _SRC),
+    ("Assam", "biomass",        2.00, None, None, None, None,    None, 2026, 2, _SRC),
+    ("Assam", "solar",        533.47, None, 13760.0, 15.0, "AEDA", 3.00, 2026, 2, _SRC),
+    ("Assam", "large_hydro",  346.00, None, None, None, None,    None, 2026, 2, _SRC),
 
     # ── Bihar ───────────────────────────────────────────────────────────────
     # Bio total includes large Waste-to-Energy component (112.50 MW WtE)
-    ("Bihar", "small_hydro",  70.70, None, None, None, "BSPHCL",             None, 2026, 1, _SRC),
-    ("Bihar", "biomass",     140.22, None, None, None, None,                 None, 2026, 1, _SRC),
-    ("Bihar", "solar",       435.34, None, 11200.0, 16.5, "BREDA, NTPC",    2.85, 2026, 1, _SRC),
+    ("Bihar", "small_hydro",  70.70, None, None, None, "BSPHCL",             None, 2026, 2, _SRC),
+    ("Bihar", "biomass",     140.22, None, None, None, None,                 None, 2026, 2, _SRC),
+    ("Bihar", "solar",       435.34, None, 11200.0, 16.5, "BREDA, NTPC",    2.85, 2026, 2, _SRC),
 
     # ── Chhattisgarh ────────────────────────────────────────────────────────
     # Bio total includes large Waste-to-Energy component (272.09 MW WtE)
-    ("Chhattisgarh", "small_hydro",  100.90, None, None, None, "CSPHCL",     None, 2026, 1, _SRC),
-    ("Chhattisgarh", "biomass",      285.42, None, None, None, "CREDA",      None, 2026, 1, _SRC),
-    ("Chhattisgarh", "solar",       1755.40, None, 18270.0, 18.0, "CREDA",   2.70, 2026, 1, _SRC),
-    ("Chhattisgarh", "large_hydro",  120.00, None, None, None, None,         None, 2026, 1, _SRC),
+    ("Chhattisgarh", "small_hydro",  100.90, None, None, None, "CSPHCL",     None, 2026, 2, _SRC),
+    ("Chhattisgarh", "biomass",      285.42, None, None, None, "CREDA",      None, 2026, 2, _SRC),
+    ("Chhattisgarh", "solar",       1755.40, None, 18270.0, 18.0, "CREDA",   2.70, 2026, 2, _SRC),
+    ("Chhattisgarh", "large_hydro",  120.00, None, None, None, None,         None, 2026, 2, _SRC),
 
     # ── Goa ─────────────────────────────────────────────────────────────────
-    ("Goa", "small_hydro",  0.05, None, None, None, "GEDA",    None, 2026, 1, _SRC),
-    ("Goa", "biomass",      1.94, None, None, None, None,      None, 2026, 1, _SRC),
-    ("Goa", "solar",       73.64, None, 880.0, 16.0, "GEDA",  3.15, 2026, 1, _SRC),
+    ("Goa", "small_hydro",  0.05, None, None, None, "GEDA",    None, 2026, 2, _SRC),
+    ("Goa", "biomass",      1.94, None, None, None, None,      None, 2026, 2, _SRC),
+    ("Goa", "solar",       76.24, None, 880.0, 16.0, "GEDA",  3.15, 2026, 2, _SRC),
 
     # ── Gujarat ─────────────────────────────────────────────────────────────
-    ("Gujarat", "small_hydro",   113.30, None,   None, None, None,                               None, 2026, 1, _SRC),
-    ("Gujarat", "wind",        14855.19, None, 84431.0, 26.5, "Suzlon, Siemens Gamesa, Adani",   2.78, 2026, 1, _SRC),
-    ("Gujarat", "biomass",       129.85, None,   None, None, None,                               None, 2026, 1, _SRC),
-    ("Gujarat", "solar",       26909.30, None, 35770.0, 20.8, "Adani Green, Tata Power Solar",   2.42, 2026, 1, _SRC),
-    ("Gujarat", "large_hydro",  1990.00, None,   None, None, None,                               None, 2026, 1, _SRC),
+    ("Gujarat", "small_hydro",   113.30, None,   None, None, None,                               None, 2026, 2, _SRC),
+    ("Gujarat", "wind",        15197.19, None, 84431.0, 26.5, "Suzlon, Siemens Gamesa, Adani",   2.78, 2026, 2, _SRC),
+    ("Gujarat", "biomass",       129.85, None,   None, None, None,                               None, 2026, 2, _SRC),
+    ("Gujarat", "solar",       27486.27, None, 35770.0, 20.8, "Adani Green, Tata Power Solar",   2.42, 2026, 2, _SRC),
+    ("Gujarat", "large_hydro",  1990.00, None,   None, None, None,                               None, 2026, 2, _SRC),
 
     # ── Haryana ─────────────────────────────────────────────────────────────
-    # Bio total includes Biomass (151.40) + BioNonBagasse (125.46) + WtE (37.61 + 11.20)
-    ("Haryana", "small_hydro",  73.50, None, None, None, "HAREDA",             None, 2026, 1, _SRC),
-    ("Haryana", "biomass",     325.67, None, None, None, "HAREDA",             None, 2026, 1, _SRC),
-    ("Haryana", "solar",      2540.08, None, 4560.0, 17.5, "HAREDA, SECI",    2.68, 2026, 1, _SRC),
+    # Bio total includes Biomass (151.40) + BioNonBagasse (125.46) + WtE (11.20) + WtE Offgrid (38.65)
+    ("Haryana", "small_hydro",  73.50, None, None, None, "HAREDA",             None, 2026, 2, _SRC),
+    ("Haryana", "biomass",     326.71, None, None, None, "HAREDA",             None, 2026, 2, _SRC),
+    ("Haryana", "solar",      2584.78, None, 4560.0, 17.5, "HAREDA, SECI",    2.68, 2026, 2, _SRC),
 
     # ── Himachal Pradesh ────────────────────────────────────────────────────
-    ("Himachal Pradesh", "small_hydro",  1000.71, None, 2398.0, 50.0, "HIMURJA, HPPCL", None, 2026, 1, _SRC),
-    ("Himachal Pradesh", "biomass",        10.20, None,  None, None, None,               None, 2026, 1, _SRC),
-    ("Himachal Pradesh", "solar",         346.28, None,  None, 16.0, "HIMURJA",         2.90, 2026, 1, _SRC),
-    ("Himachal Pradesh", "large_hydro", 11421.02, None,  None, None, "HPPCL",           None, 2026, 1, _SRC),
+    ("Himachal Pradesh", "small_hydro",  1013.46, None, 2398.0, 50.0, "HIMURJA, HPPCL", None, 2026, 2, _SRC),
+    ("Himachal Pradesh", "biomass",        10.20, None,  None, None, None,               None, 2026, 2, _SRC),
+    ("Himachal Pradesh", "solar",         346.28, None,  None, 16.0, "HIMURJA",         2.90, 2026, 2, _SRC),
+    ("Himachal Pradesh", "large_hydro", 11421.02, None,  None, None, "HPPCL",           None, 2026, 2, _SRC),
 
     # ── Jammu & Kashmir ─────────────────────────────────────────────────────
-    ("Jammu & Kashmir", "small_hydro",  189.93, None, None, None, "JAKEDA",  None, 2026, 1, _SRC),
-    ("Jammu & Kashmir", "solar",         79.48, None, None, None, "SECI",    2.50, 2026, 1, _SRC),
-    ("Jammu & Kashmir", "large_hydro", 3360.00, None, None, None, "JKSPDC",  None, 2026, 1, _SRC),
+    ("Jammu & Kashmir", "small_hydro",  189.93, None, None, None, "JAKEDA",  None, 2026, 2, _SRC),
+    ("Jammu & Kashmir", "solar",         79.48, None, None, None, "SECI",    2.50, 2026, 2, _SRC),
+    ("Jammu & Kashmir", "large_hydro", 3360.00, None, None, None, "JKSPDC",  None, 2026, 2, _SRC),
 
     # ── Jharkhand ───────────────────────────────────────────────────────────
-    ("Jharkhand", "small_hydro",   4.05, None, None, None, "JREDA",          None, 2026, 1, _SRC),
-    ("Jharkhand", "biomass",       20.14, None, None, None, None,             None, 2026, 1, _SRC),
-    ("Jharkhand", "solar",        235.77, None, 18180.0, 17.0, "JREDA",      2.75, 2026, 1, _SRC),
-    ("Jharkhand", "large_hydro",  210.00, None, None, None, "JUVNL",         None, 2026, 1, _SRC),
+    ("Jharkhand", "small_hydro",   4.05, None, None, None, "JREDA",          None, 2026, 2, _SRC),
+    ("Jharkhand", "biomass",       20.14, None, None, None, None,             None, 2026, 2, _SRC),
+    ("Jharkhand", "solar",        242.39, None, 18180.0, 17.0, "JREDA",      2.75, 2026, 2, _SRC),
+    ("Jharkhand", "large_hydro",  210.00, None, None, None, "JUVNL",         None, 2026, 2, _SRC),
 
     # ── Karnataka ───────────────────────────────────────────────────────────
-    ("Karnataka", "small_hydro",  1284.73, None,  None, None, "KREDL, KPCL",          None, 2026, 1, _SRC),
-    ("Karnataka", "wind",         8423.64, None, 55857.0, 25.0, "Suzlon, Vestas, ReNew", 2.90, 2026, 1, _SRC),
-    ("Karnataka", "biomass",      1917.05, None,  None, None, "KREDL",                None, 2026, 1, _SRC),
-    ("Karnataka", "solar",       10824.00, None, 24700.0, 19.5, "KREDL, Vikram Solar", 2.48, 2026, 1, _SRC),
-    ("Karnataka", "large_hydro",  3689.20, None,  None, None, "KPCL",                 None, 2026, 1, _SRC),
+    ("Karnataka", "small_hydro",  1284.73, None,  None, None, "KREDL, KPCL",          None, 2026, 2, _SRC),
+    ("Karnataka", "wind",         8500.54, None, 55857.0, 25.0, "Suzlon, Vestas, ReNew", 2.90, 2026, 2, _SRC),
+    ("Karnataka", "biomass",      1917.05, None,  None, None, "KREDL",                None, 2026, 2, _SRC),
+    ("Karnataka", "solar",       11029.95, None, 24700.0, 19.5, "KREDL, Vikram Solar", 2.48, 2026, 2, _SRC),
+    ("Karnataka", "large_hydro",  3689.20, None,  None, None, "KPCL",                 None, 2026, 2, _SRC),
 
     # ── Kerala ──────────────────────────────────────────────────────────────
-    ("Kerala", "small_hydro",   276.52, None, 704.0, 45.0, "KSEB",    None, 2026, 1, _SRC),
-    ("Kerala", "wind",           71.52, None,  None, None, "KSEB",    None, 2026, 1, _SRC),
-    ("Kerala", "biomass",         2.50, None,  None, None, None,      None, 2026, 1, _SRC),
-    ("Kerala", "solar",        2080.26, None, 6110.0, 16.0, "KSEB, ANERT", 3.10, 2026, 1, _SRC),
-    ("Kerala", "large_hydro",  2008.15, None,  None, None, "KSEB",    None, 2026, 1, _SRC),
+    ("Kerala", "small_hydro",   276.52, None, 704.0, 45.0, "KSEB",    None, 2026, 2, _SRC),
+    ("Kerala", "wind",           71.52, None,  None, None, "KSEB",    None, 2026, 2, _SRC),
+    ("Kerala", "biomass",         2.50, None,  None, None, None,      None, 2026, 2, _SRC),
+    ("Kerala", "solar",        2150.25, None, 6110.0, 16.0, "KSEB, ANERT", 3.10, 2026, 2, _SRC),
+    ("Kerala", "large_hydro",  2008.15, None,  None, None, "KSEB",    None, 2026, 2, _SRC),
 
     # ── Ladakh ──────────────────────────────────────────────────────────────
-    ("Ladakh", "small_hydro",  45.79, None,     None, None, "LAHDC",       None, 2026, 1, _SRC),
-    ("Ladakh", "biomass",      12.02, None,     None, None, None,          None, 2026, 1, _SRC),
-    ("Ladakh", "solar",        89.00, None, 34000.0, 22.0, "SECI, LAHDC", 2.20, 2026, 1, _SRC),
+    ("Ladakh", "small_hydro",  45.79, None,     None, None, "LAHDC",       None, 2026, 2, _SRC),
+    ("Ladakh", "biomass",      12.02, None,     None, None, None,          None, 2026, 2, _SRC),
+    ("Ladakh", "solar",        89.00, None, 34000.0, 22.0, "SECI, LAHDC", 2.20, 2026, 2, _SRC),
 
     # ── Madhya Pradesh ──────────────────────────────────────────────────────
-    ("Madhya Pradesh", "small_hydro",   123.71, None,   None, None, "MPPGCL",                      None, 2026, 1, _SRC),
-    ("Madhya Pradesh", "wind",         3591.15, None,   None, 28.0, "Suzlon, Inox Wind",            2.82, 2026, 1, _SRC),
-    ("Madhya Pradesh", "biomass",       155.46, None,   None, None, None,                           None, 2026, 1, _SRC),
-    ("Madhya Pradesh", "solar",        5855.64, None, 61660.0, 19.5, "REWA Ultra Mega, MPUVNL",    2.45, 2026, 1, _SRC),
-    ("Madhya Pradesh", "large_hydro",  2235.00, None,   None, None, "MPPGCL",                      None, 2026, 1, _SRC),
+    ("Madhya Pradesh", "small_hydro",   123.71, None,   None, None, "MPPGCL",                      None, 2026, 2, _SRC),
+    ("Madhya Pradesh", "wind",         3610.15, None,   None, 28.0, "Suzlon, Inox Wind",            2.82, 2026, 2, _SRC),
+    ("Madhya Pradesh", "biomass",       155.46, None,   None, None, None,                           None, 2026, 2, _SRC),
+    ("Madhya Pradesh", "solar",        5893.84, None, 61660.0, 19.5, "REWA Ultra Mega, MPUVNL",    2.45, 2026, 2, _SRC),
+    ("Madhya Pradesh", "large_hydro",  2235.00, None,   None, None, "MPPGCL",                      None, 2026, 2, _SRC),
 
     # ── Maharashtra ─────────────────────────────────────────────────────────
-    ("Maharashtra", "small_hydro",    384.28, None,    None, None, "MAHAGENCO",                        None, 2026, 1, _SRC),
-    ("Maharashtra", "wind",          5847.01, None, 45394.0, 24.5, "Suzlon, Inox Wind, ReNew Power",   2.92, 2026, 1, _SRC),
-    ("Maharashtra", "biomass",       2998.30, None,    None, None, None,                               None, 2026, 1, _SRC),
-    ("Maharashtra", "solar",        19105.13, None, 64320.0, 18.0, "Tata Power, Avaada Energy, MSEDCL", 2.58, 2026, 1, _SRC),
-    ("Maharashtra", "large_hydro",   3047.00, None,    None, None, "MAHAGENCO",                        None, 2026, 1, _SRC),
+    ("Maharashtra", "small_hydro",    384.28, None,    None, None, "MAHAGENCO",                        None, 2026, 2, _SRC),
+    ("Maharashtra", "wind",          5873.01, None, 45394.0, 24.5, "Suzlon, Inox Wind, ReNew Power",   2.92, 2026, 2, _SRC),
+    ("Maharashtra", "biomass",       2998.30, None,    None, None, None,                               None, 2026, 2, _SRC),
+    ("Maharashtra", "solar",        19364.16, None, 64320.0, 18.0, "Tata Power, Avaada Energy, MSEDCL", 2.58, 2026, 2, _SRC),
+    ("Maharashtra", "large_hydro",   3047.00, None,    None, None, "MAHAGENCO",                        None, 2026, 2, _SRC),
 
     # ── Manipur ─────────────────────────────────────────────────────────────
-    ("Manipur", "small_hydro",   5.45, None, None, None, None,  None, 2026, 1, _SRC),
-    ("Manipur", "solar",        17.52, None, None, None, None,  None, 2026, 1, _SRC),
-    ("Manipur", "large_hydro", 105.00, None, None, None, None,  None, 2026, 1, _SRC),
+    ("Manipur", "small_hydro",   5.45, None, None, None, None,  None, 2026, 2, _SRC),
+    ("Manipur", "solar",        17.52, None, None, None, None,  None, 2026, 2, _SRC),
+    ("Manipur", "large_hydro", 105.00, None, None, None, None,  None, 2026, 2, _SRC),
 
     # ── Meghalaya ───────────────────────────────────────────────────────────
-    ("Meghalaya", "small_hydro",   55.03, None, None, None, "MePGCL",  None, 2026, 1, _SRC),
-    ("Meghalaya", "biomass",       13.80, None, None, None, None,      None, 2026, 1, _SRC),
-    ("Meghalaya", "solar",          4.28, None, None, None, None,      None, 2026, 1, _SRC),
-    ("Meghalaya", "large_hydro",  322.00, None, None, None, "MePGCL",  None, 2026, 1, _SRC),
+    ("Meghalaya", "small_hydro",   55.03, None, None, None, "MePGCL",  None, 2026, 2, _SRC),
+    ("Meghalaya", "biomass",       13.80, None, None, None, None,      None, 2026, 2, _SRC),
+    ("Meghalaya", "solar",          4.28, None, None, None, None,      None, 2026, 2, _SRC),
+    ("Meghalaya", "large_hydro",  322.00, None, None, None, "MePGCL",  None, 2026, 2, _SRC),
 
     # ── Mizoram ─────────────────────────────────────────────────────────────
-    ("Mizoram", "small_hydro",   45.47, None, None, None, "MPCL",  None, 2026, 1, _SRC),
-    ("Mizoram", "solar",         33.69, None, None, None, None,    None, 2026, 1, _SRC),
-    ("Mizoram", "large_hydro",   60.00, None, None, None, "MPCL",  None, 2026, 1, _SRC),
+    ("Mizoram", "small_hydro",   45.47, None, None, None, "MPCL",  None, 2026, 2, _SRC),
+    ("Mizoram", "solar",         33.69, None, None, None, None,    None, 2026, 2, _SRC),
+    ("Mizoram", "large_hydro",   60.00, None, None, None, "MPCL",  None, 2026, 2, _SRC),
 
     # ── Nagaland ────────────────────────────────────────────────────────────
-    ("Nagaland", "small_hydro",   32.67, None, None, None, None,  None, 2026, 1, _SRC),
-    ("Nagaland", "solar",          3.34, None, None, None, None,  None, 2026, 1, _SRC),
-    ("Nagaland", "large_hydro",   75.00, None, None, None, None,  None, 2026, 1, _SRC),
+    ("Nagaland", "small_hydro",   32.67, None, None, None, None,  None, 2026, 2, _SRC),
+    ("Nagaland", "solar",          3.34, None, None, None, None,  None, 2026, 2, _SRC),
+    ("Nagaland", "large_hydro",   75.00, None, None, None, None,  None, 2026, 2, _SRC),
 
     # ── Odisha ──────────────────────────────────────────────────────────────
     # Bio total includes Biomass (50.40) + BioNonBagasse (8.82) + WtE (5.00)
-    ("Odisha", "small_hydro",   140.63, None,    None, None, "OHPC",         None, 2026, 1, _SRC),
-    ("Odisha", "biomass",        64.22, None,    None, None, None,           None, 2026, 1, _SRC),
-    ("Odisha", "solar",         773.32, None, 25780.0, 17.5, "OREDA",       2.72, 2026, 1, _SRC),
-    ("Odisha", "large_hydro",  2154.55, None,    None, None, "OHPC",         None, 2026, 1, _SRC),
+    ("Odisha", "small_hydro",   140.63, None,    None, None, "OHPC",         None, 2026, 2, _SRC),
+    ("Odisha", "biomass",        64.22, None,    None, None, None,           None, 2026, 2, _SRC),
+    ("Odisha", "solar",         779.32, None, 25780.0, 17.5, "OREDA",       2.72, 2026, 2, _SRC),
+    ("Odisha", "large_hydro",  2154.55, None,    None, None, "OHPC",         None, 2026, 2, _SRC),
 
     # ── Punjab ──────────────────────────────────────────────────────────────
     # Bio total includes Biomass/Bagasse (299.50) + BioNonBagasse (231.79)
     #   + WtE (10.75) + WtE Offgrid (34.55) — major agri/sugarcane state
-    ("Punjab", "small_hydro",   176.10, None,   None, None, "PSPCL",              None, 2026, 1, _SRC),
-    ("Punjab", "biomass",       576.59, None, 3172.0, 60.0, "Punjab Biomass Power", 5.50, 2026, 1, _SRC),
-    ("Punjab", "solar",        1560.99, None, 6170.0, 17.0, "PEDA, Azure Power",  2.65, 2026, 1, _SRC),
-    ("Punjab", "large_hydro",  1096.30, None,   None, None, "BBMB",               None, 2026, 1, _SRC),
+    ("Punjab", "small_hydro",   176.10, None,   None, None, "PSPCL",              None, 2026, 2, _SRC),
+    ("Punjab", "biomass",       576.59, None, 3172.0, 60.0, "Punjab Biomass Power", 5.50, 2026, 2, _SRC),
+    ("Punjab", "solar",        1566.91, None, 6170.0, 17.0, "PEDA, Azure Power",  2.65, 2026, 2, _SRC),
+    ("Punjab", "large_hydro",  1096.30, None,   None, None, "BBMB",               None, 2026, 2, _SRC),
 
     # ── Rajasthan ───────────────────────────────────────────────────────────
-    ("Rajasthan", "small_hydro",    23.85, None,    None, None, None,                               None, 2026, 1, _SRC),
-    ("Rajasthan", "wind",         5229.15, None, 18770.0, 28.0, "Suzlon, Inox Wind, Adani",        2.85, 2026, 1, _SRC),
-    ("Rajasthan", "biomass",       207.52, None,    None, None, None,                               None, 2026, 1, _SRC),
-    ("Rajasthan", "solar",       37925.04, None, 142310.0, 21.5, "Adani Green, NTPC, Azure Power", 2.36, 2026, 1, _SRC),
-    ("Rajasthan", "large_hydro",   412.50, None,    None, None, "RVUNL",                            None, 2026, 1, _SRC),
+    ("Rajasthan", "small_hydro",    23.85, None,    None, None, None,                               None, 2026, 2, _SRC),
+    ("Rajasthan", "wind",         5229.15, None, 18770.0, 28.0, "Suzlon, Inox Wind, Adani",        2.85, 2026, 2, _SRC),
+    ("Rajasthan", "biomass",       207.52, None,    None, None, None,                               None, 2026, 2, _SRC),
+    ("Rajasthan", "solar",       38728.22, None, 142310.0, 21.5, "Adani Green, NTPC, Azure Power", 2.36, 2026, 2, _SRC),
+    ("Rajasthan", "large_hydro",   412.50, None,    None, None, "RVUNL",                            None, 2026, 2, _SRC),
 
     # ── Sikkim ──────────────────────────────────────────────────────────────
-    ("Sikkim", "small_hydro",    55.11, None, None, None, "SPDC",  None, 2026, 1, _SRC),
-    ("Sikkim", "solar",           7.56, None, None, None, None,    None, 2026, 1, _SRC),
-    ("Sikkim", "large_hydro",  2282.00, None, None, None, "SPDC",  None, 2026, 1, _SRC),
+    ("Sikkim", "small_hydro",    55.11, None, None, None, "SPDC",  None, 2026, 2, _SRC),
+    ("Sikkim", "solar",           7.56, None, None, None, None,    None, 2026, 2, _SRC),
+    ("Sikkim", "large_hydro",  2282.00, None, None, None, "SPDC",  None, 2026, 2, _SRC),
 
     # ── Tamil Nadu ──────────────────────────────────────────────────────────
-    ("Tamil Nadu", "small_hydro",    123.05, None,    None, None, "TANGEDCO",                        None, 2026, 1, _SRC),
-    ("Tamil Nadu", "wind",         12084.56, None, 33800.0, 27.5, "Suzlon, Vestas, ReNew Power",    2.82, 2026, 1, _SRC),
-    ("Tamil Nadu", "biomass",       1046.62, None,    None, None, None,                               None, 2026, 1, _SRC),
-    ("Tamil Nadu", "solar",        11731.61, None, 17670.0, 18.5, "Adani, TANGEDCO, SECI",          2.55, 2026, 1, _SRC),
-    ("Tamil Nadu", "large_hydro",   2203.20, None,    None, None, "TANGEDCO",                        None, 2026, 1, _SRC),
+    ("Tamil Nadu", "small_hydro",    123.05, None,    None, None, "TANGEDCO",                        None, 2026, 2, _SRC),
+    ("Tamil Nadu", "wind",         12102.76, None, 33800.0, 27.5, "Suzlon, Vestas, ReNew Power",    2.82, 2026, 2, _SRC),
+    ("Tamil Nadu", "biomass",       1046.62, None,    None, None, None,                               None, 2026, 2, _SRC),
+    ("Tamil Nadu", "solar",        12352.49, None, 17670.0, 18.5, "Adani, TANGEDCO, SECI",          2.55, 2026, 2, _SRC),
+    ("Tamil Nadu", "large_hydro",   2203.20, None,    None, None, "TANGEDCO",                        None, 2026, 2, _SRC),
 
     # ── Telangana ───────────────────────────────────────────────────────────
-    ("Telangana", "small_hydro",    89.67, None,    None, None, "TSGENCO",           None, 2026, 1, _SRC),
-    ("Telangana", "wind",          128.10, None,    None, None, None,                None, 2026, 1, _SRC),
-    ("Telangana", "biomass",       221.67, None,    None, None, None,                None, 2026, 1, _SRC),
-    ("Telangana", "solar",        5065.10, None, 20410.0, 19.0, "TSSPDCL, Adani",   2.50, 2026, 1, _SRC),
-    ("Telangana", "large_hydro",  2405.60, None,    None, None, "TSGENCO",           None, 2026, 1, _SRC),
+    ("Telangana", "small_hydro",    89.67, None,    None, None, "TSGENCO",           None, 2026, 2, _SRC),
+    ("Telangana", "wind",          128.10, None,    None, None, None,                None, 2026, 2, _SRC),
+    ("Telangana", "biomass",       221.67, None,    None, None, None,                None, 2026, 2, _SRC),
+    ("Telangana", "solar",        5065.10, None, 20410.0, 19.0, "TSSPDCL, Adani",   2.50, 2026, 2, _SRC),
+    ("Telangana", "large_hydro",  2405.60, None,    None, None, "TSGENCO",           None, 2026, 2, _SRC),
 
     # ── Tripura ─────────────────────────────────────────────────────────────
-    ("Tripura", "small_hydro",  16.01, None, None, None, "TSECL",  None, 2026, 1, _SRC),
-    ("Tripura", "solar",        35.16, None, None, None, None,     None, 2026, 1, _SRC),
+    ("Tripura", "small_hydro",  16.01, None, None, None, "TSECL",  None, 2026, 2, _SRC),
+    ("Tripura", "solar",        35.41, None, None, None, None,     None, 2026, 2, _SRC),
 
     # ── Uttar Pradesh ───────────────────────────────────────────────────────
     # Bio total includes large Bagasse Cogeneration from sugarcane industry (1985.50 MW)
-    ("Uttar Pradesh", "small_hydro",    50.60, None,    None, None, "UPJVNL",                    None, 2026, 1, _SRC),
-    ("Uttar Pradesh", "biomass",      2310.39, None,    None, None, "UPCL, Sugar mills",         None, 2026, 1, _SRC),
-    ("Uttar Pradesh", "solar",        3829.88, None, 22830.0, 17.5, "UPNEDA, Tata Power, NTPC", 2.62, 2026, 1, _SRC),
-    ("Uttar Pradesh", "large_hydro",   501.60, None,    None, None, "UPJVNL",                    None, 2026, 1, _SRC),
+    ("Uttar Pradesh", "small_hydro",    50.60, None,    None, None, "UPJVNL",                    None, 2026, 2, _SRC),
+    ("Uttar Pradesh", "biomass",      2310.39, None,    None, None, "UPCL, Sugar mills",         None, 2026, 2, _SRC),
+    ("Uttar Pradesh", "solar",        3846.45, None, 22830.0, 17.5, "UPNEDA, Tata Power, NTPC", 2.62, 2026, 2, _SRC),
+    ("Uttar Pradesh", "large_hydro",   501.60, None,    None, None, "UPJVNL",                    None, 2026, 2, _SRC),
 
     # ── Uttarakhand ─────────────────────────────────────────────────────────
-    ("Uttarakhand", "small_hydro",   233.82, None, 1708.0, 48.0, "UJVNL, UREDA",  None, 2026, 1, _SRC),
-    ("Uttarakhand", "biomass",       149.57, None,   None, None, None,             None, 2026, 1, _SRC),
-    ("Uttarakhand", "solar",         837.89, None,   None, None, "UREDA",          None, 2026, 1, _SRC),
-    ("Uttarakhand", "large_hydro",  4785.35, None,   None, None, "UJVNL",          None, 2026, 1, _SRC),
+    ("Uttarakhand", "small_hydro",   233.82, None, 1708.0, 48.0, "UJVNL, UREDA",  None, 2026, 2, _SRC),
+    ("Uttarakhand", "biomass",       149.57, None,   None, None, None,             None, 2026, 2, _SRC),
+    ("Uttarakhand", "solar",         837.89, None,   None, None, "UREDA",          None, 2026, 2, _SRC),
+    ("Uttarakhand", "large_hydro",  4785.35, None,   None, None, "UJVNL",          None, 2026, 2, _SRC),
 
     # ── West Bengal ─────────────────────────────────────────────────────────
     # Bio total includes Biomass (300 MW, largely rice husk/agri residue)
-    ("West Bengal", "small_hydro",    98.50, None, None, None, "WBSEDCL",         None, 2026, 1, _SRC),
-    ("West Bengal", "biomass",       351.86, None, None, None, "WBSEDCL",         None, 2026, 1, _SRC),
-    ("West Bengal", "solar",         320.62, None, 6260.0, 16.0, "WBREDA",        2.80, 2026, 1, _SRC),
-    ("West Bengal", "large_hydro",  1341.20, None, None, None, "WBSEDCL",         None, 2026, 1, _SRC),
+    ("West Bengal", "small_hydro",    98.50, None, None, None, "WBSEDCL",         None, 2026, 2, _SRC),
+    ("West Bengal", "biomass",       351.86, None, None, None, "WBSEDCL",         None, 2026, 2, _SRC),
+    ("West Bengal", "solar",         320.62, None, 6260.0, 16.0, "WBREDA",        2.80, 2026, 2, _SRC),
+    ("West Bengal", "large_hydro",  1341.20, None, None, None, "WBSEDCL",         None, 2026, 2, _SRC),
 
     # ── Andaman & Nicobar Islands ────────────────────────────────────────────
-    ("Andaman & Nicobar Islands", "small_hydro",  5.25, None, None, None, None, None, 2026, 1, _SRC),
-    ("Andaman & Nicobar Islands", "solar",        32.12, None, None, None, None, None, 2026, 1, _SRC),
+    ("Andaman & Nicobar Islands", "small_hydro",  5.25, None, None, None, None, None, 2026, 2, _SRC),
+    ("Andaman & Nicobar Islands", "solar",        32.12, None, None, None, None, None, 2026, 2, _SRC),
 
     # ── Chandigarh ──────────────────────────────────────────────────────────
-    ("Chandigarh", "solar",  78.85, None, None, None, None, None, 2026, 1, _SRC),
+    ("Chandigarh", "solar",  78.85, None, None, None, None, None, 2026, 2, _SRC),
 
     # ── Dadra & Nagar Haveli and Daman & Diu ────────────────────────────────
-    ("Dadra & Nagar Haveli and Daman & Diu", "biomass",   3.75, None, None, None, None, None, 2026, 1, _SRC),
-    ("Dadra & Nagar Haveli and Daman & Diu", "solar",   134.90, None, None, None, None, None, 2026, 1, _SRC),
+    ("Dadra & Nagar Haveli and Daman & Diu", "biomass",   3.75, None, None, None, None, None, 2026, 2, _SRC),
+    ("Dadra & Nagar Haveli and Daman & Diu", "solar",   134.90, None, None, None, None, None, 2026, 2, _SRC),
 
     # ── Delhi ───────────────────────────────────────────────────────────────
-    ("Delhi", "biomass",   85.17, None, None, None, None, None, 2026, 1, _SRC),
-    ("Delhi", "solar",    403.30, None, None, None, None, None, 2026, 1, _SRC),
+    ("Delhi", "biomass",   85.17, None, None, None, None, None, 2026, 2, _SRC),
+    ("Delhi", "solar",    413.90, None, None, None, None, None, 2026, 2, _SRC),
 
     # ── Lakshadweep ─────────────────────────────────────────────────────────
-    ("Lakshadweep", "solar",  6.57, None, None, None, None, None, 2026, 1, _SRC),
+    ("Lakshadweep", "solar",  6.57, None, None, None, None, None, 2026, 2, _SRC),
 
     # ── Puducherry ──────────────────────────────────────────────────────────
-    ("Puducherry", "solar",  77.61, None, None, None, None, None, 2026, 1, _SRC),
+    ("Puducherry", "solar",  80.71, None, None, None, None, None, 2026, 2, _SRC),
 
     # ── Others (miscellaneous/unclassified) ──────────────────────────────────
-    ("Others", "small_hydro",  4.30, None, None, None, None, None, 2026, 1, _SRC),
-    ("Others", "solar",       45.01, None, None, None, None, None, 2026, 1, _SRC),
+    ("Others", "small_hydro",  4.30, None, None, None, None, None, 2026, 2, _SRC),
+    ("Others", "solar",       45.01, None, None, None, None, None, 2026, 2, _SRC),
 ]
-# National totals per MNRE Jan-2026 report (MW):
-#   Small Hydro: 5,158.61  Wind: 54,650.40  Biomass: 11,613.93
-#   Solar: 1,40,601.75     Large Hydro: 51,164.67   Grand Total: 2,63,189.36
+# National totals per MNRE report as on 28.02.2026 (MW):
+#   Small Hydro: 5,171.36  Wind: 55,132.50  Biomass: 11,614.97
+#   Solar: 1,43,604.37     Large Hydro: 51,164.67   Grand Total: 2,66,687.85
 
 # ---------------------------------------------------------------------------
 # Power Generation – annual generation (MU) by source, FY 2024-25
@@ -475,10 +477,10 @@ INVESTMENT_GUIDELINE_DATA = [
 # ---------------------------------------------------------------------------
 DATA_REPOSITORY_DATA = [
     # (title, category, org, doc_type, url, description, year, last_updated, active)
-    ("MNRE State-wise Installed Capacity Jan-2026", "capacity", "MNRE", "pdf",
-     "https://cdnbbsr.s3waas.gov.in/s3716e1b8c6cd17b771da77391355749f3/uploads/2026/02/202602091660392380.pdf",
-     "State-wise (Location based) installed capacity of Renewable Power as on 31.01.2026 — official MNRE data sheet covering all 37 states/UTs with SHP, Wind, Bio-Power, Solar and Large Hydro breakdowns",
-     2026, "2026-01-31", True),
+    ("MNRE State-wise Installed Capacity as on 28.02.2026", "capacity", "MNRE", "pdf",
+     "https://cdnbbsr.s3waas.gov.in/s3716e1b8c6cd17b771da77391355749f3/uploads/2026/03/202603111194797922.pdf",
+     "State-wise (Location based) installed capacity of Renewable Power as on 28.02.2026 — official MNRE data sheet covering all 37 states/UTs with SHP, Wind, Bio-Power, Solar and Large Hydro breakdowns",
+     2026, "2026-02-28", True),
     ("CEA Monthly Generation Report", "generation", "CEA", "report",
      "https://cea.nic.in/monthly-generation-report/", "Monthly power generation data for all sources across India", 2026, "Monthly", True),
     ("MNRE Physical Progress", "capacity", "MNRE", "dashboard",
@@ -512,8 +514,8 @@ DATA_REPOSITORY_DATA = [
 ]
 
 
-async def update_renewable_capacity_jan2026() -> None:
-    """Replace RenewableCapacity table with MNRE Jan-2026 data (idempotent upsert).
+async def update_renewable_capacity_feb2026() -> None:
+    """Replace RenewableCapacity table with MNRE 28.02.2026 data (idempotent upsert).
 
     Safe to run against an already-populated database — deletes all existing
     capacity rows and re-inserts from RENEWABLE_CAPACITY_DATA.  All other
@@ -526,7 +528,7 @@ async def update_renewable_capacity_jan2026() -> None:
         await session.execute(delete(RenewableCapacity))
         logger.info("Cleared existing RenewableCapacity rows.")
 
-        # Insert Jan-2026 data
+        # Insert Feb-2026 data (as on 28.02.2026)
         for row in RENEWABLE_CAPACITY_DATA:
             state, source, installed, available, potential, cuf, dev, ppa, year, month, src = row
             session.add(RenewableCapacity(
@@ -538,12 +540,12 @@ async def update_renewable_capacity_jan2026() -> None:
                 ppa_rate_per_kwh=ppa,
                 data_year=year, data_month=month,
                 source=src,
-                source_url="https://cdnbbsr.s3waas.gov.in/s3716e1b8c6cd17b771da77391355749f3/uploads/2026/02/202602091660392380.pdf",
+                source_url=_SRC_URL,
             ))
 
         await session.commit()
         logger.info(
-            "RenewableCapacity updated with MNRE Jan-2026 data (%d records).",
+            "RenewableCapacity updated with MNRE 28.02.2026 data (%d records).",
             len(RENEWABLE_CAPACITY_DATA),
         )
 
@@ -572,7 +574,7 @@ async def seed_power_market() -> None:
                 ppa_rate_per_kwh=ppa,
                 data_year=year, data_month=month,
                 source=src,
-                source_url="https://cdnbbsr.s3waas.gov.in/s3716e1b8c6cd17b771da77391355749f3/uploads/2026/02/202602091660392380.pdf",
+                source_url=_SRC_URL,
             ))
 
         # 2. Power Generation
