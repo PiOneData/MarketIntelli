@@ -62,6 +62,19 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables verified/created.")
 
+    # Ensure re_tariffs has energy_source column (fixes missing column from bad migration)
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(
+                __import__("sqlalchemy", fromlist=["text"]).text(
+                    "ALTER TABLE re_tariffs ADD COLUMN IF NOT EXISTS "
+                    "energy_source VARCHAR(100) NOT NULL DEFAULT 'solar';"
+                )
+            )
+        logger.info("re_tariffs.energy_source column ensured.")
+    except Exception as e:
+        logger.warning("re_tariffs schema check skipped: %s", e)
+
     # Seed data centers from CSV if table is empty
     try:
         from app.scripts.seed_data_centers import seed_data_centers
@@ -96,6 +109,23 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await seed_power_market()
     except Exception as e:
         logger.warning("Power market seed skipped: %s", e)
+
+    # Refresh renewable capacity to MNRE 28.02.2026 data if still on older data
+    try:
+        from app.db.session import async_session_factory as _cap_asf
+        from app.domains.power_market.models.power_market import RenewableCapacity as _RC
+        from sqlalchemy import select as _sel, func as _fn
+        async with _cap_asf() as _db:
+            _result = await _db.execute(
+                _sel(_fn.max(_RC.data_month)).where(_RC.data_year == 2026)
+            )
+            _latest_month = _result.scalar()
+        if _latest_month is None or _latest_month < 2:
+            from app.scripts.seed_power_market import update_renewable_capacity_feb2026
+            await update_renewable_capacity_feb2026()
+            logger.info("Renewable capacity refreshed to MNRE 28.02.2026 data.")
+    except Exception as e:
+        logger.warning("Renewable capacity refresh skipped: %s", e)
 
     # Seed daily RE generation timeseries from CSV
     try:
