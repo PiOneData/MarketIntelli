@@ -131,6 +131,7 @@ CREATE TABLE IF NOT EXISTS tariff_records (
     tariff_type VARCHAR(100) NOT NULL,
     rate_per_kwh DOUBLE PRECISION NOT NULL,
     effective_date TIMESTAMPTZ NOT NULL,
+    energy_source VARCHAR(100) DEFAULT 'solar',
     currency VARCHAR(10) DEFAULT 'INR',
     expiry_date TIMESTAMPTZ,
     source VARCHAR(255) DEFAULT '',
