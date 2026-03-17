@@ -40,11 +40,11 @@ async function fetchIEXData(): Promise<IEXData> {
 // Sources: MNRE Physical Progress Jan 2026, CEA Installed Capacity Report Sep 2025,
 //          Wikipedia Wind/Solar power in India (Jan 2026), IESA 2025
 const RE_ITEMS = [
-  { cls: "solar",   icon: "☀️", num: "140.6", unit: "GW", name: "Solar",         note: "Utility + Rooftop · Rajasthan 36 GW · MNRE Jan 2026" },
-  { cls: "wind",    icon: "💨", num: "55",     unit: "GW", name: "Wind",          note: "Onshore · TN · GJ · RJ zones · MNRE Nov 2025" },
-  { cls: "hydro",   icon: "💧", num: "55.7",   unit: "GW", name: "Hydro",         note: "Large 50.5 GW + Small 5.2 GW · CEA Sep 2025" },
+  { cls: "solar",   icon: "☀️", num: "143.6", unit: "GW", name: "Solar",         note: "Utility + Rooftop · Rajasthan 38.7 GW · MNRE Feb 2026" },
+  { cls: "wind",    icon: "💨", num: "55.1",   unit: "GW", name: "Wind",          note: "Onshore · TN · GJ · RJ zones · MNRE Feb 2026" },
+  { cls: "hydro",   icon: "💧", num: "56.3",   unit: "GW", name: "Hydro",         note: "Large 51.2 GW + Small 5.2 GW · MNRE Feb 2026" },
   { cls: "storage", icon: "🔋", num: "4.75",   unit: "GW", name: "Storage",       note: "Pumped Hydro installed · 0.8 GWh BESS op. · IESA 2025" },
-  { cls: "total",   icon: "⚡", num: "520",    unit: "GW", name: "Total Installed",note: "All sources · Jan 2026 · CEA / MoP" },
+  { cls: "total",   icon: "⚡", num: "520",    unit: "GW", name: "Total Installed",note: "All sources · Feb 2026 · CEA / MoP" },
 ];
 
 // Source: CEA / CREA India Power Sector Overview FY2024-25 · Vasudha Foundation FY25 report
@@ -93,21 +93,21 @@ const NEWS_ITEMS = [
   { cls: "sol", text: "IEX all-time high 13,050 MU in Jan 2026 — ↑19.6% YoY; RTM record 4,638 MU ↑52.8% YoY · IEX Jan 2026" },
   { cls: "pol", text: "APTEL upholds CERC market coupling order Feb 2026 — IEX appeal dismissed; unified clearing price to proceed" },
   { cls: "rec", text: "18.86 lakh RECs traded on IEX in Jan 2026 (↑15.2% YoY); REC floor price ₹2,100 from Apr 2026 · NLDC" },
-  { cls: "win", text: "India adds record 37.9 GW solar + 6.3 GW wind in CY2025 — total RE installed 263 GW · MNRE Jan 2026" },
+  { cls: "win", text: "India adds record 37.9 GW solar + 6.3 GW wind in CY2025 — total RE installed 266.7 GW · MNRE Feb 2026" },
   { cls: "pol", text: "CERC proposes fixed 1.5 paise/unit exchange fee as market coupling replaces bilateral price discovery" },
 ];
 
-// ── Top-5 states by total installed capacity (CEA Sep–Dec 2025 + MNRE Jan 2026) ──
+// ── Top-5 states by total installed capacity (CEA Sep–Dec 2025 + MNRE Feb 2026) ──
 // Total GW = all sources (thermal + RE + nuclear); solar/wind = RE-only breakdown
 // Sources: CEA Installed Capacity Report Sep 2025 (GJ 63.8 GW, MH 54.5 GW, RJ 52.6 GW);
-//          MNRE Physical Progress Jan 2026 (RJ 34.14 GW RE, GJ 33.39 GW RE, TN 25.24 GW RE);
-//          JMK Research CY2025; India Data Map Aug 2025; IndiaDataMap solar/wind state maps Jul 2025
+//          MNRE Physical Progress Feb 2026 (RJ 44.6 GW RE, GJ 44.9 GW RE, TN 27.8 GW RE);
+//          JMK Research CY2025; MNRE State-wise Installed Capacity 28.02.2026
 const TOP5_STATIC = [
-  { rank: "01", name: "Gujarat",     totalGW: "66.0", solar: "24.8", wind: "10.8", re: "52%", reClass: "re-high", barW: "100%", barBg: "linear-gradient(90deg,#43a047 37%,#1e88e5 37% 54%,#9e9e9e 54%)" },
-  { rank: "02", name: "Maharashtra", totalGW: "58.0", solar: "17.2", wind: "7.4",  re: "43%", reClass: "re-high", barW: "88%",  barBg: "linear-gradient(90deg,#43a047 30%,#1e88e5 30% 43%,#9e9e9e 43%)" },
-  { rank: "03", name: "Rajasthan",   totalGW: "56.0", solar: "36.2", wind: "5.2",  re: "73%", reClass: "re-high", barW: "85%",  barBg: "linear-gradient(90deg,#43a047 65%,#1e88e5 65% 74%,#9e9e9e 74%)" },
-  { rank: "04", name: "Tamil Nadu",  totalGW: "36.3", solar: "9.2",  wind: "14.1", re: "70%", reClass: "re-high", barW: "55%",  barBg: "linear-gradient(90deg,#43a047 25%,#1e88e5 25% 64%,#9e9e9e 64%)" },
-  { rank: "05", name: "Karnataka",   totalGW: "35.0", solar: "21.5", wind: "5.8",  re: "78%", reClass: "re-high", barW: "53%",  barBg: "linear-gradient(90deg,#43a047 61%,#1e88e5 61% 78%,#9e9e9e 78%)" },
+  { rank: "01", name: "Gujarat",     totalGW: "66.0", solar: "27.5", wind: "15.2", re: "68%", reClass: "re-high", barW: "100%", barBg: "linear-gradient(90deg,#43a047 42%,#1e88e5 42% 65%,#9e9e9e 65%)" },
+  { rank: "02", name: "Maharashtra", totalGW: "58.0", solar: "19.4", wind: "5.9",  re: "55%", reClass: "re-high", barW: "88%",  barBg: "linear-gradient(90deg,#43a047 33%,#1e88e5 33% 43%,#9e9e9e 43%)" },
+  { rank: "03", name: "Rajasthan",   totalGW: "56.0", solar: "38.7", wind: "5.2",  re: "80%", reClass: "re-high", barW: "85%",  barBg: "linear-gradient(90deg,#43a047 69%,#1e88e5 69% 78%,#9e9e9e 78%)" },
+  { rank: "04", name: "Tamil Nadu",  totalGW: "36.3", solar: "12.4", wind: "12.1", re: "77%", reClass: "re-high", barW: "55%",  barBg: "linear-gradient(90deg,#43a047 34%,#1e88e5 34% 67%,#9e9e9e 67%)" },
+  { rank: "05", name: "Karnataka",   totalGW: "35.0", solar: "11.0", wind: "8.5",  re: "75%", reClass: "re-high", barW: "53%",  barBg: "linear-gradient(90deg,#43a047 31%,#1e88e5 31% 56%,#9e9e9e 56%)" },
 ];
 
 // ── News cycler hook ─────────────────────────────────────────────────────────
@@ -274,7 +274,7 @@ export default function DashboardPage() {
                     ))}
                   </div>
                   <div style={{ fontFamily: "var(--mono)", fontSize: 9, color: "var(--faint)", marginTop: 6, letterSpacing: ".06em" }}>
-                    GW · CEA Sep 2025 + MNRE Jan 2026 · {capQ.isError ? "⚠ API error" : "MNRE"}
+                    GW · CEA Sep 2025 + MNRE Feb 2026 · {capQ.isError ? "⚠ API error" : "MNRE"}
                   </div>
                 </div>
 
@@ -363,7 +363,7 @@ export default function DashboardPage() {
       {/* ═══ RE CAPACITY BAND ═══════════════════════════════════════════════ */}
       <div className="re-band">
         <div className="re-band-inner">
-          <div className="re-band-label">🌿 RE Capacity Monitored &nbsp;·&nbsp; 263 GW India Total · MNRE Jan 2026</div>
+          <div className="re-band-label">🌿 RE Capacity Monitored &nbsp;·&nbsp; 266.7 GW India Total · MNRE Feb 2026</div>
           <div className="re-band-items">
             <div className="re-band-track">
               {[...RE_ITEMS, ...RE_ITEMS].map((item, i) => (

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { usePolicies, useTariffs, useSubsidies, useComplianceAlerts } from "../hooks/usePolicy";
+import { usePolicies, useSubsidies, useComplianceAlerts } from "../hooks/usePolicy";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ErrorMessage from "../components/common/ErrorMessage";
 import type { Policy } from "../types/policy";
@@ -166,114 +166,6 @@ function PolicyRepositorySection() {
       </div>
       {filtered.length === 0 && (
         <p className="pol-empty">No policies match the current filters.</p>
-      )}
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Tariff Tracker Section                                             */
-/* ------------------------------------------------------------------ */
-
-function TariffTrackerSection() {
-  const [stateFilter, setStateFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
-  const { data: tariffs = [], isLoading, error } = useTariffs();
-
-  const states = useMemo(
-    () => [...new Set(tariffs.map((t) => t.state))].sort(),
-    [tariffs]
-  );
-  const types = useMemo(
-    () => [...new Set(tariffs.map((t) => t.tariff_type))].sort(),
-    [tariffs]
-  );
-  const filtered = useMemo(
-    () =>
-      tariffs.filter(
-        (t) =>
-          (!stateFilter || t.state === stateFilter) &&
-          (!typeFilter || t.tariff_type === typeFilter)
-      ),
-    [tariffs, stateFilter, typeFilter]
-  );
-
-  if (isLoading) return <LoadingSpinner />;
-  if (error) return <ErrorMessage message="Failed to load tariff data" />;
-
-  return (
-    <section className="pol-section">
-      <h3>Tariff Tracker</h3>
-      <p className="pol-section-desc">
-        Historical and current feed-in tariffs, SECI/NTPC auction results, and PPA rates across states.
-      </p>
-      <div className="pol-data-source" style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
-        <span>Official sources:</span>
-        <a href="https://www.seci.co.in/tenders.aspx" target="_blank" rel="noopener noreferrer" className="pol-link">SECI Auction Results</a>
-        <span>·</span>
-        <a href="https://cercind.gov.in/orders.html" target="_blank" rel="noopener noreferrer" className="pol-link">CERC Tariff Orders</a>
-        <span>·</span>
-        <a href="https://mercomindia.com/category/regulation/" target="_blank" rel="noopener noreferrer" className="pol-link">SERC Orders (Mercom India)</a>
-        <span>·</span>
-        <a href="https://ntpctender.com/" target="_blank" rel="noopener noreferrer" className="pol-link">NTPC RE Auctions</a>
-        <span>·</span>
-        <a href="https://mnre.gov.in/" target="_blank" rel="noopener noreferrer" className="pol-link">MNRE</a>
-        <span className="pol-data-note">· All tariffs shown are for renewable energy sources (solar, wind, hybrid, small hydro, biomass)</span>
-      </div>
-      <div className="pm-filters">
-        <select value={stateFilter} onChange={(e) => setStateFilter(e.target.value)}>
-          <option value="">All States</option>
-          {states.map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
-        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-          <option value="">All Types</option>
-          {types.map((t) => (
-            <option key={t} value={t}>{t.replace(/_/g, " ")}</option>
-          ))}
-        </select>
-        <span className="pm-filter-count">{filtered.length} records</span>
-      </div>
-      <div className="pm-table-wrapper">
-        <table className="pm-table">
-          <thead>
-            <tr>
-              <th>State</th>
-              <th>Source</th>
-              <th>Type</th>
-              <th>Rate (INR/kWh)</th>
-              <th>Effective</th>
-              <th>Expiry</th>
-              <th>Recency</th>
-              <th>Data Source</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((t) => {
-              const recency = recencyLabel(t.effective_date);
-              return (
-                <tr key={t.id}>
-                  <td>{t.state}</td>
-                  <td>
-                    <span className={`pm-source-badge pm-source-badge--${t.energy_source}`}>
-                      {t.energy_source.replace(/_/g, " ")}
-                    </span>
-                  </td>
-                  <td>{t.tariff_type.replace(/_/g, " ")}</td>
-                  <td className="pm-num pm-rate">{t.rate_per_kwh.toFixed(2)}</td>
-                  <td>{formatDate(t.effective_date)}</td>
-                  <td>{formatDate(t.expiry_date)}</td>
-                  <td><span className={`pol-recency ${recency.className}`}>{recency.text}</span></td>
-                  <td className="pol-source-cell">{t.source}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      {filtered.length === 0 && (
-        <p className="pol-empty">No tariff records match the current filters.</p>
       )}
     </section>
   );
@@ -672,8 +564,7 @@ function PolicyPage() {
       <h2>Policy &amp; Regulatory Intelligence</h2>
 
       {activeSection === "policy-repository" && <PolicyRepositorySection />}
-      {activeSection === "tariff-tracker" && <TariffTrackerSection />}
-      {activeSection === "compliance-alerts" && <ComplianceAlertsSection />}
+{activeSection === "compliance-alerts" && <ComplianceAlertsSection />}
       {activeSection === "subsidy-monitor" && <SubsidyMonitorSection />}
     </div>
   );
