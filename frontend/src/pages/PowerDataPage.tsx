@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import {
   usePowerMarketOverview,
   useRenewableCapacity,
@@ -96,6 +96,20 @@ function OverviewSection() {
           </div>
         ))}
       </div>
+      <div className="pm-overview-footer">
+        <div className="pm-source-bar">
+          <span className="pm-source-label">Source:</span>
+          <a href="https://cea.nic.in/report/monthly/" target="_blank" rel="noopener noreferrer" className="pm-source-link">CEA Monthly Report</a>
+          <span>·</span>
+          <a href="https://mnre.gov.in/physical-progress/" target="_blank" rel="noopener noreferrer" className="pm-source-link">MNRE Physical Progress</a>
+          <span>·</span>
+          <a href="https://npp.gov.in/" target="_blank" rel="noopener noreferrer" className="pm-source-link">National Power Portal</a>
+          <span className="pm-source-year">· Data as of {overview.data_year}</span>
+        </div>
+        <Link to="/power-data/renewable-capacity" className="pm-capacity-link">
+          View State-wise Installed Capacity →
+        </Link>
+      </div>
     </section>
   );
 }
@@ -128,6 +142,11 @@ function CapacitySection({
           (!sourceFilter || r.energy_source === sourceFilter)
       ),
     [records, stateFilter, sourceFilter]
+  );
+
+  const totalInstalled = useMemo(
+    () => filtered.reduce((sum, r) => sum + (r.installed_capacity_mw ?? 0), 0),
+    [filtered]
   );
 
   if (isLoading) return <LoadingSpinner />;
@@ -185,7 +204,22 @@ function CapacitySection({
               </tr>
             ))}
           </tbody>
+          <tfoot>
+            <tr className="pm-table-total-row">
+              <td colSpan={2}><strong>Total (Filtered — Installed RE)</strong></td>
+              <td className="pm-num"><strong>{formatNumber(totalInstalled)} MW</strong></td>
+              <td colSpan={6} />
+            </tr>
+          </tfoot>
         </table>
+      </div>
+      <div className="pm-source-bar" style={{ marginTop: "0.75rem" }}>
+        <span className="pm-source-label">Source:</span>
+        <a href="https://cea.nic.in/report/monthly/" target="_blank" rel="noopener noreferrer" className="pm-source-link">CEA Monthly Reports</a>
+        <span>·</span>
+        <a href="https://mnre.gov.in/physical-progress/" target="_blank" rel="noopener noreferrer" className="pm-source-link">MNRE Physical Progress Dashboard</a>
+        <span>·</span>
+        <a href="https://npp.gov.in/" target="_blank" rel="noopener noreferrer" className="pm-source-link">National Power Portal</a>
       </div>
     </section>
   );

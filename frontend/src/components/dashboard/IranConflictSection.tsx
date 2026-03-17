@@ -148,11 +148,14 @@ export default function IranConflictSection() {
             </div>
             <h2>Iran Conflict &amp; India Energy Impact</h2>
             <p className="s-sub">
-              Six key risk vectors tracked as of March 2026 — live news feed sourced from Down To Earth, Business Standard, SaurEnergy, Policy Circle, and CEEW.
+              Six key risk vectors tracked as of March 2026 — curated analysis sourced from Down To Earth, Business Standard, SaurEnergy, Policy Circle, and CEEW.
             </p>
           </div>
           <div className="alerts-meta">
-            <span className="alerts-meta-date">Last updated: March 6, 2026</span>
+            <div className="alerts-meta-date">
+              <span className="alerts-static-label">Static · Last reviewed: March 6, 2026</span>
+              <span className="alerts-static-note">Curated analysis — not a live feed. For live Brent &amp; USD/INR see ticker ↑</span>
+            </div>
             <span className="alerts-meta-badge">6 Active Risk Vectors</span>
           </div>
         </div>
