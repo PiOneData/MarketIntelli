@@ -71,11 +71,11 @@ function GeoAnalyticsPage() {
             </a>
           </div>
           <div className="geo-iframe-wrap">
-            <iframe
-              src="https://tngis.tn.gov.in/apps/gi_viewer/"
-              title="TN GIS Land Record Viewer"
+            <img
+              src="/tn-land-record-preview.png"
+              alt="Tamil Nilam GI Viewer — land parcel information with district, survey number, ownership and land details"
               className="geo-iframe"
-              allowFullScreen
+              style={{ objectFit: "cover", objectPosition: "top" }}
             />
           </div>
         </section>
