@@ -75,7 +75,7 @@ export async function generateReport(
     }),
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({})) as { error?: string };
+    const err = await res.json().catch(() => ({})) as { error?: string; details?: string };
     throw new Error(err.error ?? 'Failed to generate report');
   }
   return res.json() as Promise<ReportResponse>;

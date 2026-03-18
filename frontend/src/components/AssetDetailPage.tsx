@@ -465,7 +465,8 @@ export default function AssetDetailPage({ id, type, onBack }: { id: string; type
             }, 100);
         } catch (error) {
             console.error(error);
-            alert('Failed to generate Assessment report. Check that Azure OpenAI credentials are configured in backend/.env, or that Ollama is running.');
+            const msg = error instanceof Error ? error.message : String(error);
+            alert(`Failed to generate Assessment report: ${msg}`);
         } finally {
             setIsGeneratingReport(false);
         }
