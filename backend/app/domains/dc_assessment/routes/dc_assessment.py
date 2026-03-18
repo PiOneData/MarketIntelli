@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 import textwrap
 from datetime import datetime
@@ -17,6 +18,7 @@ from app.domains.dc_assessment.models.report import AssessmentReport
 from app.domains.dc_assessment.services.report_service import ReportService
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 # ── Request / Response schemas ───────────────────────────────────────────────
@@ -132,7 +134,7 @@ def _build_prompt(p: ReportPayload) -> str:
         Type: {asset_type}
         Location: {p.city}, {p.state}, {p.country}
         Coordinates: {p.lat:.4f}° N, {p.lon:.4f}° E
-        Power Capacity: {p.power_mw or "N/A"} MW
+        Power Capacity: {p.power_mw if p.power_mw not in (None, "", "Not Specified", "N/A") else "N/A"} MW
 
         **Solar Metrics:**
         GHI (daily): {p.solar.get("ghi", "N/A")} kWh/m²/day
@@ -305,15 +307,19 @@ async def generate_report(
     try:
         markdown_content = await service.generate_markdown(prompt)
     except Exception as exc:
+        logger.error("Report generation failed for asset_key=%s: %s", payload.asset_key, exc, exc_info=True)
         return JSONResponse(
             status_code=503,
-            content={"error": "LLM service not available", "details": str(exc)},
+            content={"error": "Azure OpenAI service unavailable", "details": str(exc)},
         )
 
     html_body = _markdown_to_html(markdown_content)
 
-    # Save to DB
-    power_mw = float(payload.power_mw) if payload.power_mw is not None else None
+    # Save to DB — power_mw may arrive as a string (e.g. "Not Specified") from GeoJSON properties
+    try:
+        power_mw = float(payload.power_mw) if payload.power_mw is not None else None
+    except (ValueError, TypeError):
+        power_mw = None
     report = await service.upsert(
         asset_key=payload.asset_key or f"{payload.asset_type}_unknown",
         asset_name=asset_name,

@@ -65,19 +65,29 @@ class ReportService:
         return report
 
     async def generate_markdown(self, prompt: str) -> str:
-        """Call Azure OpenAI if configured, otherwise fall back to Ollama."""
+        """Call Azure OpenAI if configured, otherwise fall back to Ollama.
+
+        When Azure credentials are present, Azure is used exclusively — errors are
+        raised immediately so the caller returns a clear 503 rather than silently
+        attempting Ollama (which is not available in production).
+        """
         if settings.AZURE_OPENAI_API_KEY and settings.AZURE_OPENAI_ENDPOINT:
             try:
                 return await self._call_azure(prompt)
             except Exception as exc:
-                logger.warning(
-                    "Azure OpenAI report generation failed, falling back to Ollama: %s", exc
-                )
+                logger.error("Azure OpenAI report generation failed: %s", exc)
+                raise
         return await self._call_ollama(prompt)
 
     async def _call_azure(self, prompt: str) -> str:
         import openai  # lazy import — optional dependency
 
+        logger.info(
+            "Calling Azure OpenAI: endpoint=%s deployment=%s api_version=%s",
+            settings.AZURE_OPENAI_ENDPOINT,
+            settings.AZURE_OPENAI_DEPLOYMENT,
+            settings.AZURE_OPENAI_API_VERSION,
+        )
         client = openai.AsyncAzureOpenAI(
             api_key=settings.AZURE_OPENAI_API_KEY,
             azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
@@ -98,7 +108,9 @@ class ReportService:
             temperature=0.1,
             max_tokens=4000,
         )
-        return response.choices[0].message.content or ""
+        content = response.choices[0].message.content or ""
+        logger.info("Azure OpenAI returned %d chars", len(content))
+        return content
 
     async def _call_ollama(self, prompt: str) -> str:
         async with httpx.AsyncClient(timeout=120.0) as client:
