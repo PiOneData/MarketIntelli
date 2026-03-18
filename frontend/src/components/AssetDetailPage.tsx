@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type MouseEvent } from 'react';
 import { AssetFeature, AssetGeoJSON, SolarAssessment, WindAssessment, WaterAssessment, AssetType } from '../types/dc';
 import { getGWColor, getRiskDescription, formatNum, MONTHS, getRatingColor, getWindGradeColor } from '../lib/dcUtils';
-import { ArrowLeft, ExternalLink, Building2, Zap, Droplets, Sun, Wind, CloudRain, Calendar, Waves, PlaneTakeoff, ShieldCheck, X, Search, Info, HelpCircle, FileText, Loader2 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Building2, Zap, Droplets, Sun, Wind, CloudRain, Calendar, Waves, PlaneTakeoff, ShieldCheck, X, Search, HelpCircle, FileText, Loader2, Download, RefreshCw, ChevronDown, ChevronUp, Bot } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import MiniMap from './dc-assessment/MiniMap';
+import { getReport, generateReport, downloadReport, type ReportResponse } from '../api/dcAssessment';
 
 
 // ─── Count-up hook ────────────────────────────────────────────────────────────
@@ -336,8 +337,11 @@ export default function AssetDetailPage({ id, type, onBack }: { id: string; type
     const [activeTab, setActiveTab] = useState(0);
     const [glossaryOpen, setGlossaryOpen] = useState(false);
     const [metadata, setMetadata] = useState<any>(null);
+    // ── AI Report state ──
+    const [cachedReport, setCachedReport] = useState<ReportResponse | null>(null);
+    const [reportCheckDone, setReportCheckDone] = useState(false);
     const [isGeneratingReport, setIsGeneratingReport] = useState(false);
-    const [reportSuccess, setReportSuccess] = useState(false);
+    const [reportExpanded, setReportExpanded] = useState(false);
 
     // ── All hooks unconditionally first ──
     const gw = feature?.properties.local_analysis?.groundwater as any;
@@ -373,33 +377,44 @@ export default function AssetDetailPage({ id, type, onBack }: { id: string; type
         });
     }, [id]);
 
-    const handleGenerateReport = async () => {
-        if (!feature) return;
+    // ── Check for cached report when asset loads ─────────────────────────────
+    useEffect(() => {
+        if (!id || !type) return;
+        const assetKey = `${type}_${id}`;
+        setReportCheckDone(false);
+        setCachedReport(null);
+        setReportExpanded(false);
+        getReport(assetKey)
+            .then(report => {
+                if (report) setCachedReport(report);
+            })
+            .catch(() => {})
+            .finally(() => setReportCheckDone(true));
+    }, [id, type]);
+
+    const handleGenerateReport = async (forceRegenerate = false) => {
+        if (!feature || !type) return;
+        if (forceRegenerate && cachedReport) {
+            if (!window.confirm('Regenerate the report? This will replace the saved version.')) return;
+        }
+        const assetKey = `${type}_${id}`;
         setIsGeneratingReport(true);
         try {
-            const res = await fetch('/api/generate-report', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...feature.properties, lat: feature.geometry.coordinates[1], lon: feature.geometry.coordinates[0] })
-            });
-            if (!res.ok) throw new Error('Failed to generate report');
-
-            const blob = await res.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${(feature.properties.dc_name || feature.properties.airport_name || 'Site').replace(/\\s+/g, '_')}_Analysis.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-
-            setReportSuccess(true);
-            setTimeout(() => setReportSuccess(false), 3000);
-
+            const report = await generateReport(
+                {
+                    ...feature.properties,
+                    lat: feature.geometry.coordinates[1],
+                    lon: feature.geometry.coordinates[0],
+                },
+                assetKey,
+                type,
+                forceRegenerate,
+            );
+            setCachedReport(report);
+            setReportExpanded(true);
         } catch (error) {
             console.error(error);
-            alert('Failed to generate AI report. Make sure local Ollama is running.');
+            alert('Failed to generate AI report. Check that Azure OpenAI credentials are configured in backend/.env, or that Ollama is running.');
         } finally {
             setIsGeneratingReport(false);
         }
@@ -446,14 +461,27 @@ export default function AssetDetailPage({ id, type, onBack }: { id: string; type
                     <button onClick={() => setGlossaryOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>
                         <HelpCircle size={14} /> View Legend
                     </button>
-                    <button
-                        onClick={handleGenerateReport}
-                        disabled={isGeneratingReport || reportSuccess}
-                        style={{ display: 'flex', alignItems: 'center', gap: '6px', background: reportSuccess ? '#059669' : (isGeneratingReport ? '#e2e8f0' : '#1e3a8a'), color: (isGeneratingReport && !reportSuccess) ? '#94a3b8' : '#fff', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: (isGeneratingReport || reportSuccess) ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
-                    >
-                        {isGeneratingReport ? <Loader2 size={14} className="animate-spin" style={{ animation: 'spin 1.5s linear infinite' }} /> : (reportSuccess ? <ShieldCheck size={14} /> : <FileText size={14} />)}
-                        {isGeneratingReport ? 'Generating AI Report...' : (reportSuccess ? 'Report Downloaded!' : 'Generate AI Report')}
-                    </button>
+                    {cachedReport ? (
+                        <button
+                            onClick={() => setReportExpanded((prev: boolean) => !prev)}
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f0fdf4', color: '#15803d', border: '1px solid #86efac', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', transition: 'background 0.2s' }}
+                        >
+                            <ShieldCheck size={14} /> AI Report Saved
+                        </button>
+                    ) : reportCheckDone ? (
+                        <button
+                            onClick={() => handleGenerateReport(false)}
+                            disabled={isGeneratingReport}
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', background: isGeneratingReport ? '#e2e8f0' : '#1e3a8a', color: isGeneratingReport ? '#94a3b8' : '#fff', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: isGeneratingReport ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
+                        >
+                            {isGeneratingReport ? <Loader2 size={14} style={{ animation: 'spin 1.5s linear infinite' }} /> : <FileText size={14} />}
+                            {isGeneratingReport ? 'Generating...' : 'Generate AI Report'}
+                        </button>
+                    ) : (
+                        <span style={{ fontSize: '11px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <Loader2 size={12} style={{ animation: 'spin 1.5s linear infinite' }} /> Checking report…
+                        </span>
+                    )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {p.airport_name ? <PlaneTakeoff size={15} color="#1e40af" /> : <Building2 size={15} color="#1e40af" />}
@@ -839,12 +867,134 @@ export default function AssetDetailPage({ id, type, onBack }: { id: string; type
                 </div>
             </div >
 
+            {/* ── AI Environmental Report Panel ─────────────────────────────────── */}
+            {reportCheckDone && (
+                <div style={{ maxWidth: '1340px', margin: '0 auto', padding: '0 20px 48px' }}>
+                    <div style={{
+                        background: '#fff',
+                        borderRadius: '20px',
+                        boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
+                        border: '1px solid #e2e8f0',
+                        overflow: 'hidden',
+                    }}>
+                        {/* Header row */}
+                        <div style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            padding: '18px 24px',
+                            background: 'linear-gradient(135deg, rgba(30,58,138,0.04) 0%, rgba(59,130,246,0.04) 100%)',
+                            borderBottom: reportExpanded ? '1px solid #e2e8f0' : 'none',
+                            cursor: cachedReport ? 'pointer' : 'default',
+                        }}
+                            onClick={() => { if (cachedReport) setReportExpanded((prev: boolean) => !prev); }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #dbeafe' }}>
+                                    <Bot size={18} color="#1d4ed8" />
+                                </div>
+                                <div>
+                                    <p style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', margin: 0 }}>AI Environmental Report</p>
+                                    {cachedReport ? (
+                                        <p style={{ fontSize: '11px', color: '#64748b', margin: 0, marginTop: '2px' }}>
+                                            {cachedReport.cached ? '⚡ Loaded from cache' : '✨ Freshly generated'} · {new Date(cachedReport.generated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                        </p>
+                                    ) : (
+                                        <p style={{ fontSize: '11px', color: '#94a3b8', margin: 0, marginTop: '2px' }}>No report generated yet</p>
+                                    )}
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={(e: MouseEvent) => e.stopPropagation()}>
+                                {cachedReport && (
+                                    <>
+                                        <button
+                                            onClick={() => downloadReport(cachedReport)}
+                                            style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#f8fafc', color: '#374151', border: '1px solid #e2e8f0', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                                        >
+                                            <Download size={13} /> Download
+                                        </button>
+                                        <button
+                                            onClick={() => handleGenerateReport(true)}
+                                            disabled={isGeneratingReport}
+                                            style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#f8fafc', color: '#64748b', border: '1px solid #e2e8f0', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: isGeneratingReport ? 'not-allowed' : 'pointer' }}
+                                        >
+                                            {isGeneratingReport ? <Loader2 size={13} style={{ animation: 'spin 1.5s linear infinite' }} /> : <RefreshCw size={13} />}
+                                            {isGeneratingReport ? 'Regenerating…' : 'Regenerate'}
+                                        </button>
+                                        <button
+                                            onClick={() => setReportExpanded((prev: boolean) => !prev)}
+                                            style={{ display: 'flex', alignItems: 'center', gap: '5px', background: reportExpanded ? '#eff6ff' : '#f8fafc', color: reportExpanded ? '#1d4ed8' : '#64748b', border: `1px solid ${reportExpanded ? '#bfdbfe' : '#e2e8f0'}`, padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                                        >
+                                            {reportExpanded ? <><ChevronUp size={13} /> Collapse</> : <><ChevronDown size={13} /> View Report</>}
+                                        </button>
+                                    </>
+                                )}
+                                {!cachedReport && !isGeneratingReport && (
+                                    <button
+                                        onClick={() => handleGenerateReport(false)}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#1e3a8a', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(30,58,138,0.25)' }}
+                                    >
+                                        <Bot size={14} /> Generate AI Report
+                                    </button>
+                                )}
+                                {isGeneratingReport && !cachedReport && (
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
+                                        <Loader2 size={14} style={{ animation: 'spin 1.5s linear infinite' }} /> Generating report…
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Generating state */}
+                        {isGeneratingReport && (
+                            <div style={{ padding: '40px 24px', textAlign: 'center' }}>
+                                <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                                    <div style={{
+                                        width: '48px', height: '48px',
+                                        background: 'linear-gradient(135deg, #1e3a8a, #3b82f6)',
+                                        borderRadius: '14px',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        boxShadow: '0 8px 20px rgba(30,58,138,0.3)',
+                                        animation: 'pulse 1.5s ease-in-out infinite',
+                                    }}>
+                                        <Bot size={24} color="#fff" />
+                                    </div>
+                                    <div>
+                                        <p style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Analysing environmental data…</p>
+                                        <p style={{ fontSize: '12px', color: '#64748b', margin: '6px 0 0' }}>Azure OpenAI is generating your assessment report. This may take 20–40 seconds.</p>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        {['Solar', 'Wind', 'Hydrology', 'Resilience'].map((label, i) => (
+                                            <span key={label} style={{ fontSize: '11px', fontWeight: 600, color: '#3b82f6', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '99px', padding: '3px 10px', animation: `fadeSlideUp 0.4s ease ${i * 0.15}s both` }}>{label}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Report content */}
+                        {reportExpanded && cachedReport && !isGeneratingReport && (
+                            <div style={{
+                                padding: '0',
+                                maxHeight: '680px',
+                                overflowY: 'auto',
+                                borderLeft: '4px solid #1e3a8a',
+                            }}>
+                                <div
+                                    style={{ padding: '28px 32px', fontSize: '14px', lineHeight: '1.75', color: '#1e293b' }}
+                                    dangerouslySetInnerHTML={{ __html: cachedReport.html_content }}
+                                />
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
             <GlossaryModal isOpen={glossaryOpen} onClose={() => setGlossaryOpen(false)} />
 
 
             <style>{`
         @keyframes fadeSlideUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(0.95); } }
       `}</style>
         </div >
     );
