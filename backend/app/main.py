@@ -146,6 +146,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         "ALTER TABLE assessment_reports ADD COLUMN IF NOT EXISTS water_score FLOAT;",
         "ALTER TABLE assessment_reports ADD COLUMN IF NOT EXISTS overall_score FLOAT;",
         "ALTER TABLE assessment_reports ADD COLUMN IF NOT EXISTS rating VARCHAR(100);",
+        "ALTER TABLE assessment_reports ADD COLUMN IF NOT EXISTS analysis_json TEXT;",
     ]:
         await _safe_add_column(ddl)
     logger.info("assessment_reports score columns ensured.")
