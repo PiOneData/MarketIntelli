@@ -247,37 +247,26 @@ def _parse_rss_feed(xml_text: str, source_name: str) -> list[dict]:
 # ─────────────────────────────────────────────────────────────────────────────
 
 async def _call_llm(prompt: str, max_tokens: int = 400) -> str:
-    """Call Azure OpenAI if configured, else Ollama."""
-    if settings.AZURE_OPENAI_API_KEY and settings.AZURE_OPENAI_ENDPOINT:
-        try:
-            import openai  # lazy import
-            client = openai.AsyncAzureOpenAI(
-                api_key=settings.AZURE_OPENAI_API_KEY,
-                azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
-                api_version=settings.AZURE_OPENAI_API_VERSION,
-            )
-            resp = await client.chat.completions.create(
-                model=settings.AZURE_OPENAI_DEPLOYMENT,
-                messages=[
-                    {"role": "system", "content": "You are a market intelligence analyst for India's renewable energy sector. Respond only with valid JSON."},
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0.1,
-                max_tokens=max_tokens,
-            )
-            return resp.choices[0].message.content or ""
-        except Exception as exc:
-            logger.debug("Azure OpenAI news enrichment failed: %s", exc)
+    """Call Azure OpenAI for news enrichment."""
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(
-                f"{settings.OLLAMA_URL}/api/generate",
-                json={"model": settings.OLLAMA_MODEL, "prompt": prompt, "stream": False, "options": {"temperature": 0.1}},
-            )
-            resp.raise_for_status()
-            return resp.json().get("response", "")
+        import openai  # lazy import
+        client = openai.AsyncAzureOpenAI(
+            api_key=settings.AZURE_OPENAI_API_KEY,
+            azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
+            api_version=settings.AZURE_OPENAI_API_VERSION,
+        )
+        resp = await client.chat.completions.create(
+            model=settings.AZURE_OPENAI_DEPLOYMENT,
+            messages=[
+                {"role": "system", "content": "You are a market intelligence analyst for India's renewable energy sector. Respond only with valid JSON."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.1,
+            max_tokens=max_tokens,
+        )
+        return resp.choices[0].message.content or ""
     except Exception as exc:
-        logger.debug("Ollama news enrichment failed: %s", exc)
+        logger.debug("Azure OpenAI news enrichment failed: %s", exc)
     return ""
 
 
