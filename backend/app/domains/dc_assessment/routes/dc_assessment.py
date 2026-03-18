@@ -5,12 +5,15 @@ import textwrap
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
+from sqlalchemy import select
+
+from app.domains.dc_assessment.models.report import AssessmentReport
 from app.domains.dc_assessment.services.report_service import ReportService
 
 router = APIRouter()
@@ -49,6 +52,25 @@ class ReportResponse(BaseModel):
     html_content: str
     generated_at: str
     cached: bool
+    solar_score: float | None = None
+    wind_score: float | None = None
+    water_score: float | None = None
+    overall_score: float | None = None
+    rating: str | None = None
+
+
+class ScorePayload(BaseModel):
+    solar_score: float
+    wind_score: float
+    water_score: float
+    overall_score: float
+    rating: str
+    asset_name: str
+    asset_type: str
+    city: str | None = None
+    state: str | None = None
+    lat: float
+    lon: float
 
 
 # ── Prompt builder ────────────────────────────────────────────────────────────
@@ -218,6 +240,30 @@ def _build_full_html(name: str, body_html: str) -> str:
 </html>"""
 
 
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+
+def _to_response(report: AssessmentReport, cached: bool) -> ReportResponse:
+    return ReportResponse(
+        asset_key=report.asset_key,
+        asset_name=report.asset_name,
+        asset_type=report.asset_type,
+        city=report.city,
+        state=report.state,
+        lat=report.lat,
+        lon=report.lon,
+        markdown_content=report.markdown_content,
+        html_content=report.html_content,
+        generated_at=report.generated_at.isoformat(),
+        cached=cached,
+        solar_score=report.solar_score,
+        wind_score=report.wind_score,
+        water_score=report.water_score,
+        overall_score=report.overall_score,
+        rating=report.rating,
+    )
+
+
 # ── Routes ────────────────────────────────────────────────────────────────────
 
 
@@ -238,19 +284,7 @@ async def generate_report(
     if payload.asset_key and not payload.force_regenerate:
         cached = await service.get_by_asset_key(payload.asset_key)
         if cached:
-            return ReportResponse(
-                asset_key=cached.asset_key,
-                asset_name=cached.asset_name,
-                asset_type=cached.asset_type,
-                city=cached.city,
-                state=cached.state,
-                lat=cached.lat,
-                lon=cached.lon,
-                markdown_content=cached.markdown_content,
-                html_content=cached.html_content,
-                generated_at=cached.generated_at.isoformat(),
-                cached=True,
-            )
+            return _to_response(cached, cached=True)
 
     # ── Generate fresh report ────────────────────────────────────────────────
     prompt = _build_prompt(payload)
@@ -277,19 +311,7 @@ async def generate_report(
         html_content=html_body,
     )
 
-    return ReportResponse(
-        asset_key=report.asset_key,
-        asset_name=report.asset_name,
-        asset_type=report.asset_type,
-        city=report.city,
-        state=report.state,
-        lat=report.lat,
-        lon=report.lon,
-        markdown_content=report.markdown_content,
-        html_content=report.html_content,
-        generated_at=report.generated_at.isoformat(),
-        cached=False,
-    )
+    return _to_response(report, cached=False)
 
 
 @router.get("/reports/{asset_key:path}", response_model=None)
@@ -303,19 +325,77 @@ async def get_report(
     if not report:
         return JSONResponse(status_code=404, content={"error": "No cached report found"})
 
-    return ReportResponse(
-        asset_key=report.asset_key,
-        asset_name=report.asset_name,
-        asset_type=report.asset_type,
-        city=report.city,
-        state=report.state,
-        lat=report.lat,
-        lon=report.lon,
-        markdown_content=report.markdown_content,
-        html_content=report.html_content,
-        generated_at=report.generated_at.isoformat(),
-        cached=True,
+    return _to_response(report, cached=True)
+
+
+@router.get("/saved", response_model=list[ReportResponse])
+async def list_saved_assessments(
+    db: AsyncSession = Depends(get_db),
+) -> list[ReportResponse]:
+    """Return all assessment reports that have scores saved (for Profile page)."""
+    result = await db.execute(
+        select(AssessmentReport)
+        .where(AssessmentReport.overall_score.isnot(None))
+        .order_by(AssessmentReport.generated_at.desc())
     )
+    reports = result.scalars().all()
+    return [_to_response(r, cached=True) for r in reports]
+
+
+@router.post("/reports/{asset_key:path}/scores", response_model=ReportResponse, status_code=201)
+async def save_assessment_scores(
+    asset_key: str,
+    payload: ScorePayload,
+    db: AsyncSession = Depends(get_db),
+) -> ReportResponse:
+    """Upsert renewable energy scores for an asset. Creates a stub row if no AI report exists yet."""
+    service = ReportService(db)
+    existing = await service.get_by_asset_key(asset_key)
+    if existing:
+        existing.solar_score = payload.solar_score
+        existing.wind_score = payload.wind_score
+        existing.water_score = payload.water_score
+        existing.overall_score = payload.overall_score
+        existing.rating = payload.rating
+        await db.commit()
+        await db.refresh(existing)
+        return _to_response(existing, cached=True)
+
+    from datetime import UTC
+    report = AssessmentReport(
+        asset_key=asset_key,
+        asset_name=payload.asset_name,
+        asset_type=payload.asset_type,
+        city=payload.city or "",
+        state=payload.state or "",
+        lat=payload.lat,
+        lon=payload.lon,
+        markdown_content="",
+        html_content="",
+        solar_score=payload.solar_score,
+        wind_score=payload.wind_score,
+        water_score=payload.water_score,
+        overall_score=payload.overall_score,
+        rating=payload.rating,
+    )
+    db.add(report)
+    await db.commit()
+    await db.refresh(report)
+    return _to_response(report, cached=False)
+
+
+@router.delete("/reports/{asset_key:path}", status_code=204)
+async def delete_assessment(
+    asset_key: str,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Delete a saved assessment report by asset_key."""
+    service = ReportService(db)
+    report = await service.get_by_asset_key(asset_key)
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    await db.delete(report)
+    await db.commit()
 
 
 @router.get("/reports/{asset_key:path}/download", response_model=None)

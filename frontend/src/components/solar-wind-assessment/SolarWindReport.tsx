@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import apiClient from "../../api/client";
+import { saveAssessmentScores, listSavedAssessments } from "../../api/dcAssessment";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Area,
@@ -128,35 +129,6 @@ const GUIDE_ITEMS = [
 ];
 
 // ── Main Component ───────────────────────────────────────────────────────────
-const SAVED_REPORTS_KEY = "mi_saved_assessment_reports_v1";
-
-interface SavedAssessmentReport {
-  id: string;
-  title: string;
-  location: string;
-  type: "datacenter" | "airport" | "site";
-  lat: number;
-  lng: number;
-  rating: string;
-  overallScore: number;
-  solarScore: number;
-  windScore: number;
-  waterScore: number;
-  savedAt: string;
-}
-
-function getSavedReports(): SavedAssessmentReport[] {
-  try {
-    return JSON.parse(localStorage.getItem(SAVED_REPORTS_KEY) ?? "[]") as SavedAssessmentReport[];
-  } catch { return []; }
-}
-
-function saveReport(report: SavedAssessmentReport): void {
-  try {
-    const existing = getSavedReports().filter(r => r.id !== report.id);
-    localStorage.setItem(SAVED_REPORTS_KEY, JSON.stringify([report, ...existing].slice(0, 50)));
-  } catch { /* storage full */ }
-}
 
 export default function SolarWindReport({ analysis, live, lat, lng, datacenter, onClose, onClearCache }: Props) {
   // font-sans (Inter) is declared on the container; all children inherit it
@@ -167,34 +139,46 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
   const [reportSaved, setReportSaved] = useState(false);
   const navigate = useNavigate();
 
-  // Check if already saved
-  useEffect(() => {
-    const reportId = datacenter?.id ? `dc_${String(datacenter.id)}` : `site_${lat.toFixed(4)}_${lng.toFixed(4)}`;
-    const already = getSavedReports().some(r => r.id === reportId);
-    setReportSaved(already);
-  }, [datacenter?.id, lat, lng]);
+  // Build stable asset_key matching AssetDetailPage pattern: "{asset_type}_{id}"
+  const assetType = datacenter?.id
+    ? String((datacenter as Record<string, unknown>).asset_type ?? "datacenter")
+    : "site";
+  const assetKey = datacenter?.id
+    ? `${assetType}_${String(datacenter.id)}`
+    : `site_${lat.toFixed(4)}_${lng.toFixed(4)}`;
 
-  const handleSaveReport = () => {
-    const reportId = datacenter?.id ? `dc_${String(datacenter.id)}` : `site_${lat.toFixed(4)}_${lng.toFixed(4)}`;
+  // Check if already saved in DB
+  useEffect(() => {
+    listSavedAssessments()
+      .then((reports) => {
+        if (reports.some((r) => r.asset_key === assetKey)) setReportSaved(true);
+      })
+      .catch(() => { /* ignore network errors */ });
+  }, [assetKey]);
+
+  const handleSaveReport = async () => {
     const suit = analysis.suitability ?? {};
-    const report: SavedAssessmentReport = {
-      id: reportId,
-      title: datacenter?.name ? String(datacenter.name) : `Site ${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`,
-      location: datacenter?.city && datacenter?.state
-        ? `${String(datacenter.city)}, ${String(datacenter.state)}`
-        : datacenter?.state ? String(datacenter.state) : `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`,
-      type: datacenter?.name ? "datacenter" : "site",
-      lat,
-      lng,
-      rating: String((suit as Record<string, unknown>).rating ?? "—"),
-      overallScore: Number((suit as Record<string, unknown>).overall_score ?? 0),
-      solarScore: Number(((suit as Record<string, unknown>).components as Record<string, unknown> | undefined)?.solar ?? 0),
-      windScore: Number(((suit as Record<string, unknown>).components as Record<string, unknown> | undefined)?.wind ?? 0),
-      waterScore: Number(((suit as Record<string, unknown>).components as Record<string, unknown> | undefined)?.water ?? 0),
-      savedAt: new Date().toISOString(),
-    };
-    saveReport(report);
-    setReportSaved(true);
+    const suitMap = suit as Record<string, unknown>;
+    const components = suitMap.components as Record<string, unknown> | undefined;
+    try {
+      await saveAssessmentScores(assetKey, {
+        solar_score: Number(components?.solar ?? 0),
+        wind_score: Number(components?.wind ?? 0),
+        water_score: Number(components?.water ?? 0),
+        overall_score: Number(suitMap.overall_score ?? 0),
+        rating: String(suitMap.rating ?? "—"),
+        asset_name: datacenter?.name ? String(datacenter.name) : `Site ${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`,
+        asset_type: assetType,
+        city: datacenter?.city ? String(datacenter.city) : undefined,
+        state: datacenter?.state ? String(datacenter.state) : undefined,
+        lat,
+        lon: lng,
+      });
+      setReportSaved(true);
+    } catch {
+      // Fallback: still mark as saved in UI even if network fails
+      setReportSaved(true);
+    }
   };
 
   useEffect(() => {

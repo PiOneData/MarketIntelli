@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent } from 'react';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { AssetFeature, AssetGeoJSON, SolarAssessment, WindAssessment, WaterAssessment, AssetType } from '../types/dc';
 import { getGWColor, getRiskDescription, formatNum, MONTHS, getRatingColor, getWindGradeColor } from '../lib/dcUtils';
 import { ArrowLeft, ExternalLink, Building2, Zap, Droplets, Sun, Wind, CloudRain, Calendar, Waves, PlaneTakeoff, ShieldCheck, X, Search, HelpCircle, FileText, Loader2, Download, RefreshCw, ChevronDown, ChevronUp, Bot } from 'lucide-react';
@@ -389,6 +389,7 @@ export default function AssetDetailPage({ id, type, onBack }: { id: string; type
     const [reportCheckDone, setReportCheckDone] = useState(false);
     const [isGeneratingReport, setIsGeneratingReport] = useState(false);
     const [reportExpanded, setReportExpanded] = useState(false);
+    const reportSectionRef = useRef<HTMLDivElement>(null);
 
     // ── All hooks unconditionally first ──
     const gw = feature?.properties.local_analysis?.groundwater as any;
@@ -459,6 +460,9 @@ export default function AssetDetailPage({ id, type, onBack }: { id: string; type
             );
             setCachedReport(report);
             setReportExpanded(true);
+            setTimeout(() => {
+                reportSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }, 100);
         } catch (error) {
             console.error(error);
             alert('Failed to generate Assessment report. Check that Azure OpenAI credentials are configured in backend/.env, or that Ollama is running.');
@@ -916,7 +920,7 @@ export default function AssetDetailPage({ id, type, onBack }: { id: string; type
 
             {/* ── AI Environmental Report Panel ─────────────────────────────────── */}
             {reportCheckDone && (
-                <div style={{ maxWidth: '1340px', margin: '0 auto', padding: '0 20px 48px' }}>
+                <div ref={reportSectionRef} style={{ maxWidth: '1340px', margin: '0 auto', padding: '0 20px 48px' }}>
                     <div style={{
                         background: '#fff',
                         borderRadius: '20px',
