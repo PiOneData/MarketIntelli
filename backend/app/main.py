@@ -17,7 +17,7 @@ from app.domains.geo_analytics.models.spatial import SolarPotentialZone, GridInf
 from app.domains.data_center_intelligence.models.data_center import DataCenterCompany, DataCenterFacility  # noqa: F401
 from app.domains.project_intelligence.models.projects import Developer, SolarProject, Tender  # noqa: F401
 from app.domains.policy_intelligence.models.policy import Policy, TariffRecord, Subsidy, ComplianceAlert  # noqa: F401
-from app.domains.alerts.models.alerts import Alert, Watchlist, Notification, NewsArticle  # noqa: F401
+from app.domains.alerts.models.alerts import Alert, Watchlist, Notification, NewsArticle, DailyBrief  # noqa: F401
 from app.domains.power_market.models.power_market import (  # noqa: F401
     RenewableCapacity, PowerGeneration, TransmissionLine,
     PowerConsumption, RETariff, InvestmentGuideline, DataRepository,
@@ -42,15 +42,21 @@ async def _run_scheduled_scrapes() -> None:
 
         try:
             async with async_session_factory() as db:
-                result = await NewsService(db).scrape_and_store()
+                svc = NewsService(db)
+                result = await svc.scrape_and_store()
                 logger.info("Scheduled news scrape: %s", result)
+                enriched = await svc.enrich_missing_articles()
+                logger.info("Scheduled news re-enrichment: %d articles", enriched)
         except Exception as exc:
             logger.warning("Scheduled news scrape failed: %s", exc)
 
         try:
             async with async_session_factory() as db:
-                result = await ComplianceScraperService(db).scrape_and_store()
+                svc = ComplianceScraperService(db)
+                result = await svc.scrape_and_store()
                 logger.info("Scheduled compliance scrape: %s", result)
+                enriched = await svc.enrich_missing_alerts()
+                logger.info("Scheduled compliance re-enrichment: %d alerts", enriched)
         except Exception as exc:
             logger.warning("Scheduled compliance scrape failed: %s", exc)
 
@@ -162,8 +168,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         from app.db.session import async_session_factory
         from app.domains.policy_intelligence.services.compliance_scraper import ComplianceScraperService
         async with async_session_factory() as db:
-            result = await ComplianceScraperService(db).scrape_and_store()
+            svc = ComplianceScraperService(db)
+            result = await svc.scrape_and_store()
             logger.info("Startup compliance scrape: %s", result)
+            enriched = await svc.enrich_missing_alerts()
+            logger.info("Startup compliance re-enrichment: %d alerts", enriched)
     except Exception as e:
         logger.warning("Startup compliance scrape failed (will retry on schedule): %s", e)
 
@@ -172,8 +181,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         from app.db.session import async_session_factory
         from app.domains.alerts.services.news_service import NewsService
         async with async_session_factory() as db:
-            result = await NewsService(db).scrape_and_store()
+            svc = NewsService(db)
+            result = await svc.scrape_and_store()
             logger.info("Startup news scrape: %s", result)
+            enriched = await svc.enrich_missing_articles()
+            logger.info("Startup news re-enrichment: %d articles", enriched)
     except Exception as e:
         logger.warning("Startup news scrape failed (will retry on schedule): %s", e)
 

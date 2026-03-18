@@ -21,7 +21,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.domains.alerts.models.alerts import NewsArticle
+from app.domains.alerts.models.alerts import DailyBrief, NewsArticle
 
 logger = logging.getLogger(__name__)
 
@@ -431,10 +431,21 @@ class NewsService:
         return {"new": new_count, "skipped": skipped}
 
     async def generate_daily_brief(self) -> str:
-        """Synthesise top-10 news items from last 24 hours into an executive daily brief.
+        """Synthesise top-10 news items into an executive daily brief.
 
-        Returns a markdown string suitable for display. Called by the 6 AM IST scheduler.
+        Result is cached in DB per calendar day so the LLM is called at most once per day.
         """
+        today = datetime.now(timezone.utc).date()
+
+        # ── Return cached brief if it exists for today ────────────────────────
+        cached = await self.db.execute(
+            select(DailyBrief).where(DailyBrief.brief_date == today)
+        )
+        existing = cached.scalar_one_or_none()
+        if existing:
+            return existing.content
+
+        # ── Generate fresh brief via LLM ──────────────────────────────────────
         cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
         query = (
             select(NewsArticle)
@@ -466,8 +477,56 @@ Write a structured brief with:
 
 Keep it professional, concise, under 400 words. Use markdown formatting."""
 
-        raw = await _call_llm(prompt, max_tokens=600)
-        return raw or "Daily brief generation failed — LLM unavailable."
+        content = await _call_llm(prompt, max_tokens=600)
+        if not content:
+            return "Daily brief generation failed — LLM unavailable."
+
+        # ── Save to DB (upsert by date) ────────────────────────────────────────
+        try:
+            brief = DailyBrief(brief_date=today, content=content)
+            self.db.add(brief)
+            await self.db.commit()
+        except Exception:
+            await self.db.rollback()
+            # Concurrent request may have inserted first — fetch it
+            cached2 = await self.db.execute(
+                select(DailyBrief).where(DailyBrief.brief_date == today)
+            )
+            row = cached2.scalar_one_or_none()
+            if row:
+                return row.content
+        return content
+
+    async def enrich_missing_articles(self, batch: int = 30) -> int:
+        """Enrich articles stored without AI data (ai_analyzed_at IS NULL).
+
+        Called after each scrape and on startup to catch articles stored during LLM downtime.
+        Returns the count of newly enriched articles.
+        """
+        result = await self.db.execute(
+            select(NewsArticle)
+            .where(NewsArticle.ai_analyzed_at.is_(None), NewsArticle.is_active.is_(True))
+            .order_by(NewsArticle.scraped_at.desc())
+            .limit(batch)
+        )
+        articles = list(result.scalars().all())
+        count = 0
+        for article in articles:
+            try:
+                intel = await _enrich_article(article.title, article.summary)
+                if intel.get("ai_summary"):
+                    article.ai_summary = intel["ai_summary"]
+                    article.market_impact_score = intel["market_impact_score"]
+                    article.affected_states = intel["affected_states"] or None
+                    article.affected_companies = intel["affected_companies"] or None
+                    article.ai_analyzed_at = datetime.now(timezone.utc)
+                    count += 1
+            except Exception as exc:
+                logger.debug("Re-enrichment skipped for %s: %s", article.id, exc)
+        if count:
+            await self.db.commit()
+            logger.info("Re-enriched %d articles with missing AI data", count)
+        return count
 
     async def get_trending_themes(self, days: int = 7) -> list[dict]:
         """Identify trending themes across the last N days of news.

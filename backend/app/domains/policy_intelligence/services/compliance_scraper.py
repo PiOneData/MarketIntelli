@@ -437,6 +437,36 @@ class ComplianceScraperService:
         )
         return {"new": new_count, "skipped": skipped}
 
+    async def enrich_missing_alerts(self, batch: int = 20) -> int:
+        """Re-analyze compliance alerts stored without AI data (ai_analyzed_at IS NULL).
+
+        Called after each scrape and on startup to catch alerts stored during LLM downtime.
+        Returns the count of newly analyzed alerts.
+        """
+        result = await self.db.execute(
+            select(ComplianceAlert)
+            .where(ComplianceAlert.ai_analyzed_at.is_(None), ComplianceAlert.is_active.is_(True))
+            .order_by(ComplianceAlert.scraped_at.desc())
+            .limit(batch)
+        )
+        alerts = list(result.scalars().all())
+        count = 0
+        for alert in alerts:
+            try:
+                intel = await _analyze_alert(alert)
+                alert.urgency_level = intel["urgency_level"]
+                alert.deadline_date = intel["deadline_date"]
+                alert.action_items = intel["action_items"]
+                alert.affected_entities = intel["affected_entities"]
+                alert.ai_analyzed_at = datetime.now(timezone.utc)
+                count += 1
+            except Exception as exc:
+                logger.debug("Re-analysis skipped for alert %s: %s", alert.id, exc)
+        if count:
+            await self.db.commit()
+            logger.info("Re-analyzed %d compliance alerts with missing AI data", count)
+        return count
+
     async def list_compliance_alerts(
         self,
         authority: str | None = None,
