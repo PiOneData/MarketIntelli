@@ -60,7 +60,13 @@ class ReportService:
     async def generate_markdown(self, prompt: str) -> str:
         """Call Azure OpenAI if configured, otherwise fall back to Ollama."""
         if settings.AZURE_OPENAI_API_KEY and settings.AZURE_OPENAI_ENDPOINT:
-            return await self._call_azure(prompt)
+            try:
+                return await self._call_azure(prompt)
+            except Exception as exc:
+                import logging
+                logging.getLogger(__name__).warning(
+                    "Azure OpenAI report generation failed, falling back to Ollama: %s", exc
+                )
         return await self._call_ollama(prompt)
 
     async def _call_azure(self, prompt: str) -> str:

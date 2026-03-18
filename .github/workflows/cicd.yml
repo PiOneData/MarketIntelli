@@ -110,10 +110,12 @@ jobs:
               --network $NETWORK \
               -p 9001:8000 \
               -e DATABASE_URL="postgresql+asyncpg://postgres:marketintelli123@$DB_CONTAINER:5432/marketintelli" \
+              -e SYNC_DATABASE_URL="postgresql+psycopg2://postgres:marketintelli123@$DB_CONTAINER:5432/marketintelli" \
               -e REDIS_URL="redis://$REDIS_CONTAINER:6379/0" \
               -e CELERY_BROKER_URL="redis://$REDIS_CONTAINER:6379/1" \
               -e CELERY_RESULT_BACKEND="redis://$REDIS_CONTAINER:6379/2" \
               -e SECRET_KEY="${{ secrets.APP_SECRET_KEY }}" \
+              -e CORS_ORIGINS='["http://refexmi.pionedata.com","https://refexmi.pionedata.com","http://localhost:3000"]' \
               -e AZURE_OPENAI_API_KEY="${{ secrets.AZURE_OPENAI_API_KEY }}" \
               -e AZURE_OPENAI_ENDPOINT="${{ secrets.AZURE_OPENAI_ENDPOINT }}" \
               -e AZURE_OPENAI_DEPLOYMENT="${{ secrets.AZURE_OPENAI_DEPLOYMENT }}" \
@@ -127,6 +129,7 @@ jobs:
               --name $CELERY_CONTAINER \
               --network $NETWORK \
               -e DATABASE_URL="postgresql+asyncpg://postgres:marketintelli123@$DB_CONTAINER:5432/marketintelli" \
+              -e SYNC_DATABASE_URL="postgresql+psycopg2://postgres:marketintelli123@$DB_CONTAINER:5432/marketintelli" \
               -e REDIS_URL="redis://$REDIS_CONTAINER:6379/0" \
               -e CELERY_BROKER_URL="redis://$REDIS_CONTAINER:6379/1" \
               -e CELERY_RESULT_BACKEND="redis://$REDIS_CONTAINER:6379/2" \
