@@ -81,6 +81,52 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as e:
         logger.warning("re_tariffs schema check skipped: %s", e)
 
+    # Ensure news_articles has AI intelligence columns (added after initial table creation)
+    try:
+        _text = __import__("sqlalchemy", fromlist=["text"]).text
+        async with engine.begin() as conn:
+            await conn.execute(_text(
+                "ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS ai_summary TEXT;"
+            ))
+            await conn.execute(_text(
+                "ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS market_impact_score FLOAT;"
+            ))
+            await conn.execute(_text(
+                "ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS affected_states JSON;"
+            ))
+            await conn.execute(_text(
+                "ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS affected_companies JSON;"
+            ))
+            await conn.execute(_text(
+                "ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS ai_analyzed_at TIMESTAMP WITH TIME ZONE;"
+            ))
+        logger.info("news_articles AI columns ensured.")
+    except Exception as e:
+        logger.warning("news_articles schema check skipped: %s", e)
+
+    # Ensure compliance_alerts has AI intelligence columns (added after initial table creation)
+    try:
+        _text = __import__("sqlalchemy", fromlist=["text"]).text
+        async with engine.begin() as conn:
+            await conn.execute(_text(
+                "ALTER TABLE compliance_alerts ADD COLUMN IF NOT EXISTS urgency_level VARCHAR(20);"
+            ))
+            await conn.execute(_text(
+                "ALTER TABLE compliance_alerts ADD COLUMN IF NOT EXISTS deadline_date TIMESTAMP WITH TIME ZONE;"
+            ))
+            await conn.execute(_text(
+                "ALTER TABLE compliance_alerts ADD COLUMN IF NOT EXISTS action_items JSON;"
+            ))
+            await conn.execute(_text(
+                "ALTER TABLE compliance_alerts ADD COLUMN IF NOT EXISTS affected_entities JSON;"
+            ))
+            await conn.execute(_text(
+                "ALTER TABLE compliance_alerts ADD COLUMN IF NOT EXISTS ai_analyzed_at TIMESTAMP WITH TIME ZONE;"
+            ))
+        logger.info("compliance_alerts AI columns ensured.")
+    except Exception as e:
+        logger.warning("compliance_alerts schema check skipped: %s", e)
+
     # Seed data centers from CSV if table is empty
     try:
         from app.scripts.seed_data_centers import seed_data_centers
