@@ -18,6 +18,39 @@ from app.domains.data_center_intelligence.services.data_center_service import (
 
 router = APIRouter()
 
+_OPERATIONAL_STATUSES = {"operational", "active", "live"}
+_PLANNED_STATUSES = {"planned", "under construction", "under development", "approved", "announced"}
+
+
+def _build_company_read(c: object) -> DataCenterCompanyRead:
+    facilities = c.facilities  # type: ignore[attr-defined]
+    operational_count = sum(
+        1 for f in facilities if (f.status or "").lower() in _OPERATIONAL_STATUSES
+    )
+    planned_count = sum(
+        1 for f in facilities if (f.status or "").lower() in _PLANNED_STATUSES
+    )
+    states = sorted({f.state for f in facilities if f.state})
+    renewable_vals = [f.current_renewable_pct for f in facilities if f.current_renewable_pct is not None]
+    avg_renewable_pct = sum(renewable_vals) / len(renewable_vals) if renewable_vals else None
+    return DataCenterCompanyRead(
+        id=c.id,  # type: ignore[attr-defined]
+        name=c.name,  # type: ignore[attr-defined]
+        parent_company=c.parent_company,  # type: ignore[attr-defined]
+        headquarters=c.headquarters,  # type: ignore[attr-defined]
+        website=c.website,  # type: ignore[attr-defined]
+        total_investment_usd=c.total_investment_usd,  # type: ignore[attr-defined]
+        annual_revenue_usd=c.annual_revenue_usd,  # type: ignore[attr-defined]
+        employee_count=c.employee_count,  # type: ignore[attr-defined]
+        sustainability_rating=c.sustainability_rating,  # type: ignore[attr-defined]
+        facility_count=len(facilities),
+        total_capacity_mw=sum(f.power_capacity_mw for f in facilities),
+        operational_count=operational_count,
+        planned_count=planned_count,
+        states=states,
+        avg_renewable_pct=avg_renewable_pct,
+    )
+
 
 # --- Company endpoints ---
 
@@ -32,22 +65,7 @@ async def list_companies(
     """List data center companies with facility counts."""
     service = DataCenterService(db)
     companies, _ = await service.list_companies(name, page, page_size)
-    return [
-        DataCenterCompanyRead(
-            id=c.id,
-            name=c.name,
-            parent_company=c.parent_company,
-            headquarters=c.headquarters,
-            website=c.website,
-            total_investment_usd=c.total_investment_usd,
-            annual_revenue_usd=c.annual_revenue_usd,
-            employee_count=c.employee_count,
-            sustainability_rating=c.sustainability_rating,
-            facility_count=len(c.facilities),
-            total_capacity_mw=sum(f.power_capacity_mw for f in c.facilities),
-        )
-        for c in companies
-    ]
+    return [_build_company_read(c) for c in companies]
 
 
 @router.get("/companies/{company_id}", response_model=DataCenterCompanyRead)
@@ -60,19 +78,7 @@ async def get_company(
     company = await service.get_company(company_id)
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
-    return DataCenterCompanyRead(
-        id=company.id,
-        name=company.name,
-        parent_company=company.parent_company,
-        headquarters=company.headquarters,
-        website=company.website,
-        total_investment_usd=company.total_investment_usd,
-        annual_revenue_usd=company.annual_revenue_usd,
-        employee_count=company.employee_count,
-        sustainability_rating=company.sustainability_rating,
-        facility_count=len(company.facilities),
-        total_capacity_mw=sum(f.power_capacity_mw for f in company.facilities),
-    )
+    return _build_company_read(company)
 
 
 @router.post("/companies", response_model=DataCenterCompanyRead, status_code=201)

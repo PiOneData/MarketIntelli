@@ -16,6 +16,10 @@ class DataCenterCompanyRead(BaseModel):
     sustainability_rating: str | None = None
     facility_count: int = 0
     total_capacity_mw: float = 0.0
+    operational_count: int = 0
+    planned_count: int = 0
+    states: list[str] = []
+    avg_renewable_pct: float | None = None
 
 
 class DataCenterCompanyCreate(BaseModel):

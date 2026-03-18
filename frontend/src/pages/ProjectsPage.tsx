@@ -857,6 +857,52 @@ function CompanyProfileModal({ company, stock, onClose }: CompanyProfileModalPro
 }
 
 /* ------------------------------------------------------------------ */
+/*  Developer Profiles Section – helpers                               */
+/* ------------------------------------------------------------------ */
+
+const DC_PALETTE = [
+  "#0d7a6e", "#2563eb", "#7c3aed", "#dc2626", "#d97706",
+  "#0891b2", "#16a34a", "#db2777", "#9333ea", "#ea580c",
+  "#0284c7", "#4f46e5", "#be123c", "#15803d", "#b45309",
+];
+
+function getDcColor(name: string, idx: number): string {
+  // Deterministic colour – try a simple name-hash first
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  // Mix with index so adjacent cards differ
+  return DC_PALETTE[(h + idx) % DC_PALETTE.length]!;
+}
+
+function getDcType(co: DataCenterCompany, stock?: { exchange?: string }): string {
+  if (stock && !("error" in stock)) return "Listed";
+  const name = co.name.toLowerCase();
+  if (
+    name.includes("government") || name.includes("niti") || name.includes("nicsi") ||
+    name.includes("stpi") || name.includes("cdac") || name.includes("nic ")
+  ) return "Government";
+  if (
+    name.includes("hyperscale") || name.includes("hyperscaler") ||
+    name.includes("amazon") || name.includes("google") || name.includes("microsoft") ||
+    name.includes("aws") || name.includes("azure")
+  ) return "Hyperscaler";
+  return "Private";
+}
+
+function getDcDescription(co: DataCenterCompany): string {
+  const cap = co.total_capacity_mw > 0 ? `${co.total_capacity_mw.toFixed(0)} MW total IT capacity` : "";
+  const states = co.states.length > 0
+    ? `operations across ${co.states.length === 1 ? co.states[0] : `${co.states.length} states`}`
+    : "";
+  const parent = co.parent_company ? `, part of ${co.parent_company}` : "";
+  const hq = co.headquarters ? ` Headquartered in ${co.headquarters}.` : "";
+  if (cap && states) return `${cap} with ${states}${parent}.${hq}`;
+  if (cap) return `${cap}${parent}.${hq}`;
+  if (states) return `Data center operator with ${states}${parent}.${hq}`;
+  return `Data center infrastructure developer${parent}.${hq}`;
+}
+
+/* ------------------------------------------------------------------ */
 /*  Developer Profiles Section                                          */
 /* ------------------------------------------------------------------ */
 
@@ -1020,88 +1066,154 @@ function DeveloperProfilesSection() {
       {viewMode === "grid" ? (
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-          gap: "12px",
+          gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
+          gap: "20px",
         }}>
-          {filtered.map((co) => {
+          {filtered.map((co, idx) => {
             const stock = stockByCompany[co.name];
             const hasStock = !!(stock && !stock.error && stock.price != null);
             const isPos = (stock?.change_pct ?? 0) > 0;
             const isNeg = (stock?.change_pct ?? 0) < 0;
+            const color = getDcColor(co.name, idx);
+            const type = getDcType(co, stock);
+            const description = getDcDescription(co);
+            const initials = co.name.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase();
 
             return (
               <div
                 key={co.id}
                 onClick={() => setSelectedCompany(co)}
                 style={{
-                  border: "1px solid #e5e7eb", background: "#fff",
-                  cursor: "pointer", padding: "16px",
-                  transition: "border-color 0.15s",
+                  background: "#fff",
+                  border: "1px solid #e2e8f0",
+                  borderTop: `3px solid ${color}`,
+                  borderRadius: "0.75rem",
+                  padding: "20px",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+                  cursor: "pointer",
+                  transition: "box-shadow 0.15s",
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "#1e293b"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = "#e5e7eb"; }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 4px 12px rgba(0,0,0,0.12)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.06)"; }}
               >
-                {/* Top */}
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "10px" }}>
-                  <div style={{
-                    width: "40px", height: "40px", background: "#0f766e",
-                    color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: "14px", fontWeight: 700, flexShrink: 0,
-                  }}>
-                    {co.name.replace(/[^a-zA-Z]/g, "").slice(0, 2).toUpperCase()}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: "14px", fontWeight: 600, color: "#111827", lineHeight: 1.3 }}>
-                      {co.name}
+                {/* Card header: initials + name + type badge */}
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "12px" }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      width: "40px", height: "40px", background: color,
+                      color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: "14px", fontWeight: 700, flexShrink: 0, borderRadius: "6px",
+                    }}>
+                      {initials}
                     </div>
-                    {co.headquarters && (
-                      <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>
-                        {co.headquarters}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "15px", fontWeight: 700, color: "#111827", lineHeight: 1.25 }}>
+                        {co.name}
                       </div>
-                    )}
+                      {co.parent_company && (
+                        <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "2px" }}>
+                          {co.parent_company}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  {stock && <ExchangeBadge exchange={stock.exchange} />}
+                  <span style={{
+                    fontSize: "9px", fontWeight: 700, padding: "3px 8px",
+                    background: `${color}18`, color: color,
+                    letterSpacing: "0.06em", textTransform: "uppercase",
+                    whiteSpace: "nowrap", borderRadius: "4px", flexShrink: 0,
+                  }}>
+                    {type}
+                  </span>
                 </div>
 
-                {/* Website + Tier */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "4px" }}>
+                {/* Description */}
+                <p style={{ fontSize: "12px", color: "#4b5563", lineHeight: 1.6, marginBottom: "14px", margin: "0 0 14px 0" }}>
+                  {description}
+                </p>
+
+                {/* KPIs grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "14px" }}>
+                  {[
+                    { label: "Facilities", val: co.facility_count, color },
+                    { label: "Operational", val: co.operational_count > 0 ? co.operational_count : "—", color: "#16a34a" },
+                    { label: "Planned", val: co.planned_count > 0 ? co.planned_count : "—", color: "#a855f7" },
+                  ].map((s) => (
+                    <div key={s.label} style={{
+                      padding: "10px 8px", background: "#f8fafc",
+                      border: "1px solid #f1f5f9", textAlign: "center", borderRadius: "6px",
+                    }}>
+                      <div style={{ fontSize: "18px", fontWeight: 800, color: s.color }}>{s.val}</div>
+                      <div style={{ fontSize: "9px", color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Total capacity */}
+                {co.total_capacity_mw > 0 && (
+                  <div style={{
+                    display: "flex", justifyContent: "space-between",
+                    padding: "7px 10px", background: "#f0fdf4",
+                    border: "1px solid #bbf7d0", borderRadius: "6px", marginBottom: "10px",
+                  }}>
+                    <span style={{ fontSize: "11px", fontWeight: 600, color: "#64748b" }}>Total IT Capacity</span>
+                    <span style={{ fontSize: "12px", fontWeight: 800, color: "#16a34a" }}>{co.total_capacity_mw.toFixed(0)} MW</span>
+                  </div>
+                )}
+
+                {/* Avg renewable */}
+                {co.avg_renewable_pct != null && co.avg_renewable_pct > 0 && (
+                  <div style={{
+                    display: "flex", justifyContent: "space-between",
+                    padding: "7px 10px", background: "#ecfdf5",
+                    border: "1px solid #a7f3d0", borderRadius: "6px", marginBottom: "10px",
+                  }}>
+                    <span style={{ fontSize: "11px", fontWeight: 600, color: "#64748b" }}>Avg. Renewable Mix</span>
+                    <span style={{ fontSize: "12px", fontWeight: 800, color: "#059669" }}>
+                      {co.avg_renewable_pct.toFixed(0)}% ♻
+                    </span>
+                  </div>
+                )}
+
+                {/* States */}
+                {co.states.length > 0 && (
+                  <div style={{ fontSize: "11px", color: "#64748b", marginBottom: "10px" }}>
+                    <span style={{ fontWeight: 600 }}>States: </span>
+                    {co.states.slice(0, 4).join(", ")}
+                    {co.states.length > 4 && ` +${co.states.length - 4} more`}
+                  </div>
+                )}
+
+                {/* Website + stock row */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   {co.website ? (
                     <a
                       href={co.website}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      style={{ fontSize: "11px", color: "#0f766e", textDecoration: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "160px" }}
-                      title={co.website}
+                      style={{ display: "inline-flex", alignItems: "center", gap: "5px", fontSize: "11px", color, fontWeight: 600, textDecoration: "none" }}
                     >
-                      ↗ {co.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                      ↗ Official Website
                     </a>
                   ) : (
                     <span style={{ fontSize: "11px", color: "#d1d5db" }}>No website</span>
                   )}
-                  <span style={{ fontSize: "10px", color: "#6b7280", background: "#f3f4f6", padding: "2px 6px", border: "1px solid #e5e7eb" }}>
-                    {co.sustainability_rating ?? "Tier: N/A"}
-                  </span>
-                </div>
-
-                {/* Facility count from DB */}
-                <div style={{
-                  fontSize: "12px", color: "#6b7280",
-                  borderTop: "1px solid #f3f4f6", paddingTop: "10px",
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                }}>
-                  <span>{co.facility_count} {co.facility_count === 1 ? "facility" : "facilities"}</span>
                   {hasStock && stock ? (
-                    <span style={{
-                      fontSize: "12px", fontWeight: 600,
-                      color: isPos ? "#16a34a" : isNeg ? "#dc2626" : "#374151",
-                    }}>
-                      {isPos ? "▲" : isNeg ? "▼" : ""}{" "}
-                      {formatPrice(stock.price, stock.currency)}
+                    <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      <ExchangeBadge exchange={stock.exchange} />
+                      <span style={{ fontSize: "12px", fontWeight: 600, color: isPos ? "#16a34a" : isNeg ? "#dc2626" : "#374151" }}>
+                        {isPos ? "▲" : isNeg ? "▼" : ""} {formatPrice(stock.price, stock.currency)}
+                      </span>
                     </span>
                   ) : (
-                    <span style={{ fontSize: "11px", color: "#d1d5db" }}>Private</span>
+                    <span style={{ fontSize: "10px", color: "#9ca3af", background: "#f3f4f6", padding: "2px 6px", borderRadius: "4px" }}>Private</span>
                   )}
+                </div>
+
+                {/* Click hint */}
+                <div style={{ marginTop: "10px", fontSize: "10px", color: "#94a3b8", fontStyle: "italic" }}>
+                  Click to view full profile →
                 </div>
               </div>
             );
