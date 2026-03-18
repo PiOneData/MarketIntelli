@@ -283,57 +283,118 @@ def _to_response(report: AssessmentReport, cached: bool) -> ReportResponse:
 # ── Routes ────────────────────────────────────────────────────────────────────
 
 
+@router.get("/azure-health")
+async def azure_health() -> JSONResponse:
+    """Check Azure OpenAI connectivity and credential availability."""
+    from app.core.config import settings as s
+    has_key = bool(s.AZURE_OPENAI_API_KEY)
+    has_endpoint = bool(s.AZURE_OPENAI_ENDPOINT)
+    if not has_key or not has_endpoint:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "misconfigured",
+                "has_api_key": has_key,
+                "has_endpoint": has_endpoint,
+                "deployment": s.AZURE_OPENAI_DEPLOYMENT,
+                "api_version": s.AZURE_OPENAI_API_VERSION,
+            },
+        )
+    try:
+        import openai
+        client = openai.AsyncAzureOpenAI(
+            api_key=s.AZURE_OPENAI_API_KEY,
+            azure_endpoint=s.AZURE_OPENAI_ENDPOINT,
+            api_version=s.AZURE_OPENAI_API_VERSION,
+        )
+        resp = await client.chat.completions.create(
+            model=s.AZURE_OPENAI_DEPLOYMENT,
+            messages=[{"role": "user", "content": "ping"}],
+            max_tokens=1,
+        )
+        return JSONResponse(content={
+            "status": "ok",
+            "deployment": s.AZURE_OPENAI_DEPLOYMENT,
+            "api_version": s.AZURE_OPENAI_API_VERSION,
+            "endpoint": s.AZURE_OPENAI_ENDPOINT,
+            "response_id": resp.id,
+        })
+    except Exception as exc:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "error",
+                "error": str(exc),
+                "deployment": s.AZURE_OPENAI_DEPLOYMENT,
+                "api_version": s.AZURE_OPENAI_API_VERSION,
+                "endpoint": s.AZURE_OPENAI_ENDPOINT,
+            },
+        )
+
+
 @router.post("/generate-report", response_model=None)
 async def generate_report(
     payload: ReportPayload,
     db: AsyncSession = Depends(get_db),
 ) -> ReportResponse | JSONResponse:
-    """Generate (or return cached) AI environmental assessment report.
-
-    - If asset_key matches a DB record and force_regenerate=False: returns cached report instantly.
-    - Otherwise: calls Azure OpenAI (or Ollama fallback), saves to DB, returns fresh report.
-    """
-    service = ReportService(db)
-    asset_name = payload.dc_name or payload.airport_name or "Site"
-
-    # ── Return cached report if available ───────────────────────────────────
-    if payload.asset_key and not payload.force_regenerate:
-        cached = await service.get_by_asset_key(payload.asset_key)
-        if cached:
-            return _to_response(cached, cached=True)
-
-    # ── Generate fresh report ────────────────────────────────────────────────
-    prompt = _build_prompt(payload)
+    """Generate (or return cached) AI environmental assessment report."""
     try:
-        markdown_content = await service.generate_markdown(prompt)
+        service = ReportService(db)
+        asset_name = payload.dc_name or payload.airport_name or "Site"
+
+        # ── Return cached report if available ───────────────────────────────
+        if payload.asset_key and not payload.force_regenerate:
+            cached = await service.get_by_asset_key(payload.asset_key)
+            if cached:
+                return _to_response(cached, cached=True)
+
+        # ── Generate fresh report ────────────────────────────────────────────
+        prompt = _build_prompt(payload)
+        try:
+            markdown_content = await service.generate_markdown(prompt)
+        except Exception as exc:
+            logger.error("Azure OpenAI failed for asset_key=%s: %s", payload.asset_key, exc, exc_info=True)
+            return JSONResponse(
+                status_code=503,
+                content={"error": "Azure OpenAI service unavailable", "details": str(exc)},
+            )
+
+        html_body = _markdown_to_html(markdown_content)
+
+        # power_mw may arrive as a string (e.g. "Not Specified") from GeoJSON properties
+        try:
+            power_mw = float(payload.power_mw) if payload.power_mw is not None else None
+        except (ValueError, TypeError):
+            power_mw = None
+
+        try:
+            report = await service.upsert(
+                asset_key=payload.asset_key or f"{payload.asset_type}_unknown",
+                asset_name=asset_name,
+                asset_type=payload.asset_type,
+                city=payload.city,
+                state=payload.state,
+                lat=payload.lat,
+                lon=payload.lon,
+                markdown_content=markdown_content,
+                html_content=html_body,
+                power_mw=power_mw,
+            )
+        except Exception as exc:
+            logger.error("DB upsert failed for asset_key=%s: %s", payload.asset_key, exc, exc_info=True)
+            return JSONResponse(
+                status_code=500,
+                content={"error": "Failed to save report to database", "details": str(exc)},
+            )
+
+        return _to_response(report, cached=False)
+
     except Exception as exc:
-        logger.error("Report generation failed for asset_key=%s: %s", payload.asset_key, exc, exc_info=True)
+        logger.error("Unhandled error in generate_report: %s", exc, exc_info=True)
         return JSONResponse(
-            status_code=503,
-            content={"error": "Azure OpenAI service unavailable", "details": str(exc)},
+            status_code=500,
+            content={"error": "Internal server error", "details": str(exc)},
         )
-
-    html_body = _markdown_to_html(markdown_content)
-
-    # Save to DB — power_mw may arrive as a string (e.g. "Not Specified") from GeoJSON properties
-    try:
-        power_mw = float(payload.power_mw) if payload.power_mw is not None else None
-    except (ValueError, TypeError):
-        power_mw = None
-    report = await service.upsert(
-        asset_key=payload.asset_key or f"{payload.asset_type}_unknown",
-        asset_name=asset_name,
-        asset_type=payload.asset_type,
-        city=payload.city,
-        state=payload.state,
-        lat=payload.lat,
-        lon=payload.lon,
-        markdown_content=markdown_content,
-        html_content=html_body,
-        power_mw=power_mw,
-    )
-
-    return _to_response(report, cached=False)
 
 
 @router.get("/reports/{asset_key:path}", response_model=None)
