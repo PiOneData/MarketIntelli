@@ -18,5 +18,14 @@ celery_app.conf.update(
     result_expires=3600,
 )
 
+from celery.schedules import crontab
+
+celery_app.conf.beat_schedule = {
+    "daily-brief-6am-ist": {
+        "task": "tasks.generate_daily_brief",
+        "schedule": crontab(hour=0, minute=30),  # 06:00 IST = 00:30 UTC
+    },
+}
+
 if __name__ == "__main__":
     celery_app.start()

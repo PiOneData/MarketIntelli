@@ -9,6 +9,8 @@ import {
   listNews,
   getNewsFilters,
   addNewsToWatchlist,
+  getDailyBrief,
+  getTrendingThemes,
 } from "../api/alerts";
 
 export function useAlerts(params?: {
@@ -102,5 +104,21 @@ export function useBulkDeleteWatchlists(userId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["watchlists", userId] });
     },
+  });
+}
+
+export function useDailyBrief() {
+  return useQuery({
+    queryKey: ["alerts", "daily-brief"],
+    queryFn: getDailyBrief,
+    staleTime: 60 * 60 * 1000,
+  });
+}
+
+export function useTrendingThemes(days = 7) {
+  return useQuery({
+    queryKey: ["alerts", "trends", days],
+    queryFn: () => getTrendingThemes(days),
+    staleTime: 30 * 60 * 1000,
   });
 }
