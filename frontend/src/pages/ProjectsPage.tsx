@@ -2622,13 +2622,6 @@ function ProjectsPage() {
 
       {activeSection === "airport-developer-profiles" && <AirportDeveloperProfilesSection />}
 
-      {activeSection === "tender-intelligence" && (
-        <section id="tender-intelligence">
-          <h3>Tender Intelligence</h3>
-          <p>Real-time updates on upcoming and awarded tenders with bid analytics.</p>
-        </section>
-      )}
-
       {activeSection === "land-availability" && (
         <section id="land-availability">
           <h3>Land Availability</h3>

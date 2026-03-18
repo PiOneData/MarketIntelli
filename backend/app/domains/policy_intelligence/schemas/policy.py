@@ -50,3 +50,9 @@ class ComplianceAlertRead(BaseModel):
     published_at: datetime | None = None
     scraped_at: datetime
     is_active: bool = True
+    # AI intelligence fields
+    urgency_level: str | None = None
+    deadline_date: datetime | None = None
+    action_items: list[str] | None = None
+    affected_entities: list[str] | None = None
+    ai_analyzed_at: datetime | None = None

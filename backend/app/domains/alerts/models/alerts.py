@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import String, Boolean, DateTime, ForeignKey, Text, func
+from sqlalchemy import JSON, String, Boolean, DateTime, Float, ForeignKey, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -85,3 +85,9 @@ class NewsArticle(Base):
         DateTime(timezone=True), server_default=func.now(), init=False
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # ── AI Intelligence fields ───────────────────────────────────────────────
+    ai_summary: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
+    market_impact_score: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)  # 0–10
+    affected_states: Mapped[list | None] = mapped_column(JSON, nullable=True, default=None)
+    affected_companies: Mapped[list | None] = mapped_column(JSON, nullable=True, default=None)
+    ai_analyzed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)

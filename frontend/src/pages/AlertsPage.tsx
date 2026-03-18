@@ -67,6 +67,33 @@ function timeAgo(dateStr: string | null | undefined): string {
 /*  News Card                                                           */
 /* ------------------------------------------------------------------ */
 
+function ImpactScoreBadge({ score }: { score: number }) {
+  const color =
+    score >= 7 ? "#16a34a" : score >= 4 ? "#d97706" : "#6b7280";
+  const bg =
+    score >= 7 ? "#dcfce7" : score >= 4 ? "#fef3c7" : "#f3f4f6";
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "3px",
+        fontSize: "11px",
+        fontWeight: 700,
+        color,
+        background: bg,
+        border: `1px solid ${color}33`,
+        borderRadius: "4px",
+        padding: "1px 6px",
+        whiteSpace: "nowrap",
+      }}
+      title="Market Impact Score (0–10)"
+    >
+      ⚡ {score.toFixed(1)}
+    </span>
+  );
+}
+
 function NewsCard({
   article,
   onAddToWatchlist,
@@ -78,11 +105,18 @@ function NewsCard({
 }) {
   const categoryLabel = CATEGORY_LABELS[article.category] ?? article.category;
   const categoryClass = CATEGORY_COLORS[article.category] ?? "news-badge--renewable";
+  const displaySummary = article.ai_summary ?? article.summary;
+  const hasAiSummary = !!article.ai_summary;
 
   return (
     <div className="news-card">
       <div className="news-card-header">
-        <span className={`news-badge ${categoryClass}`}>{categoryLabel}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+          <span className={`news-badge ${categoryClass}`}>{categoryLabel}</span>
+          {article.market_impact_score != null && (
+            <ImpactScoreBadge score={article.market_impact_score} />
+          )}
+        </div>
         <div className="news-card-meta-top">
           {article.state && <span className="news-state-tag">{article.state}</span>}
           <span className="news-time-ago">{timeAgo(article.published_at)}</span>
@@ -95,7 +129,62 @@ function NewsCard({
         </a>
       </h4>
 
-      {article.summary && <p className="news-card-summary">{article.summary}</p>}
+      {displaySummary && (
+        <p className="news-card-summary" style={{ position: "relative" }}>
+          {hasAiSummary && (
+            <span
+              style={{
+                display: "inline-block",
+                fontSize: "10px",
+                fontWeight: 700,
+                color: "#7c3aed",
+                background: "#ede9fe",
+                borderRadius: "3px",
+                padding: "1px 4px",
+                marginRight: "5px",
+                verticalAlign: "middle",
+              }}
+            >
+              AI
+            </span>
+          )}
+          {displaySummary}
+        </p>
+      )}
+
+      {((article.affected_states?.length ?? 0) > 0 ||
+        (article.affected_companies?.length ?? 0) > 0) && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "8px" }}>
+          {article.affected_states?.map((s) => (
+            <span
+              key={s}
+              style={{
+                fontSize: "10px",
+                background: "#dbeafe",
+                color: "#1d4ed8",
+                borderRadius: "3px",
+                padding: "1px 5px",
+              }}
+            >
+              {s}
+            </span>
+          ))}
+          {article.affected_companies?.map((c) => (
+            <span
+              key={c}
+              style={{
+                fontSize: "10px",
+                background: "#fce7f3",
+                color: "#9d174d",
+                borderRadius: "3px",
+                padding: "1px 5px",
+              }}
+            >
+              {c}
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="news-card-footer">
         <div className="news-card-footer-left">

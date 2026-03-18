@@ -1,17 +1,26 @@
-"""News scraping service for India-focused renewable energy and data center news."""
+"""News scraping service for India-focused renewable energy and data center news.
+
+AI enrichment added:
+- Article enrichment: 2-sentence summary, market impact score (0-10), affected states/companies
+- Daily Market Brief: executive synthesis of top-10 news items
+- Trend Detection: emerging themes across last 7 days
+"""
 
 from __future__ import annotations
 
+import json
 import logging
+import re
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from uuid import UUID
 
 import httpx
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.domains.alerts.models.alerts import NewsArticle
 
 logger = logging.getLogger(__name__)
@@ -234,6 +243,85 @@ def _parse_rss_feed(xml_text: str, source_name: str) -> list[dict]:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# AI enrichment helpers
+# ─────────────────────────────────────────────────────────────────────────────
+
+async def _call_llm(prompt: str, max_tokens: int = 400) -> str:
+    """Call Azure OpenAI if configured, else Ollama."""
+    if settings.AZURE_OPENAI_API_KEY and settings.AZURE_OPENAI_ENDPOINT:
+        try:
+            import openai  # lazy import
+            client = openai.AsyncAzureOpenAI(
+                api_key=settings.AZURE_OPENAI_API_KEY,
+                azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
+                api_version=settings.AZURE_OPENAI_API_VERSION,
+            )
+            resp = await client.chat.completions.create(
+                model=settings.AZURE_OPENAI_DEPLOYMENT,
+                messages=[
+                    {"role": "system", "content": "You are a market intelligence analyst for India's renewable energy sector. Respond only with valid JSON."},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.1,
+                max_tokens=max_tokens,
+            )
+            return resp.choices[0].message.content or ""
+        except Exception as exc:
+            logger.debug("Azure OpenAI news enrichment failed: %s", exc)
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(
+                f"{settings.OLLAMA_URL}/api/generate",
+                json={"model": settings.OLLAMA_MODEL, "prompt": prompt, "stream": False, "options": {"temperature": 0.1}},
+            )
+            resp.raise_for_status()
+            return resp.json().get("response", "")
+    except Exception as exc:
+        logger.debug("Ollama news enrichment failed: %s", exc)
+    return ""
+
+
+async def _enrich_article(title: str, summary: str | None) -> dict:
+    """AI-enrich a news article: 2-sentence summary, market impact, states, companies."""
+    text = f"Title: {title}\nSummary: {summary or 'No summary available'}"
+    prompt = f"""Analyse this India renewable energy / data center news article. Return ONLY a valid JSON object.
+
+{text}
+
+Return JSON with:
+- ai_summary: string — exactly 2 sentences summarizing market significance
+- market_impact_score: float 0-10 (10 = extremely significant market impact)
+- affected_states: array of Indian state names mentioned or implied (empty array if none)
+- affected_companies: array of company names mentioned (empty array if none)
+
+Example: {{"ai_summary": "MNRE has extended the RPO compliance deadline. This provides relief to discoms facing shortfalls.", "market_impact_score": 7.5, "affected_states": ["Karnataka", "Tamil Nadu"], "affected_companies": ["NTPC", "Adani Green"]}}
+
+Return only the JSON object."""
+
+    raw = await _call_llm(prompt, max_tokens=300)
+    if raw:
+        try:
+            cleaned = re.sub(r"```(?:json)?", "", raw).strip().strip("`").strip()
+            match = re.search(r"\{.*\}", cleaned, re.DOTALL)
+            if match:
+                parsed = json.loads(match.group())
+                score = parsed.get("market_impact_score")
+                if isinstance(score, (int, float)):
+                    score = max(0.0, min(10.0, float(score)))
+                else:
+                    score = None
+                return {
+                    "ai_summary": parsed.get("ai_summary") or None,
+                    "market_impact_score": score,
+                    "affected_states": parsed.get("affected_states") or [],
+                    "affected_companies": parsed.get("affected_companies") or [],
+                }
+        except Exception as exc:
+            logger.debug("LLM article enrichment parse failed: %s", exc)
+    return {"ai_summary": None, "market_impact_score": None, "affected_states": [], "affected_companies": []}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Service class
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -327,7 +415,90 @@ class NewsService:
                     )
                     self.db.add(article)
                     new_count += 1
+                    # AI enrichment — best-effort, won't block scrape
+                    try:
+                        intel = await _enrich_article(art["title"], art["summary"])
+                        article.ai_summary          = intel["ai_summary"]
+                        article.market_impact_score = intel["market_impact_score"]
+                        article.affected_states     = intel["affected_states"] or None
+                        article.affected_companies  = intel["affected_companies"] or None
+                        article.ai_analyzed_at      = datetime.now(timezone.utc)
+                    except Exception as ai_exc:
+                        logger.debug("AI enrichment skipped for article: %s", ai_exc)
 
         await self.db.commit()
         logger.info("News scrape complete: %d new, %d skipped", new_count, skipped)
         return {"new": new_count, "skipped": skipped}
+
+    async def generate_daily_brief(self) -> str:
+        """Synthesise top-10 news items from last 24 hours into an executive daily brief.
+
+        Returns a markdown string suitable for display. Called by the 6 AM IST scheduler.
+        """
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+        query = (
+            select(NewsArticle)
+            .where(NewsArticle.is_active.is_(True), NewsArticle.published_at >= cutoff)
+            .order_by(NewsArticle.market_impact_score.desc().nullslast(), NewsArticle.published_at.desc())
+            .limit(10)
+        )
+        result = await self.db.execute(query)
+        articles = list(result.scalars().all())
+        if not articles:
+            return "No recent news articles available for today's brief."
+
+        items_text = "\n".join(
+            f"[{i+1}] ({a.category}) {a.title} — {a.ai_summary or a.summary or 'No summary'}"
+            for i, a in enumerate(articles)
+        )
+        prompt = f"""You are a senior renewable energy market analyst. Based on today's top India RE news, write an executive Daily Market Brief.
+
+Top news items:
+{items_text}
+
+Write a structured brief with:
+1. **Market Pulse** (2-3 sentences overall assessment)
+2. **Policy & Regulation** (key developments)
+3. **Solar & Wind** (project/capacity news)
+4. **Data Centers** (infrastructure news if any)
+5. **Finance & Investment** (funding/deal news if any)
+6. **Key Takeaway** (1 sentence)
+
+Keep it professional, concise, under 400 words. Use markdown formatting."""
+
+        raw = await _call_llm(prompt, max_tokens=600)
+        return raw or "Daily brief generation failed — LLM unavailable."
+
+    async def get_trending_themes(self, days: int = 7) -> list[dict]:
+        """Identify trending themes across the last N days of news.
+
+        Returns a list of theme dicts: {theme, article_count, top_articles, avg_impact}.
+        """
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        query = (
+            select(NewsArticle)
+            .where(NewsArticle.is_active.is_(True), NewsArticle.published_at >= cutoff)
+            .order_by(NewsArticle.published_at.desc())
+            .limit(50)
+        )
+        result = await self.db.execute(query)
+        articles = list(result.scalars().all())
+        if not articles:
+            return []
+
+        # Group by category as a simple theme proxy
+        theme_map: dict[str, list[NewsArticle]] = {}
+        for a in articles:
+            theme_map.setdefault(a.category, []).append(a)
+
+        themes = []
+        for theme, arts in sorted(theme_map.items(), key=lambda x: -len(x[1])):
+            scores = [a.market_impact_score for a in arts if a.market_impact_score is not None]
+            avg_impact = sum(scores) / len(scores) if scores else 0.0
+            themes.append({
+                "theme": theme.replace("_", " ").title(),
+                "article_count": len(arts),
+                "avg_impact_score": round(avg_impact, 1),
+                "top_articles": [{"title": a.title, "url": a.url} for a in arts[:3]],
+            })
+        return themes

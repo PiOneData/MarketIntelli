@@ -42,6 +42,12 @@ export interface NewsArticle {
   published_at: string | null;
   scraped_at: string;
   is_active: boolean;
+  // AI intelligence
+  ai_summary: string | null;
+  market_impact_score: number | null;
+  affected_states: string[] | null;
+  affected_companies: string[] | null;
+  ai_analyzed_at: string | null;
 }
 
 export interface NewsFilters {

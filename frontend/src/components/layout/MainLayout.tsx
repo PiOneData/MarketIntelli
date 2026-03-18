@@ -23,7 +23,6 @@ const NAV_ITEMS = [
       { path: "/projects/project-directory", label: "Project Directory" },
       { path: "/projects/developer-profiles", label: "DC Developer Profiles" },
       { path: "/projects/airport-developer-profiles", label: "Airport Developer Profiles" },
-      { path: "/projects/tender-intelligence", label: "Tender Intelligence" },
     ],
   },
   {

@@ -1,4 +1,33 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+
+// ── Saved assessment reports from localStorage (written by SolarWindReport) ──
+const SAVED_REPORTS_KEY = "mi_saved_assessment_reports_v1";
+interface SavedAssessmentReport {
+  id: string;
+  title: string;
+  location: string;
+  type: "datacenter" | "airport" | "site";
+  lat: number;
+  lng: number;
+  rating: string;
+  overallScore: number;
+  solarScore: number;
+  windScore: number;
+  waterScore: number;
+  savedAt: string;
+}
+function loadSavedAssessments(): SavedAssessmentReport[] {
+  try {
+    return JSON.parse(localStorage.getItem(SAVED_REPORTS_KEY) ?? "[]") as SavedAssessmentReport[];
+  } catch { return []; }
+}
+function removeSavedAssessment(id: string): void {
+  try {
+    const updated = loadSavedAssessments().filter(r => r.id !== id);
+    localStorage.setItem(SAVED_REPORTS_KEY, JSON.stringify(updated));
+  } catch { /* ignore */ }
+}
 
 interface UserProfile {
   name: string;
@@ -516,6 +545,8 @@ function ProfilePage() {
   const [activeTab, setActiveTab] = useState<ProfileTab>("overview");
   const [viewingReportId, setViewingReportId] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
+  const [savedAssessments, setSavedAssessments] = useState<SavedAssessmentReport[]>([]);
+  const navigate = useNavigate();
   const [profileForm, setProfileForm] = useState({
     name: USER.name,
     role: USER.role,
@@ -532,6 +563,23 @@ function ProfilePage() {
     marketUpdates: true,
   });
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Load saved assessments from localStorage
+  const refreshAssessments = useCallback(() => {
+    setSavedAssessments(loadSavedAssessments());
+  }, []);
+
+  useEffect(() => {
+    refreshAssessments();
+    // Refresh when storage changes (e.g. another tab saves a report)
+    window.addEventListener("storage", refreshAssessments);
+    return () => window.removeEventListener("storage", refreshAssessments);
+  }, [refreshAssessments]);
+
+  const handleDeleteAssessment = (id: string) => {
+    removeSavedAssessment(id);
+    refreshAssessments();
+  };
 
   const handleSave = () => {
     setSaveSuccess(true);
@@ -751,13 +799,24 @@ function ProfilePage() {
               {/* Recent Reports */}
               <div className="profile-card">
                 <div className="profile-card-header">
-                  <h3>Recent Reports</h3>
+                  <h3>Recent Assessment Reports</h3>
                   <button className="profile-link-btn" onClick={() => setActiveTab("reports")}>
                     View all →
                   </button>
                 </div>
                 <div className="profile-recent-reports">
-                  {SAVED_REPORTS.slice(0, 3).map((r) => (
+                  {savedAssessments.length > 0 ? savedAssessments.slice(0, 3).map((r) => (
+                    <div key={r.id} className="profile-recent-report-item">
+                      <div className="profile-report-icon">🛰️</div>
+                      <div className="profile-report-info">
+                        <span className="profile-report-title">{r.title}</span>
+                        <span className="profile-report-meta">{r.location} · {new Date(r.savedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                      </div>
+                      <span style={{ padding: "2px 8px", fontSize: "9px", fontWeight: 800, background: r.rating === "PREMIUM SITE" ? "#16a34a" : "#0f766e", color: "#fff" }}>
+                        {r.rating !== "—" ? r.rating : "SAVED"}
+                      </span>
+                    </div>
+                  )) : SAVED_REPORTS.slice(0, 3).map((r) => (
                     <div key={r.id} className="profile-recent-report-item">
                       <div className="profile-report-icon">
                         {r.status === "completed" ? "📊" : r.status === "processing" ? "⏳" : "📝"}
@@ -800,8 +859,100 @@ function ProfilePage() {
         {/* SAVED REPORTS */}
         {activeTab === "reports" && (
           <div className="profile-reports-section">
+            {/* ── Saved Assessment Reports (from RE Site Assessment) ── */}
+            {savedAssessments.length > 0 && (
+              <div style={{ marginBottom: "32px" }}>
+                <div className="profile-section-header" style={{ marginBottom: "16px" }}>
+                  <h3 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ background: "#0f766e", color: "#fff", padding: "3px 10px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.06em", borderRadius: "4px" }}>LIVE</span>
+                    Assessment Reports — DC / Airport Sites ({savedAssessments.length})
+                  </h3>
+                  <button
+                    className="profile-link-btn"
+                    onClick={() => navigate("/geo-analytics/assessment")}
+                  >
+                    Run new assessment →
+                  </button>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "16px" }}>
+                  {savedAssessments.map((r) => (
+                    <div key={r.id} style={{ background: "#fff", border: "1px solid #e2e8f0", padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
+                        <div>
+                          <div style={{ fontSize: "10px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>
+                            {r.type === "datacenter" ? "Data Center" : r.type === "airport" ? "Airport" : "Custom Site"}
+                          </div>
+                          <div style={{ fontSize: "14px", fontWeight: 700, color: "#0f172a", lineHeight: 1.3 }}>{r.title}</div>
+                          <div style={{ fontSize: "12px", color: "#64748b", marginTop: "3px" }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ verticalAlign: "middle", marginRight: "3px" }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            {r.location}
+                          </div>
+                        </div>
+                        <span style={{ padding: "3px 10px", fontSize: "10px", fontWeight: 800, background: r.rating === "PREMIUM SITE" ? "#16a34a" : r.rating === "OPTIMAL" ? "#0f766e" : r.rating === "VIABLE" ? "#ca8a04" : "#64748b", color: "#fff", flexShrink: 0 }}>
+                          {r.rating !== "—" ? r.rating : "N/A"}
+                        </span>
+                      </div>
+                      {/* Score bars */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
+                        {[
+                          { label: "Solar", score: r.solarScore, color: "#f59e0b" },
+                          { label: "Wind",  score: r.windScore,  color: "#0ea5e9" },
+                          { label: "Water", score: r.waterScore, color: "#06b6d4" },
+                        ].map(({ label, score, color }) => (
+                          <div key={label} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: "8px 10px" }}>
+                            <div style={{ fontSize: "9px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>{label}</div>
+                            <div style={{ fontSize: "16px", fontWeight: 800, color, lineHeight: 1 }}>{score > 0 ? score.toFixed(0) : "—"}</div>
+                            {score > 0 && (
+                              <div style={{ marginTop: "4px", height: "3px", background: "#e2e8f0" }}>
+                                <div style={{ width: `${Math.min(score, 100)}%`, height: "100%", background: color }} />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "10px", color: "#94a3b8" }}>
+                          Saved {new Date(r.savedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                        </span>
+                        <div style={{ display: "flex", gap: "6px" }}>
+                          <button
+                            onClick={() => navigate("/geo-analytics/assessment")}
+                            style={{ padding: "5px 10px", background: "#0f766e", color: "#fff", border: "none", fontSize: "11px", fontWeight: 600, cursor: "pointer" }}
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() => handleDeleteAssessment(r.id)}
+                            style={{ padding: "5px 8px", background: "#fff", color: "#ef4444", border: "1px solid #fecaca", fontSize: "11px", fontWeight: 600, cursor: "pointer" }}
+                            title="Remove from saved"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {savedAssessments.length === 0 && (
+              <div style={{ background: "#f8fafc", border: "1px dashed #cbd5e1", padding: "32px", textAlign: "center", marginBottom: "32px" }}>
+                <div style={{ fontSize: "32px", marginBottom: "12px" }}>🛰️</div>
+                <div style={{ fontSize: "14px", fontWeight: 600, color: "#475569", marginBottom: "6px" }}>No assessment reports saved yet</div>
+                <div style={{ fontSize: "12px", color: "#94a3b8", marginBottom: "16px" }}>Run a RE Site Assessment on a Data Center or Airport and click "Save Report"</div>
+                <button
+                  onClick={() => navigate("/geo-analytics/assessment")}
+                  style={{ padding: "8px 20px", background: "#0f766e", color: "#fff", border: "none", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}
+                >
+                  Go to RE Site Assessment
+                </button>
+              </div>
+            )}
+
+            {/* Legacy / static reports */}
             <div className="profile-section-header">
-              <h3>Saved Reports ({SAVED_REPORTS.length})</h3>
+              <h3>Legacy Reports ({SAVED_REPORTS.length})</h3>
               <div className="profile-filter-row">
                 <select className="profile-filter-select">
                   <option>All Types</option>
@@ -809,12 +960,6 @@ function ProfilePage() {
                   <option>Detailed Assessment</option>
                   <option>Investment Grade</option>
                   <option>Environmental Impact</option>
-                </select>
-                <select className="profile-filter-select">
-                  <option>All Statuses</option>
-                  <option>Completed</option>
-                  <option>Draft</option>
-                  <option>Processing</option>
                 </select>
               </div>
             </div>
