@@ -152,11 +152,20 @@ jobs:
               $FRONTEND_IMAGE
 
             echo "Wait for services to start"
-            sleep 30
+            sleep 20
 
-            echo "Verify deployment"
+            echo "Verify deployment (retry up to 6 times, 10s apart)"
+            for i in 1 2 3 4 5 6; do
+              sleep 10
+              curl -sf http://localhost:9001/docs > /dev/null && break
+              echo "Backend not ready yet (attempt $i/6)..."
+              if [ "$i" = "6" ]; then
+                echo "Backend failed to start after 80s"
+                docker logs --tail 50 $BACKEND_CONTAINER
+                exit 1
+              fi
+            done
             curl -f http://localhost:9002/ || exit 1
-            curl -f http://localhost:9001/docs || exit 1
 
             echo "Clean up old images"
             docker image prune -f
