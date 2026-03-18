@@ -114,6 +114,10 @@ jobs:
               -e CELERY_BROKER_URL="redis://$REDIS_CONTAINER:6379/1" \
               -e CELERY_RESULT_BACKEND="redis://$REDIS_CONTAINER:6379/2" \
               -e SECRET_KEY="${{ secrets.APP_SECRET_KEY }}" \
+              -e AZURE_OPENAI_API_KEY="${{ secrets.AZURE_OPENAI_API_KEY }}" \
+              -e AZURE_OPENAI_ENDPOINT="${{ secrets.AZURE_OPENAI_ENDPOINT }}" \
+              -e AZURE_OPENAI_DEPLOYMENT="${{ secrets.AZURE_OPENAI_DEPLOYMENT }}" \
+              -e AZURE_OPENAI_API_VERSION="${{ secrets.AZURE_OPENAI_API_VERSION }}" \
               --restart unless-stopped \
               $BACKEND_IMAGE
 
@@ -126,6 +130,11 @@ jobs:
               -e REDIS_URL="redis://$REDIS_CONTAINER:6379/0" \
               -e CELERY_BROKER_URL="redis://$REDIS_CONTAINER:6379/1" \
               -e CELERY_RESULT_BACKEND="redis://$REDIS_CONTAINER:6379/2" \
+              -e SECRET_KEY="${{ secrets.APP_SECRET_KEY }}" \
+              -e AZURE_OPENAI_API_KEY="${{ secrets.AZURE_OPENAI_API_KEY }}" \
+              -e AZURE_OPENAI_ENDPOINT="${{ secrets.AZURE_OPENAI_ENDPOINT }}" \
+              -e AZURE_OPENAI_DEPLOYMENT="${{ secrets.AZURE_OPENAI_DEPLOYMENT }}" \
+              -e AZURE_OPENAI_API_VERSION="${{ secrets.AZURE_OPENAI_API_VERSION }}" \
               --restart unless-stopped \
               $BACKEND_IMAGE \
               celery -A app.core.celery_app worker --loglevel=info
