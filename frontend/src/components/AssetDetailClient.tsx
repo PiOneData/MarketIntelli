@@ -261,10 +261,22 @@ const GLOSSARY = [
     { cat: 'Overall', term: 'water_rating (class)', desc: 'Water qualitative class. Interprets water score. Indicates availability' }
 ];
 
+const LEGEND_TABS = [
+    { key: 'Solar', label: 'Solar', icon: '☀️', bg: '#fef3c7', color: '#92400e', activeBg: '#f59e0b', activeColor: '#fff' },
+    { key: 'Wind', label: 'Wind', icon: '💨', bg: '#eff6ff', color: '#1d4ed8', activeBg: '#3b82f6', activeColor: '#fff' },
+    { key: 'Water', label: 'Water', icon: '💧', bg: '#ecfdf5', color: '#065f46', activeBg: '#10b981', activeColor: '#fff' },
+    { key: 'Overall', label: 'Overall', icon: '⚡', bg: '#f1f5f9', color: '#64748b', activeBg: '#64748b', activeColor: '#fff' },
+] as const;
+
 function GlossaryModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     const [search, setSearch] = useState('');
+    const [activeTab, setActiveTab] = useState<'Solar' | 'Wind' | 'Water' | 'Overall'>('Solar');
     if (!isOpen) return null;
-    const filtered = GLOSSARY.filter(g => g.term.toLowerCase().includes(search.toLowerCase()) || g.desc.toLowerCase().includes(search.toLowerCase()));
+
+    const isSearching = search.trim().length > 0;
+    const filtered = isSearching
+        ? GLOSSARY.filter(g => g.term.toLowerCase().includes(search.toLowerCase()) || g.desc.toLowerCase().includes(search.toLowerCase()))
+        : GLOSSARY.filter(g => g.cat === activeTab);
 
     return (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={onClose}>
@@ -276,27 +288,62 @@ function GlossaryModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
                     </div>
                     <button onClick={onClose} style={{ background: '#f8fafc', border: 'none', borderRadius: '12px', padding: '8px', cursor: 'pointer', color: '#64748b' }}><X size={20} /></button>
                 </div>
-                <div style={{ padding: '16px 32px' }}>
-                    <div style={{ position: 'relative' }}>
+                <div style={{ padding: '16px 32px 0' }}>
+                    <div style={{ position: 'relative', marginBottom: '16px' }}>
                         <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
                         <input
-                            placeholder="Search terms or definitions..."
+                            placeholder="Search all terms..."
                             value={search} onChange={e => setSearch(e.target.value)}
-                            style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '14px', border: '1px solid #e2e8f0', fontSize: '13px', fontFamily: 'inherit', outline: 'none' }}
+                            style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '14px', border: '1px solid #e2e8f0', fontSize: '13px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
                         />
                     </div>
+                    {!isSearching && (
+                        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '2px' }}>
+                            {LEGEND_TABS.map(tab => {
+                                const isActive = activeTab === tab.key;
+                                return (
+                                    <button
+                                        key={tab.key}
+                                        onClick={() => setActiveTab(tab.key)}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '6px',
+                                            padding: '8px 16px', borderRadius: '10px', border: 'none',
+                                            background: isActive ? tab.activeBg : tab.bg,
+                                            color: isActive ? tab.activeColor : tab.color,
+                                            fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+                                            whiteSpace: 'nowrap', transition: 'all 0.15s ease',
+                                            boxShadow: isActive ? '0 2px 8px rgba(0,0,0,0.15)' : 'none',
+                                            flexShrink: 0,
+                                        }}
+                                    >
+                                        <span>{tab.icon}</span>
+                                        {tab.label}
+                                        <span style={{ fontSize: '10px', opacity: 0.8, marginLeft: '2px' }}>
+                                            ({GLOSSARY.filter(g => g.cat === tab.key).length})
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
-                <div style={{ flex: 1, overflowY: 'auto', padding: '8px 32px 32px' }}>
+                <div style={{ flex: 1, overflowY: 'auto', padding: '12px 32px 32px' }}>
                     {filtered.map((g, i) => (
                         <div key={i} style={{ padding: '16px 0', borderBottom: i === filtered.length - 1 ? 'none' : '1px solid #f8fafc' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                                <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 8px', borderRadius: '6px', background: g.cat === 'Solar' ? '#fef3c7' : g.cat === 'Wind' ? '#eff6ff' : g.cat === 'Water' ? '#ecfdf5' : '#f1f5f9', color: g.cat === 'Solar' ? '#92400e' : g.cat === 'Wind' ? '#1d4ed8' : g.cat === 'Water' ? '#065f46' : '#64748b', textTransform: 'uppercase' }}>{g.cat}</span>
+                                {isSearching && (
+                                    <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 8px', borderRadius: '6px', background: g.cat === 'Solar' ? '#fef3c7' : g.cat === 'Wind' ? '#eff6ff' : g.cat === 'Water' ? '#ecfdf5' : '#f1f5f9', color: g.cat === 'Solar' ? '#92400e' : g.cat === 'Wind' ? '#1d4ed8' : g.cat === 'Water' ? '#065f46' : '#64748b', textTransform: 'uppercase' }}>{g.cat}</span>
+                                )}
                                 <h3 style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{g.term}</h3>
                             </div>
                             <p style={{ fontSize: '12.5px', color: '#475569', lineHeight: 1.6 }}>{g.desc}</p>
                         </div>
                     ))}
-                    {filtered.length === 0 && <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>No terms found matching "{search}"</div>}
+                    {filtered.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>
+                            {isSearching ? `No terms found matching "${search}"` : 'No terms in this category'}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
