@@ -318,7 +318,7 @@ async def get_report(
     )
 
 
-@router.get("/reports/{asset_key:path}/download")
+@router.get("/reports/{asset_key:path}/download", response_model=None)
 async def download_report(
     asset_key: str,
     db: AsyncSession = Depends(get_db),
