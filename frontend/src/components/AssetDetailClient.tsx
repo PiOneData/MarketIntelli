@@ -454,7 +454,8 @@ export default function AssetDetailClient({ id }: { id: string }) {
 
         } catch (error) {
             console.error(error);
-            alert('Failed to generate Assessment report. Make sure local Ollama is running.');
+            const msg = error instanceof Error ? error.message : String(error);
+            alert(`Failed to generate Assessment report: ${msg}`);
         } finally {
             setIsGeneratingReport(false);
         }
