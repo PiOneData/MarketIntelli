@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import JSON, String, Boolean, DateTime, Float, ForeignKey, Text, func
+from sqlalchemy import JSON, String, Boolean, DateTime, Date, Float, ForeignKey, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -91,3 +91,16 @@ class NewsArticle(Base):
     affected_states: Mapped[list | None] = mapped_column(JSON, nullable=True, default=None)
     affected_companies: Mapped[list | None] = mapped_column(JSON, nullable=True, default=None)
     ai_analyzed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, default=None)
+
+
+class DailyBrief(Base):
+    """Cached AI-generated daily market brief, keyed by date. Prevents repeated LLM calls."""
+
+    __tablename__ = "daily_briefs"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4, init=False)
+    brief_date: Mapped[date] = mapped_column(Date, unique=True)  # one row per calendar day
+    content: Mapped[str] = mapped_column(Text)
+    generated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), init=False
+    )
