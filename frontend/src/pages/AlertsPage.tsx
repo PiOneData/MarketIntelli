@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import apiClient from "../api/client";
@@ -217,6 +217,71 @@ function NewsCard({
 }
 
 /* ------------------------------------------------------------------ */
+/*  Markdown-lite renderer for brief text                              */
+/* ------------------------------------------------------------------ */
+
+function renderInline(text: string): React.ReactNode {
+  // Replace **bold** with <strong>
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
+}
+
+function BriefRenderer({ text }: { text: string }) {
+  const lines = text.split("\n");
+  return (
+    <div style={{ fontSize: "13px", lineHeight: 1.75, color: "#334155" }}>
+      {lines.map((line, i) => {
+        const trimmed = line.trim();
+        if (!trimmed) return <div key={i} style={{ height: "6px" }} />;
+        if (trimmed.startsWith("### ")) {
+          return (
+            <div key={i} style={{ fontWeight: 700, fontSize: "12px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: "14px", marginBottom: "2px" }}>
+              {trimmed.slice(4)}
+            </div>
+          );
+        }
+        if (trimmed.startsWith("## ")) {
+          return (
+            <div key={i} style={{ fontWeight: 700, fontSize: "14px", color: "#1e293b", marginTop: "16px", marginBottom: "4px", borderBottom: "1px solid #f1f5f9", paddingBottom: "4px" }}>
+              {trimmed.slice(3)}
+            </div>
+          );
+        }
+        if (trimmed.startsWith("# ")) {
+          return (
+            <div key={i} style={{ fontWeight: 800, fontSize: "15px", color: "#0f172a", marginTop: "16px", marginBottom: "6px" }}>
+              {trimmed.slice(2)}
+            </div>
+          );
+        }
+        if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+          return (
+            <div key={i} style={{ display: "flex", gap: "6px", marginTop: "2px" }}>
+              <span style={{ color: "#7c3aed", flexShrink: 0 }}>•</span>
+              <span>{renderInline(trimmed.slice(2))}</span>
+            </div>
+          );
+        }
+        // Bold-only line (e.g. "**Section:**")
+        if (trimmed.startsWith("**") && (trimmed.endsWith("**") || trimmed.endsWith("**:"))) {
+          return (
+            <div key={i} style={{ fontWeight: 700, color: "#1e293b", marginTop: "12px" }}>
+              {renderInline(trimmed)}
+            </div>
+          );
+        }
+        return <div key={i}>{renderInline(trimmed)}</div>;
+      })}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Daily Brief Panel                                                  */
 /* ------------------------------------------------------------------ */
 
@@ -295,19 +360,7 @@ function DailyBriefPanel() {
           {isLoading ? (
             <div style={{ color: "#94a3b8", fontSize: "13px" }}>Generating brief…</div>
           ) : data?.brief ? (
-            <pre
-              style={{
-                margin: 0,
-                fontFamily: "inherit",
-                fontSize: "13px",
-                lineHeight: 1.7,
-                color: "#334155",
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-              }}
-            >
-              {data.brief}
-            </pre>
+            <BriefRenderer text={data.brief} />
           ) : (
             <div style={{ color: "#94a3b8", fontSize: "13px" }}>
               No brief available — will be generated at 06:00 IST or when news articles are present.
