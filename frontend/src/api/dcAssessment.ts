@@ -15,6 +15,7 @@ export interface ReportResponse {
   water_score?: number | null;
   overall_score?: number | null;
   rating?: string | null;
+  analysis_json?: string | null;
 }
 
 export interface ScorePayload {
@@ -29,6 +30,7 @@ export interface ScorePayload {
   state?: string;
   lat: number;
   lon: number;
+  analysis_json?: string;
 }
 
 /**

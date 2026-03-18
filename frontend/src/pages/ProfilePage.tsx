@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { listSavedAssessments, deleteAssessment } from "../api/dcAssessment";
 import type { ReportResponse } from "../api/dcAssessment";
+import SolarWindReport from "../components/solar-wind-assessment/SolarWindReport";
+import { DEFAULT_LIVE_WEATHER } from "../api/solarWindAssessment";
+import type { AnalysisResult } from "../api/solarWindAssessment";
 
 interface UserProfile {
   name: string;
@@ -518,6 +521,7 @@ function AtmakurReport({ onClose }: { onClose: () => void }) {
 function ProfilePage() {
   const [activeTab, setActiveTab] = useState<ProfileTab>("overview");
   const [viewingReportId, setViewingReportId] = useState<string | null>(null);
+  const [viewingAssessment, setViewingAssessment] = useState<ReportResponse | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [savedAssessments, setSavedAssessments] = useState<ReportResponse[]>([]);
   const navigate = useNavigate();
@@ -566,6 +570,31 @@ function ProfilePage() {
     { id: "reports", label: "Saved Reports", icon: "📋" },
     { id: "activity", label: "Recent Activity", icon: "🕐" },
   ];
+
+  if (viewingAssessment) {
+    let parsedAnalysis: AnalysisResult | null = null;
+    if (viewingAssessment.analysis_json) {
+      try {
+        parsedAnalysis = JSON.parse(viewingAssessment.analysis_json) as AnalysisResult;
+      } catch {
+        parsedAnalysis = null;
+      }
+    }
+    if (parsedAnalysis) {
+      return (
+        <div style={{ position: "fixed", inset: 0, zIndex: 100 }}>
+          <SolarWindReport
+            analysis={parsedAnalysis}
+            live={DEFAULT_LIVE_WEATHER}
+            lat={viewingAssessment.lat}
+            lng={viewingAssessment.lon}
+            datacenter={null}
+            onClose={() => setViewingAssessment(null)}
+          />
+        </div>
+      );
+    }
+  }
 
   if (viewingReportId === "1") {
     return <AtmakurReport onClose={() => setViewingReportId(null)} />;
@@ -893,7 +922,13 @@ function ProfilePage() {
                         </span>
                         <div style={{ display: "flex", gap: "6px" }}>
                           <button
-                            onClick={() => navigate("/geo-analytics/assessment")}
+                            onClick={() => {
+                              if (r.analysis_json) {
+                                setViewingAssessment(r);
+                              } else {
+                                navigate("/geo-analytics/assessment");
+                              }
+                            }}
                             style={{ padding: "5px 10px", background: "#0f766e", color: "#fff", border: "none", fontSize: "11px", fontWeight: 600, cursor: "pointer" }}
                           >
                             View
