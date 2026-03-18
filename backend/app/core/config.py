@@ -32,9 +32,4 @@ class Settings(BaseSettings):
     AZURE_OPENAI_DEPLOYMENT: str = "gpt-4o"
     AZURE_OPENAI_API_VERSION: str = "2024-02-15-preview"
 
-    # Ollama (fallback LLM)
-    OLLAMA_URL: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "llama3:latest"
-
-
 settings = Settings()

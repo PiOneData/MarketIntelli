@@ -232,37 +232,26 @@ def _parse_feed(xml_text: str, source_name: str, data_source_label: str) -> list
 
 
 async def _call_llm(prompt: str) -> str:
-    """Call Azure OpenAI if configured, else Ollama. Returns raw LLM text."""
-    if settings.AZURE_OPENAI_API_KEY and settings.AZURE_OPENAI_ENDPOINT:
-        try:
-            import openai  # lazy import
-            client = openai.AsyncAzureOpenAI(
-                api_key=settings.AZURE_OPENAI_API_KEY,
-                azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
-                api_version=settings.AZURE_OPENAI_API_VERSION,
-            )
-            resp = await client.chat.completions.create(
-                model=settings.AZURE_OPENAI_DEPLOYMENT,
-                messages=[
-                    {"role": "system", "content": "You are a compliance intelligence expert for India's renewable energy and power sector. Respond only with valid JSON."},
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0.1,
-                max_tokens=600,
-            )
-            return resp.choices[0].message.content or ""
-        except Exception as exc:
-            logger.warning("Azure OpenAI compliance analysis failed: %s", exc)
+    """Call Azure OpenAI for compliance analysis. Returns raw LLM text."""
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(
-                f"{settings.OLLAMA_URL}/api/generate",
-                json={"model": settings.OLLAMA_MODEL, "prompt": prompt, "stream": False, "options": {"temperature": 0.1}},
-            )
-            resp.raise_for_status()
-            return resp.json().get("response", "")
+        import openai  # lazy import
+        client = openai.AsyncAzureOpenAI(
+            api_key=settings.AZURE_OPENAI_API_KEY,
+            azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
+            api_version=settings.AZURE_OPENAI_API_VERSION,
+        )
+        resp = await client.chat.completions.create(
+            model=settings.AZURE_OPENAI_DEPLOYMENT,
+            messages=[
+                {"role": "system", "content": "You are a compliance intelligence expert for India's renewable energy and power sector. Respond only with valid JSON."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.1,
+            max_tokens=600,
+        )
+        return resp.choices[0].message.content or ""
     except Exception as exc:
-        logger.warning("Ollama compliance analysis failed: %s", exc)
+        logger.warning("Azure OpenAI compliance analysis failed: %s", exc)
     return ""
 
 
