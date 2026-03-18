@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime
 
 import httpx
@@ -8,6 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.domains.dc_assessment.models.report import AssessmentReport
+
+logger = logging.getLogger(__name__)
 
 
 class ReportService:
@@ -63,8 +66,7 @@ class ReportService:
             try:
                 return await self._call_azure(prompt)
             except Exception as exc:
-                import logging
-                logging.getLogger(__name__).warning(
+                logger.warning(
                     "Azure OpenAI report generation failed, falling back to Ollama: %s", exc
                 )
         return await self._call_ollama(prompt)

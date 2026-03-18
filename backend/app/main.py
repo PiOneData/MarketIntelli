@@ -5,6 +5,7 @@ from collections.abc import AsyncIterator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from app.core.config import settings
 from app.api.v1.router import api_router
@@ -25,6 +26,16 @@ from app.domains.power_market.models.power_market import (  # noqa: F401
 )
 
 logger = logging.getLogger(__name__)
+
+
+async def _safe_add_column(ddl: str) -> None:
+    """Execute a single DDL statement in its own transaction, ignoring errors."""
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(text(ddl))
+    except Exception as exc:
+        logger.debug("DDL skipped (already applied or table absent): %s — %s", ddl, exc)
+
 
 # ---------------------------------------------------------------------------
 # Twice-daily background scheduler (runs every 12 hours)
@@ -61,6 +72,36 @@ async def _run_scheduled_scrapes() -> None:
             logger.warning("Scheduled compliance scrape failed: %s", exc)
 
 
+async def _startup_compliance_scrape() -> None:
+    """Background task: initial compliance scrape on startup."""
+    from app.db.session import async_session_factory
+    from app.domains.policy_intelligence.services.compliance_scraper import ComplianceScraperService
+    try:
+        async with async_session_factory() as db:
+            svc = ComplianceScraperService(db)
+            result = await svc.scrape_and_store()
+            logger.info("Startup compliance scrape: %s", result)
+            enriched = await svc.enrich_missing_alerts()
+            logger.info("Startup compliance re-enrichment: %d alerts", enriched)
+    except Exception as e:
+        logger.warning("Startup compliance scrape failed (will retry on schedule): %s", e)
+
+
+async def _startup_news_scrape() -> None:
+    """Background task: initial news scrape on startup."""
+    from app.db.session import async_session_factory
+    from app.domains.alerts.services.news_service import NewsService
+    try:
+        async with async_session_factory() as db:
+            svc = NewsService(db)
+            result = await svc.scrape_and_store()
+            logger.info("Startup news scrape: %s", result)
+            enriched = await svc.enrich_missing_articles()
+            logger.info("Startup news re-enrichment: %d articles", enriched)
+    except Exception as e:
+        logger.warning("Startup news scrape failed (will retry on schedule): %s", e)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Startup: create tables if they don't exist
@@ -69,63 +110,33 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("Database tables verified/created.")
 
     # Ensure re_tariffs has energy_source column (fixes missing column from bad migration)
-    try:
-        async with engine.begin() as conn:
-            await conn.execute(
-                __import__("sqlalchemy", fromlist=["text"]).text(
-                    "ALTER TABLE re_tariffs ADD COLUMN IF NOT EXISTS "
-                    "energy_source VARCHAR(100) NOT NULL DEFAULT 'solar';"
-                )
-            )
-        logger.info("re_tariffs.energy_source column ensured.")
-    except Exception as e:
-        logger.warning("re_tariffs schema check skipped: %s", e)
+    await _safe_add_column(
+        "ALTER TABLE re_tariffs ADD COLUMN IF NOT EXISTS "
+        "energy_source VARCHAR(100) NOT NULL DEFAULT 'solar';"
+    )
+    logger.info("re_tariffs.energy_source column ensured.")
 
     # Ensure news_articles has AI intelligence columns (added after initial table creation)
-    try:
-        _text = __import__("sqlalchemy", fromlist=["text"]).text
-        async with engine.begin() as conn:
-            await conn.execute(_text(
-                "ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS ai_summary TEXT;"
-            ))
-            await conn.execute(_text(
-                "ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS market_impact_score FLOAT;"
-            ))
-            await conn.execute(_text(
-                "ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS affected_states JSON;"
-            ))
-            await conn.execute(_text(
-                "ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS affected_companies JSON;"
-            ))
-            await conn.execute(_text(
-                "ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS ai_analyzed_at TIMESTAMP WITH TIME ZONE;"
-            ))
-        logger.info("news_articles AI columns ensured.")
-    except Exception as e:
-        logger.warning("news_articles schema check skipped: %s", e)
+    for ddl in [
+        "ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS ai_summary TEXT;",
+        "ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS market_impact_score FLOAT;",
+        "ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS affected_states JSON;",
+        "ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS affected_companies JSON;",
+        "ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS ai_analyzed_at TIMESTAMP WITH TIME ZONE;",
+    ]:
+        await _safe_add_column(ddl)
+    logger.info("news_articles AI columns ensured.")
 
     # Ensure compliance_alerts has AI intelligence columns (added after initial table creation)
-    try:
-        _text = __import__("sqlalchemy", fromlist=["text"]).text
-        async with engine.begin() as conn:
-            await conn.execute(_text(
-                "ALTER TABLE compliance_alerts ADD COLUMN IF NOT EXISTS urgency_level VARCHAR(20);"
-            ))
-            await conn.execute(_text(
-                "ALTER TABLE compliance_alerts ADD COLUMN IF NOT EXISTS deadline_date TIMESTAMP WITH TIME ZONE;"
-            ))
-            await conn.execute(_text(
-                "ALTER TABLE compliance_alerts ADD COLUMN IF NOT EXISTS action_items JSON;"
-            ))
-            await conn.execute(_text(
-                "ALTER TABLE compliance_alerts ADD COLUMN IF NOT EXISTS affected_entities JSON;"
-            ))
-            await conn.execute(_text(
-                "ALTER TABLE compliance_alerts ADD COLUMN IF NOT EXISTS ai_analyzed_at TIMESTAMP WITH TIME ZONE;"
-            ))
-        logger.info("compliance_alerts AI columns ensured.")
-    except Exception as e:
-        logger.warning("compliance_alerts schema check skipped: %s", e)
+    for ddl in [
+        "ALTER TABLE compliance_alerts ADD COLUMN IF NOT EXISTS urgency_level VARCHAR(20);",
+        "ALTER TABLE compliance_alerts ADD COLUMN IF NOT EXISTS deadline_date TIMESTAMP WITH TIME ZONE;",
+        "ALTER TABLE compliance_alerts ADD COLUMN IF NOT EXISTS action_items JSON;",
+        "ALTER TABLE compliance_alerts ADD COLUMN IF NOT EXISTS affected_entities JSON;",
+        "ALTER TABLE compliance_alerts ADD COLUMN IF NOT EXISTS ai_analyzed_at TIMESTAMP WITH TIME ZONE;",
+    ]:
+        await _safe_add_column(ddl)
+    logger.info("compliance_alerts AI columns ensured.")
 
     # Seed data centers from CSV if table is empty
     try:
@@ -209,31 +220,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as e:
         logger.warning("SHANTI policy upsert skipped: %s", e)
 
-    # Run initial compliance scrape on startup to populate real data
-    try:
-        from app.db.session import async_session_factory
-        from app.domains.policy_intelligence.services.compliance_scraper import ComplianceScraperService
-        async with async_session_factory() as db:
-            svc = ComplianceScraperService(db)
-            result = await svc.scrape_and_store()
-            logger.info("Startup compliance scrape: %s", result)
-            enriched = await svc.enrich_missing_alerts()
-            logger.info("Startup compliance re-enrichment: %d alerts", enriched)
-    except Exception as e:
-        logger.warning("Startup compliance scrape failed (will retry on schedule): %s", e)
+    # Run compliance + news scrapes in background (non-blocking) so startup
+    # completes quickly and health checks pass while data populates in background.
+    asyncio.create_task(_startup_compliance_scrape())
+    logger.info("Background startup compliance scrape started.")
 
-    # Run initial news scrape on startup to populate/refresh real articles
-    try:
-        from app.db.session import async_session_factory
-        from app.domains.alerts.services.news_service import NewsService
-        async with async_session_factory() as db:
-            svc = NewsService(db)
-            result = await svc.scrape_and_store()
-            logger.info("Startup news scrape: %s", result)
-            enriched = await svc.enrich_missing_articles()
-            logger.info("Startup news re-enrichment: %d articles", enriched)
-    except Exception as e:
-        logger.warning("Startup news scrape failed (will retry on schedule): %s", e)
+    asyncio.create_task(_startup_news_scrape())
+    logger.info("Background startup news scrape started.")
 
     # Start twice-daily background scheduler
     scheduler_task = asyncio.create_task(_run_scheduled_scrapes())
