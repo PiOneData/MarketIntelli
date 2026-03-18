@@ -34,6 +34,8 @@ class AssessmentReport(Base):
     water_score: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
     overall_score: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
     rating: Mapped[str | None] = mapped_column(String(100), nullable=True, default=None)
+    # Full analysis JSON for re-rendering charts in saved report viewer
+    analysis_json: Mapped[str | None] = mapped_column(Text, nullable=True, default=None)
     generated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), init=False
     )

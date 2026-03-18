@@ -137,6 +137,8 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
   const [dcStock, setDcStock] = useState<DcStock | null>(null);
   const [stockLoading, setStockLoading] = useState(false);
   const [reportSaved, setReportSaved] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
+  const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
   // Build stable asset_key matching AssetDetailPage pattern: "{asset_type}_{id}"
@@ -157,6 +159,9 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
   }, [assetKey]);
 
   const handleSaveReport = async () => {
+    if (saving || reportSaved) return;
+    setSaving(true);
+    setSaveFailed(false);
     const suit = analysis.suitability ?? {};
     const suitMap = suit as Record<string, unknown>;
     const components = suitMap.components as Record<string, unknown> | undefined;
@@ -173,11 +178,13 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
         state: datacenter?.state ? String(datacenter.state) : undefined,
         lat,
         lon: lng,
+        analysis_json: JSON.stringify(analysis),
       });
       setReportSaved(true);
     } catch {
-      // Fallback: still mark as saved in UI even if network fails
-      setReportSaved(true);
+      setSaveFailed(true);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -355,11 +362,11 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <button onClick={handleSaveReport} disabled={reportSaved}
-            title={reportSaved ? "Report saved to profile" : "Save report to profile"}
-            style={{ padding: "7px 12px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: 600, cursor: reportSaved ? "default" : "pointer", fontFamily: "inherit", background: reportSaved ? "#f0fdf4" : "#fff", color: reportSaved ? "#16a34a" : "#64748b", borderColor: reportSaved ? "#86efac" : "#e2e8f0" }}>
+          <button onClick={handleSaveReport} disabled={reportSaved || saving}
+            title={reportSaved ? "Report saved to profile" : saveFailed ? "Save failed — click to retry" : "Save report to profile"}
+            style={{ padding: "7px 12px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: 600, cursor: (reportSaved || saving) ? "default" : "pointer", fontFamily: "inherit", background: reportSaved ? "#f0fdf4" : saveFailed ? "#fef2f2" : "#fff", color: reportSaved ? "#16a34a" : saveFailed ? "#dc2626" : "#64748b", borderColor: reportSaved ? "#86efac" : saveFailed ? "#fecaca" : "#e2e8f0" }}>
             <TrendingUp size={13} />
-            <span>{reportSaved ? "Saved" : "Save Report"}</span>
+            <span>{reportSaved ? "Saved" : saving ? "Saving…" : saveFailed ? "Retry Save" : "Save Report"}</span>
           </button>
           <button onClick={() => setShowGuide(!showGuide)}
             style={{ padding: "7px 12px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: showGuide ? "#0f766e" : "#fff", color: showGuide ? "#fff" : "#64748b" }}>

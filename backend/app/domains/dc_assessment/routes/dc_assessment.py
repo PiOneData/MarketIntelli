@@ -48,6 +48,7 @@ class ReportResponse(BaseModel):
     state: str
     lat: float
     lon: float
+    analysis_json: str | None = None
     markdown_content: str
     html_content: str
     generated_at: str
@@ -71,6 +72,7 @@ class ScorePayload(BaseModel):
     state: str | None = None
     lat: float
     lon: float
+    analysis_json: str | None = None
 
 
 # ── Prompt builder ────────────────────────────────────────────────────────────
@@ -261,6 +263,7 @@ def _to_response(report: AssessmentReport, cached: bool) -> ReportResponse:
         water_score=report.water_score,
         overall_score=report.overall_score,
         rating=report.rating,
+        analysis_json=report.analysis_json,
     )
 
 
@@ -357,11 +360,12 @@ async def save_assessment_scores(
         existing.water_score = payload.water_score
         existing.overall_score = payload.overall_score
         existing.rating = payload.rating
+        if payload.analysis_json is not None:
+            existing.analysis_json = payload.analysis_json
         await db.commit()
         await db.refresh(existing)
         return _to_response(existing, cached=True)
 
-    from datetime import UTC
     report = AssessmentReport(
         asset_key=asset_key,
         asset_name=payload.asset_name,
@@ -377,6 +381,7 @@ async def save_assessment_scores(
         water_score=payload.water_score,
         overall_score=payload.overall_score,
         rating=payload.rating,
+        analysis_json=payload.analysis_json,
     )
     db.add(report)
     await db.commit()
