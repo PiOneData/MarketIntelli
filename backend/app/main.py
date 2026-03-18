@@ -24,6 +24,7 @@ from app.domains.power_market.models.power_market import (  # noqa: F401
     PowerConsumption, RETariff, InvestmentGuideline, DataRepository,
     DailyREGeneration,
 )
+from app.domains.dc_assessment.models.report import AssessmentReport  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
@@ -137,6 +138,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     ]:
         await _safe_add_column(ddl)
     logger.info("compliance_alerts AI columns ensured.")
+
+    # Ensure assessment_reports has renewable energy score columns (added after initial table creation)
+    for ddl in [
+        "ALTER TABLE assessment_reports ADD COLUMN IF NOT EXISTS solar_score FLOAT;",
+        "ALTER TABLE assessment_reports ADD COLUMN IF NOT EXISTS wind_score FLOAT;",
+        "ALTER TABLE assessment_reports ADD COLUMN IF NOT EXISTS water_score FLOAT;",
+        "ALTER TABLE assessment_reports ADD COLUMN IF NOT EXISTS overall_score FLOAT;",
+        "ALTER TABLE assessment_reports ADD COLUMN IF NOT EXISTS rating VARCHAR(100);",
+    ]:
+        await _safe_add_column(ddl)
+    logger.info("assessment_reports score columns ensured.")
 
     # Seed data centers from CSV if table is empty
     try:
