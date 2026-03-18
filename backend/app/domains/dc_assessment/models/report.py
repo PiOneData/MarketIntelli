@@ -28,6 +28,12 @@ class AssessmentReport(Base):
     lon: Mapped[float] = mapped_column(Float, default=0.0)
     markdown_content: Mapped[str] = mapped_column(Text, default="")
     html_content: Mapped[str] = mapped_column(Text, default="")
+    # Renewable energy assessment scores (populated when user saves from SolarWindReport)
+    solar_score: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
+    wind_score: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
+    water_score: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
+    overall_score: Mapped[float | None] = mapped_column(Float, nullable=True, default=None)
+    rating: Mapped[str | None] = mapped_column(String(100), nullable=True, default=None)
     generated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), init=False
     )

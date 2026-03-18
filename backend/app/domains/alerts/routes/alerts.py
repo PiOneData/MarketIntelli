@@ -141,6 +141,11 @@ async def list_news(
             category=a.category, state=a.state, summary=a.summary,
             image_url=a.image_url, published_at=a.published_at,
             scraped_at=a.scraped_at, is_active=a.is_active,
+            ai_summary=a.ai_summary,
+            market_impact_score=a.market_impact_score,
+            affected_states=a.affected_states,
+            affected_companies=a.affected_companies,
+            ai_analyzed_at=a.ai_analyzed_at,
         )
         for a in articles
     ]
@@ -166,6 +171,26 @@ async def trigger_scrape(
     service = NewsService(db)
     background_tasks.add_task(service.scrape_and_store)
     return {"status": "scrape triggered"}
+
+
+@router.get("/news/daily-brief", response_model=dict)
+async def get_daily_brief(
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Generate an AI-powered daily market brief from the last 24 hours of news."""
+    service = NewsService(db)
+    brief = await service.generate_daily_brief()
+    return {"brief": brief, "generated_at": __import__("datetime").datetime.utcnow().isoformat()}
+
+
+@router.get("/news/trends", response_model=list)
+async def get_news_trends(
+    days: int = 7,
+    db: AsyncSession = Depends(get_db),
+) -> list:
+    """Identify trending themes across the last N days of news."""
+    service = NewsService(db)
+    return await service.get_trending_themes(days=days)
 
 
 @router.post("/news/{article_id}/watchlist/{user_id}", response_model=WatchlistRead, status_code=201)

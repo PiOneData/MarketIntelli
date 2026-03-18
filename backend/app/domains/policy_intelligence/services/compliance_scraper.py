@@ -19,17 +19,19 @@ Scheduled to run twice daily (every 12 hours).
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.domains.policy_intelligence.models.policy import ComplianceAlert
 
 logger = logging.getLogger(__name__)
@@ -229,9 +231,147 @@ def _parse_feed(xml_text: str, source_name: str, data_source_label: str) -> list
     return articles
 
 
+async def _call_llm(prompt: str) -> str:
+    """Call Azure OpenAI if configured, else Ollama. Returns raw LLM text."""
+    if settings.AZURE_OPENAI_API_KEY and settings.AZURE_OPENAI_ENDPOINT:
+        try:
+            import openai  # lazy import
+            client = openai.AsyncAzureOpenAI(
+                api_key=settings.AZURE_OPENAI_API_KEY,
+                azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
+                api_version=settings.AZURE_OPENAI_API_VERSION,
+            )
+            resp = await client.chat.completions.create(
+                model=settings.AZURE_OPENAI_DEPLOYMENT,
+                messages=[
+                    {"role": "system", "content": "You are a compliance intelligence expert for India's renewable energy and power sector. Respond only with valid JSON."},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.1,
+                max_tokens=600,
+            )
+            return resp.choices[0].message.content or ""
+        except Exception as exc:
+            logger.warning("Azure OpenAI compliance analysis failed: %s", exc)
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(
+                f"{settings.OLLAMA_URL}/api/generate",
+                json={"model": settings.OLLAMA_MODEL, "prompt": prompt, "stream": False, "options": {"temperature": 0.1}},
+            )
+            resp.raise_for_status()
+            return resp.json().get("response", "")
+    except Exception as exc:
+        logger.warning("Ollama compliance analysis failed: %s", exc)
+    return ""
+
+
+def _classify_urgency(published_at: datetime | None, deadline_date: datetime | None, category: str) -> str:
+    """Classify urgency level based on deadline proximity and content scope."""
+    now = datetime.now(timezone.utc)
+    if deadline_date:
+        days_to_deadline = (deadline_date - now).days
+        if days_to_deadline <= 7:
+            return "critical"
+        if days_to_deadline <= 30:
+            return "high"
+        if days_to_deadline <= 90:
+            return "medium"
+    # Keyword-based fallback
+    if category in ("deadline", "tariff_order"):
+        return "high"
+    if category in ("amendment", "regulatory_order"):
+        return "medium"
+    # Recency: published within last 7 days = high
+    if published_at:
+        age_days = (now - published_at.replace(tzinfo=timezone.utc if published_at.tzinfo is None else published_at.tzinfo)).days
+        if age_days <= 7:
+            return "high"
+    return "low"
+
+
+async def _analyze_alert(alert: ComplianceAlert) -> dict:
+    """Use LLM to extract structured intelligence from a compliance alert.
+
+    Returns a dict with: urgency_level, deadline_date, action_items, affected_entities.
+    Falls back to keyword-based extraction if LLM is unavailable.
+    """
+    text = f"Title: {alert.title}\nSummary: {alert.summary or ''}\nAuthority: {alert.authority}\nCategory: {alert.category}"
+    prompt = f"""Analyse this India renewable energy compliance alert and respond ONLY with a valid JSON object.
+
+{text}
+
+Return JSON with these keys:
+- urgency_level: one of "critical", "high", "medium", "low"
+- deadline_date: ISO date string if a deadline is mentioned (null otherwise)
+- action_items: array of 2-4 short bullet strings describing what companies/developers must do
+- affected_entities: array of affected states, company types, or project types mentioned
+
+Example output:
+{{"urgency_level": "high", "deadline_date": null, "action_items": ["Submit RPO compliance report by quarter end", "Update grid connection contracts"], "affected_entities": ["Solar developers", "Karnataka", "Tamil Nadu"]}}
+
+Return only the JSON object, no explanation."""
+    raw = await _call_llm(prompt)
+
+    # Try to parse JSON from LLM response
+    if raw:
+        try:
+            # Strip markdown code fences if present
+            cleaned = re.sub(r"```(?:json)?", "", raw).strip().strip("`").strip()
+            # Extract first JSON object
+            match = re.search(r"\{.*\}", cleaned, re.DOTALL)
+            if match:
+                parsed = json.loads(match.group())
+                deadline_str = parsed.get("deadline_date")
+                deadline_dt: datetime | None = None
+                if deadline_str:
+                    try:
+                        deadline_dt = datetime.fromisoformat(str(deadline_str).replace("Z", "+00:00"))
+                    except Exception:
+                        deadline_dt = None
+                urgency = parsed.get("urgency_level", "medium")
+                if urgency not in ("critical", "high", "medium", "low"):
+                    urgency = "medium"
+                return {
+                    "urgency_level": urgency,
+                    "deadline_date": deadline_dt,
+                    "action_items": parsed.get("action_items") or [],
+                    "affected_entities": parsed.get("affected_entities") or [],
+                }
+        except Exception as exc:
+            logger.debug("LLM JSON parse failed for alert %s: %s", alert.id, exc)
+
+    # Keyword-based fallback
+    urgency = _classify_urgency(alert.published_at, None, alert.category)
+    return {
+        "urgency_level": urgency,
+        "deadline_date": None,
+        "action_items": [],
+        "affected_entities": [],
+    }
+
+
 class ComplianceScraperService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
+
+    async def analyze_alert_by_id(self, alert_id: UUID) -> ComplianceAlert | None:
+        """On-demand re-analysis of a single compliance alert."""
+        result = await self.db.execute(
+            select(ComplianceAlert).where(ComplianceAlert.id == alert_id)
+        )
+        alert = result.scalar_one_or_none()
+        if not alert:
+            return None
+        intel = await _analyze_alert(alert)
+        alert.urgency_level    = intel["urgency_level"]
+        alert.deadline_date    = intel["deadline_date"]
+        alert.action_items     = intel["action_items"]
+        alert.affected_entities = intel["affected_entities"]
+        alert.ai_analyzed_at   = datetime.now(timezone.utc)
+        await self.db.commit()
+        await self.db.refresh(alert)
+        return alert
 
     async def scrape_and_store(self) -> dict[str, int]:
         """Fetch compliance RSS feeds and upsert new compliance alerts."""
@@ -280,6 +420,16 @@ class ComplianceScraperService:
                     )
                     self.db.add(alert)
                     new_count += 1
+                    # Enrich with AI intelligence (best-effort — won't block scrape on failure)
+                    try:
+                        intel = await _analyze_alert(alert)
+                        alert.urgency_level     = intel["urgency_level"]
+                        alert.deadline_date     = intel["deadline_date"]
+                        alert.action_items      = intel["action_items"]
+                        alert.affected_entities = intel["affected_entities"]
+                        alert.ai_analyzed_at    = datetime.now(timezone.utc)
+                    except Exception as ai_exc:
+                        logger.debug("AI analysis skipped for alert: %s", ai_exc)
 
         await self.db.commit()
         logger.info(

@@ -454,7 +454,7 @@ export default function AssetDetailClient({ id }: { id: string }) {
 
         } catch (error) {
             console.error(error);
-            alert('Failed to generate AI report. Make sure local Ollama is running.');
+            alert('Failed to generate Assessment report. Make sure local Ollama is running.');
         } finally {
             setIsGeneratingReport(false);
         }
@@ -507,7 +507,7 @@ export default function AssetDetailClient({ id }: { id: string }) {
                         style={{ display: 'flex', alignItems: 'center', gap: '6px', background: reportSuccess ? '#059669' : (isGeneratingReport ? '#e2e8f0' : '#1e3a8a'), color: (isGeneratingReport && !reportSuccess) ? '#94a3b8' : '#fff', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: (isGeneratingReport || reportSuccess) ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
                     >
                         {isGeneratingReport ? <Loader2 size={14} className="animate-spin" style={{ animation: 'spin 1.5s linear infinite' }} /> : (reportSuccess ? <ShieldCheck size={14} /> : <FileText size={14} />)}
-                        {isGeneratingReport ? 'Generating AI Report...' : (reportSuccess ? 'Report Downloaded!' : 'Generate AI Report')}
+                        {isGeneratingReport ? 'Generating Assessment Report...' : (reportSuccess ? 'Report Downloaded!' : 'Generate Assessment Report')}
                     </button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

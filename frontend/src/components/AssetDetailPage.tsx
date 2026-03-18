@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent } from 'react';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { AssetFeature, AssetGeoJSON, SolarAssessment, WindAssessment, WaterAssessment, AssetType } from '../types/dc';
 import { getGWColor, getRiskDescription, formatNum, MONTHS, getRatingColor, getWindGradeColor } from '../lib/dcUtils';
 import { ArrowLeft, ExternalLink, Building2, Zap, Droplets, Sun, Wind, CloudRain, Calendar, Waves, PlaneTakeoff, ShieldCheck, X, Search, HelpCircle, FileText, Loader2, Download, RefreshCw, ChevronDown, ChevronUp, Bot } from 'lucide-react';
@@ -389,6 +389,7 @@ export default function AssetDetailPage({ id, type, onBack }: { id: string; type
     const [reportCheckDone, setReportCheckDone] = useState(false);
     const [isGeneratingReport, setIsGeneratingReport] = useState(false);
     const [reportExpanded, setReportExpanded] = useState(false);
+    const reportSectionRef = useRef<HTMLDivElement>(null);
 
     // ── All hooks unconditionally first ──
     const gw = feature?.properties.local_analysis?.groundwater as any;
@@ -459,9 +460,12 @@ export default function AssetDetailPage({ id, type, onBack }: { id: string; type
             );
             setCachedReport(report);
             setReportExpanded(true);
+            setTimeout(() => {
+                reportSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }, 100);
         } catch (error) {
             console.error(error);
-            alert('Failed to generate AI report. Check that Azure OpenAI credentials are configured in backend/.env, or that Ollama is running.');
+            alert('Failed to generate Assessment report. Check that Azure OpenAI credentials are configured in backend/.env, or that Ollama is running.');
         } finally {
             setIsGeneratingReport(false);
         }
@@ -513,7 +517,7 @@ export default function AssetDetailPage({ id, type, onBack }: { id: string; type
                             onClick={() => setReportExpanded((prev: boolean) => !prev)}
                             style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f0fdf4', color: '#15803d', border: '1px solid #86efac', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', transition: 'background 0.2s' }}
                         >
-                            <ShieldCheck size={14} /> AI Report Saved
+                            <ShieldCheck size={14} /> Assessment Report Saved
                         </button>
                     ) : reportCheckDone ? (
                         <button
@@ -522,7 +526,7 @@ export default function AssetDetailPage({ id, type, onBack }: { id: string; type
                             style={{ display: 'flex', alignItems: 'center', gap: '6px', background: isGeneratingReport ? '#e2e8f0' : '#1e3a8a', color: isGeneratingReport ? '#94a3b8' : '#fff', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: isGeneratingReport ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}
                         >
                             {isGeneratingReport ? <Loader2 size={14} style={{ animation: 'spin 1.5s linear infinite' }} /> : <FileText size={14} />}
-                            {isGeneratingReport ? 'Generating...' : 'Generate AI Report'}
+                            {isGeneratingReport ? 'Generating...' : 'Generate Assessment Report'}
                         </button>
                     ) : (
                         <span style={{ fontSize: '11px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -916,7 +920,7 @@ export default function AssetDetailPage({ id, type, onBack }: { id: string; type
 
             {/* ── AI Environmental Report Panel ─────────────────────────────────── */}
             {reportCheckDone && (
-                <div style={{ maxWidth: '1340px', margin: '0 auto', padding: '0 20px 48px' }}>
+                <div ref={reportSectionRef} style={{ maxWidth: '1340px', margin: '0 auto', padding: '0 20px 48px' }}>
                     <div style={{
                         background: '#fff',
                         borderRadius: '20px',
@@ -979,7 +983,7 @@ export default function AssetDetailPage({ id, type, onBack }: { id: string; type
                                         onClick={() => handleGenerateReport(false)}
                                         style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#1e3a8a', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 12px rgba(30,58,138,0.25)' }}
                                     >
-                                        <Bot size={14} /> Generate AI Report
+                                        <Bot size={14} /> Generate Assessment Report
                                     </button>
                                 )}
                                 {isGeneratingReport && !cachedReport && (

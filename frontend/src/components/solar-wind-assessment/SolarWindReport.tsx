@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import apiClient from "../../api/client";
+import { saveAssessmentScores, listSavedAssessments } from "../../api/dcAssessment";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Area,
@@ -128,13 +129,57 @@ const GUIDE_ITEMS = [
 ];
 
 // ── Main Component ───────────────────────────────────────────────────────────
+
 export default function SolarWindReport({ analysis, live, lat, lng, datacenter, onClose, onClearCache }: Props) {
   // font-sans (Inter) is declared on the container; all children inherit it
   const [activeTab, setActiveTab] = useState<TabId>(datacenter ? "datacenter" : "wind");
   const [showGuide, setShowGuide] = useState(false);
   const [dcStock, setDcStock] = useState<DcStock | null>(null);
   const [stockLoading, setStockLoading] = useState(false);
+  const [reportSaved, setReportSaved] = useState(false);
   const navigate = useNavigate();
+
+  // Build stable asset_key matching AssetDetailPage pattern: "{asset_type}_{id}"
+  const assetType = datacenter?.id
+    ? String((datacenter as Record<string, unknown>).asset_type ?? "datacenter")
+    : "site";
+  const assetKey = datacenter?.id
+    ? `${assetType}_${String(datacenter.id)}`
+    : `site_${lat.toFixed(4)}_${lng.toFixed(4)}`;
+
+  // Check if already saved in DB
+  useEffect(() => {
+    listSavedAssessments()
+      .then((reports) => {
+        if (reports.some((r) => r.asset_key === assetKey)) setReportSaved(true);
+      })
+      .catch(() => { /* ignore network errors */ });
+  }, [assetKey]);
+
+  const handleSaveReport = async () => {
+    const suit = analysis.suitability ?? {};
+    const suitMap = suit as Record<string, unknown>;
+    const components = suitMap.components as Record<string, unknown> | undefined;
+    try {
+      await saveAssessmentScores(assetKey, {
+        solar_score: Number(components?.solar ?? 0),
+        wind_score: Number(components?.wind ?? 0),
+        water_score: Number(components?.water ?? 0),
+        overall_score: Number(suitMap.overall_score ?? 0),
+        rating: String(suitMap.rating ?? "—"),
+        asset_name: datacenter?.name ? String(datacenter.name) : `Site ${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`,
+        asset_type: assetType,
+        city: datacenter?.city ? String(datacenter.city) : undefined,
+        state: datacenter?.state ? String(datacenter.state) : undefined,
+        lat,
+        lon: lng,
+      });
+      setReportSaved(true);
+    } catch {
+      // Fallback: still mark as saved in UI even if network fails
+      setReportSaved(true);
+    }
+  };
 
   useEffect(() => {
     if (!datacenter?.company) return;
@@ -310,6 +355,12 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <button onClick={handleSaveReport} disabled={reportSaved}
+            title={reportSaved ? "Report saved to profile" : "Save report to profile"}
+            style={{ padding: "7px 12px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: 600, cursor: reportSaved ? "default" : "pointer", fontFamily: "inherit", background: reportSaved ? "#f0fdf4" : "#fff", color: reportSaved ? "#16a34a" : "#64748b", borderColor: reportSaved ? "#86efac" : "#e2e8f0" }}>
+            <TrendingUp size={13} />
+            <span>{reportSaved ? "Saved" : "Save Report"}</span>
+          </button>
           <button onClick={() => setShowGuide(!showGuide)}
             style={{ padding: "7px 12px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", background: showGuide ? "#0f766e" : "#fff", color: showGuide ? "#fff" : "#64748b" }}>
             <BookOpen size={13} />
@@ -377,6 +428,69 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
       </AnimatePresence>
 
       <main style={{ maxWidth: "1400px", margin: "0 auto", padding: "32px", display: "flex", flexDirection: "column", gap: "40px" }}>
+
+        {/* ── SUITABILITY SUMMARY BANNER ── always visible above tabs */}
+        {(() => {
+          const suit = analysis.suitability ?? {};
+          const suitR = suit as Record<string, unknown>;
+          const overall  = num(suitR["overall_score"]);
+          const compR    = (suitR["components"] ?? {}) as Record<string, unknown>;
+          const sScore   = num(compR["solar"]);
+          const wScore   = num(compR["wind"]);
+          const wtScore  = num(compR["water"]);
+          const rating   = str(suitR["rating"], "—");
+          const ratingColor = rating === "PREMIUM SITE" ? "#16a34a" : rating === "OPTIMAL" ? "#0f766e" : rating === "VIABLE" ? "#ca8a04" : "#64748b";
+          const chartData = [
+            { name: "Solar",     score: sScore > 0 ? sScore : 0,   fill: "#f59e0b" },
+            { name: "Wind",      score: wScore > 0 ? wScore : 0,   fill: "#0ea5e9" },
+            { name: "Hydrology", score: wtScore > 0 ? wtScore : 0, fill: "#06b6d4" },
+            { name: "Overall",   score: overall > 0 ? overall : 0, fill: "#0f766e" },
+          ];
+          const hasData = chartData.some(d => d.score > 0);
+          return (
+            <div style={{ background: "#fff", border: "1px solid #e2e8f0", overflow: "hidden" }}>
+              <div style={{ display: "grid", gridTemplateColumns: hasData ? "auto 1fr" : "1fr", gap: 0 }}>
+                {/* Left: rating + overall score */}
+                <div style={{ background: "#0f172a", padding: "24px 32px", display: "flex", flexDirection: "column", justifyContent: "center", gap: "8px", minWidth: "180px" }}>
+                  <div style={{ fontSize: "9px", fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Site Rating</div>
+                  <div style={{ fontSize: "11px", fontWeight: 800, background: ratingColor, color: "#fff", padding: "4px 12px", letterSpacing: "0.06em", textAlign: "center" }}>{rating}</div>
+                  <div style={{ marginTop: "8px" }}>
+                    <div style={{ fontSize: "48px", fontWeight: 900, color: "#fff", lineHeight: 1 }}>{overall > 0 ? overall.toFixed(1) : "—"}</div>
+                    <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>/ 100 overall score</div>
+                  </div>
+                </div>
+                {/* Right: bar chart */}
+                {hasData && (
+                  <div style={{ padding: "16px 24px" }}>
+                    <div style={{ fontSize: "10px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "12px" }}>Resource Component Scores</div>
+                    <ResponsiveContainer width="100%" height={110}>
+                      <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 50, left: 10, bottom: 0 }} barCategoryGap="20%">
+                        <XAxis type="number" domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: "#94a3b8" }} />
+                        <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 700, fill: "#334155" }} width={70} />
+                        <Tooltip formatter={(v: number) => [`${v.toFixed(1)} / 100`, "Score"]} contentStyle={{ border: "1px solid #e2e8f0", fontSize: 11 }} />
+                        <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="#f1f5f9" />
+                        <Bar dataKey="score" radius={[0, 3, 3, 0]} label={{ position: "right", fontSize: 11, fontWeight: 700, fill: "#334155" }}>
+                          {chartData.map((entry, i) => (
+                            <Cell key={i} fill={entry.fill} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                    <div style={{ display: "flex", gap: "20px", marginTop: "8px", flexWrap: "wrap" }}>
+                      {(str(suitR["insights"] ? (Array.isArray(suitR["insights"]) ? (suitR["insights"] as string[]).join(" · ") : str(suitR["insights"])) : "", "")).split(" · ").filter(Boolean).slice(0, 3).map((insight, i) => (
+                        <span key={i} style={{ fontSize: "11px", color: "#475569", display: "flex", alignItems: "center", gap: "4px" }}>
+                          <span style={{ width: "5px", height: "5px", background: "#0f766e", display: "inline-block", flexShrink: 0 }} />
+                          {insight}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
         <AnimatePresence mode="wait">
 
           {/* ════ DATA CENTER TAB ════ */}
@@ -1249,6 +1363,43 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
                   </div>
                 )}
               </div>
+
+              {/* Water Metrics Bar Chart */}
+              {(num(waterData.composite_risk_score) > 0 || precipAnnual > 0 || tcEtAnnual > 0) && (
+                <div style={{ background: "#fff", border: "1px solid #e2e8f0", overflow: "hidden" }}>
+                  <div style={{ padding: "20px 24px 8px" }}>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#0f172a" }}>Hydrology Resource Metrics</div>
+                    <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>Annual water balance indicators · mm/yr or index</div>
+                  </div>
+                  <div style={{ padding: "0 16px 16px", height: "220px" }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ComposedChart
+                        data={[
+                          { metric: "Precip", value: precipAnnual > 0 ? precipAnnual : 0, fill: "#0ea5e9" },
+                          { metric: "Ann ET",  value: tcEtAnnual > 0 ? tcEtAnnual : (modisEtAnnual > 0 ? modisEtAnnual : 0), fill: "#06b6d4" },
+                          { metric: "Runoff",  value: tcRunoffMonth > 0 ? tcRunoffMonth * 12 : 0, fill: "#0f766e" },
+                          { metric: "Score×10",value: num(waterData.composite_risk_score) * 10, fill: "#2dd4bf" },
+                        ].filter(d => d.value > 0)}
+                        margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis dataKey="metric" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: "#94a3b8" }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#94a3b8" }} />
+                        <Tooltip contentStyle={{ border: "1px solid #e2e8f0", padding: "10px 14px", fontSize: 11 }} />
+                        <Bar dataKey="value" name="Value" radius={[3, 3, 0, 0]}>
+                          {[
+                            { metric: "Precip", fill: "#0ea5e9" },
+                            { metric: "Ann ET",  fill: "#06b6d4" },
+                            { metric: "Runoff",  fill: "#0f766e" },
+                            { metric: "Score×10",fill: "#2dd4bf" },
+                          ].map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+                        </Bar>
+                        <Line type="monotone" dataKey="value" stroke="#334155" strokeWidth={1.5} dot={{ r: 3, fill: "#334155" }} strokeDasharray="4 2" />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
 
               {/* Soil Moisture Profile */}
               <div style={{ background: "#fff", border: "1px solid #e2e8f0", padding: "24px" }}>

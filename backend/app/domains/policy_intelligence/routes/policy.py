@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, BackgroundTasks
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
@@ -102,6 +104,11 @@ async def list_compliance_alerts(
             published_at=a.published_at,
             scraped_at=a.scraped_at,
             is_active=a.is_active,
+            urgency_level=a.urgency_level,
+            deadline_date=a.deadline_date,
+            action_items=a.action_items,
+            affected_entities=a.affected_entities,
+            ai_analyzed_at=a.ai_analyzed_at,
         )
         for a in alerts
     ]
@@ -116,3 +123,33 @@ async def trigger_compliance_scrape(
     service = ComplianceScraperService(db)
     background_tasks.add_task(service.scrape_and_store)
     return {"status": "compliance scrape triggered"}
+
+
+@router.post("/compliance-alerts/{alert_id}/analyze", response_model=ComplianceAlertRead)
+async def analyze_compliance_alert(
+    alert_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> ComplianceAlertRead:
+    """On-demand AI analysis of a compliance alert — extracts deadline, action items, urgency, entities."""
+    service = ComplianceScraperService(db)
+    alert = await service.analyze_alert_by_id(alert_id)
+    if not alert:
+        raise HTTPException(status_code=404, detail="Compliance alert not found")
+    return ComplianceAlertRead(
+        id=alert.id,
+        title=alert.title,
+        authority=alert.authority,
+        data_source=alert.data_source,
+        source_name=alert.source_name,
+        source_url=alert.source_url,
+        category=alert.category,
+        summary=alert.summary,
+        published_at=alert.published_at,
+        scraped_at=alert.scraped_at,
+        is_active=alert.is_active,
+        urgency_level=alert.urgency_level,
+        deadline_date=alert.deadline_date,
+        action_items=alert.action_items,
+        affected_entities=alert.affected_entities,
+        ai_analyzed_at=alert.ai_analyzed_at,
+    )

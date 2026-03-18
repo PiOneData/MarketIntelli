@@ -44,4 +44,10 @@ export interface ComplianceAlert {
   published_at: string | null;
   scraped_at: string;
   is_active: boolean;
+  // AI intelligence fields
+  urgency_level: string | null;
+  deadline_date: string | null;
+  action_items: string[] | null;
+  affected_entities: string[] | null;
+  ai_analyzed_at: string | null;
 }

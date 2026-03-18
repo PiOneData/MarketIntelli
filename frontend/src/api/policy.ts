@@ -37,3 +37,8 @@ export async function triggerComplianceScrape(): Promise<{ status: string }> {
   const { data } = await apiClient.post("/policy/compliance-alerts/scrape");
   return data;
 }
+
+export async function analyzeComplianceAlert(alertId: string): Promise<ComplianceAlert> {
+  const { data } = await apiClient.post(`/policy/compliance-alerts/${alertId}/analyze`);
+  return data;
+}

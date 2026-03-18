@@ -58,6 +58,12 @@ class NewsArticleRead(BaseModel):
     published_at: datetime | None = None
     scraped_at: datetime
     is_active: bool
+    # AI intelligence
+    ai_summary: str | None = None
+    market_impact_score: float | None = None
+    affected_states: list[str] | None = None
+    affected_companies: list[str] | None = None
+    ai_analyzed_at: datetime | None = None
 
 
 class NewsWatchlistCreate(BaseModel):

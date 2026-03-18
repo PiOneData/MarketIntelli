@@ -1,9 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { usePolicies, useSubsidies, useComplianceAlerts } from "../hooks/usePolicy";
+import { analyzeComplianceAlert } from "../api/policy";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ErrorMessage from "../components/common/ErrorMessage";
-import type { Policy } from "../types/policy";
+import type { ComplianceAlert, Policy } from "../types/policy";
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return "—";
@@ -202,9 +203,120 @@ const AUTHORITY_LINKS: Record<string, string> = {
   "MoF": "https://www.indiabudget.gov.in/",
 };
 
+const URGENCY_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
+  critical: { label: "CRITICAL", color: "#fff",     bg: "#dc2626" },
+  high:     { label: "HIGH",     color: "#fff",     bg: "#f97316" },
+  medium:   { label: "MEDIUM",   color: "#92400e",  bg: "#fef3c7" },
+  low:      { label: "LOW",      color: "#475569",  bg: "#f1f5f9" },
+};
+
+function UrgencyBadge({ level }: { level: string | null }) {
+  if (!level) return null;
+  const cfg = URGENCY_CONFIG[level] ?? URGENCY_CONFIG.low;
+  return (
+    <span style={{ padding: "2px 8px", fontSize: "9px", fontWeight: 800, background: cfg.bg, color: cfg.color, letterSpacing: "0.06em", marginLeft: "6px", borderRadius: "2px", verticalAlign: "middle" }}>
+      {cfg.label}
+    </span>
+  );
+}
+
+function AlertDetailPanel({ alert, onClose }: { alert: ComplianceAlert; onClose: () => void }) {
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzed, setAnalyzed] = useState<ComplianceAlert>(alert);
+
+  const handleAnalyze = async () => {
+    setAnalyzing(true);
+    try {
+      const result = await analyzeComplianceAlert(alert.id);
+      setAnalyzed(result);
+    } catch (e) {
+      // silently fail
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}
+      onClick={onClose}>
+      <div style={{ background: "#fff", maxWidth: "600px", width: "100%", maxHeight: "80vh", overflowY: "auto", padding: "28px", position: "relative" }}
+        onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} style={{ position: "absolute", top: "12px", right: "16px", background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#94a3b8" }}>×</button>
+
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px", flexWrap: "wrap" }}>
+          <span style={{ padding: "2px 10px", fontSize: "10px", fontWeight: 700, background: "#f1f5f9", color: "#334155", borderRadius: "3px" }}>
+            {analyzed.category.replace(/_/g, " ")}
+          </span>
+          <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748b" }}>{analyzed.authority}</span>
+          <UrgencyBadge level={analyzed.urgency_level} />
+        </div>
+
+        <h3 style={{ fontSize: "15px", fontWeight: 700, color: "#0f172a", lineHeight: 1.4, marginBottom: "12px" }}>{analyzed.title}</h3>
+
+        {analyzed.summary && (
+          <p style={{ fontSize: "13px", color: "#475569", lineHeight: 1.6, marginBottom: "16px" }}>{analyzed.summary}</p>
+        )}
+
+        {/* AI insights */}
+        {analyzed.ai_analyzed_at && (
+          <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "16px", marginBottom: "16px" }}>
+            <div style={{ fontSize: "10px", fontWeight: 700, color: "#16a34a", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "10px" }}>
+              AI Intelligence
+            </div>
+            {analyzed.deadline_date && (
+              <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "8px" }}>
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "#475569" }}>Deadline:</span>
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "#dc2626" }}>
+                  {new Date(analyzed.deadline_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                </span>
+              </div>
+            )}
+            {analyzed.action_items && analyzed.action_items.length > 0 && (
+              <div style={{ marginBottom: "10px" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#475569", marginBottom: "6px" }}>What you need to do:</div>
+                <ul style={{ margin: 0, paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                  {analyzed.action_items.map((item, i) => (
+                    <li key={i} style={{ fontSize: "12px", color: "#334155" }}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {analyzed.affected_entities && analyzed.affected_entities.length > 0 && (
+              <div>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#475569", marginBottom: "4px" }}>Affected entities:</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                  {analyzed.affected_entities.map((e, i) => (
+                    <span key={i} style={{ padding: "2px 8px", background: "#e0f2fe", color: "#0369a1", fontSize: "11px", fontWeight: 600, borderRadius: "3px" }}>{e}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <a href={analyzed.source_url} target="_blank" rel="noopener noreferrer"
+            style={{ padding: "8px 16px", background: "#0f766e", color: "#fff", fontSize: "12px", fontWeight: 700, textDecoration: "none" }}>
+            View Source →
+          </a>
+          {!analyzed.ai_analyzed_at && (
+            <button onClick={handleAnalyze} disabled={analyzing}
+              style={{ padding: "8px 16px", background: analyzing ? "#e2e8f0" : "#1e3a8a", color: analyzing ? "#94a3b8" : "#fff", border: "none", fontSize: "12px", fontWeight: 700, cursor: analyzing ? "not-allowed" : "pointer" }}>
+              {analyzing ? "Analysing…" : "Run AI Analysis"}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ComplianceAlertsSection() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [authorityFilter, setAuthorityFilter] = useState("");
+  const [selectedAlert, setSelectedAlert] = useState<ComplianceAlert | null>(null);
   const { data: alerts = [], isLoading, error, refetch, dataUpdatedAt } = useComplianceAlerts();
 
   const categories = useMemo(
@@ -288,6 +400,8 @@ function ComplianceAlertsSection() {
         </button>
       </div>
 
+      {selectedAlert && <AlertDetailPanel alert={selectedAlert} onClose={() => setSelectedAlert(null)} />}
+
       {filtered.length === 0 ? (
         <div className="news-empty">
           <p>No compliance alerts loaded yet. Data is fetched on startup and refreshed every 12 hours.</p>
@@ -311,27 +425,36 @@ function ComplianceAlertsSection() {
                 <th>Authority</th>
                 <th>Data Source</th>
                 <th>Category</th>
+                <th>Urgency</th>
                 <th>Published</th>
-                <th>Link</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((a) => {
                 const recency = recencyLabel(a.published_at);
                 return (
-                  <tr key={a.id}>
+                  <tr key={a.id} style={{ cursor: "pointer" }} onClick={() => setSelectedAlert(a)}>
                     <td className="pol-title-cell">
                       <strong>{a.title}</strong>
-                      {a.summary && (
+                      {a.ai_analyzed_at && a.action_items && a.action_items.length > 0 && (
+                        <div style={{ marginTop: "4px" }}>
+                          <span style={{ fontSize: "10px", fontWeight: 600, color: "#16a34a" }}>
+                            ✓ {a.action_items.length} action item{a.action_items.length > 1 ? "s" : ""} — click to view
+                          </span>
+                        </div>
+                      )}
+                      {!a.ai_analyzed_at && a.summary && (
                         <>
                           <br />
-                          <span className="pol-summary-inline">{a.summary.slice(0, 140)}…</span>
+                          <span className="pol-summary-inline">{a.summary.slice(0, 120)}…</span>
                         </>
                       )}
                     </td>
                     <td>
                       {AUTHORITY_LINKS[a.authority] ? (
-                        <a href={AUTHORITY_LINKS[a.authority]} target="_blank" rel="noopener noreferrer" className="pol-link">
+                        <a href={AUTHORITY_LINKS[a.authority]} target="_blank" rel="noopener noreferrer" className="pol-link"
+                          onClick={(e) => e.stopPropagation()}>
                           {a.authority}
                         </a>
                       ) : (
@@ -347,18 +470,33 @@ function ComplianceAlertsSection() {
                       </span>
                     </td>
                     <td>
+                      {a.urgency_level ? (
+                        <UrgencyBadge level={a.urgency_level} />
+                      ) : (
+                        <span style={{ fontSize: "10px", color: "#94a3b8" }}>—</span>
+                      )}
+                      {a.deadline_date && (
+                        <div style={{ fontSize: "10px", color: "#dc2626", marginTop: "3px", fontWeight: 600 }}>
+                          Due: {new Date(a.deadline_date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                        </div>
+                      )}
+                    </td>
+                    <td>
                       <div>{formatDate(a.published_at)}</div>
                       <span className={`pol-recency ${recency.className}`}>{recency.text}</span>
                     </td>
-                    <td>
-                      <a
-                        href={a.source_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="pol-link"
-                      >
-                        View
-                      </a>
+                    <td onClick={(e) => e.stopPropagation()}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <a href={a.source_url} target="_blank" rel="noopener noreferrer" className="pol-link">
+                          View
+                        </a>
+                        <button
+                          style={{ background: "none", border: "1px solid #e2e8f0", fontSize: "10px", padding: "2px 6px", cursor: "pointer", color: "#64748b", fontWeight: 600 }}
+                          onClick={() => setSelectedAlert(a)}
+                        >
+                          Details
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

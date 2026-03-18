@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import String, Float, DateTime, Text, Boolean, func
+from sqlalchemy import String, Float, DateTime, Text, Boolean, JSON, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -109,3 +109,19 @@ class ComplianceAlert(Base):
         DateTime(timezone=True), server_default=func.now(), init=False
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # ── AI Intelligence fields (populated by _analyze_alert) ──────────────────
+    urgency_level: Mapped[str | None] = mapped_column(
+        String(20), nullable=True, default=None
+    )  # critical / high / medium / low
+    deadline_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
+    action_items: Mapped[list | None] = mapped_column(
+        JSON, nullable=True, default=None
+    )  # list[str] — "What you need to do"
+    affected_entities: Mapped[list | None] = mapped_column(
+        JSON, nullable=True, default=None
+    )  # list[str] — states / company types / project types
+    ai_analyzed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
+    )
