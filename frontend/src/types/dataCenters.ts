@@ -10,6 +10,10 @@ export interface DataCenterCompany {
   sustainability_rating: string | null;
   facility_count: number;
   total_capacity_mw: number;
+  operational_count: number;
+  planned_count: number;
+  states: string[];
+  avg_renewable_pct: number | null;
 }
 
 export interface DataCenterFacility {
