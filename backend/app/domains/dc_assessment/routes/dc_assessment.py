@@ -8,10 +8,10 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
-from sqlalchemy import select
 
 from app.domains.dc_assessment.models.report import AssessmentReport
 from app.domains.dc_assessment.services.report_service import ReportService
@@ -58,6 +58,7 @@ class ReportResponse(BaseModel):
     water_score: float | None = None
     overall_score: float | None = None
     rating: str | None = None
+    power_mw: float | None = None
 
 
 class ScorePayload(BaseModel):
@@ -73,6 +74,15 @@ class ScorePayload(BaseModel):
     lat: float
     lon: float
     analysis_json: str | None = None
+    power_mw: float | None = None
+
+
+class AssessmentStatsResponse(BaseModel):
+    total_reports: int
+    datacenters: int
+    airports: int
+    states_covered: int
+    total_mw: float
 
 
 # ── Prompt builder ────────────────────────────────────────────────────────────
@@ -264,6 +274,7 @@ def _to_response(report: AssessmentReport, cached: bool) -> ReportResponse:
         overall_score=report.overall_score,
         rating=report.rating,
         analysis_json=report.analysis_json,
+        power_mw=report.power_mw,
     )
 
 
@@ -302,6 +313,7 @@ async def generate_report(
     html_body = _markdown_to_html(markdown_content)
 
     # Save to DB
+    power_mw = float(payload.power_mw) if payload.power_mw is not None else None
     report = await service.upsert(
         asset_key=payload.asset_key or f"{payload.asset_type}_unknown",
         asset_name=asset_name,
@@ -312,6 +324,7 @@ async def generate_report(
         lon=payload.lon,
         markdown_content=markdown_content,
         html_content=html_body,
+        power_mw=power_mw,
     )
 
     return _to_response(report, cached=False)
@@ -335,14 +348,53 @@ async def get_report(
 async def list_saved_assessments(
     db: AsyncSession = Depends(get_db),
 ) -> list[ReportResponse]:
-    """Return all assessment reports that have scores saved (for Profile page)."""
+    """Return all generated assessment reports for the Profile page.
+
+    Any report that has been generated (AI text or RE scores) appears here,
+    guaranteeing cross-device persistence without re-running AI.
+    """
     result = await db.execute(
-        select(AssessmentReport)
-        .where(AssessmentReport.overall_score.isnot(None))
-        .order_by(AssessmentReport.generated_at.desc())
+        select(AssessmentReport).order_by(AssessmentReport.generated_at.desc())
     )
     reports = result.scalars().all()
     return [_to_response(r, cached=True) for r in reports]
+
+
+@router.get("/stats", response_model=AssessmentStatsResponse)
+async def get_assessment_stats(
+    db: AsyncSession = Depends(get_db),
+) -> AssessmentStatsResponse:
+    """Return aggregate KPI stats across all saved assessment reports."""
+    total_result = await db.execute(select(func.count()).select_from(AssessmentReport))
+    total_reports = total_result.scalar_one() or 0
+
+    dc_result = await db.execute(
+        select(func.count()).select_from(AssessmentReport).where(AssessmentReport.asset_type == "datacenter")
+    )
+    datacenters = dc_result.scalar_one() or 0
+
+    airport_result = await db.execute(
+        select(func.count()).select_from(AssessmentReport).where(AssessmentReport.asset_type == "airport")
+    )
+    airports = airport_result.scalar_one() or 0
+
+    states_result = await db.execute(
+        select(func.count(func.distinct(AssessmentReport.state))).where(AssessmentReport.state != "")
+    )
+    states_covered = states_result.scalar_one() or 0
+
+    mw_result = await db.execute(
+        select(func.coalesce(func.sum(AssessmentReport.power_mw), 0.0))
+    )
+    total_mw = float(mw_result.scalar_one() or 0.0)
+
+    return AssessmentStatsResponse(
+        total_reports=total_reports,
+        datacenters=datacenters,
+        airports=airports,
+        states_covered=states_covered,
+        total_mw=total_mw,
+    )
 
 
 @router.post("/reports/{asset_key:path}/scores", response_model=ReportResponse, status_code=201)
@@ -362,6 +414,8 @@ async def save_assessment_scores(
         existing.rating = payload.rating
         if payload.analysis_json is not None:
             existing.analysis_json = payload.analysis_json
+        if payload.power_mw is not None:
+            existing.power_mw = payload.power_mw
         await db.commit()
         await db.refresh(existing)
         return _to_response(existing, cached=True)
@@ -382,6 +436,7 @@ async def save_assessment_scores(
         overall_score=payload.overall_score,
         rating=payload.rating,
         analysis_json=payload.analysis_json,
+        power_mw=payload.power_mw,
     )
     db.add(report)
     await db.commit()

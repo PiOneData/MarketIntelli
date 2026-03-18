@@ -16,6 +16,7 @@ export interface ReportResponse {
   overall_score?: number | null;
   rating?: string | null;
   analysis_json?: string | null;
+  power_mw?: number | null;
 }
 
 export interface ScorePayload {
@@ -31,6 +32,15 @@ export interface ScorePayload {
   lat: number;
   lon: number;
   analysis_json?: string;
+  power_mw?: number;
+}
+
+export interface AssessmentStats {
+  total_reports: number;
+  datacenters: number;
+  airports: number;
+  states_covered: number;
+  total_mw: number;
 }
 
 /**
@@ -88,12 +98,21 @@ export async function saveAssessmentScores(
 }
 
 /**
- * List all saved assessments that have scores (for Profile page).
+ * List all saved assessments (all generated reports) for the Profile page.
  */
 export async function listSavedAssessments(): Promise<ReportResponse[]> {
   const res = await fetch('/api/v1/dc-assessment/saved');
   if (!res.ok) throw new Error('Failed to fetch saved assessments');
   return res.json() as Promise<ReportResponse[]>;
+}
+
+/**
+ * Get aggregate KPI stats across all assessment reports.
+ */
+export async function getAssessmentStats(): Promise<AssessmentStats> {
+  const res = await fetch('/api/v1/dc-assessment/stats');
+  if (!res.ok) throw new Error('Failed to fetch assessment stats');
+  return res.json() as Promise<AssessmentStats>;
 }
 
 /**

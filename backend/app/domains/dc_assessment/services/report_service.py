@@ -34,12 +34,15 @@ class ReportService:
         lon: float,
         markdown_content: str,
         html_content: str,
+        power_mw: float | None = None,
     ) -> AssessmentReport:
         existing = await self.get_by_asset_key(asset_key)
         if existing:
             existing.markdown_content = markdown_content
             existing.html_content = html_content
             existing.generated_at = datetime.now(UTC)
+            if power_mw is not None:
+                existing.power_mw = power_mw
             await self.db.commit()
             await self.db.refresh(existing)
             return existing
@@ -54,6 +57,7 @@ class ReportService:
             lon=lon,
             markdown_content=markdown_content,
             html_content=html_content,
+            power_mw=power_mw,
         )
         self.db.add(report)
         await self.db.commit()

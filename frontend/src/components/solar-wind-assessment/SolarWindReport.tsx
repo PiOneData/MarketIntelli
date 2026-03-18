@@ -179,6 +179,7 @@ export default function SolarWindReport({ analysis, live, lat, lng, datacenter, 
         lat,
         lon: lng,
         analysis_json: JSON.stringify(analysis),
+        power_mw: datacenter?.power_mw != null ? Number(datacenter.power_mw) : undefined,
       });
       setReportSaved(true);
     } catch {
