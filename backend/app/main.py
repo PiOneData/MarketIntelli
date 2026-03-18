@@ -2,6 +2,7 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
+from datetime import datetime, timedelta, timezone
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -41,6 +42,33 @@ async def _safe_add_column(ddl: str) -> None:
 # ---------------------------------------------------------------------------
 # Twice-daily background scheduler (runs every 12 hours)
 # ---------------------------------------------------------------------------
+
+async def _run_daily_brief_scheduler() -> None:
+    """Background task: generate daily market brief at 06:00 IST (00:30 UTC) each day."""
+    from app.db.session import async_session_factory
+    from app.domains.alerts.services.news_service import NewsService
+
+    while True:
+        now = datetime.now(timezone.utc)
+        # Calculate seconds until next 00:30 UTC
+        target = now.replace(hour=0, minute=30, second=0, microsecond=0)
+        if target <= now:
+            # Next day
+            target = target + timedelta(days=1)
+        sleep_secs = (target - now).total_seconds()
+        logger.info(
+            "Daily brief scheduler: sleeping %.0f seconds until 06:00 IST", sleep_secs
+        )
+        await asyncio.sleep(sleep_secs)
+
+        try:
+            async with async_session_factory() as db:
+                svc = NewsService(db)
+                await svc.generate_daily_brief()
+                logger.info("Daily brief generated at 06:00 IST.")
+        except Exception as exc:
+            logger.warning("Daily brief generation failed: %s", exc)
+
 
 async def _run_scheduled_scrapes() -> None:
     """Background task: runs news + compliance scrapes every 12 hours (twice daily)."""
@@ -246,12 +274,21 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     scheduler_task = asyncio.create_task(_run_scheduled_scrapes())
     logger.info("Twice-daily scrape scheduler started (12-hour interval).")
 
+    # Start daily brief scheduler (fires at 06:00 IST = 00:30 UTC)
+    brief_scheduler_task = asyncio.create_task(_run_daily_brief_scheduler())
+    logger.info("Daily brief scheduler started (fires at 06:00 IST).")
+
     yield
 
     # Shutdown
     scheduler_task.cancel()
+    brief_scheduler_task.cancel()
     try:
         await scheduler_task
+    except asyncio.CancelledError:
+        pass
+    try:
+        await brief_scheduler_task
     except asyncio.CancelledError:
         pass
     await engine.dispose()

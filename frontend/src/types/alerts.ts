@@ -54,3 +54,15 @@ export interface NewsFilters {
   states: string[];
   sources: string[];
 }
+
+export interface DailyBrief {
+  brief: string;
+  generated_at: string | null;
+}
+
+export interface TrendingTheme {
+  theme: string;
+  article_count: number;
+  avg_impact_score: number;
+  top_articles: { title: string; url: string }[];
+}

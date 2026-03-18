@@ -11,6 +11,8 @@ import {
   useWatchlists,
   useDeleteWatchlist,
   useBulkDeleteWatchlists,
+  useDailyBrief,
+  useTrendingThemes,
 } from "../hooks/useAlerts";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 import ErrorMessage from "../components/common/ErrorMessage";
@@ -215,6 +217,187 @@ function NewsCard({
 }
 
 /* ------------------------------------------------------------------ */
+/*  Daily Brief Panel                                                  */
+/* ------------------------------------------------------------------ */
+
+const THEME_TO_CATEGORY: Record<string, string> = {
+  "Data Center": "data_center",
+  "Solar": "solar",
+  "Wind": "wind",
+  "Policy": "policy",
+  "Renewable Energy": "renewable_energy",
+};
+
+function DailyBriefPanel() {
+  const [collapsed, setCollapsed] = useState(false);
+  const { data, isLoading } = useDailyBrief();
+
+  return (
+    <div
+      style={{
+        background: "#fff",
+        border: "1px solid #e2e8f0",
+        borderLeft: "4px solid #7c3aed",
+        marginBottom: "20px",
+        overflow: "hidden",
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "14px 18px",
+          background: "#faf5ff",
+          cursor: "pointer",
+          userSelect: "none",
+        }}
+        onClick={() => setCollapsed((c) => !c)}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ fontSize: "16px" }}>📊</span>
+          <span style={{ fontWeight: 700, fontSize: "14px", color: "#1e293b" }}>
+            Today's Market Brief
+          </span>
+          <span
+            style={{
+              fontSize: "10px",
+              fontWeight: 700,
+              color: "#7c3aed",
+              background: "#ede9fe",
+              borderRadius: "3px",
+              padding: "1px 5px",
+            }}
+          >
+            AI
+          </span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {data?.generated_at && (
+            <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+              Generated {new Date(data.generated_at).toLocaleTimeString("en-IN", {
+                timeZone: "Asia/Kolkata",
+                hour: "2-digit",
+                minute: "2-digit",
+              })} IST
+            </span>
+          )}
+          <span style={{ fontSize: "12px", color: "#7c3aed", fontWeight: 700 }}>
+            {collapsed ? "▶ Show" : "▼ Hide"}
+          </span>
+        </div>
+      </div>
+
+      {/* Body */}
+      {!collapsed && (
+        <div style={{ padding: "16px 20px" }}>
+          {isLoading ? (
+            <div style={{ color: "#94a3b8", fontSize: "13px" }}>Generating brief…</div>
+          ) : data?.brief ? (
+            <pre
+              style={{
+                margin: 0,
+                fontFamily: "inherit",
+                fontSize: "13px",
+                lineHeight: 1.7,
+                color: "#334155",
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+              }}
+            >
+              {data.brief}
+            </pre>
+          ) : (
+            <div style={{ color: "#94a3b8", fontSize: "13px" }}>
+              No brief available — will be generated at 06:00 IST or when news articles are present.
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Trending Themes Panel                                               */
+/* ------------------------------------------------------------------ */
+
+function TrendingThemesPanel({
+  onSelectTheme,
+  activeTheme,
+}: {
+  onSelectTheme: (category: string) => void;
+  activeTheme: string;
+}) {
+  const { data: themes = [], isLoading } = useTrendingThemes(7);
+
+  if (isLoading || themes.length === 0) return null;
+
+  return (
+    <div style={{ marginBottom: "20px" }}>
+      <div
+        style={{
+          fontSize: "11px",
+          fontWeight: 700,
+          color: "#64748b",
+          textTransform: "uppercase",
+          letterSpacing: "0.1em",
+          marginBottom: "10px",
+        }}
+      >
+        7-Day Emerging Trends
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+        {themes.map((t) => {
+          const catKey = THEME_TO_CATEGORY[t.theme] ?? "";
+          const isActive = activeTheme === catKey && catKey !== "";
+          const impactColor =
+            t.avg_impact_score >= 7 ? "#16a34a" : t.avg_impact_score >= 4 ? "#d97706" : "#6b7280";
+          return (
+            <button
+              key={t.theme}
+              onClick={() => catKey && onSelectTheme(isActive ? "" : catKey)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "6px 12px",
+                borderRadius: "20px",
+                border: `1.5px solid ${isActive ? "#7c3aed" : "#e2e8f0"}`,
+                background: isActive ? "#ede9fe" : "#f8fafc",
+                color: isActive ? "#7c3aed" : "#334155",
+                cursor: catKey ? "pointer" : "default",
+                fontSize: "12px",
+                fontWeight: 600,
+                transition: "all 0.15s",
+              }}
+            >
+              <span>{t.theme}</span>
+              <span
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  background: isActive ? "#ddd6fe" : "#e2e8f0",
+                  color: isActive ? "#7c3aed" : "#475569",
+                  borderRadius: "10px",
+                  padding: "1px 6px",
+                }}
+              >
+                {t.article_count}
+              </span>
+              <span style={{ fontSize: "10px", color: impactColor, fontWeight: 700 }}>
+                ⚡{t.avg_impact_score.toFixed(1)}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  News Feed Section                                                   */
 /* ------------------------------------------------------------------ */
 
@@ -276,6 +459,12 @@ function NewsFeedSection() {
           Sources: MNRE · Mercom India · Economic Times · Solar Quarter · PIB · Data Center Dynamics
         </div>
       </div>
+
+      <DailyBriefPanel />
+      <TrendingThemesPanel
+        onSelectTheme={setCategoryFilter}
+        activeTheme={categoryFilter}
+      />
 
       <div className="pm-filters">
         <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>

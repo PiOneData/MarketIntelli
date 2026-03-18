@@ -1,5 +1,5 @@
 import apiClient from "./client";
-import type { Alert, Watchlist, Notification, NewsArticle, NewsFilters } from "../types/alerts";
+import type { Alert, Watchlist, Notification, NewsArticle, NewsFilters, DailyBrief, TrendingTheme } from "../types/alerts";
 
 export async function listAlerts(params?: {
   alert_type?: string;
@@ -84,5 +84,15 @@ export async function bulkDeleteWatchlists(
 
 export async function triggerNewsScrape(): Promise<{ status: string }> {
   const { data } = await apiClient.post("/alerts/news/scrape");
+  return data;
+}
+
+export async function getDailyBrief(): Promise<DailyBrief> {
+  const { data } = await apiClient.get("/alerts/news/daily-brief");
+  return data;
+}
+
+export async function getTrendingThemes(days = 7): Promise<TrendingTheme[]> {
+  const { data } = await apiClient.get("/alerts/news/trends", { params: { days } });
   return data;
 }
