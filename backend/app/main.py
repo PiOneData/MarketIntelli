@@ -26,6 +26,7 @@ from app.domains.power_market.models.power_market import (  # noqa: F401
     DailyREGeneration,
 )
 from app.domains.dc_assessment.models.report import AssessmentReport  # noqa: F401
+from app.domains.airport_registry.models.airport import Airport  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
@@ -180,12 +181,30 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await _safe_add_column(ddl)
     logger.info("assessment_reports score columns ensured.")
 
+    # Ensure data_center_companies has developer_id FK column (added for DC-Developer linking)
+    await _safe_add_column(
+        "ALTER TABLE data_center_companies ADD COLUMN IF NOT EXISTS "
+        "developer_id UUID REFERENCES developers(id) ON DELETE SET NULL;"
+    )
+    logger.info("data_center_companies.developer_id column ensured.")
+
     # Seed data centers from CSV if table is empty
     try:
         from app.scripts.seed_data_centers import seed_data_centers
         await seed_data_centers()
     except Exception as e:
         logger.warning("CSV seed skipped: %s", e)
+
+    # Seed airports from airports.json if table is empty
+    try:
+        from app.db.session import async_session_factory as _asf_airports
+        from app.domains.airport_registry.services.airport_service import AirportService as _AirportService
+        async with _asf_airports() as _db_airports:
+            seeded = await _AirportService(_db_airports).seed_from_json()
+            if seeded:
+                logger.info("Airport seed: %d airports loaded.", seeded)
+    except Exception as e:
+        logger.warning("Airport seed skipped: %s", e)
 
     # Phase 1 geocoding: city-centroid lookup — fast, no network, runs synchronously
     # so all facilities have coordinates before the first API request is served.

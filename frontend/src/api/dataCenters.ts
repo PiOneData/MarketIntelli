@@ -55,6 +55,21 @@ export async function deleteFacility(id: string): Promise<void> {
   await apiClient.delete(`/data-centers/facilities/${id}`);
 }
 
+export async function createCompany(data: {
+  name: string;
+  headquarters?: string | null;
+  website?: string | null;
+  developer_id?: string | null;
+}): Promise<DataCenterCompany> {
+  const { data: res } = await apiClient.post("/data-centers/companies", data);
+  return res;
+}
+
+export async function linkDeveloperToCompany(companyId: string, developerId: string): Promise<DataCenterCompany> {
+  const { data } = await apiClient.patch(`/data-centers/companies/${companyId}/link-developer`, { developer_id: developerId });
+  return data;
+}
+
 export async function geocodeFacilities(): Promise<{
   resolved: number;
   skipped: number;

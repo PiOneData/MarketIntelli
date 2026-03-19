@@ -52,6 +52,19 @@ class ProjectService:
         )
         return result.scalar_one_or_none()
 
+    async def create_developer(self, **kwargs) -> Developer:
+        developer = Developer(**kwargs)
+        self.db.add(developer)
+        await self.db.commit()
+        await self.db.refresh(developer)
+        return developer
+
+    async def get_developer_by_name(self, name: str) -> Developer | None:
+        result = await self.db.execute(
+            select(Developer).where(Developer.name.ilike(name))
+        )
+        return result.scalar_one_or_none()
+
     async def list_tenders(self, status: str | None = None) -> list[Tender]:
         query = select(Tender).order_by(Tender.deadline.desc())
         if status:

@@ -14,6 +14,7 @@ class DataCenterCompanyRead(BaseModel):
     annual_revenue_usd: float | None = None
     employee_count: int | None = None
     sustainability_rating: str | None = None
+    developer_id: UUID | None = None
     facility_count: int = 0
     total_capacity_mw: float = 0.0
     operational_count: int = 0
@@ -31,12 +32,14 @@ class DataCenterCompanyCreate(BaseModel):
     annual_revenue_usd: float | None = None
     employee_count: int | None = None
     sustainability_rating: str | None = None
+    developer_id: UUID | None = None
 
 
 class DataCenterFacilityRead(BaseModel):
     id: UUID
     company_id: UUID
     company_name: str = ""
+    company_developer_id: UUID | None = None
     name: str
     city: str
     state: str

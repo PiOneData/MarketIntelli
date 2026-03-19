@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import SubstationView from "../components/SubstationView";
 import { useFacilities, useFacilityStats } from "../hooks/useDataCenters";
-import { listFacilities, createFacility } from "../api/dataCenters";
+import { listFacilities, createFacility, createCompany, linkDeveloperToCompany } from "../api/dataCenters";
 import { useQueryClient } from "@tanstack/react-query";
 import type { DataCenterFacility } from "../types/dataCenters";
 import apiClient from "../api/client";
@@ -161,10 +161,40 @@ interface DCFacilityDetailPanelProps {
   facility: DataCenterFacility;
   onClose: () => void;
   onViewDeveloper: (companyName: string) => void;
+  onDeveloperLinked?: () => void;
 }
 
-function DCFacilityDetailPanel({ facility, onClose, onViewDeveloper }: DCFacilityDetailPanelProps) {
+function DCFacilityDetailPanel({ facility, onClose, onViewDeveloper, onDeveloperLinked }: DCFacilityDetailPanelProps) {
   const [tab, setTab] = useState<DCDetailTab>("overview");
+  const [showLinkPanel, setShowLinkPanel] = useState(false);
+  const [developerSearch, setDeveloperSearch] = useState("");
+  const [developers, setDevelopers] = useState<Array<{ id: string; name: string }>>([]);
+  const [linkingDev, setLinkingDev] = useState(false);
+
+  useEffect(() => {
+    if (showLinkPanel && developers.length === 0) {
+      apiClient.get<Array<{ id: string; name: string }>>("/projects/developers/")
+        .then(res => setDevelopers(res.data))
+        .catch(() => {});
+    }
+  }, [showLinkPanel, developers.length]);
+
+  const handleLinkDeveloper = async (developerId: string) => {
+    setLinkingDev(true);
+    try {
+      await linkDeveloperToCompany(facility.company_id, developerId);
+      setShowLinkPanel(false);
+      onDeveloperLinked?.();
+    } catch {
+      alert("Failed to link developer. Please try again.");
+    } finally {
+      setLinkingDev(false);
+    }
+  };
+
+  const filteredDevs = developers.filter(d =>
+    developerSearch ? d.name.toLowerCase().includes(developerSearch.toLowerCase()) : true
+  );
 
   const TABS: { id: DCDetailTab; label: string }[] = [
     { id: "overview", label: "Overview" },
@@ -402,7 +432,63 @@ function DCFacilityDetailPanel({ facility, onClose, onViewDeveloper }: DCFacilit
                 <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "6px" }}>
                   Click the name above to view the full developer profile.
                 </div>
+                {facility.company_developer_id ? (
+                  <div style={{ marginTop: "10px", fontSize: "11px", color: "#16a34a", fontWeight: 600 }}>
+                    ✓ Linked to Developer Profile
+                  </div>
+                ) : (
+                  <div style={{ marginTop: "10px" }}>
+                    <div style={{ fontSize: "11px", color: "#f59e0b", fontWeight: 600, marginBottom: "6px" }}>
+                      ⚠ No developer profile linked yet
+                    </div>
+                    <button
+                      onClick={() => setShowLinkPanel(v => !v)}
+                      style={{
+                        fontSize: "12px", fontWeight: 700, color: "#0d7a6e",
+                        background: "#f0fdfa", border: "1px solid #0d7a6e",
+                        padding: "6px 12px", cursor: "pointer", fontFamily: "inherit",
+                      }}
+                    >
+                      {showLinkPanel ? "Cancel" : "Link to Developer Profile"}
+                    </button>
+                  </div>
+                )}
               </div>
+
+              {showLinkPanel && (
+                <div style={{ border: "1px solid #e5e7eb", background: "#f9fafb", padding: "16px" }}>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#374151", marginBottom: "10px" }}>
+                    Search & Link Developer Profile
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search developer name…"
+                    value={developerSearch}
+                    onChange={e => setDeveloperSearch(e.target.value)}
+                    style={{ width: "100%", padding: "7px 10px", border: "1px solid #d1d5db", fontSize: "13px", marginBottom: "8px", fontFamily: "inherit", boxSizing: "border-box" }}
+                  />
+                  <div style={{ maxHeight: "180px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "4px" }}>
+                    {filteredDevs.length === 0 && (
+                      <div style={{ fontSize: "12px", color: "#94a3b8", padding: "8px 0" }}>No matching developer profiles found.</div>
+                    )}
+                    {filteredDevs.map(dev => (
+                      <button
+                        key={dev.id}
+                        onClick={() => handleLinkDeveloper(dev.id)}
+                        disabled={linkingDev}
+                        style={{
+                          textAlign: "left", padding: "8px 10px", background: "#fff",
+                          border: "1px solid #e2e8f0", cursor: "pointer",
+                          fontSize: "13px", fontWeight: 600, color: "#0f172a",
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        {dev.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -491,15 +577,27 @@ function IndiaDataCenterAlertPage() {
 
     try {
       // Find matching company from existing facilities
+      let companyId: string | null = null;
       const matchingFacility = facilities.find(
         (f) => f.company_name.toLowerCase() === form.company.toLowerCase()
       );
-      if (!matchingFacility) {
-        alert("Company not found in database. Please add the company first via the admin panel.");
-        return;
+      if (matchingFacility) {
+        companyId = matchingFacility.company_id;
+      } else {
+        // Company not found — auto-create company and its developer profile
+        const developerRes = await apiClient.post("/projects/developers/", {
+          name: form.company,
+          headquarters: form.city ? `${form.city}, ${form.state}` : form.state,
+        });
+        const newCompany = await createCompany({
+          name: form.company,
+          developer_id: developerRes.data.id,
+        });
+        companyId = newCompany.id;
       }
+
       await createFacility({
-        company_id: matchingFacility.company_id,
+        company_id: companyId,
         name: form.location || `${form.city} Data Center`,
         city: form.city,
         state: form.state,
@@ -944,6 +1042,10 @@ function IndiaDataCenterAlertPage() {
         <DCFacilityDetailPanel
           facility={selectedFacility}
           onClose={() => setSelectedFacility(null)}
+          onDeveloperLinked={() => {
+            queryClient.invalidateQueries({ queryKey: ["dc-facilities"] });
+            setSelectedFacility(null);
+          }}
           onViewDeveloper={(companyName) => {
             setSelectedFacility(null);
             navigate(`/projects/developer-profiles?company=${encodeURIComponent(companyName)}`);

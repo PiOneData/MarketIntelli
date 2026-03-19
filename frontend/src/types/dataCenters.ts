@@ -8,6 +8,7 @@ export interface DataCenterCompany {
   annual_revenue_usd: number | null;
   employee_count: number | null;
   sustainability_rating: string | null;
+  developer_id: string | null;
   facility_count: number;
   total_capacity_mw: number;
   operational_count: number;
@@ -20,6 +21,7 @@ export interface DataCenterFacility {
   id: string;
   company_id: string;
   company_name: string;
+  company_developer_id: string | null;
   name: string;
   city: string;
   state: string;

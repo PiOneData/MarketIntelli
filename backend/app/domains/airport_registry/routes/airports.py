@@ -1,117 +1,126 @@
 """
-Airport Registry Routes
-Serves India airport data from the bundled airports.json data file.
+Airport Registry Routes — DB-backed CRUD via AirportService.
 """
-import json
-from pathlib import Path
-from typing import Optional
+from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db.session import get_db
+from app.domains.airport_registry.schemas.airports import AirportCreate, AirportRead, AirportUpdate
+from app.domains.airport_registry.services.airport_service import AirportService
 
 router = APIRouter()
 
-DATA_FILE = Path(__file__).parents[4] / "data" / "airports.json"
 
-_airports_cache: list[dict] | None = None
+def _to_read(a) -> AirportRead:
+    return AirportRead(
+        id=a.id,
+        sno=a.sno,
+        airport_name=a.airport_name,
+        iata_code=a.iata_code,
+        city=a.city,
+        state=a.state,
+        type=a.type,
+        status=a.status,
+        latitude=a.latitude,
+        longitude=a.longitude,
+        power_consumption_mw=a.power_consumption_mw,
+        solar_capacity_mw=a.solar_capacity_mw,
+        pct_green_coverage=a.pct_green_coverage,
+        green_energy_sources=a.green_energy_sources,
+        carbon_neutral_aci_level=a.carbon_neutral_aci_level,
+        is_green=a.is_green,
+        annual_passengers_mn=a.annual_passengers_mn,
+        no_of_runways=a.no_of_runways,
+        operator_concessionaire=a.operator_concessionaire,
+        developer_id=a.developer_id,
+        created_at=a.created_at,
+        updated_at=a.updated_at,
+    )
 
 
-def _load_airports() -> list[dict]:
-    global _airports_cache
-    if _airports_cache is None:
-        with open(DATA_FILE, encoding="utf-8") as f:
-            _airports_cache = json.load(f)
-    return _airports_cache
-
-
-@router.get("/airports")
-def list_airports(
-    state: Optional[str] = Query(None, description="Filter by state/UT"),
-    type: Optional[str] = Query(None, description="Filter by airport type"),
-    status: Optional[str] = Query(None, description="Filter by operational status"),
-    green_only: bool = Query(False, description="Only return green airports"),
-    search: Optional[str] = Query(None, description="Search by name, city, or IATA code"),
+@router.get("/airports", response_model=dict)
+async def list_airports(
+    state: str | None = Query(None),
+    type: str | None = Query(None),
+    status: str | None = Query(None),
+    green_only: bool = Query(False),
+    search: str | None = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(200, ge=1, le=500),
+    db: AsyncSession = Depends(get_db),
 ) -> dict:
-    airports = _load_airports()
-    filtered = airports
-
-    if green_only:
-        filtered = [a for a in filtered if a.get("is_green")]
-
-    if state:
-        filtered = [a for a in filtered if (a.get("State / UT") or "").lower() == state.lower()]
-
-    if type:
-        filtered = [a for a in filtered if (a.get("Type") or "").lower() == type.lower()]
-
-    if status:
-        filtered = [a for a in filtered if (a.get("Status") or "").lower() == status.lower()]
-
-    if search:
-        q = search.lower()
-        filtered = [
-            a for a in filtered
-            if q in (a.get("Airport Name") or "").lower()
-            or q in (a.get("City") or "").lower()
-            or q in (a.get("IATA Code") or "").lower()
-            or q in (a.get("State / UT") or "").lower()
-        ]
-
-    return {"airports": filtered, "total": len(filtered)}
+    service = AirportService(db)
+    airports, total = await service.list_airports(
+        state=state,
+        type_filter=type,
+        status=status,
+        green_only=green_only,
+        search=search,
+        page=page,
+        page_size=page_size,
+    )
+    return {"airports": [_to_read(a).model_dump() for a in airports], "total": total}
 
 
 @router.get("/airports/meta")
-def get_airports_meta() -> dict:
-    airports = _load_airports()
-    states = sorted({a.get("State / UT") for a in airports if a.get("State / UT")})
-    types = sorted({a.get("Type") for a in airports if a.get("Type")})
-    statuses = sorted({a.get("Status") for a in airports if a.get("Status")})
-    return {"states": states, "types": types, "statuses": statuses}
-
-
-def _parse_mw(value: object) -> float:
-    """Parse a MW value that may be prefixed with '~' or be N/A."""
-    if value is None:
-        return 0.0
-    if isinstance(value, (int, float)):
-        return float(value)
-    s = str(value).replace(",", "").strip().lstrip("~").strip()
-    if s in ("N/A", "NA", "n/a", ""):
-        return 0.0
-    try:
-        return float(s)
-    except ValueError:
-        return 0.0
+async def get_airports_meta(db: AsyncSession = Depends(get_db)) -> dict:
+    service = AirportService(db)
+    return await service.get_meta()
 
 
 @router.get("/airports/power-stats")
-def get_airports_power_stats() -> dict:
-    """Aggregate power consumption and solar generation stats across all airports."""
-    airports = _load_airports()
-    total_power_mw = sum(_parse_mw(a.get("Power Consumption (MW)")) for a in airports)
-    total_solar_mw = sum(_parse_mw(a.get("Solar Capacity Installed (MW)")) for a in airports)
-    grid_power_mw = max(total_power_mw - total_solar_mw, 0.0)
-    green_share_pct = (total_solar_mw / total_power_mw * 100) if total_power_mw > 0 else 0.0
-    grid_share_pct = 100.0 - green_share_pct if total_power_mw > 0 else 0.0
-    airports_with_power = sum(1 for a in airports if _parse_mw(a.get("Power Consumption (MW)")) > 0)
-    airports_with_solar = sum(1 for a in airports if _parse_mw(a.get("Solar Capacity Installed (MW)")) > 0)
-    return {
-        "total_airports": len(airports),
-        "airports_with_power_data": airports_with_power,
-        "airports_with_solar_data": airports_with_solar,
-        "total_power_mw": round(total_power_mw, 1),
-        "total_solar_mw": round(total_solar_mw, 1),
-        "grid_power_mw": round(grid_power_mw, 1),
-        "green_share_pct": round(green_share_pct, 1),
-        "grid_share_pct": round(grid_share_pct, 1),
-        "source": "AAI / MoCA · airports.json",
-    }
+async def get_airports_power_stats(db: AsyncSession = Depends(get_db)) -> dict:
+    service = AirportService(db)
+    return await service.get_power_stats()
 
 
-@router.get("/airports/{airport_id}")
-def get_airport(airport_id: int) -> dict:
-    airports = _load_airports()
-    for a in airports:
-        sno = a.get("S.No")
-        if sno is not None and int(sno) == airport_id:
-            return a
-    raise HTTPException(status_code=404, detail="Airport not found")
+@router.post("/airports", response_model=AirportRead, status_code=201)
+async def create_airport(
+    payload: AirportCreate,
+    db: AsyncSession = Depends(get_db),
+) -> AirportRead:
+    service = AirportService(db)
+    airport = await service.create_airport(**payload.model_dump())
+    return _to_read(airport)
+
+
+@router.get("/airports/{airport_id}", response_model=AirportRead)
+async def get_airport(
+    airport_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> AirportRead:
+    service = AirportService(db)
+    airport = await service.get_airport(airport_id)
+    if not airport:
+        raise HTTPException(status_code=404, detail="Airport not found")
+    return _to_read(airport)
+
+
+@router.put("/airports/{airport_id}", response_model=AirportRead)
+async def update_airport(
+    airport_id: UUID,
+    payload: AirportUpdate,
+    db: AsyncSession = Depends(get_db),
+) -> AirportRead:
+    service = AirportService(db)
+    updates = {k: v for k, v in payload.model_dump().items() if v is not None}
+    # Allow explicitly setting is_green=False
+    if payload.is_green is not None:
+        updates["is_green"] = payload.is_green
+    airport = await service.update_airport(airport_id, **updates)
+    if not airport:
+        raise HTTPException(status_code=404, detail="Airport not found")
+    return _to_read(airport)
+
+
+@router.delete("/airports/{airport_id}", status_code=204)
+async def delete_airport(
+    airport_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    service = AirportService(db)
+    deleted = await service.delete_airport(airport_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Airport not found")
