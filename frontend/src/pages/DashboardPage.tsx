@@ -329,11 +329,13 @@ export default function DashboardPage() {
                 <div className="hs-pc-type">⚡ Grid Power</div>
                 <div className="hs-pc-num">1.17<em>GW</em></div>
                 <div className="hs-pc-label">Thermal &amp; Hydro Supply<br />78% of DC Load</div>
+                <a href="https://cea.nic.in/dashboard/?lang=en" target="_blank" rel="noopener noreferrer" className="pgen-trends-src-link">CEA FY2024-25</a>
               </div>
               <div className="hs-power-card green">
                 <div className="hs-pc-type">☀️ Green Energy</div>
                 <div className="hs-pc-num">0.33<em>GW</em></div>
                 <div className="hs-pc-label">Solar + Wind Installed<br />22% of 1.50 GW Total</div>
+                <a href="https://www.ceew.in/publications/how-is-data-centre-infrastructure-in-india-shaping-power-and-water-use" target="_blank" rel="noopener noreferrer" className="pgen-trends-src-link">CEEW 2024</a>
               </div>
             </div>
           </div>
@@ -349,11 +351,13 @@ export default function DashboardPage() {
                 <div className="hs-pc-type">⚡ Grid Power</div>
                 <div className="hs-pc-num">1.87<em>GW</em></div>
                 <div className="hs-pc-label">DISCOM / ISTS Supply<br />78% of Airport Load</div>
+                <a href="https://cea.nic.in/dashboard/?lang=en" target="_blank" rel="noopener noreferrer" className="pgen-trends-src-link">CEA FY2024-25</a>
               </div>
               <div className="hs-power-card green">
                 <div className="hs-pc-type">☀️ Green Energy</div>
                 <div className="hs-pc-num">0.53<em>GW</em></div>
                 <div className="hs-pc-label">On-site Solar + PPAs<br />22% of 2.4 GW Total</div>
+                <a href="https://www.ceew.in/publications/how-is-data-centre-infrastructure-in-india-shaping-power-and-water-use" target="_blank" rel="noopener noreferrer" className="pgen-trends-src-link">CEEW 2024</a>
               </div>
             </div>
           </div>
