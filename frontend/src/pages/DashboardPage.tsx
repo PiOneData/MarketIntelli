@@ -327,13 +327,13 @@ export default function DashboardPage() {
             <div className="hs-power-row">
               <div className="hs-power-card grid">
                 <div className="hs-pc-type">⚡ Grid Power</div>
-                <div className="hs-pc-num">0.98<em>GW</em></div>
-                <div className="hs-pc-label">Thermal &amp; Hydro Supply<br />64% of DC Load</div>
+                <div className="hs-pc-num">1.17<em>GW</em></div>
+                <div className="hs-pc-label">Thermal &amp; Hydro Supply<br />78% of DC Load</div>
               </div>
               <div className="hs-power-card green">
                 <div className="hs-pc-type">☀️ Green Energy</div>
-                <div className="hs-pc-num">0.55<em>GW</em></div>
-                <div className="hs-pc-label">Solar + Wind Installed<br />36% of 1.53 GW Total</div>
+                <div className="hs-pc-num">0.33<em>GW</em></div>
+                <div className="hs-pc-label">Solar + Wind Installed<br />22% of 1.50 GW Total</div>
               </div>
             </div>
           </div>
