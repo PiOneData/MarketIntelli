@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
@@ -15,6 +16,10 @@ from app.domains.data_center_intelligence.schemas.data_center import (
 from app.domains.data_center_intelligence.services.data_center_service import (
     DataCenterService,
 )
+
+
+class LinkDeveloperPayload(BaseModel):
+    developer_id: UUID
 
 router = APIRouter()
 
@@ -43,6 +48,7 @@ def _build_company_read(c: object) -> DataCenterCompanyRead:
         annual_revenue_usd=c.annual_revenue_usd,  # type: ignore[attr-defined]
         employee_count=c.employee_count,  # type: ignore[attr-defined]
         sustainability_rating=c.sustainability_rating,  # type: ignore[attr-defined]
+        developer_id=c.developer_id,  # type: ignore[attr-defined]
         facility_count=len(facilities),
         total_capacity_mw=sum(f.power_capacity_mw for f in facilities),
         operational_count=operational_count,
@@ -99,6 +105,7 @@ async def create_company(
         annual_revenue_usd=company.annual_revenue_usd,
         employee_count=company.employee_count,
         sustainability_rating=company.sustainability_rating,
+        developer_id=company.developer_id,
     )
 
 
@@ -133,6 +140,7 @@ async def list_facilities(
                 id=f.id,
                 company_id=f.company_id,
                 company_name=f.company.name if f.company else "",
+                company_developer_id=f.company.developer_id if f.company else None,
                 name=f.name,
                 city=f.city,
                 state=f.state,
@@ -223,6 +231,7 @@ async def get_facility(
         id=f.id,
         company_id=f.company_id,
         company_name=f.company.name if f.company else "",
+        company_developer_id=f.company.developer_id if f.company else None,
         name=f.name,
         city=f.city,
         state=f.state,
@@ -263,6 +272,7 @@ async def create_facility(
         id=f.id,
         company_id=f.company_id,
         company_name=company.name,
+        company_developer_id=company.developer_id,
         name=f.name,
         city=f.city,
         state=f.state,
@@ -304,6 +314,7 @@ async def update_facility(
         id=f.id,
         company_id=f.company_id,
         company_name=f.company.name if f.company else "",
+        company_developer_id=f.company.developer_id if f.company else None,
         name=f.name,
         city=f.city,
         state=f.state,
@@ -338,3 +349,17 @@ async def delete_facility(
     deleted = await service.delete_facility(facility_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Facility not found")
+
+
+@router.patch("/companies/{company_id}/link-developer", response_model=DataCenterCompanyRead)
+async def link_developer_to_company(
+    company_id: UUID,
+    payload: LinkDeveloperPayload,
+    db: AsyncSession = Depends(get_db),
+) -> DataCenterCompanyRead:
+    """Link a data center company to a developer profile."""
+    service = DataCenterService(db)
+    company = await service.link_developer(company_id, payload.developer_id)
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    return _build_company_read(company)

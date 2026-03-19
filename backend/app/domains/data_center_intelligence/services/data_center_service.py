@@ -94,6 +94,15 @@ class DataCenterService:
         await self.db.refresh(company)
         return company
 
+    async def link_developer(self, company_id: UUID, developer_id: UUID) -> DataCenterCompany | None:
+        company = await self.get_company(company_id)
+        if not company:
+            return None
+        company.developer_id = developer_id
+        await self.db.commit()
+        await self.db.refresh(company)
+        return company
+
     # --- Facility operations ---
 
     async def list_facilities(

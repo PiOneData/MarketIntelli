@@ -12,6 +12,7 @@ from app.db.session import get_db
 from app.domains.project_intelligence.schemas.projects import (
     SolarProjectRead,
     DeveloperRead,
+    DeveloperCreate,
     TenderRead,
 )
 from app.domains.project_intelligence.services.project_service import ProjectService
@@ -95,6 +96,28 @@ async def list_projects(
         )
         for p in projects
     ]
+
+
+@router.post("/developers/", response_model=DeveloperRead, status_code=201)
+async def create_developer(
+    data: DeveloperCreate,
+    db: AsyncSession = Depends(get_db),
+) -> DeveloperRead:
+    """Create a new developer profile. Returns existing if a profile with the same name already exists."""
+    service = ProjectService(db)
+    existing = await service.get_developer_by_name(data.name)
+    if existing:
+        return DeveloperRead(
+            id=existing.id, name=existing.name, headquarters=existing.headquarters,
+            total_capacity_mw=existing.total_capacity_mw, risk_score=existing.risk_score,
+            projects_completed=existing.projects_completed,
+        )
+    developer = await service.create_developer(**data.model_dump())
+    return DeveloperRead(
+        id=developer.id, name=developer.name, headquarters=developer.headquarters,
+        total_capacity_mw=developer.total_capacity_mw, risk_score=developer.risk_score,
+        projects_completed=developer.projects_completed,
+    )
 
 
 @router.get("/developers/", response_model=list[DeveloperRead])

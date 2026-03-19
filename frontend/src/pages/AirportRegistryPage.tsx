@@ -1,5 +1,7 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { fetchAirports, createAirport, updateAirport, type ApiAirport, type AirportCreate } from "../api/airports";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface AirportOperations {
@@ -17,6 +19,7 @@ interface AirportGreenEnergy {
 }
 
 interface AirportProperties {
+  id: string;
   slno: number;
   airport_name: string;
   iata_code?: string | null;
@@ -113,6 +116,68 @@ function exportCsv(rows: AirportProperties[]) {
   URL.revokeObjectURL(url);
 }
 
+// ── Map API flat response → AirportProperties (nested for existing UI) ────────
+function mapApiToProps(a: ApiAirport): AirportProperties {
+  return {
+    id: a.id,
+    slno: a.sno ?? 0,
+    airport_name: a.airport_name,
+    iata_code: a.iata_code,
+    city: a.city,
+    state: a.state,
+    type: a.type,
+    status: a.status,
+    is_notable_green: a.is_green,
+    lat: a.latitude,
+    lon: a.longitude,
+    operations: {
+      annual_passengers_mn: a.annual_passengers_mn,
+      no_of_runways: a.no_of_runways,
+      power_consumption_mw: a.power_consumption_mw,
+      operator_concessionaire: a.operator_concessionaire,
+    },
+    green_energy: {
+      solar_capacity_installed_mw: a.solar_capacity_mw,
+      pct_green_coverage: a.pct_green_coverage,
+      carbon_neutral_aci_level: a.carbon_neutral_aci_level,
+      green_energy_sources: a.green_energy_sources,
+    },
+  };
+}
+
+const INDIAN_STATES_AIRPORT = [
+  "Andaman & Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam",
+  "Bihar", "Chandigarh", "Chhattisgarh", "Dadra & Nagar Haveli", "Daman & Diu",
+  "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu & Kashmir",
+  "Jharkhand", "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh",
+  "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha",
+  "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana",
+  "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+];
+
+const AIRPORT_TYPES = [
+  "International", "Domestic", "Military / Civil Enclave", "Civil", "Greenfield",
+];
+
+const AIRPORT_STATUSES = [
+  "Operational", "Under Development", "Under Construction", "Limited Operations",
+  "Proposed", "Disused",
+];
+
+const EMPTY_AIRPORT_FORM: AirportCreate = {
+  airport_name: "",
+  iata_code: "",
+  city: "",
+  state: "",
+  type: "",
+  status: "Operational",
+  operator_concessionaire: "",
+  power_consumption_mw: "",
+  solar_capacity_mw: "",
+  pct_green_coverage: "",
+  is_green: false,
+};
+
 // ── Airport Detail Panel ───────────────────────────────────────────────────────
 type AirportDetailTab = "overview" | "operations" | "green_energy" | "developer";
 
@@ -120,9 +185,10 @@ interface AirportDetailPanelProps {
   airport: AirportProperties;
   onClose: () => void;
   onViewDeveloper: (operatorName: string) => void;
+  onEdit: () => void;
 }
 
-function AirportDetailPanel({ airport, onClose, onViewDeveloper }: AirportDetailPanelProps) {
+function AirportDetailPanel({ airport, onClose, onViewDeveloper, onEdit }: AirportDetailPanelProps) {
   const [tab, setTab] = useState<AirportDetailTab>("overview");
 
   const TABS: { id: AirportDetailTab; label: string }[] = [
@@ -168,17 +234,28 @@ function AirportDetailPanel({ airport, onClose, onViewDeveloper }: AirportDetail
           padding: "24px 24px 20px",
           position: "relative", flexShrink: 0,
         }}>
-          <button
-            onClick={onClose}
-            style={{
-              position: "absolute", top: "16px", right: "16px",
-              background: "rgba(255,255,255,0.18)", border: "none",
-              borderRadius: "8px", padding: "6px 10px", cursor: "pointer",
-              color: "#fff", fontSize: "14px", fontWeight: 700,
-            }}
-          >
-            ✕
-          </button>
+          <div style={{ position: "absolute", top: "16px", right: "16px", display: "flex", gap: "8px" }}>
+            <button
+              onClick={onEdit}
+              style={{
+                background: "rgba(255,255,255,0.18)", border: "none",
+                borderRadius: "8px", padding: "6px 12px", cursor: "pointer",
+                color: "#fff", fontSize: "12px", fontWeight: 700,
+              }}
+            >
+              ✎ Edit
+            </button>
+            <button
+              onClick={onClose}
+              style={{
+                background: "rgba(255,255,255,0.18)", border: "none",
+                borderRadius: "8px", padding: "6px 10px", cursor: "pointer",
+                color: "#fff", fontSize: "14px", fontWeight: 700,
+              }}
+            >
+              ✕
+            </button>
+          </div>
           {airport.iata_code && (
             <div style={{
               display: "inline-block", padding: "2px 10px",
@@ -354,9 +431,17 @@ function AirportDetailPanel({ airport, onClose, onViewDeveloper }: AirportDetail
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function AirportRegistryPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [airports, setAirports] = useState<AirportProperties[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAirport, setSelectedAirport] = useState<AirportProperties | null>(null);
+
+  // Add / Edit modal state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editAirport, setEditAirport] = useState<AirportProperties | null>(null);
+  const [addForm, setAddForm] = useState<AirportCreate>(EMPTY_AIRPORT_FORM);
+  const [editForm, setEditForm] = useState<AirportCreate>(EMPTY_AIRPORT_FORM);
+  const [saving, setSaving] = useState(false);
 
   // Filters
   const [search, setSearch] = useState("");
@@ -373,19 +458,70 @@ export default function AirportRegistryPage() {
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
 
-  useEffect(() => {
-    fetch("/data/india_airports_unified.geojson")
-      .then(r => r.json())
-      .then((data: { features: Array<{ geometry: { coordinates: [number, number] }; properties: AirportProperties }> }) => {
-        setAirports(data.features.map(f => ({
-          ...f.properties,
-          lat: f.geometry.coordinates[1],
-          lon: f.geometry.coordinates[0],
-        })));
-      })
+  const loadAirports = useCallback(() => {
+    setLoading(true);
+    fetchAirports({ page_size: 500 })
+      .then(res => setAirports(res.airports.map(mapApiToProps)))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    loadAirports();
+  }, [loadAirports]);
+
+  const handleAddAirport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addForm.airport_name || !addForm.state || !addForm.status) return;
+    setSaving(true);
+    try {
+      await createAirport(addForm);
+      queryClient.invalidateQueries({ queryKey: ["airports"] });
+      loadAirports();
+      setAddForm(EMPTY_AIRPORT_FORM);
+      setShowAddModal(false);
+    } catch (err) {
+      console.error("Failed to add airport:", err);
+      alert("Failed to add airport. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEditAirport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editAirport?.id || !editForm.airport_name) return;
+    setSaving(true);
+    try {
+      await updateAirport(editAirport.id, editForm);
+      queryClient.invalidateQueries({ queryKey: ["airports"] });
+      loadAirports();
+      setEditAirport(null);
+      setSelectedAirport(null);
+    } catch (err) {
+      console.error("Failed to update airport:", err);
+      alert("Failed to update airport. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openEdit = (airport: AirportProperties) => {
+    setEditForm({
+      airport_name: airport.airport_name,
+      iata_code: airport.iata_code ?? "",
+      city: airport.city ?? "",
+      state: airport.state ?? "",
+      type: airport.type ?? "",
+      status: airport.status ?? "",
+      operator_concessionaire: airport.operations?.operator_concessionaire ?? "",
+      power_consumption_mw: airport.operations?.power_consumption_mw ?? "",
+      solar_capacity_mw: String(airport.green_energy?.solar_capacity_installed_mw ?? ""),
+      pct_green_coverage: airport.green_energy?.pct_green_coverage ?? "",
+      is_green: airport.is_notable_green ?? false,
+    });
+    setEditAirport(airport);
+  };
 
   // Derived filter options
   const states = useMemo(() => [...new Set(airports.map(a => a.state ?? "").filter(Boolean))].sort(), [airports]);
@@ -473,12 +609,20 @@ export default function AirportRegistryPage() {
                 {airports.length} airports across India — operational, upcoming, and green-certified
               </p>
             </div>
-            <button
-              onClick={() => exportCsv(filtered)}
-              style={{ padding: "8px 18px", background: "#0d7a6e", color: "#fff", border: "none", fontSize: "12px", fontWeight: 700, cursor: "pointer", letterSpacing: "0.04em" }}
-            >
-              ↓ Export CSV ({filtered.length})
-            </button>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                onClick={() => setShowAddModal(true)}
+                style={{ padding: "8px 18px", background: "#0d7a6e", color: "#fff", border: "none", fontSize: "12px", fontWeight: 700, cursor: "pointer", letterSpacing: "0.04em" }}
+              >
+                + Add Airport
+              </button>
+              <button
+                onClick={() => exportCsv(filtered)}
+                style={{ padding: "8px 18px", background: "#0f172a", color: "#fff", border: "none", fontSize: "12px", fontWeight: 700, cursor: "pointer", letterSpacing: "0.04em" }}
+              >
+                ↓ Export CSV ({filtered.length})
+              </button>
+            </div>
           </div>
 
           {/* Stats cards */}
@@ -498,6 +642,154 @@ export default function AirportRegistryPage() {
 
         </div>
       </div>
+
+      {/* ── Add Airport Modal ── */}
+      {showAddModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(15,23,42,0.55)", backdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center" }}
+          onClick={e => { if (e.target === e.currentTarget) setShowAddModal(false); }}>
+          <div style={{ background: "#fff", borderRadius: "0.75rem", boxShadow: "0 20px 60px rgba(0,0,0,0.25)", width: "min(620px, 95vw)", maxHeight: "90vh", overflowY: "auto" }}>
+            <div style={{ padding: "18px 24px", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f8fafc", borderTopLeftRadius: "0.75rem", borderTopRightRadius: "0.75rem" }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#1e293b" }}>Add New Airport</h3>
+                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#64748b" }}>Enter airport details below</p>
+              </div>
+              <button onClick={() => setShowAddModal(false)} style={{ background: "none", border: "1px solid #e2e8f0", cursor: "pointer", borderRadius: "6px", padding: "6px 10px", fontSize: "16px", color: "#64748b" }}>✕</button>
+            </div>
+            <form onSubmit={handleAddAirport} style={{ padding: "24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+              {[
+                { label: "Airport Name *", name: "airport_name", type: "text", placeholder: "e.g. Indira Gandhi Intl Airport" },
+                { label: "IATA Code", name: "iata_code", type: "text", placeholder: "e.g. DEL" },
+                { label: "City", name: "city", type: "text", placeholder: "e.g. New Delhi" },
+                { label: "Operator / Concessionaire", name: "operator_concessionaire", type: "text", placeholder: "e.g. GMR Group" },
+                { label: "Power Consumption (MW)", name: "power_consumption_mw", type: "text", placeholder: "e.g. 15" },
+                { label: "Solar Capacity (MW)", name: "solar_capacity_mw", type: "text", placeholder: "e.g. 7.84" },
+                { label: "Green Energy %", name: "pct_green_coverage", type: "text", placeholder: "e.g. 60%" },
+              ].map(f => (
+                <div key={f.name} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>{f.label}</label>
+                  <input name={f.name} type={f.type} placeholder={f.placeholder}
+                    value={(addForm as Record<string, unknown>)[f.name] as string ?? ""}
+                    onChange={e => setAddForm(prev => ({ ...prev, [f.name]: e.target.value }))}
+                    style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+                </div>
+              ))}
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>State / UT *</label>
+                <select value={addForm.state ?? ""} onChange={e => setAddForm(prev => ({ ...prev, state: e.target.value }))}
+                  style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                  <option value="">Select State</option>
+                  {INDIAN_STATES_AIRPORT.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Type</label>
+                <select value={addForm.type ?? ""} onChange={e => setAddForm(prev => ({ ...prev, type: e.target.value }))}
+                  style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                  <option value="">Select Type</option>
+                  {AIRPORT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Status *</label>
+                <select value={addForm.status ?? ""} onChange={e => setAddForm(prev => ({ ...prev, status: e.target.value }))}
+                  style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                  <option value="">Select Status</option>
+                  {AIRPORT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: "8px" }}>
+                <input type="checkbox" id="add_is_green" checked={addForm.is_green ?? false}
+                  onChange={e => setAddForm(prev => ({ ...prev, is_green: e.target.checked }))} />
+                <label htmlFor="add_is_green" style={{ fontSize: "13px", fontWeight: 600, color: "#16a34a", cursor: "pointer" }}>Green Certified Airport</label>
+              </div>
+              <div style={{ gridColumn: "1 / -1", display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "4px" }}>
+                <button type="button" onClick={() => setShowAddModal(false)}
+                  style={{ padding: "9px 18px", background: "#f8fafc", border: "1px solid #e2e8f0", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", color: "#374151" }}>
+                  Cancel
+                </button>
+                <button type="submit" disabled={saving}
+                  style={{ padding: "9px 20px", background: "#0d7a6e", color: "#fff", border: "none", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                  {saving ? "Adding…" : "Add Airport"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Edit Airport Modal ── */}
+      {editAirport && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1002, background: "rgba(15,23,42,0.55)", backdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center" }}
+          onClick={e => { if (e.target === e.currentTarget) setEditAirport(null); }}>
+          <div style={{ background: "#fff", borderRadius: "0.75rem", boxShadow: "0 20px 60px rgba(0,0,0,0.25)", width: "min(620px, 95vw)", maxHeight: "90vh", overflowY: "auto" }}>
+            <div style={{ padding: "18px 24px", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f8fafc", borderTopLeftRadius: "0.75rem", borderTopRightRadius: "0.75rem" }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#1e293b" }}>Edit Airport</h3>
+                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#64748b" }}>{editAirport.airport_name}</p>
+              </div>
+              <button onClick={() => setEditAirport(null)} style={{ background: "none", border: "1px solid #e2e8f0", cursor: "pointer", borderRadius: "6px", padding: "6px 10px", fontSize: "16px", color: "#64748b" }}>✕</button>
+            </div>
+            <form onSubmit={handleEditAirport} style={{ padding: "24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+              {[
+                { label: "Airport Name *", name: "airport_name", type: "text", placeholder: "" },
+                { label: "IATA Code", name: "iata_code", type: "text", placeholder: "" },
+                { label: "City", name: "city", type: "text", placeholder: "" },
+                { label: "Operator / Concessionaire", name: "operator_concessionaire", type: "text", placeholder: "" },
+                { label: "Power Consumption (MW)", name: "power_consumption_mw", type: "text", placeholder: "" },
+                { label: "Solar Capacity (MW)", name: "solar_capacity_mw", type: "text", placeholder: "" },
+                { label: "Green Energy %", name: "pct_green_coverage", type: "text", placeholder: "" },
+              ].map(f => (
+                <div key={f.name} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>{f.label}</label>
+                  <input name={f.name} type={f.type} placeholder={f.placeholder}
+                    value={(editForm as Record<string, unknown>)[f.name] as string ?? ""}
+                    onChange={e => setEditForm(prev => ({ ...prev, [f.name]: e.target.value }))}
+                    style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+                </div>
+              ))}
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>State / UT</label>
+                <select value={editForm.state ?? ""} onChange={e => setEditForm(prev => ({ ...prev, state: e.target.value }))}
+                  style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                  <option value="">Select State</option>
+                  {INDIAN_STATES_AIRPORT.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Type</label>
+                <select value={editForm.type ?? ""} onChange={e => setEditForm(prev => ({ ...prev, type: e.target.value }))}
+                  style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                  <option value="">Select Type</option>
+                  {AIRPORT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Status</label>
+                <select value={editForm.status ?? ""} onChange={e => setEditForm(prev => ({ ...prev, status: e.target.value }))}
+                  style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                  <option value="">Select Status</option>
+                  {AIRPORT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: "8px" }}>
+                <input type="checkbox" id="edit_is_green" checked={editForm.is_green ?? false}
+                  onChange={e => setEditForm(prev => ({ ...prev, is_green: e.target.checked }))} />
+                <label htmlFor="edit_is_green" style={{ fontSize: "13px", fontWeight: 600, color: "#16a34a", cursor: "pointer" }}>Green Certified Airport</label>
+              </div>
+              <div style={{ gridColumn: "1 / -1", display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "4px" }}>
+                <button type="button" onClick={() => setEditAirport(null)}
+                  style={{ padding: "9px 18px", background: "#f8fafc", border: "1px solid #e2e8f0", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", color: "#374151" }}>
+                  Cancel
+                </button>
+                <button type="submit" disabled={saving}
+                  style={{ padding: "9px 20px", background: "#0d7a6e", color: "#fff", border: "none", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                  {saving ? "Saving…" : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div style={{ maxWidth: 1400, margin: "0 auto", padding: "24px 32px" }}>
         <>
@@ -691,6 +983,9 @@ export default function AirportRegistryPage() {
         <AirportDetailPanel
           airport={selectedAirport}
           onClose={() => setSelectedAirport(null)}
+          onEdit={() => {
+            openEdit(selectedAirport);
+          }}
           onViewDeveloper={(operatorName) => {
             setSelectedAirport(null);
             navigate(`/projects/airport-developer-profiles?operator=${encodeURIComponent(operatorName)}`);
