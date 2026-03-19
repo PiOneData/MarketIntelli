@@ -60,7 +60,22 @@ export interface DataCenterFacilityCreate {
   city: string;
   state: string;
   location_detail?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   power_capacity_mw?: number;
+  it_load_mw?: number | null;
   size_sqft?: number;
   status?: string;
+  tier_level?: string | null;
+  pue_target?: number | null;
+  pue_actual?: number | null;
+  current_renewable_pct?: number | null;
+  target_renewable_pct?: number | null;
+  cooling_type?: string | null;
+  water_consumption_kld?: number | null;
+  commissioning_date?: string | null;
+  expansion_plans?: string | null;
+  compliance_status?: string | null;
 }
+
+export type DataCenterFacilityUpdate = Partial<Omit<DataCenterFacilityCreate, "company_id">>;

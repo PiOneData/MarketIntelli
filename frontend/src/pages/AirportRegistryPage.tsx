@@ -175,6 +175,12 @@ const EMPTY_AIRPORT_FORM: AirportCreate = {
   power_consumption_mw: "",
   solar_capacity_mw: "",
   pct_green_coverage: "",
+  green_energy_sources: "",
+  carbon_neutral_aci_level: "",
+  annual_passengers_mn: "",
+  no_of_runways: "",
+  latitude: null,
+  longitude: null,
   is_green: false,
 };
 
@@ -518,6 +524,12 @@ export default function AirportRegistryPage() {
       power_consumption_mw: airport.operations?.power_consumption_mw ?? "",
       solar_capacity_mw: String(airport.green_energy?.solar_capacity_installed_mw ?? ""),
       pct_green_coverage: airport.green_energy?.pct_green_coverage ?? "",
+      green_energy_sources: airport.green_energy?.green_energy_sources ?? "",
+      carbon_neutral_aci_level: airport.green_energy?.carbon_neutral_aci_level ?? "",
+      annual_passengers_mn: String(airport.operations?.annual_passengers_mn ?? ""),
+      no_of_runways: String(airport.operations?.no_of_runways ?? ""),
+      latitude: airport.lat ?? null,
+      longitude: airport.lon ?? null,
       is_green: airport.is_notable_green ?? false,
     });
     setEditAirport(airport);
@@ -655,54 +667,102 @@ export default function AirportRegistryPage() {
               </div>
               <button onClick={() => setShowAddModal(false)} style={{ background: "none", border: "1px solid #e2e8f0", cursor: "pointer", borderRadius: "6px", padding: "6px 10px", fontSize: "16px", color: "#64748b" }}>✕</button>
             </div>
-            <form onSubmit={handleAddAirport} style={{ padding: "24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-              {[
-                { label: "Airport Name *", name: "airport_name", type: "text", placeholder: "e.g. Indira Gandhi Intl Airport" },
-                { label: "IATA Code", name: "iata_code", type: "text", placeholder: "e.g. DEL" },
-                { label: "City", name: "city", type: "text", placeholder: "e.g. New Delhi" },
-                { label: "Operator / Concessionaire", name: "operator_concessionaire", type: "text", placeholder: "e.g. GMR Group" },
-                { label: "Power Consumption (MW)", name: "power_consumption_mw", type: "text", placeholder: "e.g. 15" },
-                { label: "Solar Capacity (MW)", name: "solar_capacity_mw", type: "text", placeholder: "e.g. 7.84" },
-                { label: "Green Energy %", name: "pct_green_coverage", type: "text", placeholder: "e.g. 60%" },
-              ].map(f => (
-                <div key={f.name} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>{f.label}</label>
-                  <input name={f.name} type={f.type} placeholder={f.placeholder}
-                    value={(addForm as Record<string, unknown>)[f.name] as string ?? ""}
-                    onChange={e => setAddForm(prev => ({ ...prev, [f.name]: e.target.value }))}
-                    style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+            <form onSubmit={handleAddAirport} style={{ padding: "24px" }}>
+              {/* Basic Info */}
+              <div style={{ marginBottom: "6px", fontSize: "11px", fontWeight: 800, color: "#0d7a6e", textTransform: "uppercase", letterSpacing: "0.07em" }}>Basic Info</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                {[
+                  { label: "Airport Name *", name: "airport_name", placeholder: "e.g. Indira Gandhi Intl Airport" },
+                  { label: "IATA Code", name: "iata_code", placeholder: "e.g. DEL" },
+                  { label: "City", name: "city", placeholder: "e.g. New Delhi" },
+                  { label: "Operator / Concessionaire", name: "operator_concessionaire", placeholder: "e.g. GMR Group" },
+                ].map(f => (
+                  <div key={f.name} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>{f.label}</label>
+                    <input name={f.name} type="text" placeholder={f.placeholder}
+                      value={(addForm as Record<string, unknown>)[f.name] as string ?? ""}
+                      onChange={e => setAddForm(prev => ({ ...prev, [e.target.name]: e.target.value }))}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+                  </div>
+                ))}
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>State / UT *</label>
+                  <select value={addForm.state ?? ""} onChange={e => setAddForm(prev => ({ ...prev, state: e.target.value }))}
+                    style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                    <option value="">Select State</option>
+                    {INDIAN_STATES_AIRPORT.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
                 </div>
-              ))}
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>State / UT *</label>
-                <select value={addForm.state ?? ""} onChange={e => setAddForm(prev => ({ ...prev, state: e.target.value }))}
-                  style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
-                  <option value="">Select State</option>
-                  {INDIAN_STATES_AIRPORT.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Type</label>
+                  <select value={addForm.type ?? ""} onChange={e => setAddForm(prev => ({ ...prev, type: e.target.value }))}
+                    style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                    <option value="">Select Type</option>
+                    {AIRPORT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Status *</label>
+                  <select value={addForm.status ?? ""} onChange={e => setAddForm(prev => ({ ...prev, status: e.target.value }))}
+                    style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                    <option value="">Select Status</option>
+                    {AIRPORT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Type</label>
-                <select value={addForm.type ?? ""} onChange={e => setAddForm(prev => ({ ...prev, type: e.target.value }))}
-                  style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
-                  <option value="">Select Type</option>
-                  {AIRPORT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
+              {/* Operations */}
+              <div style={{ marginBottom: "6px", fontSize: "11px", fontWeight: 800, color: "#0369a1", textTransform: "uppercase", letterSpacing: "0.07em" }}>Operations</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                {[
+                  { label: "Power Consumption (MW)", name: "power_consumption_mw", placeholder: "e.g. 15" },
+                  { label: "Annual Passengers (Mn)", name: "annual_passengers_mn", placeholder: "e.g. 69.9" },
+                  { label: "Number of Runways", name: "no_of_runways", placeholder: "e.g. 3" },
+                ].map(f => (
+                  <div key={f.name} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>{f.label}</label>
+                    <input name={f.name} type="text" placeholder={f.placeholder}
+                      value={(addForm as Record<string, unknown>)[f.name] as string ?? ""}
+                      onChange={e => setAddForm(prev => ({ ...prev, [e.target.name]: e.target.value }))}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+                  </div>
+                ))}
+                {[
+                  { label: "Latitude", field: "latitude" },
+                  { label: "Longitude", field: "longitude" },
+                ].map(f => (
+                  <div key={f.field} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>{f.label}</label>
+                    <input type="number" step="any" placeholder={f.field === "latitude" ? "e.g. 28.5665" : "e.g. 77.1031"}
+                      value={(addForm as Record<string, unknown>)[f.field] as string ?? ""}
+                      onChange={e => setAddForm(prev => ({ ...prev, [f.field]: e.target.value ? Number(e.target.value) : null }))}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+                  </div>
+                ))}
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Status *</label>
-                <select value={addForm.status ?? ""} onChange={e => setAddForm(prev => ({ ...prev, status: e.target.value }))}
-                  style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
-                  <option value="">Select Status</option>
-                  {AIRPORT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+              {/* Green Energy */}
+              <div style={{ marginBottom: "6px", fontSize: "11px", fontWeight: 800, color: "#16a34a", textTransform: "uppercase", letterSpacing: "0.07em" }}>Green Energy</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                {[
+                  { label: "Solar Capacity (MW)", name: "solar_capacity_mw", placeholder: "e.g. 7.84" },
+                  { label: "Green Energy %", name: "pct_green_coverage", placeholder: "e.g. 60%" },
+                  { label: "Green Energy Sources", name: "green_energy_sources", placeholder: "e.g. Solar, Wind" },
+                  { label: "ACI Carbon Neutral Level", name: "carbon_neutral_aci_level", placeholder: "e.g. Level 3" },
+                ].map(f => (
+                  <div key={f.name} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>{f.label}</label>
+                    <input name={f.name} type="text" placeholder={f.placeholder}
+                      value={(addForm as Record<string, unknown>)[f.name] as string ?? ""}
+                      onChange={e => setAddForm(prev => ({ ...prev, [e.target.name]: e.target.value }))}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+                  </div>
+                ))}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", gridColumn: "1 / -1" }}>
+                  <input type="checkbox" id="add_is_green" checked={addForm.is_green ?? false}
+                    onChange={e => setAddForm(prev => ({ ...prev, is_green: e.target.checked }))} />
+                  <label htmlFor="add_is_green" style={{ fontSize: "13px", fontWeight: 600, color: "#16a34a", cursor: "pointer" }}>Green Certified Airport</label>
+                </div>
               </div>
-              <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: "8px" }}>
-                <input type="checkbox" id="add_is_green" checked={addForm.is_green ?? false}
-                  onChange={e => setAddForm(prev => ({ ...prev, is_green: e.target.checked }))} />
-                <label htmlFor="add_is_green" style={{ fontSize: "13px", fontWeight: 600, color: "#16a34a", cursor: "pointer" }}>Green Certified Airport</label>
-              </div>
-              <div style={{ gridColumn: "1 / -1", display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "4px" }}>
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "4px" }}>
                 <button type="button" onClick={() => setShowAddModal(false)}
                   style={{ padding: "9px 18px", background: "#f8fafc", border: "1px solid #e2e8f0", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", color: "#374151" }}>
                   Cancel
@@ -729,54 +789,102 @@ export default function AirportRegistryPage() {
               </div>
               <button onClick={() => setEditAirport(null)} style={{ background: "none", border: "1px solid #e2e8f0", cursor: "pointer", borderRadius: "6px", padding: "6px 10px", fontSize: "16px", color: "#64748b" }}>✕</button>
             </div>
-            <form onSubmit={handleEditAirport} style={{ padding: "24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-              {[
-                { label: "Airport Name *", name: "airport_name", type: "text", placeholder: "" },
-                { label: "IATA Code", name: "iata_code", type: "text", placeholder: "" },
-                { label: "City", name: "city", type: "text", placeholder: "" },
-                { label: "Operator / Concessionaire", name: "operator_concessionaire", type: "text", placeholder: "" },
-                { label: "Power Consumption (MW)", name: "power_consumption_mw", type: "text", placeholder: "" },
-                { label: "Solar Capacity (MW)", name: "solar_capacity_mw", type: "text", placeholder: "" },
-                { label: "Green Energy %", name: "pct_green_coverage", type: "text", placeholder: "" },
-              ].map(f => (
-                <div key={f.name} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>{f.label}</label>
-                  <input name={f.name} type={f.type} placeholder={f.placeholder}
-                    value={(editForm as Record<string, unknown>)[f.name] as string ?? ""}
-                    onChange={e => setEditForm(prev => ({ ...prev, [f.name]: e.target.value }))}
-                    style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+            <form onSubmit={handleEditAirport} style={{ padding: "24px" }}>
+              {/* Basic Info */}
+              <div style={{ marginBottom: "6px", fontSize: "11px", fontWeight: 800, color: "#0d7a6e", textTransform: "uppercase", letterSpacing: "0.07em" }}>Basic Info</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                {[
+                  { label: "Airport Name *", name: "airport_name" },
+                  { label: "IATA Code", name: "iata_code" },
+                  { label: "City", name: "city" },
+                  { label: "Operator / Concessionaire", name: "operator_concessionaire" },
+                ].map(f => (
+                  <div key={f.name} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>{f.label}</label>
+                    <input name={f.name} type="text"
+                      value={(editForm as Record<string, unknown>)[f.name] as string ?? ""}
+                      onChange={e => setEditForm(prev => ({ ...prev, [e.target.name]: e.target.value }))}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+                  </div>
+                ))}
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>State / UT</label>
+                  <select value={editForm.state ?? ""} onChange={e => setEditForm(prev => ({ ...prev, state: e.target.value }))}
+                    style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                    <option value="">Select State</option>
+                    {INDIAN_STATES_AIRPORT.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
                 </div>
-              ))}
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>State / UT</label>
-                <select value={editForm.state ?? ""} onChange={e => setEditForm(prev => ({ ...prev, state: e.target.value }))}
-                  style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
-                  <option value="">Select State</option>
-                  {INDIAN_STATES_AIRPORT.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Type</label>
+                  <select value={editForm.type ?? ""} onChange={e => setEditForm(prev => ({ ...prev, type: e.target.value }))}
+                    style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                    <option value="">Select Type</option>
+                    {AIRPORT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Status</label>
+                  <select value={editForm.status ?? ""} onChange={e => setEditForm(prev => ({ ...prev, status: e.target.value }))}
+                    style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                    <option value="">Select Status</option>
+                    {AIRPORT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Type</label>
-                <select value={editForm.type ?? ""} onChange={e => setEditForm(prev => ({ ...prev, type: e.target.value }))}
-                  style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
-                  <option value="">Select Type</option>
-                  {AIRPORT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
+              {/* Operations */}
+              <div style={{ marginBottom: "6px", fontSize: "11px", fontWeight: 800, color: "#0369a1", textTransform: "uppercase", letterSpacing: "0.07em" }}>Operations</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                {[
+                  { label: "Power Consumption (MW)", name: "power_consumption_mw" },
+                  { label: "Annual Passengers (Mn)", name: "annual_passengers_mn" },
+                  { label: "Number of Runways", name: "no_of_runways" },
+                ].map(f => (
+                  <div key={f.name} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>{f.label}</label>
+                    <input name={f.name} type="text"
+                      value={(editForm as Record<string, unknown>)[f.name] as string ?? ""}
+                      onChange={e => setEditForm(prev => ({ ...prev, [e.target.name]: e.target.value }))}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+                  </div>
+                ))}
+                {[
+                  { label: "Latitude", field: "latitude" },
+                  { label: "Longitude", field: "longitude" },
+                ].map(f => (
+                  <div key={f.field} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>{f.label}</label>
+                    <input type="number" step="any"
+                      value={(editForm as Record<string, unknown>)[f.field] as string ?? ""}
+                      onChange={e => setEditForm(prev => ({ ...prev, [f.field]: e.target.value ? Number(e.target.value) : null }))}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+                  </div>
+                ))}
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Status</label>
-                <select value={editForm.status ?? ""} onChange={e => setEditForm(prev => ({ ...prev, status: e.target.value }))}
-                  style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
-                  <option value="">Select Status</option>
-                  {AIRPORT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+              {/* Green Energy */}
+              <div style={{ marginBottom: "6px", fontSize: "11px", fontWeight: 800, color: "#16a34a", textTransform: "uppercase", letterSpacing: "0.07em" }}>Green Energy</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                {[
+                  { label: "Solar Capacity (MW)", name: "solar_capacity_mw" },
+                  { label: "Green Energy %", name: "pct_green_coverage" },
+                  { label: "Green Energy Sources", name: "green_energy_sources" },
+                  { label: "ACI Carbon Neutral Level", name: "carbon_neutral_aci_level" },
+                ].map(f => (
+                  <div key={f.name} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>{f.label}</label>
+                    <input name={f.name} type="text"
+                      value={(editForm as Record<string, unknown>)[f.name] as string ?? ""}
+                      onChange={e => setEditForm(prev => ({ ...prev, [e.target.name]: e.target.value }))}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+                  </div>
+                ))}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", gridColumn: "1 / -1" }}>
+                  <input type="checkbox" id="edit_is_green" checked={editForm.is_green ?? false}
+                    onChange={e => setEditForm(prev => ({ ...prev, is_green: e.target.checked }))} />
+                  <label htmlFor="edit_is_green" style={{ fontSize: "13px", fontWeight: 600, color: "#16a34a", cursor: "pointer" }}>Green Certified Airport</label>
+                </div>
               </div>
-              <div style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: "8px" }}>
-                <input type="checkbox" id="edit_is_green" checked={editForm.is_green ?? false}
-                  onChange={e => setEditForm(prev => ({ ...prev, is_green: e.target.checked }))} />
-                <label htmlFor="edit_is_green" style={{ fontSize: "13px", fontWeight: 600, color: "#16a34a", cursor: "pointer" }}>Green Certified Airport</label>
-              </div>
-              <div style={{ gridColumn: "1 / -1", display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "4px" }}>
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "4px" }}>
                 <button type="button" onClick={() => setEditAirport(null)}
                   style={{ padding: "9px 18px", background: "#f8fafc", border: "1px solid #e2e8f0", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", color: "#374151" }}>
                   Cancel

@@ -293,6 +293,16 @@ const THEME_TO_CATEGORY: Record<string, string> = {
   "Renewable Energy": "renewable_energy",
 };
 
+function formatBriefGenerated(isoUtc: string): string {
+  const dt = new Date(isoUtc);
+  const time = dt.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" });
+  const dateStr = dt.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "2-digit", month: "2-digit", year: "numeric" });
+  const todayStr = new Date().toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "2-digit", month: "2-digit", year: "numeric" });
+  return dateStr === todayStr
+    ? `Generated today at ${time} IST`
+    : `Generated on ${dateStr} at ${time} IST`;
+}
+
 function DailyBriefPanel() {
   const [collapsed, setCollapsed] = useState(false);
   const { data, isLoading } = useDailyBrief();
@@ -341,11 +351,7 @@ function DailyBriefPanel() {
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           {data?.generated_at && (
             <span style={{ fontSize: "11px", color: "#94a3b8" }}>
-              Generated {new Date(data.generated_at).toLocaleTimeString("en-IN", {
-                timeZone: "Asia/Kolkata",
-                hour: "2-digit",
-                minute: "2-digit",
-              })} IST
+              {formatBriefGenerated(data.generated_at)}
             </span>
           )}
           <span style={{ fontSize: "12px", color: "#7c3aed", fontWeight: 700 }}>
