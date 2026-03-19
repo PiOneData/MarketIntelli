@@ -1434,6 +1434,22 @@ const UPCOMING_PROJECTS: UpcomingProject[] = [
     description:
       "STT GDC India's hyperscale expansion in Chennai's OMR corridor adding 100 MW IT capacity, catering to Southeast Asia and global connectivity via the Chennai cable landing stations.",
   },
+  {
+    id: 6,
+    name: "Google Cloud — Visakhapatnam Campus",
+    developer: "Google LLC (India)",
+    parentListed: "Alphabet Inc.",
+    ticker: "GOOGL",
+    exchange: "NASDAQ",
+    state: "Andhra Pradesh",
+    capacityMW: 200,
+    type: "Hyperscale",
+    status: "Planning",
+    expectedCOD: "2027–2028",
+    investmentCr: 11000,
+    description:
+      "Google's announced hyperscale data center campus near Visakhapatnam, part of Alphabet's ₹11,000 Cr India investment commitment. The facility will run on 100% renewable energy and support Google Cloud's asia-south expansion for sovereign cloud and AI workloads.",
+  },
 ];
 
 const PROJECT_TYPE_COLORS: Record<string, { bg: string; color: string; icon: string }> = {
