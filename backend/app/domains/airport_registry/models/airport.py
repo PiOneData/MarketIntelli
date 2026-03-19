@@ -13,8 +13,8 @@ class Airport(Base):
     __tablename__ = "airports"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4, init=False)
-    sno: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
     airport_name: Mapped[str] = mapped_column(String(500))
+    sno: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
     iata_code: Mapped[str | None] = mapped_column(String(10), nullable=True, default=None)
     city: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)
     state: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)

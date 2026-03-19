@@ -15,7 +15,7 @@ class DeveloperRead(BaseModel):
 
 class DeveloperCreate(BaseModel):
     name: str
-    headquarters: str
+    headquarters: str = ""
     total_capacity_mw: float = 0.0
     risk_score: float = 0.0
     projects_completed: int = 0
