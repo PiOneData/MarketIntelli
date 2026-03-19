@@ -338,6 +338,14 @@ export default function DashboardPage() {
                 <a href="https://www.ceew.in/publications/how-is-data-centre-infrastructure-in-india-shaping-power-and-water-use" target="_blank" rel="noopener noreferrer" className="pgen-trends-src-link">CEEW 2024</a>
               </div>
             </div>
+            <div className="hs-proj-bar">
+              <span>📈 2030 Projection</span>
+              <span className="hs-proj-dot">·</span>
+              <span className="hs-proj-num">~25 GW</span>
+              <span className="hs-proj-dot">demand forecast</span>
+              <span className="hs-proj-dot">·</span>
+              <a href="https://www.ibef.org/industry/data-center-india" target="_blank" rel="noopener noreferrer" className="pgen-trends-src-link">IBEF / CEA</a>
+            </div>
           </div>
           <div className="hs-group">
             <div className="hs-group-header">
