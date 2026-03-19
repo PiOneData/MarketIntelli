@@ -4,6 +4,7 @@ import type {
   DataCenterFacility,
   FacilityStats,
   DataCenterFacilityCreate,
+  DataCenterFacilityUpdate,
 } from "../types/dataCenters";
 
 export async function listCompanies(params?: {
@@ -48,6 +49,14 @@ export async function createFacility(
   facility: DataCenterFacilityCreate
 ): Promise<DataCenterFacility> {
   const { data } = await apiClient.post("/data-centers/facilities", facility);
+  return data;
+}
+
+export async function updateFacility(
+  id: string,
+  payload: DataCenterFacilityUpdate
+): Promise<DataCenterFacility> {
+  const { data } = await apiClient.put(`/data-centers/facilities/${id}`, payload);
   return data;
 }
 

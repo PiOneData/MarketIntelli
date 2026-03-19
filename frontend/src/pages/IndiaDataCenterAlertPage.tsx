@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import SubstationView from "../components/SubstationView";
 import { useFacilities, useFacilityStats } from "../hooks/useDataCenters";
-import { listFacilities, createFacility, createCompany, linkDeveloperToCompany } from "../api/dataCenters";
+import { listFacilities, createFacility, updateFacility, createCompany, linkDeveloperToCompany } from "../api/dataCenters";
 import { useQueryClient } from "@tanstack/react-query";
 import type { DataCenterFacility } from "../types/dataCenters";
 import apiClient from "../api/client";
@@ -64,14 +64,29 @@ const STATUS_DISPLAY: Record<string, string> = {
   operational: "Operational",
 };
 
+const TIER_OPTIONS = ["Tier I", "Tier II", "Tier III", "Tier IV"];
+const COOLING_OPTIONS = ["Air Cooled", "Water Cooled", "Liquid Cooled", "Free Cooling", "Hybrid", "Immersion Cooling"];
+const COMPLIANCE_OPTIONS = ["BEE 4-star", "BEE 5-star", "ISO 27001", "ISO 50001", "LEED", "GRIHA", "Compliant", "Pending", "Non-compliant"];
+
 const EMPTY_FORM = {
   company: "",
   city: "",
   location: "",
   state: "",
   powerMW: "",
+  itLoadMW: "",
   sizeSqFt: "",
   status: "",
+  tierLevel: "",
+  coolingType: "",
+  currentRePct: "",
+  targetRePct: "",
+  pueTarget: "",
+  pueActual: "",
+  waterKLD: "",
+  commissioningDate: "",
+  expansionPlans: "",
+  complianceStatus: "",
 };
 
 type SortField = "company_name" | "city" | "state" | "power_capacity_mw" | "size_sqft" | "status" | "current_renewable_pct";
@@ -502,6 +517,8 @@ function IndiaDataCenterAlertPage() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(EMPTY_FORM);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editFacility, setEditFacility] = useState<DataCenterFacility | null>(null);
+  const [editForm, setEditForm] = useState(EMPTY_FORM);
   const [filters, setFilters] = useState({ state: "", city: "", company: "", power: "", greenOnly: false });
   const [activeTab, setActiveTab] = useState<"registry" | "substations">("registry");
   const [stocksByCompany, setStocksByCompany] = useState<Record<string, DcStock>>({});
@@ -603,8 +620,19 @@ function IndiaDataCenterAlertPage() {
         state: form.state,
         location_detail: form.location,
         power_capacity_mw: Number(form.powerMW) || 0,
+        it_load_mw: form.itLoadMW ? Number(form.itLoadMW) : null,
         size_sqft: Number(form.sizeSqFt) || 0,
         status: form.status,
+        tier_level: form.tierLevel || null,
+        cooling_type: form.coolingType || null,
+        current_renewable_pct: form.currentRePct ? Number(form.currentRePct) : null,
+        target_renewable_pct: form.targetRePct ? Number(form.targetRePct) : null,
+        pue_target: form.pueTarget ? Number(form.pueTarget) : null,
+        pue_actual: form.pueActual ? Number(form.pueActual) : null,
+        water_consumption_kld: form.waterKLD ? Number(form.waterKLD) : null,
+        commissioning_date: form.commissioningDate || null,
+        expansion_plans: form.expansionPlans || null,
+        compliance_status: form.complianceStatus || null,
       });
       queryClient.invalidateQueries({ queryKey: ["dc-facilities"] });
       queryClient.invalidateQueries({ queryKey: ["dc-facility-stats"] });
@@ -613,6 +641,63 @@ function IndiaDataCenterAlertPage() {
     } catch (err) {
       console.error("Failed to add data center:", err);
       alert("Failed to add data center. Please try again.");
+    }
+  };
+
+  const openEditModal = (f: DataCenterFacility) => {
+    setEditFacility(f);
+    setEditForm({
+      company: f.company_name,
+      city: f.city,
+      location: f.location_detail || f.name,
+      state: f.state,
+      powerMW: String(f.power_capacity_mw ?? ""),
+      itLoadMW: f.it_load_mw != null ? String(f.it_load_mw) : "",
+      sizeSqFt: String(f.size_sqft ?? ""),
+      status: f.status,
+      tierLevel: f.tier_level || "",
+      coolingType: f.cooling_type || "",
+      currentRePct: f.current_renewable_pct != null ? String(f.current_renewable_pct) : "",
+      targetRePct: f.target_renewable_pct != null ? String(f.target_renewable_pct) : "",
+      pueTarget: f.pue_target != null ? String(f.pue_target) : "",
+      pueActual: f.pue_actual != null ? String(f.pue_actual) : "",
+      waterKLD: f.water_consumption_kld != null ? String(f.water_consumption_kld) : "",
+      commissioningDate: f.commissioning_date ? f.commissioning_date.substring(0, 10) : "",
+      expansionPlans: f.expansion_plans || "",
+      complianceStatus: f.compliance_status || "",
+    });
+  };
+
+  const handleEditDataCenter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editFacility) return;
+    try {
+      await updateFacility(editFacility.id, {
+        name: editForm.location || `${editForm.city} Data Center`,
+        city: editForm.city,
+        state: editForm.state,
+        location_detail: editForm.location,
+        power_capacity_mw: Number(editForm.powerMW) || 0,
+        it_load_mw: editForm.itLoadMW ? Number(editForm.itLoadMW) : null,
+        size_sqft: Number(editForm.sizeSqFt) || 0,
+        status: editForm.status,
+        tier_level: editForm.tierLevel || null,
+        cooling_type: editForm.coolingType || null,
+        current_renewable_pct: editForm.currentRePct ? Number(editForm.currentRePct) : null,
+        target_renewable_pct: editForm.targetRePct ? Number(editForm.targetRePct) : null,
+        pue_target: editForm.pueTarget ? Number(editForm.pueTarget) : null,
+        pue_actual: editForm.pueActual ? Number(editForm.pueActual) : null,
+        water_consumption_kld: editForm.waterKLD ? Number(editForm.waterKLD) : null,
+        commissioning_date: editForm.commissioningDate || null,
+        expansion_plans: editForm.expansionPlans || null,
+        compliance_status: editForm.complianceStatus || null,
+      });
+      queryClient.invalidateQueries({ queryKey: ["dc-facilities"] });
+      queryClient.invalidateQueries({ queryKey: ["dc-facility-stats"] });
+      setEditFacility(null);
+    } catch (err) {
+      console.error("Failed to update data center:", err);
+      alert("Failed to update data center. Please try again.");
     }
   };
 
@@ -743,7 +828,7 @@ function IndiaDataCenterAlertPage() {
           <div style={{
             background: "#fff", borderRadius: "0.75rem",
             boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
-            width: "min(600px, 95vw)", maxHeight: "90vh", overflowY: "auto",
+            width: "min(720px, 95vw)", maxHeight: "90vh", overflowY: "auto",
           }}>
             {/* Modal header */}
             <div style={{
@@ -768,52 +853,279 @@ function IndiaDataCenterAlertPage() {
             </div>
             {/* Modal body / form */}
             <div style={{ padding: "24px" }}>
-              <form onSubmit={handleAddDataCenter} className="india-dc-form">
-                <div className="india-dc-form-grid">
-                  <div className="india-dc-field">
-                    <label htmlFor="company">Company / Group</label>
-                    <input id="company" name="company" type="text" placeholder="e.g. Adani Group" value={form.company} onChange={handleFormChange} />
-                  </div>
-                  <div className="india-dc-field">
-                    <label htmlFor="city">City</label>
-                    <input id="city" name="city" type="text" placeholder="e.g. Mumbai" value={form.city} onChange={handleFormChange} />
-                  </div>
-                  <div className="india-dc-field">
-                    <label htmlFor="location">Location</label>
-                    <input id="location" name="location" type="text" placeholder="e.g. Navi Mumbai SEZ" value={form.location} onChange={handleFormChange} />
-                  </div>
-                  <div className="india-dc-field">
-                    <label htmlFor="state">State</label>
-                    <select id="state" name="state" value={form.state} onChange={handleFormChange}>
+              <form onSubmit={handleAddDataCenter}>
+                {/* Basic Info */}
+                <div style={{ marginBottom: "6px", fontSize: "11px", fontWeight: 800, color: "#0d7a6e", textTransform: "uppercase", letterSpacing: "0.07em" }}>Basic Info</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                  {[
+                    { id: "company", label: "Company / Group *", placeholder: "e.g. Adani Group", type: "text" },
+                    { id: "city", label: "City *", placeholder: "e.g. Mumbai", type: "text" },
+                    { id: "location", label: "Location / Facility Name", placeholder: "e.g. Navi Mumbai SEZ", type: "text" },
+                  ].map(f => (
+                    <div key={f.id} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>{f.label}</label>
+                      <input name={f.id} type={f.type} placeholder={f.placeholder}
+                        value={(form as Record<string, string>)[f.id]}
+                        onChange={handleFormChange}
+                        style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>State *</label>
+                    <select name="state" value={form.state} onChange={handleFormChange}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
                       <option value="">Select State</option>
-                      {INDIAN_STATES.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
+                      {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
-                  <div className="india-dc-field">
-                    <label htmlFor="powerMW">Power Needs (MW)</label>
-                    <input id="powerMW" name="powerMW" type="number" placeholder="e.g. 50" value={form.powerMW} onChange={handleFormChange} />
-                  </div>
-                  <div className="india-dc-field">
-                    <label htmlFor="sizeSqFt">Size (Sq. Ft.)</label>
-                    <input id="sizeSqFt" name="sizeSqFt" type="number" placeholder="e.g. 200000" value={form.sizeSqFt} onChange={handleFormChange} />
-                  </div>
-                  <div className="india-dc-field">
-                    <label htmlFor="status">Status</label>
-                    <select id="status" name="status" value={form.status} onChange={handleFormChange}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Status *</label>
+                    <select name="status" value={form.status} onChange={handleFormChange}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
                       <option value="">Select Status</option>
-                      {STATUS_OPTIONS.map((s) => (
-                        <option key={s} value={s}>{STATUS_DISPLAY[s]}</option>
-                      ))}
+                      {STATUS_OPTIONS.map(s => <option key={s} value={s}>{STATUS_DISPLAY[s]}</option>)}
                     </select>
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: "10px", marginTop: "20px", justifyContent: "flex-end" }}>
+                {/* Technical Specs */}
+                <div style={{ marginBottom: "6px", fontSize: "11px", fontWeight: 800, color: "#0369a1", textTransform: "uppercase", letterSpacing: "0.07em" }}>Technical Specs</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                  {[
+                    { id: "powerMW", label: "Power Capacity (MW)", placeholder: "e.g. 50" },
+                    { id: "itLoadMW", label: "IT Load (MW)", placeholder: "e.g. 40" },
+                    { id: "sizeSqFt", label: "Size (Sq. Ft.)", placeholder: "e.g. 200000" },
+                  ].map(f => (
+                    <div key={f.id} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>{f.label}</label>
+                      <input name={f.id} type="number" placeholder={f.placeholder}
+                        value={(form as Record<string, string>)[f.id]}
+                        onChange={handleFormChange}
+                        style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Tier Level</label>
+                    <select name="tierLevel" value={form.tierLevel} onChange={handleFormChange}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                      <option value="">Select Tier</option>
+                      {TIER_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Cooling Type</label>
+                    <select name="coolingType" value={form.coolingType} onChange={handleFormChange}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                      <option value="">Select Cooling</option>
+                      {COOLING_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                </div>
+                {/* Sustainability */}
+                <div style={{ marginBottom: "6px", fontSize: "11px", fontWeight: 800, color: "#16a34a", textTransform: "uppercase", letterSpacing: "0.07em" }}>Sustainability</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                  {[
+                    { id: "currentRePct", label: "Current RE %", placeholder: "e.g. 30" },
+                    { id: "targetRePct", label: "Target RE %", placeholder: "e.g. 100" },
+                    { id: "pueTarget", label: "PUE Target", placeholder: "e.g. 1.4" },
+                    { id: "pueActual", label: "PUE Actual", placeholder: "e.g. 1.6" },
+                    { id: "waterKLD", label: "Water Consumption (KLD)", placeholder: "e.g. 200" },
+                  ].map(f => (
+                    <div key={f.id} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>{f.label}</label>
+                      <input name={f.id} type="number" placeholder={f.placeholder}
+                        value={(form as Record<string, string>)[f.id]}
+                        onChange={handleFormChange}
+                        style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+                    </div>
+                  ))}
+                </div>
+                {/* Operations */}
+                <div style={{ marginBottom: "6px", fontSize: "11px", fontWeight: 800, color: "#7c3aed", textTransform: "uppercase", letterSpacing: "0.07em" }}>Operations</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Commissioning Date</label>
+                    <input name="commissioningDate" type="date"
+                      value={form.commissioningDate}
+                      onChange={handleFormChange}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Compliance Status</label>
+                    <select name="complianceStatus" value={form.complianceStatus} onChange={handleFormChange}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                      <option value="">Select Compliance</option>
+                      {COMPLIANCE_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px", gridColumn: "1 / -1" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Expansion Plans</label>
+                    <textarea name="expansionPlans"
+                      value={form.expansionPlans}
+                      onChange={(e) => setForm({ ...form, expansionPlans: e.target.value })}
+                      placeholder="e.g. Phase 2 – 200MW planned for 2026"
+                      rows={2}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit", resize: "vertical" }} />
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: "10px", marginTop: "4px", justifyContent: "flex-end" }}>
                   <button type="button" className="india-dc-btn india-dc-btn--outline" onClick={() => setShowAddModal(false)}>
                     Cancel
                   </button>
                   <button type="submit" className="india-dc-btn india-dc-btn--primary">Add Data Center</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Data Center Modal */}
+      {editFacility && (
+        <div
+          style={{
+            position: "fixed", inset: 0, zIndex: 1002,
+            background: "rgba(15,23,42,0.55)", backdropFilter: "blur(3px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setEditFacility(null); }}
+        >
+          <div style={{
+            background: "#fff", borderRadius: "0.75rem",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.25)",
+            width: "min(720px, 95vw)", maxHeight: "90vh", overflowY: "auto",
+          }}>
+            <div style={{
+              padding: "18px 24px", borderBottom: "1px solid #e2e8f0",
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              borderTopLeftRadius: "0.75rem", borderTopRightRadius: "0.75rem",
+              background: "#f8fafc",
+            }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#1e293b" }}>Edit Data Center</h3>
+                <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#64748b" }}>{editFacility.company_name} — {editFacility.city}</p>
+              </div>
+              <button
+                onClick={() => setEditFacility(null)}
+                style={{ background: "none", border: "1px solid #e2e8f0", cursor: "pointer", borderRadius: "6px", padding: "6px 10px", fontSize: "16px", color: "#64748b", lineHeight: 1 }}
+              >✕</button>
+            </div>
+            <div style={{ padding: "24px" }}>
+              <form onSubmit={handleEditDataCenter}>
+                {/* Basic Info */}
+                <div style={{ marginBottom: "6px", fontSize: "11px", fontWeight: 800, color: "#0d7a6e", textTransform: "uppercase", letterSpacing: "0.07em" }}>Basic Info</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                  {[
+                    { id: "city", label: "City *", placeholder: "e.g. Mumbai", type: "text" },
+                    { id: "location", label: "Location / Facility Name", placeholder: "e.g. Navi Mumbai SEZ", type: "text" },
+                  ].map(f => (
+                    <div key={f.id} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>{f.label}</label>
+                      <input name={f.id} type={f.type} placeholder={f.placeholder}
+                        value={(editForm as Record<string, string>)[f.id]}
+                        onChange={e => setEditForm(prev => ({ ...prev, [e.target.name]: e.target.value }))}
+                        style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>State *</label>
+                    <select name="state" value={editForm.state} onChange={e => setEditForm(prev => ({ ...prev, state: e.target.value }))}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                      <option value="">Select State</option>
+                      {INDIAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Status *</label>
+                    <select name="status" value={editForm.status} onChange={e => setEditForm(prev => ({ ...prev, status: e.target.value }))}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                      <option value="">Select Status</option>
+                      {STATUS_OPTIONS.map(s => <option key={s} value={s}>{STATUS_DISPLAY[s]}</option>)}
+                    </select>
+                  </div>
+                </div>
+                {/* Technical Specs */}
+                <div style={{ marginBottom: "6px", fontSize: "11px", fontWeight: 800, color: "#0369a1", textTransform: "uppercase", letterSpacing: "0.07em" }}>Technical Specs</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                  {[
+                    { id: "powerMW", label: "Power Capacity (MW)", placeholder: "e.g. 50" },
+                    { id: "itLoadMW", label: "IT Load (MW)", placeholder: "e.g. 40" },
+                    { id: "sizeSqFt", label: "Size (Sq. Ft.)", placeholder: "e.g. 200000" },
+                  ].map(f => (
+                    <div key={f.id} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>{f.label}</label>
+                      <input name={f.id} type="number" placeholder={f.placeholder}
+                        value={(editForm as Record<string, string>)[f.id]}
+                        onChange={e => setEditForm(prev => ({ ...prev, [e.target.name]: e.target.value }))}
+                        style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Tier Level</label>
+                    <select value={editForm.tierLevel} onChange={e => setEditForm(prev => ({ ...prev, tierLevel: e.target.value }))}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                      <option value="">Select Tier</option>
+                      {TIER_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Cooling Type</label>
+                    <select value={editForm.coolingType} onChange={e => setEditForm(prev => ({ ...prev, coolingType: e.target.value }))}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                      <option value="">Select Cooling</option>
+                      {COOLING_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                </div>
+                {/* Sustainability */}
+                <div style={{ marginBottom: "6px", fontSize: "11px", fontWeight: 800, color: "#16a34a", textTransform: "uppercase", letterSpacing: "0.07em" }}>Sustainability</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                  {[
+                    { id: "currentRePct", label: "Current RE %", placeholder: "e.g. 30" },
+                    { id: "targetRePct", label: "Target RE %", placeholder: "e.g. 100" },
+                    { id: "pueTarget", label: "PUE Target", placeholder: "e.g. 1.4" },
+                    { id: "pueActual", label: "PUE Actual", placeholder: "e.g. 1.6" },
+                    { id: "waterKLD", label: "Water Consumption (KLD)", placeholder: "e.g. 200" },
+                  ].map(f => (
+                    <div key={f.id} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>{f.label}</label>
+                      <input name={f.id} type="number" placeholder={f.placeholder}
+                        value={(editForm as Record<string, string>)[f.id]}
+                        onChange={e => setEditForm(prev => ({ ...prev, [e.target.name]: e.target.value }))}
+                        style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+                    </div>
+                  ))}
+                </div>
+                {/* Operations */}
+                <div style={{ marginBottom: "6px", fontSize: "11px", fontWeight: 800, color: "#7c3aed", textTransform: "uppercase", letterSpacing: "0.07em" }}>Operations</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Commissioning Date</label>
+                    <input name="commissioningDate" type="date"
+                      value={editForm.commissioningDate}
+                      onChange={e => setEditForm(prev => ({ ...prev, commissioningDate: e.target.value }))}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit" }} />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Compliance Status</label>
+                    <select value={editForm.complianceStatus} onChange={e => setEditForm(prev => ({ ...prev, complianceStatus: e.target.value }))}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", fontFamily: "inherit", background: "#fff" }}>
+                      <option value="">Select Compliance</option>
+                      {COMPLIANCE_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px", gridColumn: "1 / -1" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#374151" }}>Expansion Plans</label>
+                    <textarea
+                      value={editForm.expansionPlans}
+                      onChange={e => setEditForm(prev => ({ ...prev, expansionPlans: e.target.value }))}
+                      placeholder="e.g. Phase 2 – 200MW planned for 2026"
+                      rows={2}
+                      style={{ padding: "8px 10px", border: "1px solid #d1d5db", fontSize: "13px", outline: "none", fontFamily: "inherit", resize: "vertical" }} />
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: "10px", marginTop: "4px", justifyContent: "flex-end" }}>
+                  <button type="button" className="india-dc-btn india-dc-btn--outline" onClick={() => setEditFacility(null)}>Cancel</button>
+                  <button type="submit" className="india-dc-btn india-dc-btn--primary">Save Changes</button>
                 </div>
               </form>
             </div>
@@ -893,6 +1205,7 @@ function IndiaDataCenterAlertPage() {
                     { label: "Status", field: "status" },
                     { label: "RE%", field: "current_renewable_pct" },
                     { label: "Stock", field: null },
+                    { label: "Actions", field: null },
                   ] as { label: string; field: SortField | null }[]
                 ).map(({ label, field }) =>
                   field ? (
@@ -916,11 +1229,11 @@ function IndiaDataCenterAlertPage() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={9} className="india-dc-table-empty">Loading data centers...</td>
+                  <td colSpan={10} className="india-dc-table-empty">Loading data centers...</td>
                 </tr>
               ) : filteredData.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="india-dc-table-empty">No data centers match the current filters.</td>
+                  <td colSpan={10} className="india-dc-table-empty">No data centers match the current filters.</td>
                 </tr>
               ) : (
                 paginatedData.map((f) => {
@@ -981,6 +1294,20 @@ function IndiaDataCenterAlertPage() {
                         ) : (
                           <span style={{ fontSize: "12px", color: "#d1d5db" }}>—</span>
                         )}
+                      </td>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => openEditModal(f)}
+                          title="Edit this data center"
+                          style={{
+                            padding: "4px 10px", fontSize: "11px", fontWeight: 700,
+                            border: "1px solid #e2e8f0", background: "#f8fafc",
+                            cursor: "pointer", color: "#0369a1", fontFamily: "inherit",
+                            borderRadius: "4px",
+                          }}
+                        >
+                          ✎ Edit
+                        </button>
                       </td>
                     </tr>
                   );
