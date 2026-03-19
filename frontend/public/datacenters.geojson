@@ -14416,6 +14416,36 @@
                     "timestamp": "2026-02-23T19:08:59.198084"
                 }
             }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [83.3215, 17.7384]
+            },
+            "properties": {
+                "id": "google-cloud-vizag-ap",
+                "name": "Google Cloud — Visakhapatnam",
+                "dc_name": "Google Cloud Andhra Pradesh",
+                "company": "Google (Alphabet Inc.)",
+                "url": "https://cloud.google.com/",
+                "address": "Visakhapatnam, Andhra Pradesh, India",
+                "postal": "",
+                "city": "Visakhapatnam",
+                "market": "Andhra Pradesh",
+                "state": "Andhra Pradesh",
+                "country": "India",
+                "power_mw": "200",
+                "tier": "Hyperscale",
+                "whitespace": "",
+                "lat": 17.7384,
+                "lng": 83.3215,
+                "is_upcoming": true,
+                "current_renewable_pct": 100,
+                "status": "Announced / Pre-development",
+                "overall_score": 7.5,
+                "tier_design": "Hyperscale"
+            }
         }
     ]
 }
