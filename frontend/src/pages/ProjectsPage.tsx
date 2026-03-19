@@ -1450,11 +1450,33 @@ const STATUS_COLORS: Record<string, { bg: string; color: string; dot: string }> 
   Construction:       { bg: "#f0fdf4", color: "#166534", dot: "#22c55e" },
 };
 
-function UpcomingProjectsSection() {
-  const [expanded, setExpanded] = useState<number | null>(null);
+const EMPTY_FORM: Omit<UpcomingProject, "id"> = {
+  name: "", developer: "", parentListed: "", ticker: "", exchange: "",
+  state: "", capacityMW: 0, type: "Hyperscale", status: "Planning",
+  expectedCOD: "", investmentCr: 0, description: "",
+};
 
-  const totalCapacityMW = UPCOMING_PROJECTS.reduce((s, p) => s + p.capacityMW, 0);
-  const totalInvestment = UPCOMING_PROJECTS.reduce((s, p) => s + p.investmentCr, 0);
+function UpcomingProjectsSection() {
+  const [projects, setProjects] = useState<UpcomingProject[]>(UPCOMING_PROJECTS);
+  const [expanded, setExpanded] = useState<number | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [form, setForm] = useState<Omit<UpcomingProject, "id">>(EMPTY_FORM);
+
+  const totalCapacityMW = projects.reduce((s, p) => s + p.capacityMW, 0);
+  const totalInvestment = projects.reduce((s, p) => s + p.investmentCr, 0);
+
+  function handleAddProject(e: React.FormEvent) {
+    e.preventDefault();
+    const newProject: UpcomingProject = { ...form, id: Date.now() };
+    setProjects((prev) => [...prev, newProject]);
+    setForm(EMPTY_FORM);
+    setShowAddForm(false);
+  }
+
+  function handleRemove(id: number) {
+    setProjects((prev) => prev.filter((p) => p.id !== id));
+    setExpanded((prev) => (prev === id ? null : prev));
+  }
 
   return (
     <div style={{ fontFamily: "var(--font-family,'Inter',system-ui,sans-serif)" }}>
@@ -1477,11 +1499,11 @@ function UpcomingProjectsSection() {
             India's largest planned data center IT capacity additions · Hyperscale & co-location
           </p>
         </div>
-        <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center" }}>
           {[
             { val: `${totalCapacityMW} MW`, lbl: "Total IT Capacity" },
             { val: `₹${(totalInvestment / 1000).toFixed(0)}K Cr`, lbl: "Est. Investment" },
-            { val: "5", lbl: "Projects" },
+            { val: String(projects.length), lbl: "Projects" },
           ].map((k) => (
             <div key={k.lbl} style={{
               background: "rgba(255,255,255,0.08)",
@@ -1495,8 +1517,139 @@ function UpcomingProjectsSection() {
               <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>{k.lbl}</div>
             </div>
           ))}
+          <button
+            onClick={() => setShowAddForm((v) => !v)}
+            style={{
+              background: showAddForm ? "rgba(255,255,255,0.15)" : "#0f766e",
+              border: "1px solid rgba(255,255,255,0.25)",
+              borderRadius: "0.5rem",
+              padding: "10px 18px",
+              color: "#fff",
+              fontSize: "13px",
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              transition: "background 0.15s",
+            }}
+          >
+            {showAddForm ? "✕ Cancel" : "+ Add Project"}
+          </button>
         </div>
       </div>
+
+      {/* Add Project Form */}
+      {showAddForm && (
+        <form
+          onSubmit={handleAddProject}
+          style={{
+            background: "#f8fafc",
+            border: "1px solid #e2e8f0",
+            borderTop: "none",
+            padding: "20px 24px",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+            gap: "12px",
+          }}
+        >
+          {(
+            [
+              { key: "name", label: "Project Name", type: "text", required: true },
+              { key: "developer", label: "Developer", type: "text", required: true },
+              { key: "state", label: "State", type: "text", required: true },
+              { key: "capacityMW", label: "Capacity (MW)", type: "number", required: true },
+              { key: "investmentCr", label: "Investment (₹ Cr)", type: "number", required: false },
+              { key: "expectedCOD", label: "Expected COD", type: "text", required: false },
+              { key: "parentListed", label: "Listed Parent", type: "text", required: false },
+              { key: "ticker", label: "Ticker", type: "text", required: false },
+              { key: "exchange", label: "Exchange", type: "text", required: false },
+            ] as const
+          ).map(({ key, label, type, required }) => (
+            <div key={key}>
+              <label style={{ fontSize: "11px", color: "#64748b", display: "block", marginBottom: "4px", fontWeight: 600 }}>
+                {label}{required && " *"}
+              </label>
+              <input
+                type={type}
+                value={String(form[key as keyof typeof form])}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, [key]: type === "number" ? Number(e.target.value) : e.target.value }))
+                }
+                required={required}
+                style={{
+                  width: "100%", boxSizing: "border-box",
+                  border: "1px solid #cbd5e1", borderRadius: "6px",
+                  padding: "7px 10px", fontSize: "13px",
+                  outline: "none",
+                }}
+              />
+            </div>
+          ))}
+          <div>
+            <label style={{ fontSize: "11px", color: "#64748b", display: "block", marginBottom: "4px", fontWeight: 600 }}>Type *</label>
+            <select
+              value={form.type}
+              onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as UpcomingProject["type"] }))}
+              style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "6px", padding: "7px 10px", fontSize: "13px" }}
+            >
+              <option>Hyperscale</option>
+              <option>Co-location</option>
+              <option>Enterprise</option>
+              <option>Edge</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: "11px", color: "#64748b", display: "block", marginBottom: "4px", fontWeight: 600 }}>Status *</label>
+            <select
+              value={form.status}
+              onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as UpcomingProject["status"] }))}
+              style={{ width: "100%", border: "1px solid #cbd5e1", borderRadius: "6px", padding: "7px 10px", fontSize: "13px" }}
+            >
+              <option>Planning</option>
+              <option>Under Development</option>
+              <option>Financial Close</option>
+              <option>Construction</option>
+            </select>
+          </div>
+          <div style={{ gridColumn: "1 / -1" }}>
+            <label style={{ fontSize: "11px", color: "#64748b", display: "block", marginBottom: "4px", fontWeight: 600 }}>Description</label>
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              rows={2}
+              style={{
+                width: "100%", boxSizing: "border-box",
+                border: "1px solid #cbd5e1", borderRadius: "6px",
+                padding: "7px 10px", fontSize: "13px", resize: "vertical",
+              }}
+            />
+          </div>
+          <div style={{ gridColumn: "1 / -1", display: "flex", gap: "10px" }}>
+            <button
+              type="submit"
+              style={{
+                background: "#0f766e", color: "#fff", border: "none",
+                borderRadius: "6px", padding: "9px 20px",
+                fontSize: "13px", fontWeight: 700, cursor: "pointer",
+              }}
+            >
+              Add Project
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowAddForm(false); setForm(EMPTY_FORM); }}
+              style={{
+                background: "#f1f5f9", color: "#475569", border: "1px solid #e2e8f0",
+                borderRadius: "6px", padding: "9px 20px",
+                fontSize: "13px", fontWeight: 600, cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
 
       {/* Project cards */}
       <div style={{
@@ -1506,7 +1659,7 @@ function UpcomingProjectsSection() {
         background: "#fff",
         boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
       }}>
-        {UPCOMING_PROJECTS.map((proj, idx) => {
+        {projects.map((proj, idx) => {
           const typeStyle = PROJECT_TYPE_COLORS[proj.type] ?? PROJECT_TYPE_COLORS["Solar"];
           const statusStyle = STATUS_COLORS[proj.status] ?? STATUS_COLORS["Planning"];
           const isOpen = expanded === proj.id;
@@ -1515,7 +1668,7 @@ function UpcomingProjectsSection() {
             <div
               key={proj.id}
               style={{
-                borderBottom: idx < UPCOMING_PROJECTS.length - 1 ? "1px solid #f1f5f9" : "none",
+                borderBottom: idx < projects.length - 1 ? "1px solid #f1f5f9" : "none",
               }}
             >
               {/* Main row */}
@@ -1614,6 +1767,23 @@ function UpcomingProjectsSection() {
                     transition: "transform 0.2s",
                     display: "inline-block",
                   }}>▼</span>
+
+                  {/* Remove button */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleRemove(proj.id); }}
+                    title="Remove project"
+                    style={{
+                      background: "none", border: "1px solid #fca5a5",
+                      borderRadius: "50%", width: "26px", height: "26px",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer", color: "#ef4444", fontSize: "14px",
+                      flexShrink: 0, transition: "background 0.15s",
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#fee2e2"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+                  >
+                    ×
+                  </button>
                 </div>
               </div>
 
