@@ -58,6 +58,7 @@ export interface NewsFilters {
 export interface DailyBrief {
   brief: string;
   generated_at: string | null;
+  is_fallback?: boolean;
 }
 
 export interface TrendingTheme {

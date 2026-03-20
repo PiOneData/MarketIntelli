@@ -366,7 +366,14 @@ function DailyBriefPanel() {
           {isLoading ? (
             <div style={{ color: "#94a3b8", fontSize: "13px" }}>Generating brief…</div>
           ) : data?.brief ? (
-            <BriefRenderer text={data.brief} />
+            <>
+              <BriefRenderer text={data.brief} />
+              {data.is_fallback && (
+                <div style={{ marginTop: "10px", color: "#94a3b8", fontSize: "12px", fontStyle: "italic" }}>
+                  Showing previous brief — no new articles available yet for today.
+                </div>
+              )}
+            </>
           ) : (
             <div style={{ color: "#94a3b8", fontSize: "13px" }}>
               No brief available — will be generated at 06:00 IST or when news articles are present.

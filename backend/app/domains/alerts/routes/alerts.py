@@ -179,8 +179,12 @@ async def get_daily_brief(
 ) -> dict:
     """Generate an AI-powered daily market brief from the last 24 hours of news."""
     service = NewsService(db)
-    brief = await service.generate_daily_brief()
-    return {"brief": brief, "generated_at": __import__("datetime").datetime.utcnow().isoformat()}
+    result = await service.generate_daily_brief()
+    return {
+        "brief": result["content"],
+        "generated_at": __import__("datetime").datetime.utcnow().isoformat(),
+        "is_fallback": result["is_fallback"],
+    }
 
 
 @router.get("/news/trends", response_model=list)

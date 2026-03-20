@@ -423,10 +423,11 @@ class NewsService:
         logger.info("News scrape complete: %d new, %d skipped", new_count, skipped)
         return {"new": new_count, "skipped": skipped}
 
-    async def generate_daily_brief(self) -> str:
+    async def generate_daily_brief(self) -> dict:
         """Synthesise top-10 news items into an executive daily brief.
 
         Result is cached in DB per calendar day so the LLM is called at most once per day.
+        Returns a dict with keys: content (str), is_fallback (bool).
         """
         today = datetime.now(timezone.utc).date()
 
@@ -442,7 +443,7 @@ class NewsService:
                 await self.db.commit()
                 existing = None
             else:
-                return existing.content
+                return {"content": existing.content, "is_fallback": False}
 
         # ── Generate fresh brief via LLM ──────────────────────────────────────
         cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
@@ -455,7 +456,17 @@ class NewsService:
         result = await self.db.execute(query)
         articles = list(result.scalars().all())
         if not articles:
-            return "No recent news articles available for today's brief."
+            # Fall back to the most recently generated brief from any previous date
+            fallback_q = await self.db.execute(
+                select(DailyBrief)
+                .where(DailyBrief.brief_date < today)
+                .order_by(DailyBrief.brief_date.desc())
+                .limit(1)
+            )
+            prev = fallback_q.scalar_one_or_none()
+            if prev:
+                return {"content": prev.content, "is_fallback": True}
+            return {"content": "No recent news articles available for today's brief.", "is_fallback": False}
 
         items_text = "\n".join(
             f"[{i+1}] ({a.category}) {a.title} — {a.ai_summary or a.summary or 'No summary'}"
@@ -487,7 +498,7 @@ Keep it professional, concise, under 400 words. Use markdown formatting."""
             ),
         )
         if not content:
-            return "Daily brief generation failed — LLM unavailable."
+            return {"content": "Daily brief generation failed — LLM unavailable.", "is_fallback": False}
 
         # ── Save to DB (upsert by date) ────────────────────────────────────────
         try:
@@ -502,8 +513,8 @@ Keep it professional, concise, under 400 words. Use markdown formatting."""
             )
             row = cached2.scalar_one_or_none()
             if row:
-                return row.content
-        return content
+                return {"content": row.content, "is_fallback": False}
+        return {"content": content, "is_fallback": False}
 
     async def enrich_missing_articles(self, batch: int = 30) -> int:
         """Enrich articles stored without AI data (ai_analyzed_at IS NULL).
