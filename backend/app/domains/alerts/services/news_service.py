@@ -472,7 +472,7 @@ class NewsService:
             f"[{i+1}] ({a.category}) {a.title} — {a.ai_summary or a.summary or 'No summary'}"
             for i, a in enumerate(articles)
         )
-        prompt = f"""You are a senior renewable energy market analyst. Based on today's top India RE news, write an executive Daily Market Brief.
+        prompt = f"""You are a senior renewable energy market analyst. Based on today's top India RE news, write an executive Daily Market Brief for {today.strftime("%B %d, %Y")}.
 
 Top news items:
 {items_text}
@@ -494,6 +494,7 @@ Keep it professional, concise, under 400 words. Use markdown formatting."""
                 "You are a senior renewable energy market analyst for India. "
                 "Write clear, professional executive briefs using markdown formatting "
                 "(use ## for section headers, **bold** for emphasis). "
+                "Always use the exact date provided in the prompt — do not invent or guess the date. "
                 "Do not return JSON under any circumstances."
             ),
         )
