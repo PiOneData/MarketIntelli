@@ -724,7 +724,7 @@ function CompanyProfileModal({ company, stock, onClose }: CompanyProfileModalPro
 
       {/* Report viewer overlay */}
       {viewingReport && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto", padding: "40px 16px" }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 1100, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto", padding: "40px 16px" }}>
           <div style={{ background: "#fff", width: "100%", maxWidth: "860px", boxShadow: "0 20px 60px rgba(0,0,0,0.3)", position: "relative" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderBottom: "1px solid #e2e8f0", position: "sticky", top: 0, background: "#fff", zIndex: 1 }}>
               <div>
