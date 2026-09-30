@@ -1,4 +1,4 @@
-name: Deploy MarketIntelli (Solar Intelligence Platform)
+name: Deploy Refexmi (Solar Intelligence Platform)
 
 on:
   push:
